@@ -1,0 +1,37 @@
+{
+  "name": "service",
+  "globalDependencies": {
+    "amqplib": "registry:dt/amqplib#0.3.0+20160317120654",
+    "express": "registry:dt/express#4.0.0+20160317120654",
+    "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160701212727",
+    "node": "registry:dt/node#6.0.0+20160621231320",
+    "passport-strategy": "registry:dt/passport-strategy#0.2.0+20160316155526",
+    "rx": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.aggregates": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.aggregates.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.all": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.all.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.async": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.async.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.async-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.async-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.backpressure": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.backpressure.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.backpressure-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.backpressure-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.binding": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.binding.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.binding-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.binding-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.coincidence": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.coincidence.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.coincidence-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.coincidence-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.experimental": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.experimental.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.joinpatterns": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.joinpatterns.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.testing": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.testing.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.time": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.time.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.time-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.time-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "rx.virtualtime": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.virtualtime.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
+    "serve-static": "registry:dt/serve-static#0.0.0+20160606155157"
+  },
+  "globalDevDependencies": {
+    "chai": "registry:dt/chai#3.4.0+20160317120654",
+    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "sinon": "registry:dt/sinon#1.16.0+20160517064723"
+  },
+  "dependencies": {
+    "amqplib": "registry:npm/amqplib#0.4.1+20160401203933"
+  }
+}

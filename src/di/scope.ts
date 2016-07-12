@@ -1,0 +1,24 @@
+export class Scope {
+    private cache = new Map<string, any>();
+
+    constructor(private parent?: Scope) { }
+    
+    get(name: string) {
+        if (!name)
+            throw new Error("name argument must not be null");    
+        let component = this.cache.get(name);
+        return component || (this.parent && this.parent.get(name));
+    }
+
+    set(name: string, component) {
+        if (!name)
+            throw new Error("name argument must not be null");    
+        this.cache.set(name, component);
+    }
+
+    dispose() {
+        this.cache.forEach(v => v.dispose && v.dispose());
+        this.cache.clear();
+        this.parent = null;
+    }
+}

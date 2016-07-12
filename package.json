@@ -1,0 +1,44 @@
+{
+  "name": "service1",
+  "version": "1.0.0",
+  "description": "Sovinty micro-service",
+  "main": "src/index.ts",
+  "scripts": {
+    "postinstall": "typings install"
+  },
+  "author": "Sovinty",
+  "license": "Sovinty",
+  "devDependencies": {
+    "typescript": "^1.8.0",
+    "fs-extra": "^0.30.0",
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.10.0",
+    "merge2": "^1.0.0",
+    "tslint": "^3.13.0",
+    "gulp-tslint": "^6.0.1",
+    "typings": "^1.3.1",
+    "chai": "^3.5.0",
+    "sinon": "^1.17.4",
+    "gulp-istanbul": "^1.0.0",
+    "gulp-mocha": "^2.2.0"
+  },
+  "dependencies": {
+    "@sovinty/vulcain-commands": "^1.0.39",
+    "@sovinty/vulcain-configurations": "^1.0.36",
+    "amqplib": "^0.4.2",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "jsonwebtoken": "^7.0.1",
+    "moment": "^2.14.1",
+    "mongodb": "^2.2.0",
+    "node-uuid": "^1.4.7",
+    "passport": "^0.3.2",
+    "passport-http": "^0.3.0",
+    "passport-http-bearer": "^1.0.1",
+    "passport-strategy": "^1.0.0",
+    "reflect-metadata": "^0.1.3"
+  }
+}

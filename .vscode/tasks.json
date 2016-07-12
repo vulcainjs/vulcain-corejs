@@ -1,0 +1,19 @@
+{
+    "version": "0.1.0",
+    "command": "gulp",
+    "isShellCommand": true,
+    "tasks": [
+        {
+            "taskName": "compile-ts",
+            "isBuildCommand": true,
+            "isWatching": false,
+            "problemMatcher": "$tsc"
+        },
+        {
+            "taskName": "test",
+            "isTestCommand": true,
+            "isWatching": false,
+            "problemMatcher": "$tsc"
+        }
+    ]
+}

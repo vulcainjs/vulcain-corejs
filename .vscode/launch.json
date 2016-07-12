@@ -1,0 +1,58 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/src/index.ts",
+			"stopOnEntry": false,
+			"preLaunchTask": "compile-ts",
+			"args": [],
+			"smartStep": true,
+			"cwd": "${workspaceRoot}",
+			"runtimeExecutable": null,
+			"runtimeArgs": [
+				"--harmony"
+			],
+			"env": {
+				"VULCAIN_STORAGE": "master1",
+				"VULCAIN_CLUSTER": "vulcain",
+				"VULCAIN_SERVICE_NAME": "customer",
+				"VULCAIN_SERVICE_VERSION": "1.0",
+				"VULCAIN_DOMAIN": "Customer",
+				"NODE_ENV": "development"
+			},
+			"externalConsole": false,
+			"sourceMaps": true,
+			"outDir": "${workspaceRoot}/dist"
+		},
+        {
+            "name": "Test",
+            "type": "node",
+			"request": "launch",
+			"smartStep": true,
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "preLaunchTask": "compile-test",
+            "args": ["${workspaceRoot}/dist-test/**/*.js"],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--harmony"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "externalConsole": false,
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/dist-test"
+        },
+		{
+			"name": "Attach",
+			"type": "node",
+			"request": "attach",
+			"port": 5858
+		}
+	]
+}
