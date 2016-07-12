@@ -1,13 +1,16 @@
 {
-  "name": "service1",
+  "name": "vulcain-corejs",
   "version": "1.0.0",
-  "description": "Sovinty micro-service",
-  "main": "src/index.ts",
-  "scripts": {
-    "postinstall": "typings install"
-  },
-  "author": "Sovinty",
-  "license": "Sovinty",
+  "description": "Vulcain micro-service framework",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "maintainers": [
+    "Alain Metge"
+  ],
+  "license": "Apache-2.0",
+  "typings": "dist/index.d.ts",
   "devDependencies": {
     "typescript": "^1.8.0",
     "fs-extra": "^0.30.0",
@@ -25,8 +28,6 @@
     "gulp-mocha": "^2.2.0"
   },
   "dependencies": {
-    "@sovinty/vulcain-commands": "^1.0.39",
-    "@sovinty/vulcain-configurations": "^1.0.36",
     "amqplib": "^0.4.2",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.15.2",

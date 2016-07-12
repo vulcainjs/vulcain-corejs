@@ -6,7 +6,7 @@ import {Domain} from '../../schemas/schema';
 import * as fs from 'fs';
 var jwt = require('jsonwebtoken');
 
-@Injectable("ApiKeyService", LifeTime.Singleton)
+@Injectable("TokenService", LifeTime.Singleton)
 export class TokenService implements ITokenService {
 
     private issuer:string;

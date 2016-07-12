@@ -5,7 +5,7 @@
 			"name": "Debug",
 			"type": "node",
 			"request": "launch",
-			"program": "${workspaceRoot}/src/index.ts",
+			"program": "${workspaceRoot}/src/samples/index.ts",
 			"stopOnEntry": false,
 			"preLaunchTask": "compile-ts",
 			"args": [],

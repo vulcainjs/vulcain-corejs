@@ -17,7 +17,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
 
-        let auth = (this.container.get(DefaultServiceNames.Authentication) || container.resolve(Authentication)).init();
+        let auth = (this.container.get(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
         let self = this;
         this.app.get('/:domain?/:action?', auth, async (req: express.Request, res: express.Response) => {
             this.executeRequest(this.executeQueryRequest, req, res);

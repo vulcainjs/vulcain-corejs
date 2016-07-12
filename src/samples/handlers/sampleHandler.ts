@@ -2,7 +2,7 @@ import {Command} from '../../pipeline/commands';
 import {CommandHandler, Action, EventHandler, Consume} from '../../pipeline/annotations';
 import {ValidationError, RuntimeError} from '../../pipeline/common';
 import {Property, Model} from '../../schemas/annotations'
-import {AbstractCommandHandler, AbstractEventHandler} from '../../core';
+import {AbstractCommandHandler, AbstractEventHandler} from '../../index';
 
 @Model("Customer", { storageName: "customers" })
 export class Customer {
