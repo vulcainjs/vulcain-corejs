@@ -121,7 +121,7 @@ export class CommandManager implements IManager {
             command.startedAt = moment.utc().format();
             command.service = this._service;
             if (ctx && ctx.user)
-                command.context = { id: ctx.id, name: ctx.name, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
+                command.context = { id: ctx.user.id, name: ctx.user.name, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
             else
                 command.context = <any>{};
 
@@ -152,7 +152,7 @@ export class CommandManager implements IManager {
         let res;
         try {
             let ctx = new RequestContext(this.container);
-            ctx.user = (command.context && command.context.user);
+            ctx.user = command.context;
             info.handler.requestContext = ctx;
             info.handler.command = command;
             let result = await info.handler[info.method](command.data);

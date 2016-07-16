@@ -1,5 +1,5 @@
 // Entry point
-import {DefaultServiceNames, RabbitAdapter, Application} from '../index';
+import {DefaultServiceNames, RabbitAdapter, Application, Conventions} from '../index';
 
 class MyApplication extends Application {
     initializeServices() {
@@ -7,5 +7,7 @@ class MyApplication extends Application {
     }
 }
 
-let app = new MyApplication("samples");
+Conventions.defaultApplicationFolder = "samples";
+
+let app = new MyApplication("customer");
 app.start(8080);

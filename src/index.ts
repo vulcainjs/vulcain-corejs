@@ -2,6 +2,7 @@ export * from './schemas/schema'
 export * from './schemas/annotations'
 
 export * from './application'
+export {Conventions} from './utils/conventions';
 
 export * from './pipeline/annotations'
 export {ActionMetadata, Command, CommandMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata} from './pipeline/commands';

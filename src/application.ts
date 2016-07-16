@@ -14,6 +14,7 @@ import {MemoryProvider} from "./providers/memory/provider";
 import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from '@sovinty/vulcain-configurations'
 import {RabbitAdapter} from './bus/rabbitAdapter'
+import {Conventions} from './utils/conventions';
 
 var parent = module.parent.parent || module.parent;
 var parentFile = parent.filename;
@@ -26,7 +27,8 @@ export enum BusUsage {
     eventOnly
 }
 
-export class DefaultServiceNames {
+export class DefaultServiceNames
+{
     static "Authentication" = "Authentication";
     static "Logger" = "Logger";
     static "Provider" = "Provider";
@@ -39,10 +41,10 @@ export abstract class Application
     static Preloads: Array<Function> = [];
 
     private _executablePath: string;
-    private _basePath:string;
     private _container:IContainer;
     private _domain: Domain;
     public enableHystrixStream: boolean;
+    private _basePath: string;
 
     setStaticRoot(basePath: string) {
         this.adapter.setStaticRoot(basePath);
@@ -75,13 +77,13 @@ export abstract class Application
      * @param container Global component container
      * @param app  (optional)Server adapter
      */
-    constructor(path?: string, public domainName?:string, container?: IContainer, public adapter?: AbstractAdapter) {
+    constructor(public domainName?:string, container?: IContainer, public adapter?: AbstractAdapter) {
         this.domainName = domainName || process.env.VULCAIN_DOMAIN;
         if (!this.domainName)
             throw new Error("VULCAIN_DOMAIN is required.");
         this._executablePath = Path.dirname(module.filename);
+        this._basePath = parentDir;
         this._container = container || new Container();
-        this._basePath = Path.join(parentDir, path || "");
         this._container.injectInstance(new VulcainLogger(), "Logger");
         this._container.injectTransient(MemoryProvider, "Provider");
         this._container.injectInstance(this, "ApplicationFactory");
@@ -92,7 +94,7 @@ export abstract class Application
         if (!this.enableHystrixStream)
             return;
 
-        this.adapter.useMiddleware("get", "/hystrix.stream",  (request, response) => {
+        this.adapter.useMiddleware("get", Conventions.defaultHystrixPath,  (request, response) => {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
             response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.append('Pragma', 'no-cache');
@@ -158,8 +160,8 @@ export abstract class Application
     private registerModelsInternal() {
         this.registerModels(Path.join(this._executablePath, "defaults/models"));
 
-        let p = Path.join( this._basePath, "models" || "/api/models" );
-        this.registerModels( p );
+        let path = Conventions.defaultModelsFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        this.registerModels( Path.join(this._basePath, path) );
     }
 
     /**
@@ -181,8 +183,8 @@ export abstract class Application
 
     private registerHandlersInternal() {
         this.registerHandlers(Path.join(this._executablePath, "defaults/handlers"));
-        let p = Path.join( this._basePath, "handlers" || "/api/handlers" );
-        this.registerHandlers( p );
+        let path = Conventions.defaultHandlersFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        this.registerHandlers( Path.join(this._basePath, path) );
     }
 
     /**
@@ -199,8 +201,8 @@ export abstract class Application
     private registerServicesInternal() {
         this.registerServices(Path.join(this._executablePath, "defaults/services"));
 
-        let p = Path.join(this._basePath, "services" || "/api/services");
-        this.registerServices(p);
+        let path = Conventions.defaultServicesFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        this.registerServices(Path.join(this._basePath, path));
     }
 
     /**
