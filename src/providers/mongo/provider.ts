@@ -10,38 +10,20 @@ import {Logger} from '@sovinty/vulcain-configurations'
  */
 export class MongoProvider implements IProvider<any>
 {
-    private _schema:Schema;
     private  _mongo;
     private _keyPropertyName:string;
 
-    /**
-     * Create a memory provider instance.
-     * @param dataFolder : (optional) if provided, data will be persisted on disk on EVERY create, update or delete
-     */
-    constructor( @Inject("Logger")private _logger:Logger, private uri:string, private options? )
+    constructor( @Inject("Logger")private _logger:Logger, private _schema:Schema, private uri:string, private options? )
     {
-    }
-
-    private ensuresSchema() {
         if (!this._schema)
             throw new Error("Schema is not set for the current provider.");
-    }
 
-    /**
-     * Set schema to use
-     * @param schema A valid schema
-     */
-    setSchema(schema: Schema) {
-        if (!schema)
-            throw new Error("Schema can not be null");
-
-        this._keyPropertyName = schema.getIdProperty();
-        this._schema = schema;
+        this._keyPropertyName = this._schema.getIdProperty();
         let keys;
-        for (let p in schema.description.properties) {
-            if (!schema.description.properties.hasOwnProperty(p))
+        for (let p in this._schema.description.properties) {
+            if (!this._schema.description.properties.hasOwnProperty(p))
                 continue;
-            let prop = schema.description.properties[p];
+            let prop = this._schema.description.properties[p];
             if (prop.unique) {
                 if (!keys) keys = {};
                 keys[p] = prop.unique === true ? 1 : prop.unique;
@@ -63,7 +45,6 @@ export class MongoProvider implements IProvider<any>
     }
 
     private ensuresDbOpen(): Promise<Db> {
-        this.ensuresSchema();
 
         let self = this;
         return new Promise((resolve, reject) => {

@@ -4,7 +4,11 @@
     "amqplib": "registry:dt/amqplib#0.3.0+20160317120654",
     "express": "registry:dt/express#4.0.0+20160317120654",
     "express-serve-static-core": "registry:dt/express-serve-static-core#0.0.0+20160701212727",
+    "fast-stats": "registry:dt/fast-stats#0.0.0+20160316155526",
+    "mime": "registry:dt/mime#0.0.0+20160316155526",
+    "mongodb": "registry:dt/mongodb#2.1.0+20160602142941",
     "node": "registry:dt/node#6.0.0+20160621231320",
+    "passport": "registry:dt/passport#0.2.0+20160317120654",
     "passport-strategy": "registry:dt/passport-strategy#0.2.0+20160316155526",
     "rx": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
     "rx-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
@@ -24,7 +28,8 @@
     "rx.time": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.time.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
     "rx.time-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.time-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
     "rx.virtualtime": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.virtualtime.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
-    "serve-static": "registry:dt/serve-static#0.0.0+20160606155157"
+    "serve-static": "registry:dt/serve-static#0.0.0+20160606155157",
+    "when": "registry:dt/when#2.4.0+20160317120654"
   },
   "globalDevDependencies": {
     "chai": "registry:dt/chai#3.4.0+20160317120654",

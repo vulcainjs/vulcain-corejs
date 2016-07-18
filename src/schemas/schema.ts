@@ -106,8 +106,14 @@ export class Domain
         }
         if( !schema ) throw new Error("Invalid schema argument");
 
-        if( typeof schema === "function" )
-            schema = SchemaBuilder.build( schema );
+        if (typeof schema === "function") {
+            let tmp = this._schemaDescriptions.get(schema.name);
+            if (!tmp)
+                return schema.name;
+
+            schema = SchemaBuilder.build(schema);
+        }
+
         schemaName = name || schema.name;
         if( !schemaName ) return;
         // Existing Model extension
@@ -123,9 +129,11 @@ export class Domain
         return schemaName;
     }
 
-    getSchema( name:string )
+    getSchema( name:string|Function )
     {
-        return new Schema( this, name );
+        if( typeof name === "string")
+            return new Schema(this, name);
+        return new Schema(this, this.addSchemaDescription(name));
     }
 
     findSchemaDescription( name:string )

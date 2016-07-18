@@ -4,13 +4,12 @@ export interface ModelOptions {
     name?: string;
     extends?: string;
     description?: string;
-    storageName?: string;
     bind?: ((data) => any)|boolean;
     serialize?: ((entity) => any)|boolean;
     check?: (entity) => string;
 }
 
-export function Model(name:string, options: ModelOptions) {
+export function Model(name:string, options?: ModelOptions) {
     return function (target: Function) {
         options = options || {name:name};
         options.name = name;

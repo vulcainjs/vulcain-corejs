@@ -1,10 +1,10 @@
-import {Command} from '../../pipeline/commands';
+import {CommandData} from '../../pipeline/commands';
 import {CommandHandler, Action, EventHandler, Consume} from '../../pipeline/annotations';
 import {ValidationError, RuntimeError} from '../../pipeline/common';
 import {Property, Model} from '../../schemas/annotations'
 import {AbstractCommandHandler, AbstractEventHandler} from '../../index';
 
-@Model("Customer", { storageName: "customers" })
+@Model("Customer")
 export class Customer {
     @Property({ type: "string", required: true })
     firstName: string;
@@ -12,7 +12,7 @@ export class Customer {
     lastName: string;
 }
 
-@CommandHandler({ async: false, scope: "*", schema:"Customer" })
+@CommandHandler({ async: false, scope: "*", schema:Customer })
 export class CustomerHandler extends AbstractCommandHandler {
 
     @Action({action:"createCustomer"})

@@ -14,7 +14,6 @@ export interface ListOptions {
  */
 export interface IProvider<T>
 {
-    setSchema(schema:Schema);
     findOneAsync(query): Promise<T>;
     getAllAsync( options:ListOptions ) : Promise<Array<T>>;
     getAsync( id:string ) : Promise<T>;

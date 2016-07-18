@@ -8,7 +8,7 @@ const guid = require('node-uuid');
 import * as os from 'os';
 import {RequestContext} from '../servers/requestContext';
 
-export interface Command extends CommonRequestData {
+export interface CommandData extends CommonRequestData {
     correlationId: string;
     data: any;
     service: string;
@@ -76,7 +76,7 @@ export class CommandManager implements IManager {
         this.messageBus = new MessageBus(this);
     }
 
-    private createResponse(command: Command, error?: ErrorResponse) {
+    private createResponse(command: CommandData, error?: ErrorResponse) {
         let res: CommandResponse = {
             source: this._hostname,
             startedAt: command.startedAt,
@@ -109,7 +109,7 @@ export class CommandManager implements IManager {
         return info.metadata;
     }
 
-    async runAsync(command: Command, ctx: RequestContext) {
+    async runAsync(command: CommandData, ctx: RequestContext) {
         let info = CommandManager.commandHandlersFactory.getInfo<CommandMetadata>(this.container, command.domain, command.action);
 
         try {
@@ -147,7 +147,7 @@ export class CommandManager implements IManager {
         }
     }
 
-    async consumeTaskAsync(command: Command) {
+    async consumeTaskAsync(command: CommandData) {
         let info = CommandManager.commandHandlersFactory.getInfo<CommandMetadata>(this.container, command.domain, command.action);
         let res;
         try {

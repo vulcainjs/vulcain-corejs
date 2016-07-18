@@ -1,4 +1,4 @@
-import {Command, CommandResponse, CommandManager} from './commands';
+import {CommandData, CommandResponse, CommandManager} from './commands';
 import {ErrorResponse} from './common';
 const guid = require('node-uuid');
 import {ICommandBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
@@ -17,7 +17,7 @@ export class MessageBus {
         this.eventBus.listenForEvent(manager.domain.name, manager.consumeEventAsync.bind(manager));
     }
 
-    pushTask(command: Command) {
+    pushTask(command: CommandData) {
         command.status = "Pending";
         command.taskId = guid.v4();
         this.commandBus.publishTask(command.domain, this.manager.serviceName, JSON.stringify(command));

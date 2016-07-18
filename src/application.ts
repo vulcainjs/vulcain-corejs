@@ -1,4 +1,4 @@
-import {HystrixSSEStream as hystrixStream} from '@sovinty/vulcain-commands'
+import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
 import {ICommandBusAdapter, IEventBusAdapter} from './bus/busAdapter';
 import {LocalAdapter} from './bus/localAdapter';
 import * as Path from 'path'
@@ -11,6 +11,7 @@ import 'reflect-metadata'
 import {LifeTime} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {MemoryProvider} from "./providers/memory/provider";
+import {MongoProvider} from "./providers/mongo/provider";
 import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from '@sovinty/vulcain-configurations'
 import {RabbitAdapter} from './bus/rabbitAdapter'
@@ -127,6 +128,16 @@ export abstract class Application
             this.container.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)
             this.container.injectInstance(bus, DefaultServiceNames.CommandBusAdapter);
+    }
+
+    protected useMongoProvider(name:string, schema: string | any, uri: string, mongoOptions?) {
+        schema = this.domain.getSchema(schema);
+        this.container.injectSingleton(MongoProvider, name, schema, uri, mongoOptions);
+    }
+
+    protected useMemoryProvider(name:string, schema: string | any, folder?:string) {
+        schema = this.domain.getSchema(schema);
+        this.container.injectSingleton(MemoryProvider, name, schema, folder);
     }
 
     protected initializeServices(container: IContainer) {

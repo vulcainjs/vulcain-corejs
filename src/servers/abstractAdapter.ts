@@ -35,17 +35,14 @@ export abstract class AbstractAdapter {
         let self = this;
         return new Promise((resolve) => {
             let headers = new Map<string, string>();
+            if (!command || !command.domain) {
+                resolve({ value: "domain is required.", code: 400, headers: headers });
+                return;
+            }
             if (command.domain.toLowerCase() !== self.domainName.toLowerCase()) {
                 resolve({ value: "this service doesn't belong to domain " + self.domainName, code: 400, headers: headers });
                 return;
             }
-            if (!command || !command.action || !command.domain) {
-                resolve({ value: "action and domain are required.", code: 400, headers: headers });
-                return;
-            }
-            command.version = command.version || "1";
-            if (command.version[0] === "v" || command.version[0] === "V")
-                command.version = command.version.substr(1);
 
             try {
                 let metadata = <CommandMetadata>manager.getMetadata(command);

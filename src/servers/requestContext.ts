@@ -2,6 +2,8 @@ import {Schema} from '../schemas/schema'
 import {Logger} from '@sovinty/vulcain-configurations';
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
+import {CommandFactory} from '../commands/command/commandFactory';
+import {ICommand} from '../commands/command/abstractCommand'
 
 class DefaultLogger {
     log(msg: string | Error) {
@@ -66,7 +68,7 @@ export class RequestContext {
         return this.scopes && this.scopes.length > 0 && this.scopes[0] === "*";
     }
 
-    /*getCommand(name: string): ICommand {
+    getCommand(name: string): ICommand {
         return CommandFactory.get(name, this);
-    }*/
+    }
 }

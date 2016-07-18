@@ -8,7 +8,6 @@ import {Inject} from '../../di/annotations';
 export class MemoryProvider implements IProvider<any>
 {
     private _data:Map<string, any> = new Map<string,any>();
-    private _schema:Schema;
     private _saveToFile:string;
     private _length                = 0;
 
@@ -16,31 +15,21 @@ export class MemoryProvider implements IProvider<any>
      * Create a memory provider instance.
      * @param dataFolder : (optional) if provided, data will be persisted on disk on EVERY create, update or delete
      */
-    constructor( private dataFolder?:string )
+    constructor( private _schema:Schema, private dataFolder?:string )
     {
-    }
-
-    private ensuresSchema() {
         if (!this._schema)
             throw new Error("Schema is not set for the current provider.");
-    }
 
-    /**
-     * Set schema to use
-     * @param schema A valid schema
-     */
-    setSchema( schema:Schema )
-    {
-        if (!schema)
+        if (!this._schema)
             throw new Error("Schema can not be null");
-        this._schema = schema;
+        
         if( this.dataFolder && this._data.size === 0)
         {
            // console.log("Create memory provider for " + schema.name);
             if( !fs.existsSync( this.dataFolder ) )
                 fs.mkdirSync( this.dataFolder );
 
-            this._saveToFile = this.dataFolder + "/" + schema.name + ".json";
+            this._saveToFile = this.dataFolder + "/" + this._schema.name + ".json";
 
             if( fs.existsSync( this._saveToFile ) )
             {
@@ -69,8 +58,6 @@ export class MemoryProvider implements IProvider<any>
      */
     getAllAsync( options:ListOptions ) : Promise<Array<any>>
     {
-        this.ensuresSchema();
-
         options = options || {limit:-1};
         return new Promise( ( resolve, reject ) =>
             {
@@ -207,7 +194,6 @@ export class MemoryProvider implements IProvider<any>
 
     async findOneAsync( query )
     {
-        this.ensuresSchema();
         let options = <ListOptions>{};
         options.query = query;
         let list = await this.getAllAsync(options);
@@ -221,7 +207,6 @@ export class MemoryProvider implements IProvider<any>
      */
     getAsync( name:string )
     {
-        this.ensuresSchema();
         var self = this;
         return new Promise( ( resolve, reject ) =>
         {
@@ -249,7 +234,6 @@ export class MemoryProvider implements IProvider<any>
         if (!old)
             throw new Error("Argument is required");
 
-        this.ensuresSchema();
         let self = this;
         return new Promise((resolve, reject) => {
             try {
@@ -285,7 +269,6 @@ export class MemoryProvider implements IProvider<any>
         if (!entity)
             throw new Error("Entity is required");
 
-        this.ensuresSchema();
         var self = this;
         entity._created = new Date().toUTCString();
 
@@ -321,7 +304,6 @@ export class MemoryProvider implements IProvider<any>
         if (!entity)
             throw new Error("Entity is required");
 
-        this.ensuresSchema();
         entity._updated = new Date().toUTCString();
 
         let self = this;

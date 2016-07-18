@@ -5,4 +5,5 @@ export class Conventions {
     static defaultHandlersFolderPattern = "${base}/handlers";
     static defaultServicesFolderPattern = "${base}/services";
     static defaultHystrixPath = "/hystrix.stream";
+    static defaultUrlprefix = "/api/";
 }

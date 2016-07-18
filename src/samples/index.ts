@@ -4,6 +4,7 @@ import {DefaultServiceNames, RabbitAdapter, Application, Conventions} from '../i
 class MyApplication extends Application {
     initializeServices() {
         this.useRabbitAdapter('amqp://192.168.99.100');
+     //   this.useMongoProvider("CustomerProvider", "Customer", "");
     }
 }
 

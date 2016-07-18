@@ -1,9 +1,9 @@
-import {Command, CommandResponse} from './commands';
+import {CommandData, CommandResponse} from './commands';
 import {RequestContext} from '../servers/requestContext';
 import {Query} from './query';
 
 export abstract class AbstractCommandHandler {
-    command: Command;
+    command: CommandData;
     requestContext: RequestContext;
 }
 

@@ -44,7 +44,7 @@ export interface CommonActionMetadata {
 }
 
 export interface CommonMetadata {
-    schema?: string;
+    schema?: string|Function;
     serviceName?: string;
 }
 
