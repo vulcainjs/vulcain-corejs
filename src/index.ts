@@ -5,7 +5,7 @@ export * from './application'
 export {Conventions} from './utils/conventions';
 
 export * from './pipeline/annotations'
-export {ActionMetadata, CommandData, CommandMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata} from './pipeline/commands';
+export {ActionMetadata, CommandData, CommandMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/commands';
 export {Query, QueryMetadata, QueryResponse} from './pipeline/query';
 export {AbstractCommandHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
 
@@ -16,7 +16,7 @@ export * from './providers/memory/provider'
 export * from './providers/mongo/provider'
 
 export {IContainer} from './di/resolvers';
-export * from './di/annotations';
+export {Inject, Injectable, LifeTime} from './di/annotations';
 
 export {IProvider, ListOptions} from './providers/provider'
 export {RequestContext} from './servers/requestContext'
@@ -28,3 +28,4 @@ export {HystrixSSEStream} from './commands/http/hystrixSSEStream'
 export {CommandRuntimeError, TimeoutError} from './commands/command/command'
 export {IHttpRequest, IHttpResponse} from './commands/command/types'
 
+export {DefaultCommandHandler, DefaultQueryHandler} from './defaults/crudHandlers';

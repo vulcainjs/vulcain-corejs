@@ -9,7 +9,7 @@
 			"stopOnEntry": false,
 			"preLaunchTask": "compile-ts",
 			"args": [],
-			"smartStep": true,
+			"smartStep": false,
 			"cwd": "${workspaceRoot}",
 			"runtimeExecutable": null,
 			"runtimeArgs": [

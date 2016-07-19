@@ -2,11 +2,13 @@ import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
+import {DefaultServiceNames} from '../application'
 import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonResponse, CommonHandlerMetadata, IManager, CommonActionMetadata} from './common';
 const moment = require('moment');
 const guid = require('node-uuid');
 import * as os from 'os';
 import {RequestContext} from '../servers/requestContext';
+import * as RX from 'rx';
 
 export interface CommandData extends CommonRequestData {
     correlationId: string;
@@ -24,6 +26,7 @@ export interface ConsumeEventMetadata {
 }
 
 export interface EventMetadata extends CommonMetadata {
+    domain: string;
 }
 
 export interface CommandMetadata extends CommonHandlerMetadata {
@@ -43,6 +46,10 @@ export interface CommandResponse extends CommonResponse {
     commandMode?: string;
 }
 
+export interface EventData extends CommandResponse {
+
+}
+
 export class CommandManager implements IManager {
 
     private messageBus: MessageBus;
@@ -59,7 +66,7 @@ export class CommandManager implements IManager {
      */
     get domain() {
         if (!this._domain) {
-            this._domain = this.container.get("Domain");
+            this._domain = this.container.get<Domain>(DefaultServiceNames.Domain);
         }
         return this._domain;
     }
@@ -170,6 +177,10 @@ export class CommandManager implements IManager {
     }
 
     async consumeEventAsync(event: CommandResponse) {
+        let events = Rx.Observable.create<EventData>((observer: Rx.Observer<EventData>) => {
+            observer.onNext(event);
+        });
+
         let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(this.container, event.domain, event.action, true);
         if (info) {
             let ctx = new RequestContext(this.container);

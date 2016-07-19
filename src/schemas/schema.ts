@@ -108,7 +108,7 @@ export class Domain
 
         if (typeof schema === "function") {
             let tmp = this._schemaDescriptions.get(schema.name);
-            if (!tmp)
+            if (tmp)
                 return schema.name;
 
             schema = SchemaBuilder.build(schema);

@@ -1,10 +1,14 @@
 import 'reflect-metadata';
 import {Scope} from './scope';
 import {IResolver, InstanceResolver, SingletonResolver, Resolver} from './resolvers';
-import {IContainer} from '../di/resolvers';
+import {IContainer, BusUsage} from '../di/resolvers';
+import {DefaultServiceNames} from '../application';
+import {RabbitAdapter} from '../bus/rabbitAdapter'
+import {MemoryProvider} from "../providers/memory/provider";
+import {MongoProvider} from "../providers/mongo/provider";
 
 export class Container {
-    
+
     private resolvers: Map<string,IResolver> = new Map<string,IResolver>();
     public scope: Scope;
 
@@ -16,8 +20,24 @@ export class Container {
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
-    }   
-    
+    }
+
+    useRabbitAdapter(address:string, usage = BusUsage.all) {
+        let bus = new RabbitAdapter(address);
+        if( usage === BusUsage.all || usage === BusUsage.eventOnly)
+            this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
+        if( usage === BusUsage.all || usage === BusUsage.commandOnly)
+            this.injectInstance(bus, DefaultServiceNames.CommandBusAdapter);
+    }
+
+    useMongoProvider(uri: string, mongoOptions?) {
+        this.injectSingleton(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
+    }
+
+    useMemoryProvider(folder?:string) {
+        this.injectSingleton(MemoryProvider, DefaultServiceNames.Provider, folder);
+    }
+
     /**
      *
      * @param name
@@ -56,7 +76,7 @@ export class Container {
     }
 
     /**
-     * 
+     *
      * @param fn
      * @param args
      */
@@ -74,7 +94,7 @@ export class Container {
 
         let attr = Reflect.getOwnMetadata(Symbol.for("di:export"), fn);
         name = name || attr && attr.name || fn.name;
-        if(!name) 
+        if(!name)
             return;
         this.resolvers.set(name, new Resolver(fn, Array.from(args)));
         console.log("INFO: Register transient component " + name + " as " + fn.name);
@@ -117,12 +137,12 @@ export class Container {
         let resolver = new Resolver(fn, Array.from(args));
         return this._resolve(resolver);
     }
-    
+
     private _resolve(resolver:IResolver, name?:string, optional?:boolean) {
-        
+
         let instance = resolver && resolver.resolve(this, name);
-        
-        if(!instance && !optional) 
+
+        if(!instance && !optional)
             throw new Error("Unable to resolve component " + name);
 
         return instance;
@@ -137,8 +157,8 @@ export class Container {
             self = <Container>self.parent;
         }
         return null;
-    }   
-    
+    }
+
     /**
      *
      * @param name
@@ -146,10 +166,10 @@ export class Container {
      * @param optional
      * @returns {any}
      */
-    get(name:string, optional?:boolean) {        
+    get<T>(name:string, optional?:boolean) {
         let resolver = this.findResolver(name);
-        let component = this._resolve(resolver, name, optional);  
-        return component;
+        let component = this._resolve(resolver, name, optional);
+        return <T>component;
     }
-} 
+}
 

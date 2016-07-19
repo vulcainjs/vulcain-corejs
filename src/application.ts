@@ -10,23 +10,10 @@ import { ExpressAdapter } from './servers/expressAdapter'
 import 'reflect-metadata'
 import {LifeTime} from './di/annotations';
 import {IContainer} from "./di/resolvers";
-import {MemoryProvider} from "./providers/memory/provider";
-import {MongoProvider} from "./providers/mongo/provider";
 import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from '@sovinty/vulcain-configurations'
-import {RabbitAdapter} from './bus/rabbitAdapter'
 import {Conventions} from './utils/conventions';
-
-var parent = module.parent.parent || module.parent;
-var parentFile = parent.filename;
-var parentDir = Path.dirname(parentFile);
-//delete require.cache[module.filename];
-
-export enum BusUsage {
-    all,
-    commandOnly,
-    eventOnly
-}
+import {MemoryProvider} from "./providers/memory/provider";
 
 export class DefaultServiceNames
 {
@@ -35,9 +22,12 @@ export class DefaultServiceNames
     static "Provider" = "Provider";
     static "EventBusAdapter" = "EventBusAdapter";
     static "CommandBusAdapter" = "CommandBusAdapter";
+    static "Domain" = "Domain";
+    static "Application" = "ApplicationFactory";
+    static "ServerAdapter" = "ServerAdapter";
 }
 
-export abstract class Application
+export class Application
 {
     static Preloads: Array<Function> = [];
 
@@ -46,6 +36,7 @@ export abstract class Application
     private _domain: Domain;
     public enableHystrixStream: boolean;
     private _basePath: string;
+    public adapter: AbstractAdapter;
 
     setStaticRoot(basePath: string) {
         this.adapter.setStaticRoot(basePath);
@@ -62,14 +53,14 @@ export abstract class Application
      * @returns {Domain}
      */
     get domain() {
-        if (!this._domain) {
-            this._domain = new Domain(this.domainName);
-        }
         return this._domain;
     }
 
-    set domain(domain: Domain) {
-        this._domain = domain;
+    private findBasePath() {
+        let parent = module.parent;
+        while (parent.parent)
+            parent = parent.parent;
+        return Path.dirname(parent.filename);
     }
 
     /**
@@ -78,17 +69,13 @@ export abstract class Application
      * @param container Global component container
      * @param app  (optional)Server adapter
      */
-    constructor(public domainName?:string, container?: IContainer, public adapter?: AbstractAdapter) {
-        this.domainName = domainName || process.env.VULCAIN_DOMAIN;
-        if (!this.domainName)
-            throw new Error("VULCAIN_DOMAIN is required.");
+    constructor(container?: IContainer) {
         this._executablePath = Path.dirname(module.filename);
-        this._basePath = parentDir;
+        this._basePath = this.findBasePath();
         this._container = container || new Container();
-        this._container.injectInstance(new VulcainLogger(), "Logger");
-        this._container.injectTransient(MemoryProvider, "Provider");
-        this._container.injectInstance(this, "ApplicationFactory");
-        this._container.injectInstance(this.domain, "Domain");
+        this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
+        this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
+        this._container.injectInstance(this, DefaultServiceNames.Application);
     }
 
     private startHystrixStream() {
@@ -122,34 +109,17 @@ export abstract class Application
         });
     }
 
-    protected useRabbitAdapter(address:string, usage = BusUsage.all) {
-        let bus = new RabbitAdapter(address);
-        if( usage === BusUsage.all || usage === BusUsage.eventOnly)
-            this.container.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
-        if( usage === BusUsage.all || usage === BusUsage.commandOnly)
-            this.container.injectInstance(bus, DefaultServiceNames.CommandBusAdapter);
-    }
+    start(domainName:string, port: number) {
+        domainName = domainName || process.env.VULCAIN_DOMAIN;
+        if (!domainName)
+            throw new Error("Domain name is required.");
 
-    protected useMongoProvider(name:string, schema: string | any, uri: string, mongoOptions?) {
-        schema = this.domain.getSchema(schema);
-        this.container.injectSingleton(MongoProvider, name, schema, uri, mongoOptions);
-    }
-
-    protected useMemoryProvider(name:string, schema: string | any, folder?:string) {
-        schema = this.domain.getSchema(schema);
-        this.container.injectSingleton(MemoryProvider, name, schema, folder);
-    }
-
-    protected initializeServices(container: IContainer) {
-
-    }
-
-    start(port: number) {
-        this.initializeServices(this.container);
+        this._domain = new Domain(domainName);
+        this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
 
         let local = new LocalAdapter();
-        let eventBus = this.container.get(DefaultServiceNames.EventBusAdapter) || local;
-        let commandBus = this.container.get(DefaultServiceNames.CommandBusAdapter) || local;
+        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter) || local;
+        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.CommandBusAdapter) || local;
 
         eventBus.startAsync().then(() => {
             commandBus.startAsync().then(() => {
@@ -160,7 +130,7 @@ export abstract class Application
                 Application.Preloads.forEach(fn => fn(this));
                 Application.Preloads = null;
 
-                this.adapter = this.adapter || new ExpressAdapter(this.domainName, this._container);
+                this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true) || new ExpressAdapter(this.domain.name, this._container);
                 this.startHystrixStream()
                 this.adapter.start(port);
             });
@@ -194,6 +164,7 @@ export abstract class Application
 
     private registerHandlersInternal() {
         this.registerHandlers(Path.join(this._executablePath, "defaults/handlers"));
+
         let path = Conventions.defaultHandlersFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
         this.registerHandlers( Path.join(this._basePath, path) );
     }

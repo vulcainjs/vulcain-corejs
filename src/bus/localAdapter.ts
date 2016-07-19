@@ -1,3 +1,4 @@
+import {EventData, CommandData} from '../pipeline/commands';
 
 export
 class LocalAdapter {
@@ -8,10 +9,10 @@ class LocalAdapter {
         return Promise.resolve(this);
     }
 
-    sendEvent(domain:string, message:string) {
+    sendEvent(domain:string, event:EventData) {
        let self = this;
         setTimeout(function () {
-            self.eventHandler(JSON.parse(message));
+            self.eventHandler(event);
         }, (10));
     }
 
@@ -19,10 +20,10 @@ class LocalAdapter {
         this.eventHandler = handler;
     }
 
-    publishTask(domain:string, serviceId:string, message:string) {
+    publishTask(domain:string, serviceId:string, command:CommandData) {
        let self = this;
         setTimeout(function () {
-            self.commandHandler(JSON.parse(message));
+            self.commandHandler(command);
         }, (10));
     }
 

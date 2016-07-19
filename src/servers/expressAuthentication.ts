@@ -4,15 +4,15 @@ import passportStrategy = require('passport-strategy');
 var BearerStrategy = require('passport-http-bearer').Strategy
 import {Injectable, Inject, LifeTime} from '../di/annotations';
 import {ITokenService} from '../defaults/services';
-
-const emptyUser = {__empty__:true};
+const AnonymousStrategy = require('passport-anonymous');
 
 @Injectable("Authentication", LifeTime.Singleton)
 export class Authentication
 {
     constructor(  @Inject("TokenService")tokens:ITokenService )
     {
-        this.initBearer( tokens );
+        this.initBearer(tokens);
+        passport.use(new AnonymousStrategy());
     }
 
     private initBearer( tokens:ITokenService )
@@ -26,7 +26,7 @@ export class Authentication
                 // No token found
                 if( !token )
                 {
-                    return callback( null, emptyUser );
+                    return callback( null, false );
                 }
 
                 token.user.scopes= token.scopes
@@ -34,7 +34,7 @@ export class Authentication
             }
             catch( err )
             {
-                return callback( null, emptyUser );
+                return callback( null, false );
             }
         });
 
@@ -44,7 +44,7 @@ export class Authentication
         passport.use( strategy );
     }
 
-    init() {return passport.authenticate( ['bearer'], { session: false } );}
+    init() {return passport.authenticate( ['bearer', 'anonymous'], { session: false } );}
 }
 
 

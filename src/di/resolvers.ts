@@ -1,6 +1,12 @@
 import {Scope} from './scope';
 import {Container} from './containers';
 
+export enum BusUsage {
+    all,
+    commandOnly,
+    eventOnly
+}
+
 export interface IContainer {
     injectInstance(fn, name: string): IContainer;
     injectSingleton(fn, ...args): IContainer;
@@ -12,9 +18,12 @@ export interface IContainer {
     injectScoped(fn, ...args): IContainer;
     injectScoped(fn, name?: string, ...args): IContainer;
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
-    get(name: string, optional?: boolean);
+    get<T>(name: string, optional?: boolean):T;
     resolve(fn, ...args);
     dispose();
+    useRabbitAdapter(address: string, usage?:BusUsage);
+    useMongoProvider(uri: string, mongoOptions?);
+    useMemoryProvider(folder ?:string);
 }
 
 export interface IResolver {
@@ -43,7 +52,7 @@ export class Resolver implements IResolver {
         if(injects) {
             for(var inject in injects) {
                 let info = injects[inject];
-                params.push( container.get(info.name, info.optional))
+                params.push( container.get<any>(info.name, info.optional))
             }
         }
 

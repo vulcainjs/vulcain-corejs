@@ -10,20 +10,20 @@ export class MessageBus {
     private eventBus: IEventBusAdapter;
 
     constructor(private manager: CommandManager) {
-        this.commandBus = manager.container.get(DefaultServiceNames.CommandBusAdapter);
+        this.commandBus = manager.container.get<ICommandBusAdapter>(DefaultServiceNames.CommandBusAdapter);
         this.commandBus.listenForTask(manager.domain.name, manager.serviceName, manager.consumeTaskAsync.bind(manager));
 
-        this.eventBus = manager.container.get(DefaultServiceNames.EventBusAdapter);
+        this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
         this.eventBus.listenForEvent(manager.domain.name, manager.consumeEventAsync.bind(manager));
     }
 
     pushTask(command: CommandData) {
         command.status = "Pending";
         command.taskId = guid.v4();
-        this.commandBus.publishTask(command.domain, this.manager.serviceName, JSON.stringify(command));
+        this.commandBus.publishTask(command.domain, this.manager.serviceName, command);
     }
 
     sendEvent(response: CommandResponse) {
-        this.eventBus.sendEvent(response.domain, JSON.stringify(response));
+        this.eventBus.sendEvent(response.domain, response);
     }
 }

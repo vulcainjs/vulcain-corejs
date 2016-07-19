@@ -1,4 +1,5 @@
 import * as amqp from 'amqplib';
+import {EventData, CommandData} from '../pipeline/commands';
 
 export /**
  * RabbitAdapter
@@ -34,12 +35,12 @@ class RabbitAdapter {
         });
     }
 
-    sendEvent(domain:string, message:string) {
+    sendEvent(domain:string, event:EventData) {
         if (!this.channel) throw "error";
         domain = domain.toLowerCase() + "_events";
 
         this.channel.assertExchange(domain, 'fanout', { durable: false });
-        this.channel.publish(domain, '', new Buffer(message));
+        this.channel.publish(domain, '', new Buffer(JSON.stringify(event)));
     }
 
     listenForEvent(domain: string, handler: Function) {
@@ -53,12 +54,12 @@ class RabbitAdapter {
         });
     }
 
-    publishTask(domain:string, serviceId:string, message:string) {
+    publishTask(domain:string, serviceId:string, command:CommandData) {
         if (!this.channel) throw "error";
         domain = domain.toLowerCase();
 
         this.channel.assertExchange(domain, 'direct', { durable: false });
-        this.channel.publish(domain, serviceId, new Buffer(message), {persistent:true});
+        this.channel.publish(domain, serviceId, new Buffer(JSON.stringify(command)), {persistent:true});
     }
 
     listenForTask(domain: string, serviceId: string, handler: Function) {

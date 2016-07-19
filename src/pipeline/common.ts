@@ -69,11 +69,12 @@ export class HandlerFactory {
 
     register(app: Application, target: Function, actions: any, handlerMetadata: CommonMetadata) {
 
-        let handlerKey = app.domainName.toLowerCase();
+        let handlerKey = app.domain.name.toLowerCase();
 
         if (handlerMetadata.schema) {
             // test if exists
-            app.domain.getSchema(handlerMetadata.schema);
+            let tmp = app.domain.getSchema(handlerMetadata.schema);
+            handlerMetadata.schema = tmp.name;
         }
 
         app.container.injectScoped(target, handlerMetadata.serviceName || target.name );
@@ -113,6 +114,8 @@ export class HandlerFactory {
             return { handler: handler, metadata: info.metadata, method: info.methodName };
         }
         catch (e) {
+            console.log(`Unable to create handler for domain ${domain}, action ${action}`);
+            console.log(e);
             throw new Error(`Unable to create handler for domain ${domain}, action ${action}`);
         }
     }

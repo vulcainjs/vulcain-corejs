@@ -19,7 +19,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
 
-        let auth = (this.container.get(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
+        let auth = (this.container.get<Authentication>(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
         let self = this;
 
         // Query can have only two options:
@@ -36,7 +36,7 @@ export class ExpressAdapter extends AbstractAdapter {
             else {
                 command.action = command.action || "search";
                 command.limit = command.limit || 100;
-                command.page = command.page || 1;
+                command.page = command.page || 0;
             }
             this.executeRequest(this.executeQueryRequest, command, req, res);
         });

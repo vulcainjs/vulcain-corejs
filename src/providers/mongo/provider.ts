@@ -13,17 +13,19 @@ export class MongoProvider implements IProvider<any>
     private  _mongo;
     private _keyPropertyName:string;
 
-    constructor( @Inject("Logger")private _logger:Logger, private _schema:Schema, private uri:string, private options? )
-    {
-        if (!this._schema)
+    constructor( @Inject("Logger") private _logger: Logger, private uri: string, private options?) {
+    }
+
+    initializeWithSchema(schema:Schema) {
+        if (!schema)
             throw new Error("Schema is not set for the current provider.");
 
-        this._keyPropertyName = this._schema.getIdProperty();
+        this._keyPropertyName = schema.getIdProperty();
         let keys;
-        for (let p in this._schema.description.properties) {
-            if (!this._schema.description.properties.hasOwnProperty(p))
+        for (let p in schema.description.properties) {
+            if (!schema.description.properties.hasOwnProperty(p))
                 continue;
-            let prop = this._schema.description.properties[p];
+            let prop = schema.description.properties[p];
             if (prop.unique) {
                 if (!keys) keys = {};
                 keys[p] = prop.unique === true ? 1 : prop.unique;
@@ -32,8 +34,8 @@ export class MongoProvider implements IProvider<any>
         if (keys) {
             this.ensuresDbOpen()
                 .then(db => {
-                    let indexName = this._schema.name + "_uniqueIndex";
-                    db.createIndex(this._schema.name, keys,{ w: 1, background: true, name: indexName, unique: true })
+                    let indexName = schema.name + "_uniqueIndex";
+                    db.createIndex(schema.name, keys,{ w: 1, background: true, name: indexName, unique: true })
                         .catch(err => {
                             this._logger.log(err);
                         });
@@ -69,14 +71,14 @@ export class MongoProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAllAsync( options:ListOptions ) : Promise<Array<any>>
+    getAllAsync( schema:Schema, options:ListOptions ) : Promise<Array<any>>
     {
         return new Promise( async ( resolve, reject ) =>
             {
                 try
                 {
                     let db = await this.ensuresDbOpen();
-                    let cursor = db.collection(this._schema.name).find(options.query, null, options.page, options.limit);
+                    let cursor = db.collection(schema.name).find(options.query, null, options.page, options.limit);
                     cursor.toArray((err, res) => {
                         if(err)
                             reject(err);
@@ -92,12 +94,12 @@ export class MongoProvider implements IProvider<any>
         );
     }
 
-    findOneAsync(query) {
+    findOneAsync(schema:Schema, query) {
         var self = this;
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(this._schema.name).findOne(query,
+                let cursor = db.collection(schema.name).findOne(query,
                     (err, res) => {
                         if (err)
                             reject(err);
@@ -116,7 +118,7 @@ export class MongoProvider implements IProvider<any>
      * @param name
      * @returns {Promise}
      */
-    getAsync( name:string )
+    getAsync( schema:Schema, name:string )
     {
         var self = this;
         return new Promise( async ( resolve, reject ) =>
@@ -126,7 +128,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName|| "_id"] = name;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(this._schema.name).findOne(filter, (err, res) => {
+                let cursor = db.collection(schema.name).findOne(filter, (err, res) => {
                     if(err)
                         reject(err);
                     else
@@ -144,7 +146,7 @@ export class MongoProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    deleteAsync( old: string|any )
+    deleteAsync( schema:Schema, old: string|any )
     {
         if (!old)
             throw new Error("Argument is required");
@@ -162,7 +164,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName|| "_id"] = id;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(this._schema.name).remove(filter, (err, res) => {
+                let cursor = db.collection(schema.name).remove(filter, (err, res) => {
                     if(err)
                         reject(this.normalizeErrors(id, err));
                     else
@@ -192,7 +194,7 @@ export class MongoProvider implements IProvider<any>
      * @param entity
      * @returns {Promise}
      */
-    createAsync( entity )
+    createAsync(schema:Schema,  entity )
     {
         if (!entity)
             throw new Error("Entity is required");
@@ -203,7 +205,7 @@ export class MongoProvider implements IProvider<any>
             try
             {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(this._schema.name).insertOne(entity, (err) => {
+                let cursor = db.collection(schema.name).insertOne(entity, (err) => {
                     if(err)
                         reject(this.normalizeErrors(entity[this._keyPropertyName], err));
                     else
@@ -216,41 +218,13 @@ export class MongoProvider implements IProvider<any>
         } );
     }
 
-    private applyChanges(initial, entity)
-    {
-        let schemaDescription = this._schema.description;
-        for (let p in schemaDescription.properties) {
-            if(!schemaDescription.properties.hasOwnProperty(p)) continue;
-            let property = schemaDescription.properties[p];
-            if (property.unique) {
-                continue;
-            }
-            initial[p] = entity[p];
-        }
-        for (let r in schemaDescription.references)
-        {
-            if(!schemaDescription.references.hasOwnProperty(r)) continue;
-
-            let reference = schemaDescription.references[r];
-            if( reference.item === "any") {
-                initial[r] = entity[r];
-            }
-            else {
-                if(!entity[r] || !initial[r])
-                    initial[r] = entity[r];
-                else
-                    this.applyChanges(initial[r], entity[r]);
-            }
-        }
-    }
-
     /**
      * Update an entity
      * @param entity
      * @param old
      * @returns {Promise<T>}
      */
-    updateAsync(entity, old) {
+    updateAsync(schema:Schema, entity, old) {
         if (!entity)
             throw new Error("Entity is required");
 
@@ -260,13 +234,13 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName||"_id"] = id;
                 let db = await this.ensuresDbOpen();
-                let collection = db.collection(this._schema.name);
+                let collection = db.collection(schema.name);
                 let cursor = collection.findOne(filter, (err, initial) => {
                     if(err || !initial) {
                         reject(err);
                         return;
                     }
-                    this.applyChanges(initial, entity);
+                    initial = Object.assign(initial, entity);
                     initial._updated = new Date().toUTCString();
 
                     collection.updateOne(filter, initial, err =>

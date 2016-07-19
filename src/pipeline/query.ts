@@ -1,7 +1,7 @@
-import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonResponse, CommonHandlerMetadata, IManager} from './common';
+import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonResponse, CommonHandlerMetadata, IManager} from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
-import {Application} from '../application';
+import {Application, DefaultServiceNames} from '../application';
 import * as os from 'os';
 
 export interface Query extends CommonRequestData {
@@ -20,6 +20,10 @@ export interface QueryResponse extends CommonResponse{
 export interface QueryMetadata extends CommonHandlerMetadata {
 }
 
+export interface QueryActionMetadata extends CommonActionMetadata {
+    querySchema?: string;
+}
+
 export class QueryManager implements IManager {
     private _domain: Domain;
     private _hostname: string;
@@ -31,7 +35,7 @@ export class QueryManager implements IManager {
      */
     get domain() {
         if (!this._domain) {
-            this._domain = this.container.get("Domain");
+            this._domain = this.container.get<Domain>(DefaultServiceNames.Domain);
         }
         return this._domain;
     }
@@ -61,12 +65,13 @@ export class QueryManager implements IManager {
 
     private async validateRequestData(info, data) {
         let errors;
-        let schema = info.metadata.schema && this.domain.getSchema(info.metadata.schema);
+        let schema = info.metadata.querySchema && this.domain.getSchema(info.metadata.querySchema);
         if (schema) {
             errors = this.domain.validate(data, schema);
         }
-        if (!errors || errors.length === 0)
+        if (!errors || errors.length === 0) {
             errors = info.handler.validateModelAsync && await info.handler.validateModelAsync(data);
+        }
         return errors;
     }
 
