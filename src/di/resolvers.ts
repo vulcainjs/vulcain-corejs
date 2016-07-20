@@ -21,7 +21,7 @@ export interface IContainer {
     get<T>(name: string, optional?: boolean):T;
     resolve(fn, ...args);
     dispose();
-    useRabbitAdapter(address: string, usage?:BusUsage);
+    useRabbitBusAdapter(address: string, usage?: BusUsage);
     useMongoProvider(uri: string, mongoOptions?);
     useMemoryProvider(folder ?:string);
 }

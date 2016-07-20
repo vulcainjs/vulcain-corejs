@@ -21,7 +21,7 @@ export class DefaultServiceNames
     static "Logger" = "Logger";
     static "Provider" = "Provider";
     static "EventBusAdapter" = "EventBusAdapter";
-    static "CommandBusAdapter" = "CommandBusAdapter";
+    static "ActionBusAdapter" = "ActionBusAdapter";
     static "Domain" = "Domain";
     static "Application" = "ApplicationFactory";
     static "ServerAdapter" = "ServerAdapter";
@@ -119,7 +119,7 @@ export class Application
 
         let local = new LocalAdapter();
         let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter) || local;
-        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.CommandBusAdapter) || local;
+        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter) || local;
 
         eventBus.startAsync().then(() => {
             commandBus.startAsync().then(() => {

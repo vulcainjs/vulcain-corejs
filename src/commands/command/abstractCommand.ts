@@ -43,10 +43,12 @@ export abstract class AbstractCommand<T> {
 
     constructor( @Inject("Container") protected container: IContainer) { }
 
-    initializeProvider(schema: string) {
-        this.provider = this.container.get<IProvider<any>>(DefaultServiceNames.Provider);
-        this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-        this.provider.initializeWithSchema(this.schema);
+    setSchema(schema: string) {
+        if (schema && !this.provider) {
+            this.provider = this.container.get<IProvider<any>>(DefaultServiceNames.Provider);
+            this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
+            this.provider.initializeWithSchema(this.schema);
+        }
     }
 
     /**

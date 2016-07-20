@@ -68,7 +68,7 @@ export class RequestContext {
         return this.scopes && this.scopes.length > 0 && this.scopes[0] === "*";
     }
 
-    getCommand(name: string) {
-        return CommandFactory.get(name, this);
+    getCommand(name: string, schema?:string) {
+        return CommandFactory.get(name, this, schema);
     }
 }

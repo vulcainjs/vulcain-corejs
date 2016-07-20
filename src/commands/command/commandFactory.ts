@@ -47,11 +47,12 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static get(commandKey: string, context?): ICommand {
+    static get(commandKey: string, context?, schema?:string): ICommand {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
             let resolvedCommand = context ? context.container.resolve(cache.command): new (<any>cache.command)();
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context);
+            cmd.setSchemaOnCommand(schema);
             return cmd;
         }
         throw new Error(`Command ${commandKey} not found`);

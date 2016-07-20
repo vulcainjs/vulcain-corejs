@@ -4,16 +4,17 @@ import {IResolver, InstanceResolver, SingletonResolver, Resolver} from './resolv
 import {IContainer, BusUsage} from '../di/resolvers';
 import {DefaultServiceNames} from '../application';
 import {RabbitAdapter} from '../bus/rabbitAdapter'
+import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
 
-export class Container {
+export class Container implements IContainer {
 
     private resolvers: Map<string,IResolver> = new Map<string,IResolver>();
     public scope: Scope;
 
     constructor(private parent?: IContainer) {
-        this.scope = new Scope(parent && (<Container>parent).scope);
+        this.scope = new Scope(parent && (<any>parent).scope);
         this.injectInstance(this, "Container");
     }
 
@@ -22,12 +23,12 @@ export class Container {
         this.resolvers.clear();
     }
 
-    useRabbitAdapter(address:string, usage = BusUsage.all) {
+    useRabbitBusAdapter(address:string, usage = BusUsage.all) {
         let bus = new RabbitAdapter(address);
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)
-            this.injectInstance(bus, DefaultServiceNames.CommandBusAdapter);
+            this.injectInstance(bus, DefaultServiceNames.ActionBusAdapter);
     }
 
     useMongoProvider(uri: string, mongoOptions?) {
