@@ -68,7 +68,7 @@ export class RequestContext {
         return this.scopes && this.scopes.length > 0 && this.scopes[0] === "*";
     }
 
-    getCommand(name: string): ICommand {
+    getCommand(name: string) {
         return CommandFactory.get(name, this);
     }
 }

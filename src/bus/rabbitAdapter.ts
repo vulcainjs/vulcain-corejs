@@ -1,5 +1,5 @@
 import * as amqp from 'amqplib';
-import {EventData, CommandData} from '../pipeline/commands';
+import {EventData, ActionData} from '../pipeline/actions';
 
 export /**
  * RabbitAdapter
@@ -44,17 +44,18 @@ class RabbitAdapter {
     }
 
     listenForEvent(domain: string, handler: Function) {
+        let self = this;
         domain = domain.toLowerCase() + "_events";
         this.channel.assertExchange(domain, 'fanout', { durable: false });
         this.channel.assertQueue('', { exclusive: true }).then(queue => {
-            this.channel.bindQueue(queue.queue, domain, '');
-            this.channel.consume(queue.queue, async (msg) => {
+            self.channel.bindQueue(queue.queue, domain, '');
+            self.channel.consume(queue.queue, async (msg) => {
                 await handler(JSON.parse(msg.content.toString()));
             }, { noAck: true });
         });
     }
 
-    publishTask(domain:string, serviceId:string, command:CommandData) {
+    publishTask(domain:string, serviceId:string, command:ActionData) {
         if (!this.channel) throw "error";
         domain = domain.toLowerCase();
 
@@ -63,15 +64,16 @@ class RabbitAdapter {
     }
 
     listenForTask(domain: string, serviceId: string, handler: Function) {
+        let self = this;
         domain = domain.toLowerCase();
         this.channel.assertExchange(domain, 'direct', { durable: false });
         this.channel.assertQueue(domain, {durable:true }).then(queue => {
-            this.channel.bindQueue(queue.queue, domain, serviceId);
-            this.channel.prefetch(1);
+            self.channel.bindQueue(queue.queue, domain, serviceId);
+            self.channel.prefetch(1);
 
-            this.channel.consume(queue.queue, async (msg) => {
+            self.channel.consume(queue.queue, async (msg) => {
                 await handler(JSON.parse(msg.content.toString()));
-                this.channel.ack(msg);
+                self.channel.ack(msg);
             }, { noAck: false });
         });
     }

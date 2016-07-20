@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {CommandManager, CommandMetadata, ActionMetadata, EventMetadata, ConsumeEventMetadata} from './commands';
+import {CommandManager, ActionMetadata, ActionHandlerMetadata, EventMetadata, ConsumeEventMetadata} from './actions';
 import {QueryManager, QueryMetadata, QueryActionMetadata} from './query';
 import {Application} from '../application';
 import {Domain} from '../schemas/schema';
@@ -7,7 +7,7 @@ import {Domain} from '../schemas/schema';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
-export function CommandHandler(metadata: CommandMetadata) {
+export function ActionHandler(metadata: ActionHandlerMetadata) {
     return function (target: Function) {
         metadata.scope = metadata.scope || "?";
         let actions = Reflect.getMetadata(symActions, target.prototype) || {};

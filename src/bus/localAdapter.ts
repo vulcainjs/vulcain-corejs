@@ -1,4 +1,4 @@
-import {EventData, CommandData} from '../pipeline/commands';
+import {EventData, ActionData} from '../pipeline/actions';
 
 export
 class LocalAdapter {
@@ -20,7 +20,7 @@ class LocalAdapter {
         this.eventHandler = handler;
     }
 
-    publishTask(domain:string, serviceId:string, command:CommandData) {
+    publishTask(domain:string, serviceId:string, command:ActionData) {
        let self = this;
         setTimeout(function () {
             self.commandHandler(command);

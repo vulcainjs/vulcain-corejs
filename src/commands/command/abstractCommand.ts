@@ -3,6 +3,12 @@ import * as types from './types';
 import * as os from 'os';
 import {DynamicConfiguration, IDynamicProperty, Logger} from '@sovinty/vulcain-configurations'
 import {ExecutionResult} from './executionResult'
+import {Schema} from '../../schemas/schema';
+import {IProvider} from '../../providers/provider';
+import {DefaultServiceNames} from '../../application';
+import {IContainer} from '../../di/resolvers';
+import {Domain} from '../../schemas/schema';
+import {Inject} from '../../di/annotations';
 
 /**
  * command
@@ -32,6 +38,16 @@ export interface ICommandContext {
 export abstract class AbstractCommand<T> {
     private _localProxy: string;
     public context:ICommandContext;
+    provider: IProvider<any>;
+    schema: Schema;
+
+    constructor( @Inject("Container") protected container: IContainer) { }
+
+    initializeProvider(schema: string) {
+        this.provider = this.container.get<IProvider<any>>(DefaultServiceNames.Provider);
+        this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
+        this.provider.initializeWithSchema(this.schema);
+    }
 
     /**
      * log always

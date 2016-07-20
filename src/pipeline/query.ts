@@ -1,8 +1,9 @@
-import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonResponse, CommonHandlerMetadata, IManager} from './common';
+import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application, DefaultServiceNames} from '../application';
 import * as os from 'os';
+import {RequestContext} from '../servers/requestContext';
 
 export interface Query extends CommonRequestData {
     data: any;
@@ -10,7 +11,7 @@ export interface Query extends CommonRequestData {
     page?: number;
 }
 
-export interface QueryResponse extends CommonResponse{
+export interface QueryResponse extends CommonRequestResponse{
     limit?: number;
     page?: number;
     totalPages?: number;
@@ -46,7 +47,7 @@ export class QueryManager implements IManager {
 
     private createResponse(query: Query, error?: ErrorResponse) {
         let res: QueryResponse = {
-            context: query.context,
+            userContext: query.userContext,
             source: this._hostname,
             schema: query.schema,
             domain: query.domain,
@@ -75,7 +76,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: Query, ctx) {
+    async runAsync(query: Query, ctx:RequestContext) {
         let info = QueryManager.handlerFactory.getInfo<QueryMetadata>(this.container, query.domain, query.action);
 
         try {
@@ -83,7 +84,7 @@ export class QueryManager implements IManager {
             if (errors && errors.length > 0)
                 return this.createResponse(query, { message: "Validation errors", errors: errors });
             if (ctx.user)
-                query.context = { id: ctx.user.id, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
+                query.userContext = { id: ctx.user.id, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.data);

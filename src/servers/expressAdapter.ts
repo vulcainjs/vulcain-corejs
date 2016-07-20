@@ -49,6 +49,9 @@ export class ExpressAdapter extends AbstractAdapter {
         this.app.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
         });
+
+        this.app.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {
+        });
     }
 
     private normalizeCommand(req: express.Request) {

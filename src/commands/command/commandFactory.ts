@@ -33,7 +33,7 @@ export function Command(config: CommandConfiguration={}, commandKey?: string, co
         commandGroup = commandGroup || "hystrix";
         commandKey = commandKey || command.name;
 
-        let properties = new CommandProperties(commandKey, commandGroup, config);        
+        let properties = new CommandProperties(commandKey, commandGroup, config);
         let metrics = CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
         let circuitBreaker = CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
         hystrixCommandsCache.set(commandKey, { properties, command });
@@ -47,7 +47,7 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static get(commandKey: string, context?) {
+    static get(commandKey: string, context?): ICommand {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
             let resolvedCommand = context ? context.container.resolve(cache.command): new (<any>cache.command)();

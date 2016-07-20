@@ -19,7 +19,7 @@ export interface CommonRequestData {
     action: string;
     domain: string;
     schema: string;
-    context?: {
+    userContext?: {
         id?: string;
         name?: string;
         scopes?: Array<string>;
@@ -27,8 +27,8 @@ export interface CommonRequestData {
     };
 }
 
-export interface CommonResponse {
-    context: any,
+export interface CommonRequestResponse {
+    userContext: any,
     source: string;
     domain: string;
     action: string;
@@ -48,28 +48,28 @@ export interface CommonMetadata {
     serviceName?: string;
 }
 
-export interface CommonHandlerMetadata extends CommonMetadata{
+export interface CommonHandlerMetadata extends CommonMetadata {
     scope: string;
 }
 
 export interface IManager {
     container: IContainer;
     getMetadata(command: CommonRequestData): CommonMetadata;
-    runAsync(command: CommonRequestData, ctx): Promise<CommonResponse>;
+    runAsync(command: CommonRequestData, ctx): Promise<CommonRequestResponse>;
 }
 
-interface HandlerItem {
+export interface HandlerItem {
     methodName: string;
     handler;
     metadata: CommonMetadata;
 }
 
 export class HandlerFactory {
-    private handlers: Map<string,HandlerItem> = new Map<string, HandlerItem>();
+    handlers: Map<string,HandlerItem> = new Map<string, HandlerItem>();
 
     register(app: Application, target: Function, actions: any, handlerMetadata: CommonMetadata) {
 
-        let handlerKey = app.domain.name.toLowerCase();
+        let domain = app.domain.name.toLowerCase();
 
         if (handlerMetadata.schema) {
             // test if exists
@@ -84,6 +84,10 @@ export class HandlerFactory {
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
             actionMetadata.action = actionMetadata.action || action;
 
+            let handlerKey = domain + "." + actionMetadata.action.toLowerCase();
+            if (this.handlers.has(handlerKey))
+                console.log(`Duplicate action ${actionMetadata.action} for domain ${domain}`);
+
             if (actionMetadata.schema) {
                 // test if exists
                 app.domain.getSchema(handlerMetadata.schema);
@@ -95,7 +99,7 @@ export class HandlerFactory {
                 metadata: Object.assign({}, handlerMetadata, actionMetadata),
                 handler: target
             }
-            this.handlers.set(handlerKey + "." + actionMetadata.action.toLowerCase(), item);
+            this.handlers.set(handlerKey, item);
         }
     }
 
@@ -111,7 +115,7 @@ export class HandlerFactory {
 
         try {
             let handler = container.resolve(info.handler);
-            return { handler: handler, metadata: info.metadata, method: info.methodName };
+            return { handler: handler, metadata: <T>info.metadata, method: info.methodName };
         }
         catch (e) {
             console.log(`Unable to create handler for domain ${domain}, action ${action}`);

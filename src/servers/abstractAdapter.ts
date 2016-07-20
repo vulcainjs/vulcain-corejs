@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as os from 'os';
 import * as http from 'http';
 import {IContainer} from '../di/resolvers';
-import {CommandManager, CommandMetadata} from '../pipeline/commands';
+import {CommandManager, ActionMetadata} from '../pipeline/actions';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
 import {BadRequestError, Logger} from '@sovinty/vulcain-configurations';
@@ -45,7 +45,7 @@ export abstract class AbstractAdapter {
             }
 
             try {
-                let metadata = <CommandMetadata>manager.getMetadata(command);
+                let metadata = <ActionMetadata>manager.getMetadata(command);
                 ctx.logger = self._logger;
 
                 let code;

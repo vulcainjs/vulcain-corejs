@@ -5,9 +5,9 @@ export * from './application'
 export {Conventions} from './utils/conventions';
 
 export * from './pipeline/annotations'
-export {ActionMetadata, CommandData, CommandMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/commands';
+export {ActionMetadata, ActionData, ActionHandlerMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
 export {Query, QueryMetadata, QueryResponse} from './pipeline/query';
-export {AbstractCommandHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
+export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
 
 export * from './bus/busAdapter'
 export * from './bus/rabbitAdapter'
@@ -28,4 +28,4 @@ export {HystrixSSEStream} from './commands/http/hystrixSSEStream'
 export {CommandRuntimeError, TimeoutError} from './commands/command/command'
 export {IHttpRequest, IHttpResponse} from './commands/command/types'
 
-export {DefaultCommandHandler, DefaultQueryHandler} from './defaults/crudHandlers';
+export {DefaultActionHandler, DefaultQueryHandler} from './defaults/crudHandlers';
