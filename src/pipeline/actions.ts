@@ -109,13 +109,19 @@ export class CommandManager implements IManager {
         if (schema) {
             errors = this.domain.validate(data, schema);
         }
-        if (!errors || errors.length === 0)
-            errors = info.handler.validateModelAsync && await info.handler.validateModelAsync(data);
+        if (!errors || errors.length === 0) {
+            // Search if a method naming validate<schema>[Async] exists
+            let methodName = 'validate' + info.metadata.schema;
+            let altMethodName = methodName + 'Async';
+            errors = info.handler[methodName] && await info.handler[methodName](data);
+            if(!errors)
+                errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+        }
         return errors;
     }
 
     getMetadata(command: CommonRequestData) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(this.container, command.domain, command.action);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(null, command.domain, command.action);
         return info.metadata;
     }
 

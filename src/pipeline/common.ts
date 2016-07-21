@@ -79,10 +79,14 @@ export class HandlerFactory {
 
         app.container.injectScoped(target, handlerMetadata.serviceName || target.name );
 
-        for (let action in actions) {
+        for (const action in actions) {
             let actionMetadata: CommonActionMetadata = actions[action];
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
-            actionMetadata.action = actionMetadata.action || action;
+            if (!actionMetadata.action) {
+                let tmp = action;
+                if (tmp.endsWith("Async")) tmp = tmp.substr(0, tmp.length - 5);
+                actionMetadata.action = tmp;
+            }
 
             let handlerKey = domain + "." + actionMetadata.action.toLowerCase();
             if (this.handlers.has(handlerKey))
@@ -90,7 +94,8 @@ export class HandlerFactory {
 
             if (actionMetadata.schema) {
                 // test if exists
-                app.domain.getSchema(handlerMetadata.schema);
+                let tmp = app.domain.getSchema(actionMetadata.schema);
+                actionMetadata.schema = tmp.name;
             }
 
             // Merge metadata
@@ -114,7 +119,7 @@ export class HandlerFactory {
         }
 
         try {
-            let handler = container.resolve(info.handler);
+            let handler = container && container.resolve(info.handler);
             return { handler: handler, metadata: <T>info.metadata, method: info.methodName };
         }
         catch (e) {

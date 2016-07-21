@@ -22,10 +22,10 @@ export class MessageBus {
     }
 
     constructor(private manager: CommandManager) {
-        this.commandBus = manager.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter) || new LocalAdapter();
+        this.commandBus = manager.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter);
         this.commandBus.listenForTask(manager.domain.name, manager.serviceName, manager.consumeTaskAsync.bind(manager));
 
-        this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter) || new LocalAdapter();
+        this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
     }
 
     private consumeEventAsync(event: EventData) {

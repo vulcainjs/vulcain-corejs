@@ -118,8 +118,16 @@ export class Application
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
 
         let local = new LocalAdapter();
-        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter) || local;
-        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter) || local;
+        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
+        if (!eventBus) {
+            this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
+            eventBus = local;
+        }
+        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+        if (!commandBus) {
+            this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
+            commandBus = local;
+        }
 
         eventBus.startAsync().then(() => {
             commandBus.startAsync().then(() => {
