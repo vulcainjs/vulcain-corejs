@@ -4,8 +4,9 @@ import {Domain} from '../schemas/schema';
 import {Application, DefaultServiceNames} from '../application';
 import * as os from 'os';
 import {RequestContext} from '../servers/requestContext';
+import {CommandRuntimeError} from '../commands/command/command';
 
-export interface Query extends CommonRequestData {
+export interface QueryData extends CommonRequestData {
     data: any;
     limit?: number;
     page?: number;
@@ -45,7 +46,7 @@ export class QueryManager implements IManager {
         this._hostname = os.hostname();
     }
 
-    private createResponse(query: Query, error?: ErrorResponse) {
+    private createResponse(query: QueryData, error?: ErrorResponse) {
         let res: QueryResponse = {
             userContext: query.userContext,
             source: this._hostname,
@@ -76,7 +77,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: Query, ctx:RequestContext) {
+    async runAsync(query: QueryData, ctx:RequestContext) {
         let info = QueryManager.handlerFactory.getInfo<QueryMetadata>(this.container, query.domain, query.action);
 
         try {
@@ -95,7 +96,8 @@ export class QueryManager implements IManager {
             return res;
         }
         catch (e) {
-            return this.createResponse(query, { message: e.message || e.toString() });
+            let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
+            return this.createResponse(query, { message: error });
         }
     }
 }

@@ -2,7 +2,7 @@
 import {Schema} from "../schemas/schema";
 
 export interface ListOptions {
-    limit:number;       // 0 for all
+    maxByPage?:number;  // 0 for all
     page?:number;       //
     length?:number;
     pages?:number;

@@ -2,13 +2,13 @@
 import 'reflect-metadata'
 
 export class SchemaBuilder {
-    
+
     static build(obj) {
         if(!obj) return null;
         let schema:any = {properties:{}, references:{}};
-        schema.name = obj.name;    
+        schema.name = obj.name;
 
-        const symModel = Symbol.for("design:model");        
+        const symModel = Symbol.for("design:model");
         let modelAttr = Reflect.getMetadata(symModel, obj);
         if(modelAttr) {
             for(let n of Object.keys( modelAttr)) {
@@ -19,6 +19,8 @@ export class SchemaBuilder {
                     schema[n] = p;
             }
         }
+
+        schema.storageName = schema.storageName || schema.name;
 
         const symProperties = Symbol.for("design:properties");
         let properties = Reflect.getOwnMetadata(symProperties, obj.prototype);
@@ -42,15 +44,15 @@ export class SchemaBuilder {
             else
                 throw new Error("No property id define for schema " + schema.name);
         }
-        const symReferences = Symbol.for("design:references");       
+        const symReferences = Symbol.for("design:references");
         let references = Reflect.getOwnMetadata(symReferences, obj.prototype);
         for(let n in references) {
-            let refAttr = references[n];   
+            let refAttr = references[n];
             if(refAttr) {
                 schema.references[n] = refAttr;
             }
         }
-        
+
         return schema;
     }
 }

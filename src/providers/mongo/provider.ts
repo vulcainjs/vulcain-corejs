@@ -34,7 +34,7 @@ export class MongoProvider implements IProvider<any>
         if (keys) {
             this.ensuresDbOpen()
                 .then(db => {
-                    let indexName = schema.name + "_uniqueIndex";
+                    let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.name, keys,{ w: 1, background: true, name: indexName, unique: true })
                         .catch(err => {
                             this._logger.log(err);
@@ -78,7 +78,7 @@ export class MongoProvider implements IProvider<any>
                 try
                 {
                     let db = await this.ensuresDbOpen();
-                    let cursor = db.collection(schema.name).find(options.query, null, options.page, options.limit);
+                    let cursor = db.collection(schema.description.storageName).find(options.query, null, options.page, options.maxByPage);
                     cursor.toArray((err, res) => {
                         if(err)
                             reject(err);
@@ -99,7 +99,7 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.name).findOne(query,
+                let cursor = db.collection(schema.description.storageName).findOne(query,
                     (err, res) => {
                         if (err)
                             reject(err);
@@ -128,7 +128,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName|| "_id"] = name;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.name).findOne(filter, (err, res) => {
+                let cursor = db.collection(schema.description.storageName).findOne(filter, (err, res) => {
                     if(err)
                         reject(err);
                     else
@@ -164,7 +164,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName|| "_id"] = id;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.name).remove(filter, (err, res) => {
+                let cursor = db.collection(schema.description.storageName).remove(filter, (err, res) => {
                     if(err)
                         reject(this.normalizeErrors(id, err));
                     else
@@ -205,7 +205,7 @@ export class MongoProvider implements IProvider<any>
             try
             {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.name).insertOne(entity, (err) => {
+                let cursor = db.collection(schema.description.storageName).insertOne(entity, (err) => {
                     if(err)
                         reject(this.normalizeErrors(entity[this._keyPropertyName], err));
                     else
@@ -234,7 +234,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this._keyPropertyName||"_id"] = id;
                 let db = await this.ensuresDbOpen();
-                let collection = db.collection(schema.name);
+                let collection = db.collection(schema.description.storageName);
                 let cursor = collection.findOne(filter, (err, initial) => {
                     if(err || !initial) {
                         reject(err);

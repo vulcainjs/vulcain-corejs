@@ -1,8 +1,7 @@
-import {ActionData, CommandResponse, ActionMetadata, EventData} from './actions';
+import {ActionData, ActionResponse, ActionMetadata, EventData} from './actions';
 import {RequestContext} from '../servers/requestContext';
-import {Query, QueryMetadata} from './query';
+import {QueryData, QueryMetadata} from './query';
 import 'reflect-metadata';
-
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
@@ -33,7 +32,7 @@ export abstract class AbstractEventHandler {
 }
 
 export abstract class AbstractQueryHandler {
-    query: Query;
+    query: QueryData;
     requestContext: RequestContext;
 
     get metadata(): QueryMetadata {

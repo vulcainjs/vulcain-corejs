@@ -5,8 +5,8 @@ export * from './application'
 export {Conventions} from './utils/conventions';
 
 export * from './pipeline/annotations'
-export {ActionMetadata, ActionData, ActionHandlerMetadata, CommandResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
-export {Query, QueryMetadata, QueryResponse} from './pipeline/query';
+export {ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
+export {QueryData,QueryActionMetadata, QueryMetadata, QueryResponse} from './pipeline/query';
 export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
 
 export * from './bus/busAdapter'

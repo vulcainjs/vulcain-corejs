@@ -7,7 +7,7 @@ import {IContainer} from '../di/resolvers';
 import {Authentication} from './expressAuthentication';
 import {DefaultServiceNames} from '../application';
 import {Conventions} from '../utils/conventions';
-import {Query} from '../pipeline/query';
+import {QueryData} from '../pipeline/query';
 const bodyParser = require('body-parser');
 
 export class ExpressAdapter extends AbstractAdapter {
@@ -27,26 +27,20 @@ export class ExpressAdapter extends AbstractAdapter {
         //  - search query with a query expression in data
         this.app.get(Conventions.defaultUrlprefix + '/:domain/:id?', auth, async (req: express.Request, res: express.Response) => {
 
-            let query: Query = <any>{ domain: this.domainName};
+            let query: QueryData = <any>{ domain: this.domainName};
 
             if (req.params.id !== undefined) {
                 query.action = "get";
                 query.data = { id: req.params.id };
             }
             else {
-                query.action = req.query.action || "search";
-                query.limit = req.query.limit || 100;
-                query.page = req.query.page || 0;
+                query.action = req.query.$action || "search";
+                query.limit = req.query.$limit || 100;
+                query.page = req.query.$page || 0;
                 query.data = {};
                 Object.keys(req.query).forEach(name => {
-                    switch (name) {
-                        case "limit":
-                        case "page":
-                        case "action":
-                        case "domain":
-                            break;
-                        default:
-                            query.data = req.query[name];
+                    if (name && name[0] !== "$") {
+                        query.data = req.query[name];
                     }
                 });
             }

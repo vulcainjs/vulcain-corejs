@@ -7,6 +7,7 @@ export interface ModelOptions {
     bind?: ((data) => any)|boolean;
     serialize?: ((entity) => any)|boolean;
     check?: (entity) => string;
+    storageName?: string;
 }
 
 export function Model(name:string, options?: ModelOptions) {

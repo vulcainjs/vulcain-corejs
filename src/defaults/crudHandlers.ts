@@ -1,8 +1,8 @@
 import {ActionData} from '../pipeline/actions';
-import {ActionHandler, Action, EventHandler, Consume} from '../pipeline/annotations';
+import {ActionHandler, Action, EventHandler, Consume, Query} from '../pipeline/annotations';
 import {ValidationError, RuntimeError} from '../pipeline/common';
 import {Property, Model} from '../schemas/annotations'
-import {AbstractCommand, AbstractActionHandler, Command, AbstractQueryHandler, Domain, Schema, DefaultServiceNames, Inject, IContainer, IProvider} from '../index';
+import {AbstractCommand, AbstractActionHandler, QueryData, Command, AbstractQueryHandler, Domain, Schema, DefaultServiceNames, Inject, IContainer, IProvider} from '../index';
 
 @Command({executionTimeoutInMilliseconds: 1500})
 class DefaultRepositoryCommand extends AbstractCommand<any> {
@@ -81,16 +81,16 @@ export class DefaultQueryHandler extends AbstractQueryHandler {
         super();
     }
 
-    @Action({ action: "get" })
+    @Query({ action: "get" })
     getAsync(id: any) {
         let cmd = this.requestContext.getCommand("DefaultRepositoryCommand");
-        return cmd.executeAsync(this.metadata.schema, "get", id);
+        return cmd.executeAsync("get", id);
     }
 
-    @Action({ action: "search" })
-    getAllAsync(query: any) {
-        let options = { limit: this.query.limit, page: this.query.page, query:query };
+    @Query({ action: "search" })
+    getAllAsync(query: any, maxByPage:number=0, page?:number) : Promise<Array<any>> {
+        let options = { maxByPage: maxByPage || this.query.limit, page: page || this.query.page, query:query };
         let cmd = this.requestContext.getCommand("DefaultRepositoryCommand");
-        return cmd.executeAsync(this.metadata.schema, "get", options);
+        return cmd.executeAsync( "get", options);
     }
 }

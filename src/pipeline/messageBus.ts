@@ -1,4 +1,4 @@
-import {ActionData, CommandResponse, CommandManager, EventData} from './actions';
+import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
 import {ErrorResponse} from './common';
 const guid = require('node-uuid');
 import {ICommandBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
@@ -39,7 +39,7 @@ export class MessageBus {
         this.commandBus.publishTask(command.domain, this.manager.serviceName, command);
     }
 
-    sendEvent(response: CommandResponse) {
+    sendEvent(response: ActionResponse) {
         this.eventBus.sendEvent(response.domain, response);
     }
 }

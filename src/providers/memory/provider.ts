@@ -27,7 +27,7 @@ export class MemoryProvider implements IProvider<any>
             if (!fs.existsSync(this.dataFolder))
                 fs.mkdirSync(this.dataFolder);
 
-            this._saveToFile = this.dataFolder + "/" + schema.name + ".json";
+            this._saveToFile = this.dataFolder + "/" + schema.description.storageName + ".json";
 
             if (fs.existsSync(this._saveToFile)) {
                 this._data = JSON.parse(fs.readFileSync(this._saveToFile, "UTF-8"));
@@ -50,10 +50,10 @@ export class MemoryProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAllAsync(schema: Schema, options: ListOptions): Promise<Array<any>> {
-        options = options || { limit: -1 };
+        options = options || { maxByPage: -1 };
         return new Promise((resolve, reject) => {
             try {
-                let result = Array.from(this.take(schema, this._data[schema.name], options));
+                let result = Array.from(this.take(schema, this._data[schema.description.storageName], options));
                 options.length = result.length;
                 resolve(result);
             }
@@ -67,7 +67,7 @@ export class MemoryProvider implements IProvider<any>
 
     public *take(schema: Schema, list, options: ListOptions) {
         let self = this;
-        let take = options.limit || -1;
+        let take = options.maxByPage || -1;
         let skip = take * (options.page || 0);
         let cx = 0;
         if (list) {
@@ -188,7 +188,7 @@ export class MemoryProvider implements IProvider<any>
         var self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.name];
+                let list = self._data[schema.description.storageName];
                 resolve(list && MemoryProvider.clone(list[name] || []));
             }
             catch (err) {
@@ -215,7 +215,7 @@ export class MemoryProvider implements IProvider<any>
                 else
                     id = schema.getId(old);
 
-                let list = self._data[schema.name];
+                let list = self._data[schema.description.storageName];
                 if (list && list[id]) {
                     delete list[id];
                     self.save(schema);
@@ -245,10 +245,10 @@ export class MemoryProvider implements IProvider<any>
 
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.name];
+                let list = self._data[schema.description.storageName];
                 if (!list) {
                     list = {};
-                    self._data[schema.name] = list;
+                    self._data[schema.description.storageName] = list;
                 }
                 let name = schema.getId(entity);
                 if (list[name]) {
@@ -280,7 +280,7 @@ export class MemoryProvider implements IProvider<any>
         let self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.name];
+                let list = self._data[schema.description.storageName];
                 let name = schema.getId(entity);
                 if (!list || !list[name]) {
                     reject("Entity doesn't exist. " + name);
