@@ -7,6 +7,9 @@ import {RabbitAdapter} from '../bus/rabbitAdapter'
 import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
+import {VulcainLogger} from '@sovinty/vulcain-configurations'
+import {Domain} from '../schemas/schema';
+import {Application} from '../application';
 
 export class Container implements IContainer {
 
@@ -174,3 +177,16 @@ export class Container implements IContainer {
     }
 }
 
+export class TestContainer extends Container {
+    constructor(public domainName: string, addServices?: (Container: IContainer) => void) {
+        super();
+        this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
+        this.injectSingleton(MemoryProvider, DefaultServiceNames.Provider);
+        let domain = new Domain(domainName);
+        this.injectInstance(domain, DefaultServiceNames.Domain);
+
+        addServices && addServices(this);
+        Application.Preloads.forEach(fn => fn(this, domain));
+        Application.Preloads = [];
+    }
+}

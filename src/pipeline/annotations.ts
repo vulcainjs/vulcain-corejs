@@ -12,8 +12,8 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = Reflect.getMetadata(symActions, target.prototype) || {};
 
-        Application.Preloads.push((app) => {
-            CommandManager.commandHandlersFactory.register(app, target, actions, metadata);
+        Application.Preloads.push((container, domain) => {
+            CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }
@@ -33,8 +33,8 @@ export function QueryHandler(metadata: QueryMetadata) {
 
         let actions = Reflect.getMetadata(symActions, target.prototype) || {};
 
-        Application.Preloads.push((app) => {
-            QueryManager.handlerFactory.register(app, target, actions, metadata);
+        Application.Preloads.push((container, domain) => {
+            QueryManager.handlerFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }
@@ -53,8 +53,8 @@ export function EventHandler(metadata: EventMetadata) {
 
         let actions = Reflect.getMetadata(symActions, target.prototype) || {};
 
-        Application.Preloads.push((app) => {
-            CommandManager.eventHandlersFactory.register(app, target, actions, metadata);
+        Application.Preloads.push((container, domain) => {
+            CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }

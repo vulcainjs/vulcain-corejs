@@ -16,6 +16,7 @@ export * from './providers/memory/provider'
 export * from './providers/mongo/provider'
 
 export {IContainer} from './di/resolvers';
+export {TestContainer} from './di/containers';
 export {Inject, Injectable, LifeTime} from './di/annotations';
 
 export {IProvider, ListOptions} from './providers/provider'

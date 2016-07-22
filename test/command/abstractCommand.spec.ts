@@ -21,7 +21,7 @@ class MyCommand extends AbstractCommand<any> {
 describe("AbstractCommand", function() {
     it("should create a valid url", function() {
 
-        var command = new MyCommand();
+        var command = new MyCommand(null);
         expect(command.testCreateUrl("p", "a", "t", "h", { field: "test" })).to.be.equal("http://localhost:80/p/a/t/h?field=test");
     });
 

@@ -105,11 +105,16 @@ export class CommandManager implements IManager {
 
     private async validateRequestData(info, data) {
         let errors;
+
         let schema = info.metadata.schema && this.domain.getSchema(info.metadata.schema);
         if (schema) {
             errors = this.domain.validate(data, schema);
         }
+
         if (!errors || errors.length === 0) {
+            // Custom binding if any
+            data = schema.bind(data);
+
             // Search if a method naming validate<schema>[Async] exists
             let methodName = 'validate' + info.metadata.schema;
             let altMethodName = methodName + 'Async';
@@ -117,6 +122,7 @@ export class CommandManager implements IManager {
             if(!errors)
                 errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
         }
+
         return errors;
     }
 

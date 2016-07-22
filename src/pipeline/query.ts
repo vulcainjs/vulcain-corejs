@@ -8,12 +8,12 @@ import {CommandRuntimeError} from '../commands/command/command';
 
 export interface QueryData extends CommonRequestData {
     data: any;
-    limit?: number;
+    maxByPage?: number;
     page?: number;
 }
 
 export interface QueryResponse extends CommonRequestResponse{
-    limit?: number;
+    maxByPage?: number;
     page?: number;
     totalPages?: number;
     total?: number;
@@ -54,7 +54,7 @@ export class QueryManager implements IManager {
             domain: query.domain,
             action: query.action,
             error: error,
-            limit: query.limit,
+            maxByPage: query.maxByPage,
             page: query.page
         }
         return res;

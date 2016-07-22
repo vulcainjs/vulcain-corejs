@@ -50,7 +50,7 @@ export class Schema {
      * @returns {null|any|{}}
      */
     bind(origin, old?)  {
-        return this.domain.bind(origin, this.description, old);
+        return this.domain.bind(origin, this, old);
     }
 
     /**

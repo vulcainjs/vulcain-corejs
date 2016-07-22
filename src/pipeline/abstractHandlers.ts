@@ -1,6 +1,6 @@
 import {ActionData, ActionResponse, ActionMetadata, EventData} from './actions';
 import {RequestContext} from '../servers/requestContext';
-import {QueryData, QueryMetadata} from './query';
+import {QueryData, QueryMetadata, QueryActionMetadata} from './query';
 import 'reflect-metadata';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -35,7 +35,7 @@ export abstract class AbstractQueryHandler {
     query: QueryData;
     requestContext: RequestContext;
 
-    get metadata(): QueryMetadata {
+    get metadata(): QueryActionMetadata {
         return Reflect.getMetadata(symMetadata, this.constructor);
     }
     get metadataActions() {

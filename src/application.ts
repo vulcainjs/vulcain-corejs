@@ -74,7 +74,7 @@ export class Application
         this._basePath = this.findBasePath();
         this._container = container || new Container();
         this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
-        this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
+        this._container.injectSingleton(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
     }
 
@@ -135,7 +135,7 @@ export class Application
                 this.registerServicesInternal();
                 this.registerHandlersInternal();
 
-                Application.Preloads.forEach(fn => fn(this));
+                Application.Preloads.forEach(fn => fn(this.container, this.domain));
                 Application.Preloads = null;
 
                 this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true) || new ExpressAdapter(this.domain.name, this._container);

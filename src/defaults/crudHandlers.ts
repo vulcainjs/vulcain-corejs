@@ -9,7 +9,7 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     // Execute command
     async runAsync(action: string, data) {
-        return this[action](this.schema, data);
+        return this[action](data);
     }
 
     create( entity: any) {
@@ -31,14 +31,14 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
         return this.provider.deleteAsync(this.schema, entity[keyProperty]);
     }
 
-    get(id: any) {
+    get(data: any) {
         let keyProperty = this.schema.getIdProperty();
         let query = {};
-        query[keyProperty] = id;
+        query[keyProperty] = data.id;
         return this.provider.findOneAsync(this.schema, query);
     }
 
-    getAllAsync(options: any) {
+    search(options: any) {
         return this.provider.getAllAsync(this.schema, options);
     }
 }
@@ -83,14 +83,14 @@ export class DefaultQueryHandler extends AbstractQueryHandler {
 
     @Query({ action: "get" })
     getAsync(id: any) {
-        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand");
+        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.executeAsync("get", id);
     }
 
     @Query({ action: "search" })
     getAllAsync(query: any, maxByPage:number=0, page?:number) : Promise<Array<any>> {
-        let options = { maxByPage: maxByPage || this.query.limit, page: page || this.query.page, query:query };
-        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand");
-        return cmd.executeAsync( "get", options);
+        let options = { maxByPage: maxByPage || this.query.maxByPage, page: page || this.query.page, query:query };
+        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
+        return cmd.executeAsync( "search", options);
     }
 }

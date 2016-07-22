@@ -35,12 +35,12 @@ export class ExpressAdapter extends AbstractAdapter {
             }
             else {
                 query.action = req.query.$action || "search";
-                query.limit = req.query.$limit || 100;
+                query.maxByPage = req.query.$maxByPage || 100;
                 query.page = req.query.$page || 0;
                 query.data = {};
                 Object.keys(req.query).forEach(name => {
                     if (name && name[0] !== "$") {
-                        query.data = req.query[name];
+                        query.data[name] = req.query[name];
                     }
                 });
             }
@@ -62,12 +62,12 @@ export class ExpressAdapter extends AbstractAdapter {
 
     private normalizeCommand(req: express.Request) {
         let command = req.body;
-        command.domain = command.domain || req.params.domain;
 
         // Body contains only data -> create a new command object
         if (!command.action && !command.data && !command.domain) {
             command = { data: command };
         }
+        command.domain = command.domain || req.params.domain;
         command.action = command.action || req.params.action;
         command.data = command.data || {};
         return command;

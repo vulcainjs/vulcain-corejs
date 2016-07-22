@@ -1,6 +1,7 @@
 
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
+import {Domain} from '../schemas/schema';
 
 export class RuntimeError extends Error { }
 
@@ -67,17 +68,17 @@ export interface HandlerItem {
 export class HandlerFactory {
     handlers: Map<string,HandlerItem> = new Map<string, HandlerItem>();
 
-    register(app: Application, target: Function, actions: any, handlerMetadata: CommonMetadata) {
+    register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata) {
 
-        let domain = app.domain.name.toLowerCase();
+        let domainName = domain.name.toLowerCase();
 
         if (handlerMetadata.schema) {
             // test if exists
-            let tmp = app.domain.getSchema(handlerMetadata.schema);
+            let tmp = domain.getSchema(handlerMetadata.schema);
             handlerMetadata.schema = tmp.name;
         }
 
-        app.container.injectScoped(target, handlerMetadata.serviceName || target.name );
+        container.injectScoped(target, handlerMetadata.serviceName || target.name );
 
         for (const action in actions) {
             let actionMetadata: CommonActionMetadata = actions[action];
@@ -88,13 +89,13 @@ export class HandlerFactory {
                 actionMetadata.action = tmp;
             }
 
-            let handlerKey = domain + "." + actionMetadata.action.toLowerCase();
+            let handlerKey = domainName + "." + actionMetadata.action.toLowerCase();
             if (this.handlers.has(handlerKey))
                 console.log(`Duplicate action ${actionMetadata.action} for domain ${domain}`);
 
             if (actionMetadata.schema) {
                 // test if exists
-                let tmp = app.domain.getSchema(actionMetadata.schema);
+                let tmp = domain.getSchema(actionMetadata.schema);
                 actionMetadata.schema = tmp.name;
             }
 
