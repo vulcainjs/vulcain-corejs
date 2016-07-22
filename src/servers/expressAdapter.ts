@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 export class ExpressAdapter extends AbstractAdapter {
     private app;
 
-    constructor(domainName:string, container:IContainer) {
+    constructor(domainName: string, container: IContainer) {
         super(domainName, container);
         this.app = express();
         this.app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,7 +27,7 @@ export class ExpressAdapter extends AbstractAdapter {
         //  - search query with a query expression in data
         this.app.get(Conventions.defaultUrlprefix + '/:domain/:id?', auth, async (req: express.Request, res: express.Response) => {
 
-            let query: QueryData = <any>{ domain: this.domainName};
+            let query: QueryData = <any>{ domain: this.domainName };
 
             if (req.params.id !== undefined) {
                 query.action = "get";
@@ -54,6 +54,17 @@ export class ExpressAdapter extends AbstractAdapter {
 
         this.app.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
+        });
+
+        this.app.get('/_schemas/:name?', (req: express.Request, res: express.Response) => {
+            let domain: any = this.container.get("Domain");
+            let name = req.params.name;
+            if (name) {
+                let schema = domain.getSchema(name, true);
+                res.send(schema);
+            }
+            else
+                res.send(domain.schemas)
         });
 
         this.app.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {

@@ -4,7 +4,7 @@ import {IProvider, ListOptions} from "../provider";
 import {Schema} from "../../schemas/schema";
 import {MongoClient, Db, Cursor} from 'mongodb';
 import {Inject} from '../../di/annotations';
-import {Logger} from '@sovinty/vulcain-configurations'
+import {Logger} from 'vulcain-configurationsjs'
 /**
  * Default mongo provider
  */

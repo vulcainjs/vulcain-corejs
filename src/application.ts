@@ -11,7 +11,7 @@ import 'reflect-metadata'
 import {LifeTime} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
-import {DynamicConfiguration, VulcainLogger} from '@sovinty/vulcain-configurations'
+import {DynamicConfiguration, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 

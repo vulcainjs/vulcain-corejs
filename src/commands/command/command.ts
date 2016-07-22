@@ -5,7 +5,7 @@ import ActualTime from "../../utils/actualTime"
 import {AbstractCommand} from './abstractCommand'
 import {SemaphoreFactory, Semaphore} from './semaphore'
 import {EventType, FailureType, ExecutionResult} from './executionResult'
-import {BadRequestError} from '@sovinty/vulcain-configurations'
+import {BadRequestError} from 'vulcain-configurationsjs'
 
 var moment = require("moment");
 

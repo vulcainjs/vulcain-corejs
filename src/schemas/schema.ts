@@ -136,6 +136,11 @@ export class Domain
         return new Schema(this, this.addSchemaDescription(name));
     }
 
+    get schemas()
+    {
+        return Array.from( this._schemaDescriptions.values() );
+    }
+
     findSchemaDescription( name:string )
     {
         return this._schemaDescriptions.get( name );

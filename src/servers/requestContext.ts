@@ -1,5 +1,5 @@
 import {Schema} from '../schemas/schema'
-import {Logger} from '@sovinty/vulcain-configurations';
+import {Logger} from 'vulcain-configurationsjs';
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';

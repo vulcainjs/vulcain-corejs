@@ -1,7 +1,7 @@
 var rest = require('unirest');
 import * as types from './types';
 import * as os from 'os';
-import {DynamicConfiguration, IDynamicProperty, Logger} from '@sovinty/vulcain-configurations'
+import {DynamicConfiguration, IDynamicProperty, Logger} from 'vulcain-configurationsjs'
 import {ExecutionResult} from './executionResult'
 import {Schema} from '../../schemas/schema';
 import {IProvider} from '../../providers/provider';
@@ -70,6 +70,10 @@ export abstract class AbstractCommand<T> {
         let errors = (<Array<Error>>msg.filter(m => m instanceof Error));
         this.context.logger.info(message, errors && errors[0], this.context);    }
 
+    private createServiceName(serviceName: string, version: number) {
+        return serviceName + version;
+    }
+
     /**
      * send a http get request
      * @param serviceId
@@ -77,21 +81,25 @@ export abstract class AbstractCommand<T> {
      * @param urlSegments
      * @returns {Promise<types.IHttpResponse>}
      */
-    protected getRequestAsync(serviceName: string, port: number, domain:string, id:string) {
+    protected getRequestAsync(serviceName: string, version: number, domain:string, id:string) {
         let command = { action: "get", data: {id:id}, correlationId: this.context.correlationId };
-        let url = `http://${serviceName}:${port}/api/${domain}/${id}`;
+        let url = `http://${this.createServiceName(serviceName, version)}/api/${domain}/${id}`;
         return this.sendRequestAsync("get", url, (req) => req.json(command));
     }
 
-    protected getQueryAsync(serviceName: string, port: number, domain:string, query:any, action?:string) {
+    protected getQueryAsync(serviceName: string, version: number, domain:string, action:string, query?:any, page?:number, maxByPage?:number) {
         let command = { action: action, data: query, correlationId: this.context.correlationId };
-        let url = `http://${serviceName}:${port}/api/${domain}`;
+        query = query || {};
+        query.$action = action;
+        query.$maxByPage = maxByPage;
+        query.$page = page;
+        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${domain}`, query);
         return this.sendRequestAsync("get", url, (req) => req.json(command));
     }
 
-    protected postActionAsync(serviceName: string, port: number, domain: string, action: string, data: any) {
+    protected postActionAsync(serviceName: string, version: number, domain: string, action: string, data: any) {
         let command = { action: action, data: data, correlationId: this.context.correlationId };
-        let url = `http://${serviceName}:${port}/api/${domain}`;
+        let url = `http://${this.createServiceName(serviceName, version)}/api/${domain}`;
         return this.sendRequestAsync("post", url, (req) => req.json(command));
     }
 
@@ -120,25 +128,12 @@ export abstract class AbstractCommand<T> {
         });
     }
 
-    protected createUrl(url: string, ...urlSegments: Array<string|any>);
-    protected createUrl(number: number|string, version?: string, ...urlSegments: Array<string|any>) {
-
-        let baseurl: string;
-        if (typeof number === "string")
-        {
-            baseurl = number; //url
-            urlSegments = <any>version;
-            if(!baseurl)
-                throw new Error("base url must not be null");
-        }
-        else if (!version)
-            throw new Error("Version is required");
-        else
-            baseurl = ["http://", DynamicConfiguration.localProxy, ":", number, '/api/', version, "/"].join("");
+    protected createUrl(baseurl: string, ...urlSegments: Array<string|any>) {
 
         if (urlSegments) {
             if( baseurl[baseurl.length-1] !== "/")
                 baseurl += "/";
+
             baseurl += urlSegments.filter((s: any) => typeof s === 'string').map((s: string) => encodeURIComponent(s)).join('/');
             var query = urlSegments.filter((s: any) => typeof s !== 'string');
             if (query.length) {
@@ -148,8 +143,10 @@ export abstract class AbstractCommand<T> {
                         if ( !obj.hasOwnProperty(p) ) {
                             continue;
                         }
-                        baseurl = baseurl.concat(sep, p, '=', encodeURIComponent( obj[p]));
-                        sep = '&';
+                        if (obj[p]) {
+                            baseurl = baseurl.concat(sep, p, '=', encodeURIComponent(obj[p]));
+                            sep = '&';
+                        }
                     }
                 });
             }

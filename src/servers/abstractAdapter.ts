@@ -6,7 +6,7 @@ import {IContainer} from '../di/resolvers';
 import {CommandManager, ActionMetadata} from '../pipeline/actions';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
-import {BadRequestError, Logger} from '@sovinty/vulcain-configurations';
+import {BadRequestError, Logger} from 'vulcain-configurationsjs';
 import {RequestContext} from './requestContext';
 
 export abstract class AbstractAdapter {

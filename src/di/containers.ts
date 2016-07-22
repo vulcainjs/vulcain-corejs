@@ -7,7 +7,7 @@ import {RabbitAdapter} from '../bus/rabbitAdapter'
 import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
-import {VulcainLogger} from '@sovinty/vulcain-configurations'
+import {VulcainLogger} from 'vulcain-configurationsjs'
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 
