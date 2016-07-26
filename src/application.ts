@@ -126,7 +126,7 @@ export class Application
         if (!domainName)
             throw new Error("Domain name is required.");
 
-        this._domain = new Domain(domainName);
+        this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
 
         let local = new LocalAdapter();

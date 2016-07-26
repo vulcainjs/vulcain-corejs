@@ -23,7 +23,7 @@ export interface QueryMetadata extends CommonHandlerMetadata {
 }
 
 export interface QueryActionMetadata extends CommonActionMetadata {
-    querySchema?: string;
+
 }
 
 export class QueryManager implements IManager {
@@ -65,30 +65,45 @@ export class QueryManager implements IManager {
         return info.metadata;
     }
 
-    private async validateRequestData(info, data) {
+    private async validateRequestData(info, query) {
         let errors;
-        let schema = info.metadata.querySchema && this.domain.getSchema(info.metadata.querySchema);
-        if (schema) {
-            errors = this.domain.validate(data, schema);
-        }
-        if (!errors || errors.length === 0) {
-            errors = info.handler.validateModelAsync && await info.handler.validateModelAsync(data);
+        let data = query.data;
+        let inputSchema = info.metadata.inputSchema;
+        if (inputSchema) {
+            let schema = inputSchema && this.domain.getSchema(inputSchema);
+            if (schema) {
+                query.inputSchema = schema.name;
+                errors = this.domain.validate(data, schema);
+            }
+            if (!errors || errors.length === 0) {
+                // Custom binding if any
+                if(schema)
+                    data = schema.bind(data);
+
+                // Search if a method naming validate<schema>[Async] exists
+                let methodName = 'validate' + inputSchema;
+                let altMethodName = methodName + 'Async';
+                errors = info.handler[methodName] && await info.handler[methodName](data);
+                if (!errors)
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+            }
         }
         return errors;
     }
 
     async runAsync(query: QueryData, ctx:RequestContext) {
-        let info = QueryManager.handlerFactory.getInfo<QueryMetadata>(this.container, query.domain, query.schema, query.action);
+        let info = QueryManager.handlerFactory.getInfo<QueryActionMetadata>(this.container, query.domain, query.schema, query.action);
 
         try {
-            let errors = await this.validateRequestData(info, query.data);
+            let errors = await this.validateRequestData(info, query);
             if (errors && errors.length > 0)
                 return this.createResponse(query, { message: "Validation errors", errors: errors });
             if (ctx.user)
                 query.userContext = { id: ctx.user.id, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
+            query.schema = <string>info.metadata.schema;
             info.handler.requestContext = ctx;
             info.handler.query = query;
-            let result = await info.handler[info.method](query.data);
+            let result = await info.handler[info.method](info.metadata.action === "get" ? query.data.id : query.data);
             let res = this.createResponse(query);
             res.value = result;
             if (Array.isArray(result))

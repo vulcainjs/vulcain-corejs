@@ -5,7 +5,7 @@ export * from './application'
 export {Conventions} from './utils/conventions';
 
 export * from './pipeline/annotations'
-export {ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
+export {ActionEventMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
 export {QueryData,QueryActionMetadata, QueryMetadata, QueryResponse} from './pipeline/query';
 export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
 
@@ -20,7 +20,7 @@ export {TestContainer} from './di/containers';
 export {Inject, Injectable, LifeTime} from './di/annotations';
 
 export {IProvider, ListOptions} from './providers/provider'
-export {RequestContext} from './servers/requestContext'
+export {RequestContext, Pipeline} from './servers/requestContext'
 
 export {Command, CommandFactory as __commandFactory} from './commands/command/commandFactory'
 import {EventType, FailureType, ExecutionResult} from './commands/command/executionResult'

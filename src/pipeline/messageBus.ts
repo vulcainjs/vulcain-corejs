@@ -40,6 +40,7 @@ export class MessageBus {
     }
 
     sendEvent(response: ActionResponse) {
+        delete response.inputSchema;
         this.eventBus.sendEvent(response.domain, response);
     }
 }

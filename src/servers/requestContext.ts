@@ -16,13 +16,19 @@ class DefaultLogger {
 
 const defaultLogger = new DefaultLogger();
 
+export enum Pipeline {
+    inProcess,
+    eventNotification,
+    Http
+}
+
 export class RequestContext {
     public user: any;
     public cache: Map<string, any>;
     public logger: Logger;
     public container: IContainer;
 
-    constructor(container: IContainer) {
+    constructor(container: IContainer, public pipeline: Pipeline) {
         this.cache = new Map<string, any>();
         this.logger = defaultLogger;
         this.container = new Container(container);
@@ -34,7 +40,7 @@ export class RequestContext {
     }
 
     static createMock(container?: IContainer, user?:any, req?) {
-        let ctx = new RequestContext(container || new Container());
+        let ctx = new RequestContext(container || new Container(), Pipeline.inProcess);
         ctx.user = user || {id:"test", scopes:["*"], name:"test", password:"", displayName:"test", email:"test", data:{}, disabled:false};
         return ctx;
     }

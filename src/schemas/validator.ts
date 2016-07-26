@@ -1,40 +1,42 @@
 
 import {Domain, Schema} from './schema'
+import {IContainer} from '../di/resolvers';
 
 export class Validator
 {
 
-    constructor( private domain:Domain, private throwErrorOnInvalidType:boolean )
+    constructor( private domain:Domain, private container:IContainer, private throwErrorOnInvalidType:boolean )
     {
     }
 
-    validate( schema, val )
+    validate( schemaDesc, val )
     {
         let errors = [];
-        if( !schema || !val ) return errors;
+        if( !schemaDesc || !val ) return errors;
 
-        if( schema.extends )
+        if( schemaDesc.extends )
         {
-            let base = typeof schema.extends === "string" ? this.domain.getSchema(schema.extends) : schema.extends;
+            let base = typeof schemaDesc.extends === "string" ? this.domain.getSchema(schemaDesc.extends) : schemaDesc.extends;
             if(base)
             {
                 this.validate( base, val ).forEach(e=> {errors.push( e );});
             }
         }
-        let id =  val && val[schema.idProperty];
-        let ctx:FormatContext = { element: val, schemaElement: schema, id: id };
+
+        let id =  val && val[this.domain.getIdProperty(schemaDesc)];
+        let ctx:FormatContext = { element: val, schemaElement: schemaDesc, id: id };
 
         // Properties checks
-        for( const ps in schema.properties )
+        for( const ps in schemaDesc.properties )
         {
-            if( !schema.properties.hasOwnProperty( ps ) ) continue;
+            if( !schemaDesc.properties.hasOwnProperty( ps ) ) continue;
             ctx.propertyName   = ps;
-            ctx.propertySchema = schema.properties[ps];
+            ctx.propertySchema = schemaDesc.properties[ps];
             ctx.propertyValue  = val[ps];
 
             try
             {
-                let err = this.validateProperty( schema.properties[ps], val[ps], val);
+                let err = this.validateProperty( schemaDesc.properties[ps], val[ps], val);
                 if( err )
                 {
                     errors.push( {message: this.__formatMessage( err, ctx ), property:ps, id:ctx.id} );
@@ -47,16 +49,16 @@ export class Validator
         }
 
         // References checks
-        for( const rs in schema.references )
+        for( const rs in schemaDesc.references )
         {
-            if( !schema.references.hasOwnProperty( rs ) ) continue;
+            if( !schemaDesc.references.hasOwnProperty( rs ) ) continue;
             ctx.propertyName   = rs;
-            ctx.propertySchema = schema.references[rs];
+            ctx.propertySchema = schemaDesc.references[rs];
             ctx.propertyValue  = val[rs];
 
             try
             {
-                let ref = schema.references[rs];
+                let ref = schemaDesc.references[rs];
                 if( ref.item === "any" && ctx.propertyValue && ctx.propertyValue.__schema)
                 {
                     if( ref && ref.dependsOn && !ref.dependsOn(val)) continue;
@@ -77,12 +79,12 @@ export class Validator
         }
 
         // Entity check
-        if( schema.check )
+        if( schemaDesc.validate )
         {
             ctx.propertyName = ctx.propertySchema = ctx.propertyValue = null;
             try
             {
-                let err = schema.check( val );
+                let err = schemaDesc.validate( val, this.container );
                 if( err )
                     errors.push( {message:this.__formatMessage( err, ctx ), id:ctx.id} );
             }

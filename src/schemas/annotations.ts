@@ -1,12 +1,15 @@
 import {Application} from '../application';
+import {IContainer} from '../di/resolvers';
 
 export interface ModelOptions {
     name?: string;
     extends?: string;
     description?: string;
     bind?: ((data) => any)|boolean;
-    serialize?: ((entity) => any)|boolean;
-    check?: (entity) => string;
+    preCreate?: (entity, container?:IContainer) => any;
+    preUpdate?: (entity, container?:IContainer) => any;
+    preGet?: (entity, container?:IContainer) => any;
+    validate?: (entity, container?:IContainer) => string;
     storageName?: string;
 }
 
@@ -31,7 +34,6 @@ export interface PropertyOptions {
     unique?: boolean;
     meta?: any;
     bind?: ((val, entity) => any)|boolean;
-    serialize?: ((val, entity) => any) | boolean;
     dependsOn?: (entity) => boolean;
     check?: (val) => string;
 }

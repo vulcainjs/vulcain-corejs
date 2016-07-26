@@ -9,7 +9,8 @@ class LocalAdapter {
         return Promise.resolve(this);
     }
 
-    sendEvent(domain:string, event:EventData) {
+    sendEvent(domain: string, event: EventData) {
+        console.log("Event: %j", event);
        let self = this;
         self.eventHandler && setTimeout(function () {
             self.eventHandler(event);
@@ -23,6 +24,7 @@ class LocalAdapter {
     publishTask(domain:string, serviceId:string, command:ActionData) {
         let self = this;
         self.commandHandler && setTimeout(function () {
+            console.log("Running task: %j", command);
             self.commandHandler(command);
         }, (10));
     }

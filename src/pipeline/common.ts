@@ -20,6 +20,7 @@ export interface CommonRequestData {
     action: string;
     domain: string;
     schema: string;
+    inputSchema?: string;
     userContext?: {
         id?: string;
         name?: string;
@@ -36,12 +37,14 @@ export interface CommonRequestResponse {
     schema: string;
     error?: ErrorResponse;
     value?: any;
+    inputSchema?: string;
 }
 
 export interface CommonActionMetadata {
     action?: string;
     scope?: string;
-    schema?: string;
+    schema?: string|Function;
+    inputSchema?: string|Function;
 }
 
 export interface CommonMetadata {
@@ -62,11 +65,43 @@ export interface IManager {
 export interface HandlerItem {
     methodName: string;
     handler;
-    metadata: CommonMetadata;
+    metadata: CommonActionMetadata;
 }
 
 export class HandlerFactory {
     handlers: Map<string,HandlerItem> = new Map<string, HandlerItem>();
+    private isMonoSchema: boolean = undefined;
+
+    private ensuresOptimized(domain) {
+        if (this.isMonoSchema !== undefined)
+            return;
+
+        // Check if all schema are the same so schema will be optional on request
+        this.isMonoSchema = true;
+        let schema;
+        for (const item of this.handlers.values()) {
+            if (!item.metadata.schema)
+                continue;
+            if (!schema)
+                schema = item.metadata.schema;
+            else if (item.metadata.schema !== schema) {
+                this.isMonoSchema = false;
+                break;
+            }
+        }
+
+        if (this.isMonoSchema) {
+            let handlers = new Map<string, HandlerItem>();
+            // Normalize all keys
+            for (const item of this.handlers.values()) {
+                let handlerKey = [domain, item.metadata.action].join('.').toLowerCase();
+                if (handlers.has(handlerKey))
+                    console.log(`Duplicate action ${item.metadata.action} for handler ${handlerKey}`);
+                handlers.set(handlerKey, item);
+            }
+            this.handlers = handlers;
+        }
+    }
 
     register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata) {
 
@@ -94,8 +129,18 @@ export class HandlerFactory {
                 let tmp = domain.getSchema(actionMetadata.schema);
                 actionMetadata.schema = tmp.name;
             }
+            if (actionMetadata.inputSchema) {
+                // test if exists
+                let tmp = domain.getSchema(actionMetadata.inputSchema);
+                actionMetadata.inputSchema = tmp.name;
+            }
 
-            let handlerKey = [domainName, actionMetadata.schema || handlerMetadata.schema, actionMetadata.action].join('.').toLowerCase();
+            let keys = [domainName];
+            let schema = <string>actionMetadata.schema || <string>handlerMetadata.schema;
+            if (schema)
+                keys.push(schema);
+            keys.push(actionMetadata.action);
+            let handlerKey =  keys.join('.').toLowerCase();
             if (this.handlers.has(handlerKey))
                 console.log(`Duplicate action ${actionMetadata.action} for handler ${handlerKey}`);
 
@@ -111,11 +156,14 @@ export class HandlerFactory {
     }
 
     getInfo<T extends CommonMetadata>(container: IContainer, domain: string, schema: string, action: string, optional?: boolean) {
+
+        this.ensuresOptimized(domain);
+
         let d = domain.toLowerCase();
         let a = action.toLowerCase();
         let handlerKey;
         let info;
-        if (schema) {
+        if (!this.isMonoSchema && schema) {
             handlerKey = d + "." + schema.toLowerCase() + "." + a;
             info = this.handlers.get(handlerKey);
         }

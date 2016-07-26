@@ -42,6 +42,12 @@ export function Action(actionMetadata?: ActionMetadata) {
     return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = actionMetadata || {};
+        if (!actions[key].inputSchema) {
+            let params = Reflect.getMetadata("design:paramtypes", target, key);
+            if (params && params.length > 0 && params[0].name !== "Object") {
+                actions[key].inputSchema = params[0];
+            }
+        }
         actions[key].action = actions[key].action || key;
         Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
@@ -63,6 +69,12 @@ export function Query(actionMetadata?: QueryActionMetadata) {
 	return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = actionMetadata || {};
+        if (!actions[key].inputSchema) {
+            let params = Reflect.getMetadata("design:paramtypes", target, key);
+            if (params && params.length > 0 && params[0].name !== "Object") {
+                actions[key].inputSchema = params[0];
+            }
+        }
         actions[key].action = actions[key].action || key;
         Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
@@ -80,6 +92,9 @@ export function EventHandler(metadata: EventMetadata) {
     }
 }
 
+/**
+ * 
+ */
 export function Consume(consumeMetadata?: ConsumeEventMetadata) {
 	return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};

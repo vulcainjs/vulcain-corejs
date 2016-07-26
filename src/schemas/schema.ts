@@ -2,6 +2,7 @@ import {Injectable, LifeTime} from '../di/annotations';
 import {SchemaBuilder} from './schemaBuilder'
 import {standards} from './standards'
 import {Validator} from './validator'
+import {IContainer} from '../di/resolvers';
 
 /**
  * Schema definition
@@ -84,7 +85,7 @@ export class Domain
     private _schemaDescriptions:Map<string, any>;
     private types:Map<string, any>;
 
-    constructor(public name:string, defaultTypes?, private throwErrorOnInvalidType?:boolean )
+    constructor(public name:string, private container: IContainer, defaultTypes?, private throwErrorOnInvalidType?:boolean )
     {
         this._schemaDescriptions = new Map<string,any>();
         this.types    = new Map<string,any>();
@@ -435,7 +436,7 @@ export class Domain
             schema = schema.description;
         }
 
-        var validator = new Validator(this, this.throwErrorOnInvalidType);
+        var validator = new Validator(this, this.container, this.throwErrorOnInvalidType);
         return validator.validate(schema,val);
     }
 

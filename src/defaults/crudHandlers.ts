@@ -2,7 +2,7 @@ import {ActionData} from '../pipeline/actions';
 import {ActionHandler, Action, EventHandler, Consume, Query} from '../pipeline/annotations';
 import {ValidationError, RuntimeError} from '../pipeline/common';
 import {Property, Model} from '../schemas/annotations'
-import {AbstractCommand, AbstractActionHandler, QueryData, Command, AbstractQueryHandler, Domain, Schema, DefaultServiceNames, Inject, IContainer, IProvider} from '../index';
+import {Pipeline, AbstractCommand, AbstractActionHandler, QueryData, Command, AbstractQueryHandler, Domain, Schema, DefaultServiceNames, Inject, IContainer, IProvider} from '../index';
 
 @Command({executionTimeoutInMilliseconds: 1500})
 class DefaultRepositoryCommand extends AbstractCommand<any> {
@@ -12,18 +12,27 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
         return this[action](data);
     }
 
-    create( entity: any) {
-        return this.provider.createAsync(this.schema, entity);
+    async create(entity: any) {
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preCreate)
+            entity = await this.schema.description.preCreate(entity, this.container) || entity;
+        entity = await this.provider.createAsync(this.schema, entity);
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
+            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        return entity;
     }
 
     async update(entity: any) {
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preUpdate)
+            entity = await this.schema.description.preUpdate(entity, this.container) || entity;
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
             throw new Error("Entity doesn't exist for updating");
 
-        let result = await this.provider.updateAsync(this.schema, entity, old);
-        return result;
+        entity = await this.provider.updateAsync(this.schema, entity, old);
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
+            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        return entity;
     }
 
     delete(entity: any) {
@@ -31,21 +40,33 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
         return this.provider.deleteAsync(this.schema, entity[keyProperty]);
     }
 
-    get(data: any) {
+    async get(id: any) {
         let keyProperty = this.schema.getIdProperty();
         let query = {};
-        query[keyProperty] = data.id;
-        return this.provider.findOneAsync(this.schema, query);
+        query[keyProperty] = id;
+        let entity = await this.provider.findOneAsync(this.schema, query);
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
+            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        return entity;
     }
 
-    search(options: any) {
-        return this.provider.getAllAsync(this.schema, options);
+    async search(options: any) {
+        let list = await this.provider.getAllAsync(this.schema, options);
+        if (this.context.pipeline === Pipeline.Http && list && this.schema.description.preGet) {
+            let result = [];
+            for (const e of list) {
+                let item = await this.schema.description.preGet(e, this.container);
+                result.push( item || e);
+            }
+            return result;
+        }
+        return list;
     }
 }
 
 export class DefaultActionHandler extends AbstractActionHandler {
 
-    constructor( @Inject("Container") protected container: IContainer) {
+    constructor( @Inject("Container") container: IContainer) {
         super(container);
     }
 
@@ -77,7 +98,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
 
 export class DefaultQueryHandler extends AbstractQueryHandler {
 
-    constructor( @Inject("Container") protected container: IContainer) {
+    constructor( @Inject("Container") container: IContainer) {
         super(container);
     }
 

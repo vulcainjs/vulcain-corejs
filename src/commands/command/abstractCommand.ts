@@ -9,7 +9,7 @@ import {DefaultServiceNames} from '../../application';
 import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
-
+import {Pipeline} from '../../servers/requestContext';
 /**
  * command
  */
@@ -33,6 +33,7 @@ export interface ICommandContext {
     correlationId: string;
     cache: Map<string, any>;
     logger: Logger;
+    pipeline: Pipeline;
 }
 
 export abstract class AbstractCommand<T> {

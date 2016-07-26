@@ -182,7 +182,7 @@ export class TestContainer extends Container {
         super();
         this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         this.injectSingleton(MemoryProvider, DefaultServiceNames.Provider);
-        let domain = new Domain(domainName);
+        let domain = new Domain(domainName, this);
         this.injectInstance(domain, DefaultServiceNames.Domain);
 
         addServices && addServices(this);

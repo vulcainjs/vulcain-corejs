@@ -2,7 +2,7 @@
 import * as express from 'express';
 import {IManager} from '../pipeline/common';
 import {AbstractAdapter} from './abstractAdapter';
-import {RequestContext} from './requestContext';
+import {RequestContext, Pipeline} from './requestContext';
 import {IContainer} from '../di/resolvers';
 import {Authentication} from './expressAuthentication';
 import {DefaultServiceNames} from '../application';
@@ -34,29 +34,33 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // Query can have only two options:
-        //  - single query with an id
+        //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.app.get(Conventions.defaultUrlprefix + '/:domain/:schema?/:id?', auth, async (req: express.Request, res: express.Response) => {
-
+        this.app.get(Conventions.defaultUrlprefix + '/:domain/:schema/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
+            query.action = "get";
+            let id = req.params.id;
+            query.schema = req.params.schema || req.query.$schema;
+            query.data = { id: id };
+            this.executeRequest(this.executeQueryRequest, query, req, res);
+        });
 
-            if (req.params.schema) {
-                query.action = "get";
-                let id = req.params.id;
-                let schema = req.params.schema;
-                if (!id) {
-                    id = schema; // schema is optional
-                    schema = null;
-                }
-                else if (!schema) {
-                    schema = req.query.$schema;
-                }
-                query.data = { id: id, schema: schema };
-            }
-            else {
+        this.app.get(Conventions.defaultUrlprefix + '/:domain/:id', auth, async (req: express.Request, res: express.Response) => {
+            let query: QueryData = <any>{ domain: this.domainName };
+            query.action = "get";
+            let id = req.params.id;
+            query.schema = req.query.$schema;
+            query.data = { id: id };
+            this.executeRequest(this.executeQueryRequest, query, req, res);
+        });
+
+        this.app.get(Conventions.defaultUrlprefix + '/:domain', auth, async (req: express.Request, res: express.Response) => {
+
+            try {
+                let query: QueryData = <any>{ domain: this.domainName };
                 query.action = req.query.$action || "search";
-                query.maxByPage = req.query.$maxByPage || 100;
-                query.page = req.query.$page || 0;
+                query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
+                query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
                 query.schema = req.query.$schema;
                 query.data = {};
                 Object.keys(req.query).forEach(name => {
@@ -64,8 +68,11 @@ export class ExpressAdapter extends AbstractAdapter {
                         query.data[name] = req.query[name];
                     }
                 });
+                this.executeRequest(this.executeQueryRequest, query, req, res);
             }
-            this.executeRequest(this.executeQueryRequest, query, req, res);
+            catch (e) {
+                res.status(400).send({Error:e.message||e.toString, Status:"Error"});
+            }
         });
 
         // All actions by post
@@ -97,18 +104,23 @@ export class ExpressAdapter extends AbstractAdapter {
 
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
 
-        let ctx: RequestContext = new RequestContext(this.container);
-        if(req.user && !req.user.__empty__)
-            ctx.user = req.user;
+        try {
+            let ctx: RequestContext = new RequestContext(this.container, Pipeline.Http);
+            if (req.user && !req.user.__empty__)
+                ctx.user = req.user;
 
-        let result = await handler.apply(this, [command, ctx]);
-        if (result.headers) {
-            for (const [k, v] of result.headers) {
-                res.setHeader(k, v);
+            let result = await handler.apply(this, [command, ctx]);
+            if (result.headers) {
+                for (const [k, v] of result.headers) {
+                    res.setHeader(k, v);
+                }
             }
+            res.statusCode = result.code || 200;
+            res.send(result.value);
         }
-        res.statusCode = result.code || 200;
-        res.send(result.value);
+        catch (e) {
+            res.status(500).send(e);
+        }
     }
 
     setStaticRoot(basePath:string)

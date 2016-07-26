@@ -7,7 +7,7 @@ import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, Runt
 const moment = require('moment');
 const guid = require('node-uuid');
 import * as os from 'os';
-import {RequestContext} from '../servers/requestContext';
+import {RequestContext, Pipeline} from '../servers/requestContext';
 import * as RX from 'rx';
 import {CommandRuntimeError} from '../commands/command/command';
 
@@ -31,11 +31,20 @@ export interface EventMetadata extends CommonMetadata {
     domain: string;
 }
 
-export interface ActionHandlerMetadata extends CommonHandlerMetadata {
-    async?: boolean;
+export enum ActionEventMode {
+    always,
+    successOnly,
+    never
 }
 
-export interface ActionMetadata extends CommonActionMetadata { }
+export interface ActionHandlerMetadata extends CommonHandlerMetadata {
+    async?: boolean;
+    eventMode?: ActionEventMode;
+}
+
+export interface ActionMetadata extends CommonActionMetadata {
+    eventMode?: ActionEventMode;
+ }
 
 export interface ActionResponse extends CommonRequestResponse {
     correlationId: string;
@@ -92,6 +101,7 @@ export class CommandManager implements IManager {
             startedAt: command.startedAt,
             service: command.service,
             schema: command.schema,
+            inputSchema: command.inputSchema,
             action: command.action,
             userContext: command.userContext,
             domain: command.domain,
@@ -103,24 +113,29 @@ export class CommandManager implements IManager {
         return res;
     }
 
-    private async validateRequestData(info, data) {
+    private async validateRequestData(info, command) {
         let errors;
+        let data = command.data;
+        let inputSchema = info.metadata.inputSchema || info.metadata.schema;
+        if (inputSchema) {
+            let schema = inputSchema && this.domain.getSchema(inputSchema);
+            if (schema) {
+                command.inputSchema = schema.name;
+                errors = this.domain.validate(data, schema);
+            }
 
-        let schema = info.metadata.schema && this.domain.getSchema(info.metadata.schema);
-        if (schema) {
-            errors = this.domain.validate(data, schema);
-        }
+            if (!errors || errors.length === 0) {
+                // Custom binding if any
+                if (schema)
+                    data = schema && schema.bind(data);
 
-        if (!errors || errors.length === 0) {
-            // Custom binding if any
-            data = schema.bind(data);
-
-            // Search if a method naming validate<schema>[Async] exists
-            let methodName = 'validate' + info.metadata.schema;
-            let altMethodName = methodName + 'Async';
-            errors = info.handler[methodName] && await info.handler[methodName](data);
-            if(!errors)
-                errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+                // Search if a method naming validate<schema>[Async] exists
+                let methodName = 'validate' + inputSchema;
+                let altMethodName = methodName + 'Async';
+                errors = info.handler[methodName] && await info.handler[methodName](data);
+                if (!errors)
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+            }
         }
 
         return errors;
@@ -133,17 +148,19 @@ export class CommandManager implements IManager {
 
     async runAsync(command: ActionData, ctx: RequestContext) {
         let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(this.container, command.domain, command.schema, command.action);
+        let eventMode = info.metadata.eventMode || ActionEventMode.always;
 
         try {
-            let errors = await this.validateRequestData(info, command.data);
+            let errors = await this.validateRequestData(info, command);
             if (errors && errors.length > 0)
                 return this.createResponse(command, { message: "Validation errors", errors: errors });
 
+            command.schema = <string>info.metadata.schema;
             command.correlationId = command.correlationId || guid.v4();
             command.startedAt = moment.utc().format();
             command.service = this._service;
             if (ctx && ctx.user)
-                command.userContext = { id: ctx.user.id, name: ctx.user.name, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
+                command.userContext = { id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName };
             else
                 command.userContext = <any>{};
 
@@ -156,7 +173,9 @@ export class CommandManager implements IManager {
                 let res = this.createResponse(command);
                 res.value = result;
                 res.completedAt = moment.utc().format();
-                this.messageBus.sendEvent(res);
+                if (eventMode === ActionEventMode.always || eventMode === ActionEventMode.successOnly) {
+                    this.messageBus.sendEvent(res);
+                }
                 return res;
             } else {
                 // Pending
@@ -172,9 +191,11 @@ export class CommandManager implements IManager {
 
     async consumeTaskAsync(command: ActionData) {
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(this.container, command.domain, command.schema, command.action);
+        let eventMode = info.metadata.eventMode || ActionEventMode.always;
+
         let res;
         try {
-            let ctx = new RequestContext(this.container);
+            let ctx = new RequestContext(this.container, Pipeline.Http);
             ctx.user = command.userContext;
             info.handler.requestContext = ctx;
             info.handler.command = command;
@@ -182,15 +203,21 @@ export class CommandManager implements IManager {
             command.status = "Success";
             res = this.createResponse(command);
             res.value = result;
+            res.commandMode = "async";
+            res.completedAt = moment.utc().format();
+            if (eventMode === ActionEventMode.always || eventMode === ActionEventMode.successOnly) {
+                this.messageBus.sendEvent(res);
+            }
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
             res = this.createResponse(command, { message: error });
+            res.commandMode = "async";
+            res.completedAt = moment.utc().format();
+            if (eventMode === ActionEventMode.always) {
+                this.messageBus.sendEvent(res);
+            }
         }
-
-        res.commandMode = "async";
-        res.completedAt = moment.utc().format();
-        this.messageBus.sendEvent(res);
     }
 
     subscribeToEvents() {
@@ -211,7 +238,7 @@ export class CommandManager implements IManager {
         events.subscribe((evt: EventData) => {
             let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(this.container, evt.domain, evt.schema, evt.action, true);
             if (info) {
-                let ctx = new RequestContext(this.container);
+                let ctx = new RequestContext(this.container, Pipeline.eventNotification);
                 ctx.user = (evt.userContext && evt.userContext.user) || {};
                 info.handler.requestContext = ctx;
                 info.handler.event = evt;
