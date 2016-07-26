@@ -7,12 +7,31 @@ import {Domain} from '../schemas/schema';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
+function getMetadata(key, target) {
+    let metadata = {};
+    while (target) {
+        let tmp = Reflect.getOwnMetadata(key, target);
+        if (tmp) {
+            // merge by action
+            Object.keys(tmp).forEach(p => {
+                let pv = tmp[p];
+                // Do not override action
+                if (Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
+                    metadata[p] = pv;
+                }
+            });
+        }
+        target = Object.getPrototypeOf(target);
+    }
+    return metadata;
+}
+
 export function ActionHandler(metadata: ActionHandlerMetadata) {
     return function (target: Function) {
         metadata.scope = metadata.scope || "?";
-        let actions = Reflect.getMetadata(symActions, target.prototype) || {};
+        let actions = getMetadata(symActions, target);
 
-        Application.Preloads.push((container, domain) => {
+        Application.registerPreload( target, (container, domain) => {
             CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
@@ -21,19 +40,19 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
 
 export function Action(actionMetadata?: ActionMetadata) {
     return (target, key) => {
-        let actions = Reflect.getMetadata(symActions, target) || {};
-        actions[key] = actionMetadata;
-        Reflect.defineMetadata(symActions, actions, target);
+        let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
+        actions[key] = actionMetadata || {};
+        actions[key].action = actions[key].action || key;
+        Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
 }
 
 export function QueryHandler(metadata: QueryMetadata) {
     return function (target: Function) {
         metadata.scope = metadata.scope || "?";
+        let actions = getMetadata(symActions, target);
 
-        let actions = Reflect.getMetadata(symActions, target.prototype) || {};
-
-        Application.Preloads.push((container, domain) => {
+        Application.registerPreload( target, (container, domain) => {
             QueryManager.handlerFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
@@ -42,18 +61,19 @@ export function QueryHandler(metadata: QueryMetadata) {
 
 export function Query(actionMetadata?: QueryActionMetadata) {
 	return (target, key) => {
-        let actions = Reflect.getMetadata(symActions, target) || {};
-        actions[key] = actionMetadata;
-        Reflect.defineMetadata(symActions, actions, target);
+        let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
+        actions[key] = actionMetadata || {};
+        actions[key].action = actions[key].action || key;
+        Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
 }
 
 export function EventHandler(metadata: EventMetadata) {
     return function (target: Function) {
 
-        let actions = Reflect.getMetadata(symActions, target.prototype) || {};
+        let actions = getMetadata(symActions, target);
 
-        Application.Preloads.push((container, domain) => {
+        Application.registerPreload( target, (container, domain) => {
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
@@ -62,8 +82,9 @@ export function EventHandler(metadata: EventMetadata) {
 
 export function Consume(consumeMetadata?: ConsumeEventMetadata) {
 	return (target, key) => {
-        let actions = Reflect.getMetadata(symActions, target) || {};
-        actions[key] = consumeMetadata;
-        Reflect.defineMetadata(symActions, actions, target);
+        let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
+        actions[key] = consumeMetadata || {};
+        actions[key].action = actions[key].action || key;
+        Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
 }

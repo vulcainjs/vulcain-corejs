@@ -31,12 +31,13 @@ export class ExpressAdapter extends AbstractAdapter {
 
             if (req.params.id !== undefined) {
                 query.action = "get";
-                query.data = { id: req.params.id };
+                query.data = { id: req.params.id, schema: req.query.$schema || req.query.schema };
             }
             else {
                 query.action = req.query.$action || "search";
                 query.maxByPage = req.query.$maxByPage || 100;
                 query.page = req.query.$page || 0;
+                query.schema = req.query.$schema;
                 query.data = {};
                 Object.keys(req.query).forEach(name => {
                     if (name && name[0] !== "$") {

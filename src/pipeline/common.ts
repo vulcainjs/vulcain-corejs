@@ -70,7 +70,7 @@ export class HandlerFactory {
 
     register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata) {
 
-        let domainName = domain.name.toLowerCase();
+        let domainName = domain.name;
 
         if (handlerMetadata.schema) {
             // test if exists
@@ -89,15 +89,15 @@ export class HandlerFactory {
                 actionMetadata.action = tmp;
             }
 
-            let handlerKey = domainName + "." + actionMetadata.action.toLowerCase();
-            if (this.handlers.has(handlerKey))
-                console.log(`Duplicate action ${actionMetadata.action} for domain ${domain}`);
-
             if (actionMetadata.schema) {
                 // test if exists
                 let tmp = domain.getSchema(actionMetadata.schema);
                 actionMetadata.schema = tmp.name;
             }
+
+            let handlerKey = [domainName, actionMetadata.schema || handlerMetadata.schema, actionMetadata.action].join('.').toLowerCase();
+            if (this.handlers.has(handlerKey))
+                console.log(`Duplicate action ${actionMetadata.action} for handler ${handlerKey}`);
 
             // Merge metadata
             let item: HandlerItem = {
@@ -106,17 +106,28 @@ export class HandlerFactory {
                 handler: target
             }
             this.handlers.set(handlerKey, item);
+            console.log("Handler registered for domain %s metadata: %j", domainName, item.metadata);
         }
     }
 
-    getInfo<T extends CommonMetadata>(container: IContainer, domain: string, action: string, optional?:boolean) {
-        let handlerKey = domain.toLowerCase() + "." + action.toLowerCase();
-        let info = this.handlers.get(handlerKey);
+    getInfo<T extends CommonMetadata>(container: IContainer, domain: string, schema: string, action: string, optional?: boolean) {
+        let d = domain.toLowerCase();
+        let a = action.toLowerCase();
+        let handlerKey;
+        let info;
+        if (schema) {
+            handlerKey = d + "." + schema.toLowerCase() + "." + a;
+            info = this.handlers.get(handlerKey);
+        }
+        if (!info) {
+            handlerKey = d + "." + a;
+            info = this.handlers.get(handlerKey);
+        }
         if (info == null) {
             if (optional)
                 return null;
             else
-                throw new RuntimeError(`no handler method founded for domain ${domain}, action ${action}`);
+                throw new RuntimeError(`no handler method founded for domain ${domain}, action ${action}, schema ${schema}`);
         }
 
         try {
@@ -124,9 +135,9 @@ export class HandlerFactory {
             return { handler: handler, metadata: <T>info.metadata, method: info.methodName };
         }
         catch (e) {
-            console.log(`Unable to create handler for domain ${domain}, action ${action}`);
+            console.log(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
             console.log(e);
-            throw new Error(`Unable to create handler for domain ${domain}, action ${action}`);
+            throw new Error(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
         }
     }
 }

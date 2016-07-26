@@ -52,7 +52,7 @@ export class Container implements IContainer {
         if(!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
         if(name !== "Container")
-            console.log("INFO: Register instance component " + name + " as " + fn.name);
+            console.log("INFO: Register instance component " + name + " as " + (fn.name || '<unnamed>'));
         return this;
     }
 
@@ -75,7 +75,7 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
-        console.log("INFO: Register singleton component " + name + " as " + fn.name);
+        console.log("INFO: Register singleton component " + name + " as " + (fn.name || '<unnamed>'));
         return this;
     }
 
@@ -101,7 +101,7 @@ export class Container implements IContainer {
         if(!name)
             return;
         this.resolvers.set(name, new Resolver(fn, Array.from(args)));
-        console.log("INFO: Register transient component " + name + " as " + fn.name);
+        console.log("INFO: Register transient component " + name + " as " + (fn.name || '<unnamed>'));
         return this;
     }
 
@@ -186,7 +186,6 @@ export class TestContainer extends Container {
         this.injectInstance(domain, DefaultServiceNames.Domain);
 
         addServices && addServices(this);
-        Application.Preloads.forEach(fn => fn(this, domain));
-        Application.Preloads = [];
+        Application.runPreloads(this, domain);
     }
 }

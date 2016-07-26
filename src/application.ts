@@ -29,7 +29,19 @@ export class DefaultServiceNames
 
 export class Application
 {
-    static Preloads: Array<Function> = [];
+    private static _preloads: Array<Function> = [];
+
+    static registerPreload(fn: Function, callback: (Container: IContainer, domain: Domain) => void) {
+        let key = fn.name;
+        Application._preloads.push(callback);
+    }
+
+    static runPreloads(container: IContainer, domain: Domain) {
+        for (const callback of Application._preloads) {
+            callback(container, domain);
+        }
+        Application._preloads = null;
+    }
 
     private _executablePath: string;
     private _container:IContainer;
@@ -109,7 +121,7 @@ export class Application
         });
     }
 
-    start(domainName:string, port: number) {
+    start(domainName:string, port: number, preinitializeServerAdapter?: (abstractAdapter:AbstractAdapter) => void) {
         domainName = domainName || process.env.VULCAIN_DOMAIN;
         if (!domainName)
             throw new Error("Domain name is required.");
@@ -135,10 +147,14 @@ export class Application
                 this.registerServicesInternal();
                 this.registerHandlersInternal();
 
-                Application.Preloads.forEach(fn => fn(this.container, this.domain));
-                Application.Preloads = null;
+                Application.runPreloads(this.container, this._domain);
 
-                this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true) || new ExpressAdapter(this.domain.name, this._container);
+                this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
+                if (!this.adapter) {
+                    this.adapter = new ExpressAdapter(this.domain.name, this._container);
+                    this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
+                    preinitializeServerAdapter && preinitializeServerAdapter(this.adapter);
+                }
                 this.startHystrixStream()
                 this.adapter.start(port);
             });

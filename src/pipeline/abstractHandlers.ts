@@ -1,13 +1,28 @@
 import {ActionData, ActionResponse, ActionMetadata, EventData} from './actions';
 import {RequestContext} from '../servers/requestContext';
 import {QueryData, QueryMetadata, QueryActionMetadata} from './query';
+import {IContainer} from '../di/resolvers';
 import 'reflect-metadata';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
 export abstract class AbstractActionHandler {
     action: ActionData;
-    requestContext: RequestContext;
+    private _requestContext: RequestContext;
+
+    get requestContext(): RequestContext {
+        if (!this._requestContext) {
+            this._requestContext = new RequestContext(this.container);
+        }
+        return this._requestContext;
+    }
+
+    set requestContext(ctx: RequestContext) {
+        this._requestContext = ctx;
+    }
+
+    constructor(protected container: IContainer) {
+    }
 
     get metadata(): ActionMetadata {
         return Reflect.getMetadata(symMetadata, this.constructor);
@@ -20,7 +35,21 @@ export abstract class AbstractActionHandler {
 
 export abstract class AbstractEventHandler {
     event: EventData;
-    requestContext: RequestContext;
+    private _requestContext: RequestContext;
+
+    get requestContext(): RequestContext {
+        if (!this._requestContext) {
+            this._requestContext = new RequestContext(this.container);
+        }
+        return this._requestContext;
+    }
+
+    set requestContext(ctx: RequestContext) {
+        this._requestContext = ctx;
+    }
+
+    constructor(protected container: IContainer) {
+    }
 
     get metadata() {
         return Reflect.getMetadata(symMetadata, this.constructor);
@@ -33,7 +62,21 @@ export abstract class AbstractEventHandler {
 
 export abstract class AbstractQueryHandler {
     query: QueryData;
-    requestContext: RequestContext;
+    private _requestContext: RequestContext;
+
+    get requestContext(): RequestContext {
+        if (!this._requestContext) {
+            this._requestContext = new RequestContext(this.container);
+        }
+        return this._requestContext;
+    }
+
+    set requestContext(ctx: RequestContext) {
+        this._requestContext = ctx;
+    }
+
+    constructor(protected container: IContainer) {
+    }
 
     get metadata(): QueryActionMetadata {
         return Reflect.getMetadata(symMetadata, this.constructor);

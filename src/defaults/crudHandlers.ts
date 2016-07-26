@@ -46,7 +46,7 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
 export class DefaultActionHandler extends AbstractActionHandler {
 
     constructor( @Inject("Container") protected container: IContainer) {
-        super();
+        super(container);
     }
 
     @Action({ action: "create" })
@@ -78,7 +78,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
 export class DefaultQueryHandler extends AbstractQueryHandler {
 
     constructor( @Inject("Container") protected container: IContainer) {
-        super();
+        super(container);
     }
 
     @Query({ action: "get" })
@@ -89,7 +89,7 @@ export class DefaultQueryHandler extends AbstractQueryHandler {
 
     @Query({ action: "search" })
     getAllAsync(query: any, maxByPage:number=0, page?:number) : Promise<Array<any>> {
-        let options = { maxByPage: maxByPage || this.query.maxByPage, page: page || this.query.page, query:query };
+        let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || -1, page: page || this.query && this.query.page || 0, query:query };
         let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.executeAsync( "search", options);
     }

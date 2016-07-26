@@ -127,12 +127,12 @@ export class CommandManager implements IManager {
     }
 
     getMetadata(command: CommonRequestData) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(null, command.domain, command.action);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(null, command.domain, command.schema, command.action);
         return info.metadata;
     }
 
     async runAsync(command: ActionData, ctx: RequestContext) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(this.container, command.domain, command.action);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(this.container, command.domain, command.schema, command.action);
 
         try {
             let errors = await this.validateRequestData(info, command.data);
@@ -171,7 +171,7 @@ export class CommandManager implements IManager {
     }
 
     async consumeTaskAsync(command: ActionData) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(this.container, command.domain, command.action);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(this.container, command.domain, command.schema, command.action);
         let res;
         try {
             let ctx = new RequestContext(this.container);
@@ -209,7 +209,7 @@ export class CommandManager implements IManager {
             events = metadata.filter(events);
 
         events.subscribe((evt: EventData) => {
-            let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(this.container, evt.domain, evt.action, true);
+            let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(this.container, evt.domain, evt.schema, evt.action, true);
             if (info) {
                 let ctx = new RequestContext(this.container);
                 ctx.user = (evt.userContext && evt.userContext.user) || {};
