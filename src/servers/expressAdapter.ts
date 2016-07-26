@@ -22,16 +22,36 @@ export class ExpressAdapter extends AbstractAdapter {
         let auth = (this.container.get<Authentication>(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
         let self = this;
 
+        this.app.get(Conventions.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
+            let domain: any = this.container.get("Domain");
+            let name = req.params.name;
+            if (name) {
+                let schema = domain.getSchema(name, true);
+                res.send(schema);
+            }
+            else
+                res.send(domain.schemas)
+        });
+
         // Query can have only two options:
         //  - single query with an id
         //  - search query with a query expression in data
-        this.app.get(Conventions.defaultUrlprefix + '/:domain/:id?', auth, async (req: express.Request, res: express.Response) => {
+        this.app.get(Conventions.defaultUrlprefix + '/:domain/:schema?/:id?', auth, async (req: express.Request, res: express.Response) => {
 
             let query: QueryData = <any>{ domain: this.domainName };
 
-            if (req.params.id !== undefined) {
+            if (req.params.schema) {
                 query.action = "get";
-                query.data = { id: req.params.id, schema: req.query.$schema || req.query.schema };
+                let id = req.params.id;
+                let schema = req.params.schema;
+                if (!id) {
+                    id = schema; // schema is optional
+                    schema = null;
+                }
+                else if (!schema) {
+                    schema = req.query.$schema;
+                }
+                query.data = { id: id, schema: schema };
             }
             else {
                 query.action = req.query.$action || "search";
@@ -57,17 +77,6 @@ export class ExpressAdapter extends AbstractAdapter {
             res.status(200).end();
         });
 
-        this.app.get('/_schemas/:name?', (req: express.Request, res: express.Response) => {
-            let domain: any = this.container.get("Domain");
-            let name = req.params.name;
-            if (name) {
-                let schema = domain.getSchema(name, true);
-                res.send(schema);
-            }
-            else
-                res.send(domain.schemas)
-        });
-
         this.app.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {
         });
     }
@@ -81,6 +90,7 @@ export class ExpressAdapter extends AbstractAdapter {
         }
         command.domain = command.domain || req.params.domain;
         command.action = command.action || req.params.action;
+        command.schema = command.schema || req.params.schema;
         command.data = command.data || {};
         return command;
     }

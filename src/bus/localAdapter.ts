@@ -11,7 +11,7 @@ class LocalAdapter {
 
     sendEvent(domain:string, event:EventData) {
        let self = this;
-        setTimeout(function () {
+        self.eventHandler && setTimeout(function () {
             self.eventHandler(event);
         }, (10));
     }
@@ -21,8 +21,8 @@ class LocalAdapter {
     }
 
     publishTask(domain:string, serviceId:string, command:ActionData) {
-       let self = this;
-        setTimeout(function () {
+        let self = this;
+        self.commandHandler && setTimeout(function () {
             self.commandHandler(command);
         }, (10));
     }
