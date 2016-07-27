@@ -63,9 +63,15 @@ export abstract class AbstractAdapter {
                 .then(result => {
                     if(command.correlationId)
                         headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
+                    if (result)
+                        delete result.userContext;
+                    // TODO https://github.com/phretaddin/schemapack
                     resolve({ value: result, headers: headers });
                 })
                 .catch(result => {
+                    if (result instanceof Error) {
+                        result = { status: "Error", error: { message: result.message } };
+                    }
                     resolve( { code: 500, value: result, headers:headers });
                 });
         });

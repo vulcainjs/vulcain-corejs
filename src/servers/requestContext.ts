@@ -27,7 +27,8 @@ export class RequestContext {
     public cache: Map<string, any>;
     public logger: Logger;
     public container: IContainer;
-
+    public requestHeaders: { [name: string]: string };
+    
     constructor(container: IContainer, public pipeline: Pipeline) {
         this.cache = new Map<string, any>();
         this.logger = defaultLogger;

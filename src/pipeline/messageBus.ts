@@ -39,7 +39,7 @@ export class MessageBus {
         this.commandBus.publishTask(command.domain, this.manager.serviceName, command);
     }
 
-    sendEvent(response: ActionResponse) {
+    sendEvent(response: ActionResponse<any>) {
         delete response.inputSchema;
         this.eventBus.sendEvent(response.domain, response);
     }

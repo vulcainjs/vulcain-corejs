@@ -29,14 +29,14 @@ export interface CommonRequestData {
     };
 }
 
-export interface CommonRequestResponse {
+export interface CommonRequestResponse<T> {
     userContext: any,
     source: string;
     domain: string;
     action: string;
     schema: string;
     error?: ErrorResponse;
-    value?: any;
+    value?: T;
     inputSchema?: string;
 }
 
@@ -59,7 +59,7 @@ export interface CommonHandlerMetadata extends CommonMetadata {
 export interface IManager {
     container: IContainer;
     getMetadata(command: CommonRequestData): CommonMetadata;
-    runAsync(command: CommonRequestData, ctx): Promise<CommonRequestResponse>;
+    runAsync(command: CommonRequestData, ctx): Promise<CommonRequestResponse<any>>;
 }
 
 export interface HandlerItem {

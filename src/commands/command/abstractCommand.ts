@@ -10,6 +10,19 @@ import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
 import {Pipeline} from '../../servers/requestContext';
+import {ActionResponse} from '../../pipeline/actions';
+import {QueryResponse} from '../../pipeline/query';
+import {ValidationError, ErrorResponse} from '../../pipeline/common';
+
+export class ApplicationRequestError extends Error {
+    private errors: Array<ValidationError>;
+
+    constructor(error: ErrorResponse) {
+        super((error && error.message) || "Unknow error");
+        this.errors = error && error.errors;
+    }
+}
+
 /**
  * command
  */
@@ -82,26 +95,41 @@ export abstract class AbstractCommand<T> {
      * @param urlSegments
      * @returns {Promise<types.IHttpResponse>}
      */
-    protected getRequestAsync(serviceName: string, version: number, domain:string, id:string) {
-        let command = { action: "get", data: {id:id}, correlationId: this.context.correlationId };
-        let url = `http://${this.createServiceName(serviceName, version)}/api/${domain}/${id}`;
-        return this.sendRequestAsync("get", url, (req) => req.json(command));
+    protected async getRequestAsync<T>(serviceName: string, version: number, domain:string, id:string, schema?:string): Promise<QueryResponse<T>> {
+        let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/${domain}/${schema}/${id}`
+                         : `http://${this.createServiceName(serviceName, version)}/api/${domain}/${id}`;
+
+        let res = await this.sendRequestAsync("get", url);
+        let data: QueryResponse<T> = JSON.parse(res.body);
+        if (res.status !== 200)
+            throw new ApplicationRequestError(data.error);
+        return data;
     }
 
-    protected getQueryAsync(serviceName: string, version: number, domain:string, action:string, query?:any, page?:number, maxByPage?:number) {
-        let command = { action: action, data: query, correlationId: this.context.correlationId };
+    protected async getQueryAsync<T>(serviceName: string, version: number, domain:string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
         query.$page = page;
+        query.$schema = schema;
         let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${domain}`, query);
-        return this.sendRequestAsync("get", url, (req) => req.json(command));
+
+        let res = await this.sendRequestAsync("get", url);
+        let data: QueryResponse<T> = JSON.parse(res.body);
+        if (res.status !== 200 || data.error)
+            throw new ApplicationRequestError(data.error);
+        return data;
     }
 
-    protected postActionAsync(serviceName: string, version: number, domain: string, action: string, data: any) {
+    protected async postActionAsync(serviceName: string, version: number, domain: string, action: string, data: any): Promise<ActionResponse<T>> {
         let command = { action: action, data: data, correlationId: this.context.correlationId };
         let url = `http://${this.createServiceName(serviceName, version)}/api/${domain}`;
-        return this.sendRequestAsync("post", url, (req) => req.json(command));
+
+        let res = await this.sendRequestAsync("post", url, (req) => req.json(command));
+        let result: ActionResponse<T> = JSON.parse(res.body);
+        if (res.status !== 200 || result.status === "Error")
+            throw new ApplicationRequestError(data.error);
+        return result;
     }
 
     protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {

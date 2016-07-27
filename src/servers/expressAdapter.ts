@@ -11,18 +11,18 @@ import {QueryData} from '../pipeline/query';
 const bodyParser = require('body-parser');
 
 export class ExpressAdapter extends AbstractAdapter {
-    private app;
+    public express: express.Express;
 
     constructor(domainName: string, container: IContainer) {
         super(domainName, container);
-        this.app = express();
-        this.app.use(bodyParser.urlencoded({ extended: true }));
-        this.app.use(bodyParser.json());
+        this.express = express();
+        this.express.use(bodyParser.urlencoded({ extended: true }));
+        this.express.use(bodyParser.json());
 
         let auth = (this.container.get<Authentication>(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
         let self = this;
 
-        this.app.get(Conventions.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
             let domain: any = this.container.get("Domain");
             let name = req.params.name;
             if (name) {
@@ -36,7 +36,7 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.app.get(Conventions.defaultUrlprefix + '/:domain/:schema/:id', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:domain/:schema/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
             let id = req.params.id;
@@ -45,7 +45,7 @@ export class ExpressAdapter extends AbstractAdapter {
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 
-        this.app.get(Conventions.defaultUrlprefix + '/:domain/:id', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:domain/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
             let id = req.params.id;
@@ -54,7 +54,7 @@ export class ExpressAdapter extends AbstractAdapter {
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 
-        this.app.get(Conventions.defaultUrlprefix + '/:domain', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:domain', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
@@ -76,15 +76,15 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // All actions by post
-        this.app.post(Conventions.defaultUrlprefix + '/:domain/:action?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.post(Conventions.defaultUrlprefix + '/:domain/:action?', auth, async (req: express.Request, res: express.Response) => {
             this.executeRequest(this.executeCommandRequest, this.normalizeCommand(req), req, res);
         });
 
-        this.app.get('/health', (req: express.Request, res: express.Response) => {
+        this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
         });
 
-        this.app.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {
         });
     }
 
@@ -108,7 +108,8 @@ export class ExpressAdapter extends AbstractAdapter {
             let ctx: RequestContext = new RequestContext(this.container, Pipeline.Http);
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
-
+            ctx.requestHeaders = req.headers;
+            
             let result = await handler.apply(this, [command, ctx]);
             if (result.headers) {
                 for (const [k, v] of result.headers) {
@@ -127,17 +128,17 @@ export class ExpressAdapter extends AbstractAdapter {
     {
         console.log("Set wwwroot to " + basePath);
         if(!basePath) throw new Error("BasePath is required.");
-        this.app.use(express.static(basePath));
+        this.express.use(express.static(basePath));
     }
 
     start(port:number)
     {
-        this.app.listen(port, (err) => {
+        this.express.listen(port, (err) => {
             console.log('Listening on port ' + port);
         });
     }
 
     useMiddleware(verb: string, path: string, handler: Function) {
-        this.app[verb](path, handler);
+        this.express[verb](path, handler);
     }
 }

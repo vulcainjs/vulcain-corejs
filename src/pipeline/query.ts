@@ -12,7 +12,7 @@ export interface QueryData extends CommonRequestData {
     page?: number;
 }
 
-export interface QueryResponse extends CommonRequestResponse{
+export interface QueryResponse<T> extends CommonRequestResponse<T> {
     maxByPage?: number;
     page?: number;
     totalPages?: number;
@@ -47,7 +47,7 @@ export class QueryManager implements IManager {
     }
 
     private createResponse(query: QueryData, error?: ErrorResponse) {
-        let res: QueryResponse = {
+        let res: QueryResponse<any> = {
             userContext: query.userContext,
             source: this._hostname,
             schema: query.schema,

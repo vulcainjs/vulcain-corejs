@@ -46,7 +46,7 @@ export interface ActionMetadata extends CommonActionMetadata {
     eventMode?: ActionEventMode;
  }
 
-export interface ActionResponse extends CommonRequestResponse {
+export interface ActionResponse<T> extends CommonRequestResponse<T> {
     correlationId: string;
     startedAt: string;
     completedAt?: string;
@@ -56,7 +56,7 @@ export interface ActionResponse extends CommonRequestResponse {
     commandMode?: string;
 }
 
-export interface EventData extends ActionResponse {
+export interface EventData extends ActionResponse<any> {
 
 }
 
@@ -96,7 +96,7 @@ export class CommandManager implements IManager {
     }
 
     private createResponse(command: ActionData, error?: ErrorResponse) {
-        let res: ActionResponse = {
+        let res: ActionResponse<any> = {
             source: this._hostname,
             startedAt: command.startedAt,
             service: command.service,
