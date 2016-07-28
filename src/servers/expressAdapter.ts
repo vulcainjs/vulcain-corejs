@@ -109,14 +109,14 @@ export class ExpressAdapter extends AbstractAdapter {
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
             ctx.requestHeaders = req.headers;
-            
+
             let result = await handler.apply(this, [command, ctx]);
-            if (result.headers) {
-                for (const [k, v] of result.headers) {
+            if (ctx.responseHeaders) {
+                for (const [k, v] of ctx.responseHeaders) {
                     res.setHeader(k, v);
                 }
             }
-            res.statusCode = result.code || 200;
+            res.statusCode = ctx.responseCode || 200;
             res.send(result.value);
         }
         catch (e) {
