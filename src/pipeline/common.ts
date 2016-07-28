@@ -41,13 +41,16 @@ export interface CommonRequestResponse<T> {
 }
 
 export interface CommonActionMetadata {
+    description?: string;
     action?: string;
     scope?: string;
     schema?: string|Function;
-    inputSchema?: string|Function;
+    inputSchema?: string | Function;
+    outputSchema?: string;
 }
 
 export interface CommonMetadata {
+    description?: string;
     schema?: string|Function;
     serviceName?: string;
 }
