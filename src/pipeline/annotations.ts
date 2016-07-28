@@ -47,14 +47,14 @@ export function Action(actionMetadata?: ActionMetadata) {
             if (params && params.length > 0 && params[0].name !== "Object") {
                 actions[key].inputSchema = params[0];
             }
-            let output = Reflect.getMetadata("design:returntype", target, key);
-            if (output && output.name !== "Object") {
-                actions[key].outputSchema = output;
-            }
+        }
+        let output = Reflect.getMetadata("design:returntype", target, key);
+        if (output && output.name !== "Object") {
+            actions[key].outputSchema = output.name;
         }
         actions[key].action = actions[key].action || key;
         Reflect.defineMetadata(symActions, actions, target.constructor);
-	}
+    }
 }
 
 export function QueryHandler(metadata: QueryMetadata) {
@@ -78,11 +78,11 @@ export function Query(actionMetadata?: QueryActionMetadata) {
             if (params && params.length > 0 && params[0].name !== "Object") {
                 actions[key].inputSchema = params[0];
             }
+        }
             let output = Reflect.getMetadata("design:returntype", target, key);
             if (output && output.name !== "Object") {
-                actions[key].outputSchema = output;
+                actions[key].outputSchema = output.name;
             }
-        }
         actions[key].action = actions[key].action || key;
         Reflect.defineMetadata(symActions, actions, target.constructor);
 	}

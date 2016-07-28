@@ -116,7 +116,7 @@ export class CommandManager implements IManager {
     private async validateRequestData(info, command) {
         let errors;
         let data = command.data;
-        let inputSchema = info.metadata.inputSchema || info.metadata.schema;
+        let inputSchema = info.metadata.inputSchema;
         if (inputSchema) {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {

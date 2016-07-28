@@ -127,6 +127,12 @@ export class HandlerFactory {
                 actionMetadata.action = tmp;
             }
 
+            if (!actionMetadata.inputSchema) {
+                actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
+            }
+            if (!actionMetadata.outputSchema) {
+                actionMetadata.outputSchema = <string>actionMetadata.inputSchema;
+            }
             if (actionMetadata.schema) {
                 // test if exists
                 let tmp = domain.getSchema(actionMetadata.schema);
