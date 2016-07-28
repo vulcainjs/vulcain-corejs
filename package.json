@@ -34,6 +34,7 @@
   "dependencies": {
     "amqplib": "^0.4.2",
     "body-parser": "^1.15.2",
+    "cors": "^2.7.1",
     "express": "^4.14.0",
     "fast-stats": "0.0.3",
     "jsonwebtoken": "^7.0.1",

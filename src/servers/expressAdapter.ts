@@ -9,6 +9,7 @@ import {DefaultServiceNames} from '../application';
 import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
@@ -16,6 +17,7 @@ export class ExpressAdapter extends AbstractAdapter {
     constructor(domainName: string, container: IContainer) {
         super(domainName, container);
         this.express = express();
+        this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
 
