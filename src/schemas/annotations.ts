@@ -8,7 +8,7 @@ export interface ModelOptions {
     bind?: ((data) => any)|boolean;
     preCreate?: (entity, container?:IContainer) => any;
     preUpdate?: (entity, container?:IContainer) => any;
-    preGet?: (entity, container?:IContainer) => any;
+    postGet?: (entity, container?:IContainer) => any;
     validate?: (entity, container?:IContainer) => string;
     storageName?: string;
 }

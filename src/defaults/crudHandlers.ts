@@ -16,8 +16,8 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
         if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preCreate)
             entity = await this.schema.description.preCreate(entity, this.container) || entity;
         entity = await this.provider.createAsync(this.schema, entity);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
-            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
+            entity = await this.schema.description.postGet(entity, this.container) || entity;
         return entity;
     }
 
@@ -30,8 +30,8 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
             throw new Error("Entity doesn't exist for updating");
 
         entity = await this.provider.updateAsync(this.schema, entity, old);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
-            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
+            entity = await this.schema.description.postGet(entity, this.container) || entity;
         return entity;
     }
 
@@ -45,17 +45,17 @@ class DefaultRepositoryCommand extends AbstractCommand<any> {
         let query = {};
         query[keyProperty] = id;
         let entity = await this.provider.findOneAsync(this.schema, query);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.preGet)
-            entity = await this.schema.description.preGet(entity, this.container) || entity;
+        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
+            entity = await this.schema.description.postGet(entity, this.container) || entity;
         return entity;
     }
 
     async search(options: any) {
         let list = await this.provider.getAllAsync(this.schema, options);
-        if (this.context.pipeline === Pipeline.Http && list && this.schema.description.preGet) {
+        if (this.context.pipeline === Pipeline.Http && list && this.schema.description.postGet) {
             let result = [];
             for (const e of list) {
-                let item = await this.schema.description.preGet(e, this.container);
+                let item = await this.schema.description.postGet(e, this.container);
                 result.push( item || e);
             }
             return result;
