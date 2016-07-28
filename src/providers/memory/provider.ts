@@ -73,7 +73,8 @@ export class MemoryProvider implements IProvider<any>
         if (list) {
             for (let k in list) {
                 let v = list[k];
-                if (!v || options.query && !self.filter(schema, v, options.query)) continue;
+                let filter = options.query.filter || options.query;
+                if (!v || filter && !self.filter(schema, v, filter)) continue;
 
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {

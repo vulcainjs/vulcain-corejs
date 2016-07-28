@@ -78,7 +78,7 @@ export class MongoProvider implements IProvider<any>
                 try
                 {
                     let db = await this.ensuresDbOpen();
-                    let cursor = db.collection(schema.description.storageName).find(options.query, null, options.page, options.maxByPage);
+                    let cursor = db.collection(schema.description.storageName).find(options.query.filter || options.query, null, options.page, options.maxByPage);
                     cursor.toArray((err, res) => {
                         if(err)
                             reject(err);

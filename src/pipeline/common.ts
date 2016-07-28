@@ -106,7 +106,7 @@ export class HandlerFactory {
         }
     }
 
-    register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata) {
+    register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata, useSchemaByDefault=false) {
 
         let domainName = domain.name;
 
@@ -127,7 +127,7 @@ export class HandlerFactory {
                 actionMetadata.action = tmp;
             }
 
-            if (!actionMetadata.inputSchema) {
+            if (!actionMetadata.inputSchema && useSchemaByDefault) {
                 actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
             }
             if (!actionMetadata.outputSchema) {

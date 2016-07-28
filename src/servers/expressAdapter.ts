@@ -64,8 +64,14 @@ export class ExpressAdapter extends AbstractAdapter {
                 query.schema = req.query.$schema;
                 query.data = {};
                 Object.keys(req.query).forEach(name => {
-                    if (name && name[0] !== "$") {
-                        query.data[name] = req.query[name];
+                    switch (name) {
+                        case "$action":
+                        case "$schema":
+                        case "$page":
+                        case "$maxByPage":
+                            break;
+                        default:
+                            query.data[name] = req.query[name];
                     }
                 });
                 this.executeRequest(this.executeQueryRequest, query, req, res);

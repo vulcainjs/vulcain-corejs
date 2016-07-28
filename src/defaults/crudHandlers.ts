@@ -98,7 +98,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
 
 export class DefaultQueryHandler extends AbstractQueryHandler {
 
-    constructor( @Inject("Container") container: IContainer) {
+    constructor( @Inject("Container") container: IContainer ) {
         super(container);
     }
 

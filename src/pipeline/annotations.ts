@@ -32,7 +32,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         let actions = getMetadata(symActions, target);
 
         Application.registerPreload( target, (container, domain) => {
-            CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata);
+            CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata, true);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }
