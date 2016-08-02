@@ -76,7 +76,7 @@ export class HandlerFactory {
     private isMonoSchema: boolean = undefined;
 
     private ensuresOptimized(domain) {
-        if (this.isMonoSchema !== undefined)
+        if (!domain || this.isMonoSchema !== undefined)
             return;
 
         // Check if all schema are the same so schema will be optional on request
@@ -168,8 +168,8 @@ export class HandlerFactory {
 
         this.ensuresOptimized(domain);
 
-        let d = domain.toLowerCase();
-        let a = action.toLowerCase();
+        let d = domain && domain.toLowerCase();
+        let a = action && action.toLowerCase();
         let handlerKey;
         let info;
         if (!this.isMonoSchema && schema) {

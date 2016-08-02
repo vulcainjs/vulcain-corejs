@@ -84,15 +84,17 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // All actions by post
-        this.express.post(Conventions.defaultUrlprefix + '/:domain/:action?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.post(Conventions.defaultUrlprefix + '/:schema/:action?', auth, async (req: express.Request, res: express.Response) => {
+            const cmd = this.normalizeCommand(req);
+            this.executeRequest(this.executeCommandRequest, cmd, req, res);
+        });
+
+        this.express.post(Conventions.defaultUrlprefix + '/:schema?', auth, async (req: express.Request, res: express.Response) => {
             this.executeRequest(this.executeCommandRequest, this.normalizeCommand(req), req, res);
         });
 
         this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
-        });
-
-        this.express.get(Conventions.defaultUrlprefix + '/:domain/swagger', async (req: express.Request, res: express.Response) => {
         });
     }
 
@@ -100,10 +102,10 @@ export class ExpressAdapter extends AbstractAdapter {
         let command = req.body;
 
         // Body contains only data -> create a new command object
-        if (!command.action && !command.data && !command.domain) {
+        if (!command.action && !command.data && !command.schema) {
             command = { data: command };
         }
-        command.domain = command.domain || req.params.domain;
+        command.domain = this.domainName;
         command.action = command.action || req.params.action;
         command.schema = command.schema || req.params.schema;
         command.data = command.data || {};
