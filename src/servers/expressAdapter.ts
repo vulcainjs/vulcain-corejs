@@ -106,8 +106,8 @@ export class ExpressAdapter extends AbstractAdapter {
             command = { data: command };
         }
         command.domain = this.domainName;
-        command.action = command.action || req.params.action;
-        command.schema = command.schema || req.params.schema;
+        command.action = command.action || req.params.action || req.query.$action;
+        command.schema = command.schema || req.params.schema || req.query.$schema;
         command.data = command.data || {};
         return command;
     }

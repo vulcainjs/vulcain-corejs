@@ -259,6 +259,8 @@ export class MemoryProvider implements IProvider<any>
                     reject(new Error("Can not add existing entity " + name));
                     return;
                 }
+
+                entity = Object.assign(list[name], entity);
                 list[name] = MemoryProvider.clone(entity);
                 self.save(schema);
                 resolve(entity);
