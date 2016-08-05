@@ -3,7 +3,7 @@ import {ErrorResponse} from './common';
 const guid = require('node-uuid');
 import {ICommandBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {LocalAdapter} from '../bus/localAdapter';
-import {DefaultServiceNames} from '../application';
+import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';
 
 export class MessageBus {

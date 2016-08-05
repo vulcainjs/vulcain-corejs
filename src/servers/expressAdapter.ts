@@ -5,7 +5,7 @@ import {AbstractAdapter} from './abstractAdapter';
 import {RequestContext, Pipeline} from './requestContext';
 import {IContainer} from '../di/resolvers';
 import {Authentication} from './expressAuthentication';
-import {DefaultServiceNames} from '../application';
+import {DefaultServiceNames} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
 const bodyParser = require('body-parser');
@@ -118,6 +118,7 @@ export class ExpressAdapter extends AbstractAdapter {
             let ctx: RequestContext = new RequestContext(this.container, Pipeline.Http);
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
+            ctx.tenant = req.headers["X_VULCAIN_TENANT"];
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);

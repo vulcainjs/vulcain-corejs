@@ -1,7 +1,7 @@
 import {CircuitBreakerFactory} from "../../dist/commands/command/circuitBreaker";
 import {CommandProperties} from "../../dist/commands/command/commandProperties";
 import {CommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetrics";
-import {DynamicConfiguration} from '@sovinty/vulcain-configurations'
+import {DynamicConfiguration} from 'vulcain-configurationsjs'
 import { expect } from 'chai';
 
 try {

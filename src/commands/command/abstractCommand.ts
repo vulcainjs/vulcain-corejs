@@ -5,7 +5,7 @@ import {DynamicConfiguration, IDynamicProperty, Logger} from 'vulcain-configurat
 import {ExecutionResult} from './executionResult'
 import {Schema} from '../../schemas/schema';
 import {IProvider} from '../../providers/provider';
-import {DefaultServiceNames} from '../../application';
+import {DefaultServiceNames} from '../../di/annotations';
 import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
@@ -47,6 +47,7 @@ export interface ICommandContext {
     cache: Map<string, any>;
     logger: Logger;
     pipeline: Pipeline;
+    tenant: string;
 }
 
 export abstract class AbstractCommand<T> {
@@ -55,13 +56,12 @@ export abstract class AbstractCommand<T> {
     provider: IProvider<any>;
     schema: Schema;
 
-    constructor( @Inject("Container") protected container: IContainer) { }
+    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer, @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) { }
 
     setSchema(schema: string) {
         if (schema && !this.provider) {
-            this.provider = this.container.get<IProvider<any>>(DefaultServiceNames.Provider);
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider.initializeWithSchema(this.schema);
+            this.provider = this.providerFactory.getProvider(this.context.tenant, this.schema);
         }
     }
 
@@ -139,6 +139,7 @@ export abstract class AbstractCommand<T> {
         request.header("X-VULCAIN-SERVICE-VERSION", DynamicConfiguration.serviceVersion);
         request.header("X-VULCAIN-CLUSTER", DynamicConfiguration.clusterName);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
+        request.header("X-VULCAIN-TENANT", this.context.tenant);
 
         prepareRequest && prepareRequest(request);
 

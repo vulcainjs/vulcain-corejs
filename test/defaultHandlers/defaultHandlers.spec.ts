@@ -45,12 +45,13 @@ describe("Default action handler", function () {
             let entity = { firstName: "elvis", lastName: "Presley" };
             await actionHandler.createAsync(entity);
             let query:any = container.get("TestQueryService");
-            entity = await query.getAsync("presley");
+            entity = await query.getAsync("Presley");
             expect(entity).to.be.not.null;
             done();
         }
         catch (e) {
             console.log(e);
+            done(e);
         }
     });
 

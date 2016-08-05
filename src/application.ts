@@ -8,24 +8,12 @@ import { Container } from './di/containers'
 import { Files } from './utils/files'
 import { ExpressAdapter } from './servers/expressAdapter'
 import 'reflect-metadata'
-import {LifeTime} from './di/annotations';
+import {LifeTime, DefaultServiceNames} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
-
-export class DefaultServiceNames
-{
-    static "Authentication" = "Authentication";
-    static "Logger" = "Logger";
-    static "Provider" = "Provider";
-    static "EventBusAdapter" = "EventBusAdapter";
-    static "ActionBusAdapter" = "ActionBusAdapter";
-    static "Domain" = "Domain";
-    static "Application" = "ApplicationFactory";
-    static "ServerAdapter" = "ServerAdapter";
-}
 
 export class Application
 {
@@ -37,10 +25,12 @@ export class Application
     }
 
     static runPreloads(container: IContainer, domain: Domain) {
-        for (const callback of Application._preloads) {
-            callback(container, domain);
+        if (Application._preloads) {
+            for (const callback of Application._preloads) {
+                callback(container, domain);
+            }
+            Application._preloads = null;
         }
-        Application._preloads = null;
     }
 
     private _executablePath: string;
@@ -86,7 +76,7 @@ export class Application
         this._basePath = this.findBasePath();
         this._container = container || new Container();
         this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
-        this._container.injectSingleton(MemoryProvider, DefaultServiceNames.Provider);
+        this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
     }
 

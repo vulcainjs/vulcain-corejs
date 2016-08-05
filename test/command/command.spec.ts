@@ -2,7 +2,7 @@ import {CircuitBreakerFactory} from "../../dist/commands/command/circuitBreaker"
 import {CommandFactory} from '../../dist/commands/command/commandFactory'
 import {CommandProperties} from "../../dist/commands/command/commandProperties";
 import {CommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetrics";
-import {DynamicConfiguration} from '@sovinty/vulcain-configurations'
+import {DynamicConfiguration} from 'vulcain-configurationsjs'
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import {TimeoutError, CommandRuntimeError} from '../../dist/commands/command/command'

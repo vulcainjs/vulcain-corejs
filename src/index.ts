@@ -20,7 +20,7 @@ export {AbstractAdapter} from './servers/abstractAdapter';
 
 export {IContainer} from './di/resolvers';
 export {TestContainer} from './di/containers';
-export {Inject, Injectable, LifeTime} from './di/annotations';
+export {Inject, Injectable, LifeTime, DefaultServiceNames} from './di/annotations';
 
 export {IProvider, ListOptions} from './providers/provider'
 export {RequestContext, Pipeline} from './servers/requestContext'

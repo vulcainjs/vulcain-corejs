@@ -1,10 +1,11 @@
 import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
-import {Application, DefaultServiceNames} from '../application';
+import {Application} from '../application';
 import * as os from 'os';
 import {RequestContext} from '../servers/requestContext';
 import {CommandRuntimeError} from '../commands/command/command';
+import {DefaultServiceNames} from '../di/annotations';
 
 export interface QueryData extends CommonRequestData {
     data: any;

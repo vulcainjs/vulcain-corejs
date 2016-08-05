@@ -5,22 +5,32 @@ import {Schema} from "../../schemas/schema";
 import {MongoClient, Db, Cursor} from 'mongodb';
 import {Inject} from '../../di/annotations';
 import {Logger} from 'vulcain-configurationsjs'
+import * as P from 'path';
+
 /**
  * Default mongo provider
  */
 export class MongoProvider implements IProvider<any>
 {
     private  _mongo;
-    private _keyPropertyName:string;
-
-    constructor( @Inject("Logger") private _logger: Logger, private uri: string, private options?) {
+    public state: {
+        keyPropertyName?: string;
+        uri: string;
     }
 
-    initializeWithSchema(schema:Schema) {
+    constructor( @Inject("Logger") private _logger: Logger, uri: string, private options?) {
+        this.state = { uri: uri };
+    }
+
+    initializeWithSchema(tenant:string, schema:Schema): any {
         if (!schema)
             throw new Error("Schema is not set for the current provider.");
+        if (!tenant)
+            throw new Error("tenant is required");
 
-        this._keyPropertyName = schema.getIdProperty();
+        this.state.uri = P.join(this.state.uri, tenant);
+        this.state.keyPropertyName = schema.getIdProperty();
+
         let keys;
         for (let p in schema.description.properties) {
             if (!schema.description.properties.hasOwnProperty(p))
@@ -44,6 +54,7 @@ export class MongoProvider implements IProvider<any>
                     this._logger.log(err);
                 });
         }
+        return this.state;
     }
 
     private ensuresDbOpen(): Promise<Db> {
@@ -51,7 +62,7 @@ export class MongoProvider implements IProvider<any>
         let self = this;
         return new Promise((resolve, reject) => {
             if (!self._mongo) {
-                MongoClient.connect(self.uri, self.options, (err, db) => {
+                MongoClient.connect(self.state.uri, self.options, (err, db) => {
                     if (err)
                         reject(err);
                     else
@@ -71,7 +82,7 @@ export class MongoProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAllAsync( schema:Schema, options:ListOptions ) : Promise<Array<any>>
+    getAllAsync(  schema:Schema, options:ListOptions ) : Promise<Array<any>>
     {
         return new Promise( async ( resolve, reject ) =>
             {
@@ -94,7 +105,7 @@ export class MongoProvider implements IProvider<any>
         );
     }
 
-    findOneAsync(schema:Schema, query) {
+    findOneAsync( schema:Schema, query) {
         var self = this;
         return new Promise(async (resolve, reject) => {
             try {
@@ -118,7 +129,7 @@ export class MongoProvider implements IProvider<any>
      * @param name
      * @returns {Promise}
      */
-    getAsync( schema:Schema, name:string )
+    getAsync(  schema:Schema, name:string )
     {
         var self = this;
         return new Promise( async ( resolve, reject ) =>
@@ -126,7 +137,7 @@ export class MongoProvider implements IProvider<any>
             try
             {
                 let filter = {};
-                filter[this._keyPropertyName|| "_id"] = name;
+                filter[this.state.keyPropertyName|| "_id"] = name;
                 let db = await this.ensuresDbOpen();
                 let cursor = db.collection(schema.description.storageName).findOne(filter, (err, res) => {
                     if(err)
@@ -146,7 +157,7 @@ export class MongoProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    deleteAsync( schema:Schema, old: string|any )
+    deleteAsync(  schema:Schema, old: string|any )
     {
         if (!old)
             throw new Error("Argument is required");
@@ -160,9 +171,9 @@ export class MongoProvider implements IProvider<any>
                 if (typeof old === "string")
                     id = old;
                 else
-                    id = old[this._keyPropertyName];
+                    id = old[this.state.keyPropertyName];
                 let filter = {};
-                filter[this._keyPropertyName|| "_id"] = id;
+                filter[this.state.keyPropertyName|| "_id"] = id;
                 let db = await this.ensuresDbOpen();
                 let cursor = db.collection(schema.description.storageName).remove(filter, (err, res) => {
                     if(err)
@@ -194,7 +205,7 @@ export class MongoProvider implements IProvider<any>
      * @param entity
      * @returns {Promise}
      */
-    createAsync(schema:Schema,  entity )
+    createAsync( schema:Schema,  entity )
     {
         if (!entity)
             throw new Error("Entity is required");
@@ -207,7 +218,7 @@ export class MongoProvider implements IProvider<any>
                 let db = await this.ensuresDbOpen();
                 let cursor = db.collection(schema.description.storageName).insertOne(entity, (err) => {
                     if(err)
-                        reject(this.normalizeErrors(entity[this._keyPropertyName], err));
+                        reject(this.normalizeErrors(entity[this.state.keyPropertyName], err));
                     else
                         resolve(entity);
                 });
@@ -224,15 +235,15 @@ export class MongoProvider implements IProvider<any>
      * @param old
      * @returns {Promise<T>}
      */
-    updateAsync(schema:Schema, entity, old) {
+    updateAsync( schema:Schema, entity, old) {
         if (!entity)
             throw new Error("Entity is required");
 
         return new Promise(async (resolve, reject) => {
             try {
-                let id = (old||entity)[this._keyPropertyName];
+                let id = (old||entity)[this.state.keyPropertyName];
                 let filter = {};
-                filter[this._keyPropertyName||"_id"] = id;
+                filter[this.state.keyPropertyName||"_id"] = id;
                 let db = await this.ensuresDbOpen();
                 let collection = db.collection(schema.description.storageName);
                 let cursor = collection.findOne(filter, (err, initial) => {

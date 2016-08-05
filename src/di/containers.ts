@@ -1,15 +1,17 @@
 import 'reflect-metadata';
 import {Scope} from './scope';
-import {IResolver, InstanceResolver, SingletonResolver, Resolver} from './resolvers';
+import {IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver} from './resolvers';
 import {IContainer, BusUsage} from '../di/resolvers';
-import {DefaultServiceNames} from '../application';
+import {DefaultServiceNames} from '../di/annotations';
 import {RabbitAdapter} from '../bus/rabbitAdapter'
 import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
+import {ProviderFactory} from '../providers/providerFactory';
 import {VulcainLogger} from 'vulcain-configurationsjs'
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
+import {LifeTime} from './annotations';
 
 export class Container implements IContainer {
 
@@ -18,7 +20,10 @@ export class Container implements IContainer {
 
     constructor(private parent?: IContainer) {
         this.scope = new Scope(parent && (<any>parent).scope);
-        this.injectInstance(this, "Container");
+        this.injectInstance(this, DefaultServiceNames.Container);
+        if (!parent) {
+            this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
+        }
     }
 
     dispose() {
@@ -35,11 +40,11 @@ export class Container implements IContainer {
     }
 
     useMongoProvider(uri: string, mongoOptions?) {
-        this.injectSingleton(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
+        this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 
     useMemoryProvider(folder?:string) {
-        this.injectSingleton(MemoryProvider, DefaultServiceNames.Provider, folder);
+        this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
     }
 
     /**
@@ -100,7 +105,7 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if(!name)
             return;
-        this.resolvers.set(name, new Resolver(fn, Array.from(args)));
+        this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         console.log("INFO: Register transient component " + name + " as " + (fn.name || '<unnamed>'));
         return this;
     }
@@ -125,7 +130,7 @@ export class Container implements IContainer {
         let attr = Reflect.getOwnMetadata(Symbol.for("di:export"), fn);
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
-        this.resolvers.set(name, new Resolver(fn, Array.from(args), true));
+        this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
         console.log("INFO: Register scoped component " + name + " as " + fn.name);
         return this;
     }
@@ -138,13 +143,13 @@ export class Container implements IContainer {
      */
     resolve(fn, ...args) {
         if(typeof fn !== "function") throw new Error("fn must be a ctor");
-        let resolver = new Resolver(fn, Array.from(args));
-        return this._resolve(resolver);
+        let resolver = new Resolver(fn, LifeTime.Transient, Array.from(args));
+        return this._resolve(this, resolver);
     }
 
-    private _resolve(resolver:IResolver, name?:string, optional?:boolean) {
+    private _resolve(parentContainer: Container, resolver:IResolver, name?:string, optional?:boolean) {
 
-        let instance = resolver && resolver.resolve(this, name);
+        let instance = resolver && resolver.resolve(this, name, parentContainer);
 
         if(!instance && !optional)
             throw new Error("Unable to resolve component " + name);
@@ -157,7 +162,7 @@ export class Container implements IContainer {
         while (self) {
             let resolver = self.resolvers.get(name);
             if (resolver)
-                return resolver;
+                return { resolver, container:self };
             self = <Container>self.parent;
         }
         return null;
@@ -170,9 +175,14 @@ export class Container implements IContainer {
      * @param optional
      * @returns {any}
      */
-    get<T>(name:string, optional?:boolean) {
-        let resolver = this.findResolver(name);
-        let component = this._resolve(resolver, name, optional);
+    get<T>(name:string, optional?:boolean, assertLifeTime?:LifeTime) {
+        let res = this.findResolver(name);
+        let resolver = res.resolver;
+        if (assertLifeTime) {
+            if (!(assertLifeTime & resolver.lifeTime))
+                throw new Error("Component " + name + " must be declared with a life time = " + assertLifeTime);
+        }
+        let component = this._resolve(res.container, resolver, name, optional);
         return <T>component;
     }
 }
@@ -181,7 +191,7 @@ export class TestContainer extends Container {
     constructor(public domainName: string, addServices?: (Container: IContainer) => void) {
         super();
         this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
-        this.injectSingleton(MemoryProvider, DefaultServiceNames.Provider);
+        this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         let domain = new Domain(domainName, this);
         this.injectInstance(domain, DefaultServiceNames.Domain);
 

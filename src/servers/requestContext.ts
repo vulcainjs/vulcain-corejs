@@ -30,6 +30,7 @@ export class RequestContext {
     public requestHeaders: { [name: string]: string };
     public responseHeaders: Map<string,string>;
     public responseCode: number;
+    public tenant: string;
 
     constructor(container: IContainer, public pipeline: Pipeline) {
         this.cache = new Map<string, any>();
@@ -44,6 +45,7 @@ export class RequestContext {
 
     static createMock(container?: IContainer, user?:any, req?) {
         let ctx = new RequestContext(container || new Container(), Pipeline.inProcess);
+        ctx.tenant = "_test_";
         ctx.user = user || {id:"test", scopes:["*"], name:"test", password:"", displayName:"test", email:"test", data:{}, disabled:false};
         return ctx;
     }

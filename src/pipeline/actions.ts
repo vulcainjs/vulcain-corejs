@@ -2,7 +2,7 @@ import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
-import {DefaultServiceNames} from '../application'
+import {DefaultServiceNames} from '../di/annotations';
 import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata} from './common';
 const moment = require('moment');
 const guid = require('node-uuid');

@@ -7,8 +7,10 @@ import {Inject} from '../../di/annotations';
  */
 export class MemoryProvider implements IProvider<any>
 {
-    private _data: any = {};
-    private _saveToFile: string;
+    public state: {
+        data: any;
+        saveToFile?: string;
+    };
 
     /**
      * Create a memory provider instance.
@@ -17,27 +19,30 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    initializeWithSchema(schema: Schema) {
+    initializeWithSchema(tenant: string, schema: Schema) {
 
         if (!schema)
             throw new Error("Schema can not be null");
+
+        this.state = { data: {} };
 
         if (this.dataFolder) {
             // console.log("Create memory provider for " + schema.name);
             if (!fs.existsSync(this.dataFolder))
                 fs.mkdirSync(this.dataFolder);
 
-            this._saveToFile = this.dataFolder + "/" + schema.description.storageName + ".json";
+            this.state.saveToFile = this.dataFolder + "/" + tenant + "/" + schema.description.storageName + ".json";
 
-            if (fs.existsSync(this._saveToFile)) {
-                this._data = JSON.parse(fs.readFileSync(this._saveToFile, "UTF-8"));
+            if (fs.existsSync(this.state.saveToFile)) {
+                this.state.data = JSON.parse(fs.readFileSync(this.state.saveToFile, "UTF-8"));
             }
         }
+        return this.state;
     }
 
     private save(schema: Schema) {
-        if (!this._saveToFile) return;
-        fs.writeFileSync(this._saveToFile, JSON.stringify(this._data), "UTF-8")
+        if (!this.state.saveToFile) return;
+        fs.writeFileSync(this.state.saveToFile, JSON.stringify(this.state.data), "UTF-8")
     }
 
     static clone(obj) {
@@ -53,7 +58,7 @@ export class MemoryProvider implements IProvider<any>
         options = options || { maxByPage: -1 };
         return new Promise((resolve, reject) => {
             try {
-                let result = Array.from(this.take(schema, this._data[schema.description.storageName], options));
+                let result = Array.from(this.take(schema, this.state.data[schema.description.storageName], options));
                 options.length = result.length;
                 resolve(result);
             }
@@ -189,7 +194,7 @@ export class MemoryProvider implements IProvider<any>
         var self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.description.storageName];
+                let list = self.state.data[schema.description.storageName];
                 resolve(list && MemoryProvider.clone(list[name] || []));
             }
             catch (err) {
@@ -216,7 +221,7 @@ export class MemoryProvider implements IProvider<any>
                 else
                     id = schema.getId(old);
 
-                let list = self._data[schema.description.storageName];
+                let list = self.state.data[schema.description.storageName];
                 if (list && list[id]) {
                     delete list[id];
                     self.save(schema);
@@ -246,10 +251,10 @@ export class MemoryProvider implements IProvider<any>
 
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.description.storageName];
+                let list = self.state.data[schema.description.storageName];
                 if (!list) {
                     list = {};
-                    self._data[schema.description.storageName] = list;
+                    self.state.data[schema.description.storageName] = list;
                 }
                 let name = schema.getId(entity);
                 if (!name)
@@ -260,7 +265,6 @@ export class MemoryProvider implements IProvider<any>
                     return;
                 }
 
-                entity = Object.assign(list[name], entity);
                 list[name] = MemoryProvider.clone(entity);
                 self.save(schema);
                 resolve(entity);
@@ -286,12 +290,14 @@ export class MemoryProvider implements IProvider<any>
         let self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = self._data[schema.description.storageName];
+                let list = self.state.data[schema.description.storageName];
                 let name = schema.getId(entity);
                 if (!list || !list[name]) {
                     reject("Entity doesn't exist. " + name);
                     return;
                 }
+
+                entity = Object.assign(list[name], entity);
                 list[name] = MemoryProvider.clone(entity);
                 self.save(schema);
                 resolve(entity);
