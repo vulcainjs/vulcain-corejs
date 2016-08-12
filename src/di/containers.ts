@@ -177,12 +177,12 @@ export class Container implements IContainer {
      */
     get<T>(name:string, optional?:boolean, assertLifeTime?:LifeTime) {
         let res = this.findResolver(name);
-        let resolver = res.resolver;
-        if (assertLifeTime) {
+        let resolver = res && res.resolver;
+        if (assertLifeTime && resolver) {
             if (!(assertLifeTime & resolver.lifeTime))
                 throw new Error("Component " + name + " must be declared with a life time = " + assertLifeTime);
         }
-        let component = this._resolve(res.container, resolver, name, optional);
+        let component = this._resolve(res && res.container, resolver, name, optional);
         return <T>component;
     }
 }

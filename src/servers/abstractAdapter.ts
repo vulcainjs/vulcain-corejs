@@ -4,6 +4,7 @@ import * as os from 'os';
 import * as http from 'http';
 import {IContainer} from '../di/resolvers';
 import {CommandManager, ActionMetadata} from '../pipeline/actions';
+import {CommonRequestData} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
 import {BadRequestError, Logger} from 'vulcain-configurationsjs';
@@ -14,6 +15,13 @@ export abstract class AbstractAdapter {
     private commandManager;
     private queryManager;
 
+    private calcDelayInMs(begin: number[]): number {
+        // ts = [seconds, nanoseconds]
+        const ts = process.hrtime(begin);
+        // convert seconds to miliseconds and nanoseconds to miliseconds as well
+        return (ts[0] * 1000) + (ts[1] / 1000000);
+    }
+
     constructor(protected domainName:string, protected container: IContainer) {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
@@ -22,6 +30,14 @@ export abstract class AbstractAdapter {
     public abstract start(port:number);
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
+
+    protected startRequest() {
+        return process.hrtime();
+    }
+
+    protected endRequest(begin: number[], command:CommonRequestData, code:number) {
+        const ms = this.calcDelayInMs(begin);
+    }
 
     protected executeQueryRequest(query, ctx){
         return this.executeRequestInternal(this.queryManager, query, ctx);

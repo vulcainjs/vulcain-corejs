@@ -82,18 +82,33 @@ export abstract class AbstractCommand<T> {
     protected logInfo(...msg: Array<string|Error>) {
         let message = (<Array<string>>msg.filter(m => typeof m === "string")).join(" ");
         let errors = (<Array<Error>>msg.filter(m => m instanceof Error));
-        this.context.logger.info(message, errors && errors[0], this.context);    }
+        this.context.logger.info(message, errors && errors[0], this.context);
+    }
 
     private createServiceName(serviceName: string, version: number) {
-        return serviceName + version;
+        if (!serviceName)
+            throw new Error("You must provide a service name");
+        if (!version || version < 0)
+            throw new Error("Invalid version number");
+
+        let name = [serviceName, version, "$redirect"].join('.');
+        let prop = DynamicConfiguration.getProperty<any>(name);
+        if (prop && prop.value) {
+            serviceName = prop.value.serviceName || serviceName;
+            version = prop.value.version || version;
+        }
+
+        return (serviceName + version).replace(/[\.-]/g, '').toLowerCase();
     }
 
     /**
-     * send a http get request
-     * @param serviceId
-     * @param version
-     * @param urlSegments
-     * @returns {Promise<types.IHttpResponse>}
+     * get a domain element
+     * @param serviceName - full service name
+     * @param version - version of the service
+     * @param domain  - service domain name
+     * @param id - Element id
+     * @param schema - optional element schema
+     * @returns A vulcain request response
      */
     protected async getRequestAsync<T>(serviceName: string, version: number, domain:string, id:string, schema?:string): Promise<QueryResponse<T>> {
         let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/${domain}/${schema}/${id}`

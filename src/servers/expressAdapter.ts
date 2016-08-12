@@ -113,12 +113,13 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
+        const begin = super.startRequest();
 
         try {
             let ctx: RequestContext = new RequestContext(this.container, Pipeline.Http);
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
-            ctx.tenant = req.headers["X_VULCAIN_TENANT"];
+            ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env["VULCAIN_TENANT"] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);
@@ -129,9 +130,11 @@ export class ExpressAdapter extends AbstractAdapter {
             }
             res.statusCode = ctx.responseCode || 200;
             res.send(result.value);
+            this.endRequest(begin, command, res.statusCode);
         }
         catch (e) {
             res.status(500).send(e);
+            this.endRequest(begin, command, 500);
         }
     }
 

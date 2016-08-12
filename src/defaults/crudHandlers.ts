@@ -2,7 +2,14 @@ import {ActionData} from '../pipeline/actions';
 import {ActionHandler, Action, EventHandler, Consume, Query} from '../pipeline/annotations';
 import {ValidationError, RuntimeError} from '../pipeline/common';
 import {Property, Model} from '../schemas/annotations'
-import {Pipeline, AbstractCommand, AbstractActionHandler, QueryData, Command, AbstractQueryHandler, Domain, Schema, DefaultServiceNames, Inject, IContainer, IProvider} from '../index';
+import {AbstractActionHandler, AbstractQueryHandler} from '../pipeline/abstractHandlers';
+import {AbstractCommand} from '../commands/command/abstractCommand'
+import {Schema} from '../schemas/schema';
+import {IProvider} from '../providers/provider';
+import {IContainer} from '../di/resolvers';
+import {Inject} from '../di/annotations';
+import {Pipeline} from '../servers/requestContext';
+import {Command} from '../commands/command/commandFactory';
 
 @Command({executionTimeoutInMilliseconds: 1500})
 class DefaultRepositoryCommand extends AbstractCommand<any> {

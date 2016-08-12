@@ -147,6 +147,7 @@ export class HystrixCommand {
     }
 
     private async getFallbackOrThrowException(eventType: EventType, failureType: FailureType, message: string, error: Error): Promise<any> {
+        this.logInfo(error.message);
         try {
             if (this.isUnrecoverable(error)) {
                 this.logInfo("Unrecoverable error for command so will throw CommandRuntimeError and not apply fallback " + error);

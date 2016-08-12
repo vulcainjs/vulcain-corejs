@@ -23,6 +23,7 @@ export enum Pipeline {
 }
 
 export class RequestContext {
+    static TestTenant = "_test_";
     public user: any;
     public cache: Map<string, any>;
     public logger: Logger;
@@ -45,7 +46,7 @@ export class RequestContext {
 
     static createMock(container?: IContainer, user?:any, req?) {
         let ctx = new RequestContext(container || new Container(), Pipeline.inProcess);
-        ctx.tenant = "_test_";
+        ctx.tenant = RequestContext.TestTenant;
         ctx.user = user || {id:"test", scopes:["*"], name:"test", password:"", displayName:"test", email:"test", data:{}, disabled:false};
         return ctx;
     }
