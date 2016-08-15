@@ -1,4 +1,5 @@
-
+const uuid = require('node-uuid')
+import {DynamicConfiguration} from 'vulcain-configurationsjs';
 
 export let standards = {
     "$ref": {
@@ -74,15 +75,14 @@ export let standards = {
             if(this.$values.indexOf(val) === - 1) return this.message;
         }
     },
-    password: {
+    sensible : {
         type:"string",
-        $required:false,
-        message: "Invalid property '{$propertyName}'. Password are incorrect.",
-        check: function(val) {
-            if(!this.$required && !val) return;
-            let pwd:string=val;
-            if(pwd && pwd.length < 6 /*|| /[0-9a-zA-Z]+/.test(pwd)===false*/) return this.message;
-        }
+        encrypt: (pwd: string) => pwd && DynamicConfiguration.encrypt(pwd),
+        decrypt: (v) => v && DynamicConfiguration.decrypt(v)
+    },
+    uid: {
+        type: "string",
+        bind: (v) => v || uuid.v1()
     },
     "arrayOf": {
         $item    : "string",

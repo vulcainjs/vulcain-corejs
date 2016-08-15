@@ -7,7 +7,7 @@ import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, Runt
 const moment = require('moment');
 const guid = require('node-uuid');
 import * as os from 'os';
-import {RequestContext, Pipeline} from '../servers/requestContext';
+import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
 import {CommandRuntimeError} from '../commands/command/command';
 
@@ -115,26 +115,29 @@ export class CommandManager implements IManager {
 
     private async validateRequestData(info, command) {
         let errors;
-        let data = command.data;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema) {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 command.inputSchema = schema.name;
-                errors = this.domain.validate(data, schema);
+                errors = this.domain.validate(command.data, schema);
+                if (errors && !Array.isArray(errors))
+                    errors = [errors];
             }
 
             if (!errors || errors.length === 0) {
                 // Custom binding if any
                 if (schema)
-                    data = schema && schema.bind(data);
+                    command.data = schema && schema.bind(command.data);
 
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && await info.handler[methodName](data);
+                errors = info.handler[methodName] && info.handler[methodName](command.data, command.action);
                 if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](command.data, command.action);
+                if (errors && !Array.isArray(errors))
+                    errors = [errors];
             }
         }
 
@@ -160,7 +163,7 @@ export class CommandManager implements IManager {
             command.startedAt = moment.utc().format();
             command.service = this._service;
             if (ctx && ctx.user)
-                command.userContext = { id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName };
+                command.userContext = <UserContext>{ id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName };
             else
                 command.userContext = <any>{};
 

@@ -3,7 +3,7 @@ import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import * as os from 'os';
-import {RequestContext} from '../servers/requestContext';
+import {RequestContext, UserContext} from '../servers/requestContext';
 import {CommandRuntimeError} from '../commands/command/command';
 import {DefaultServiceNames} from '../di/annotations';
 
@@ -68,25 +68,28 @@ export class QueryManager implements IManager {
 
     private async validateRequestData(info, query) {
         let errors;
-        let data = query.data;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema) {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 query.inputSchema = schema.name;
-                errors = this.domain.validate(data, schema);
+                errors = this.domain.validate(query.data, schema);
+                if (errors && !Array.isArray(errors))
+                    errors = [errors];
             }
             if (!errors || errors.length === 0) {
                 // Custom binding if any
-                if(schema)
-                    data = schema.bind(data);
+                if (schema)
+                    query.data = schema.bind(query.data);
 
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && await info.handler[methodName](data);
+                errors = info.handler[methodName] && info.handler[methodName](query.data, query.action);
                 if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](data);
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](query.data, query.action);
+                if (errors && !Array.isArray(errors))
+                    errors = [errors];
             }
         }
         return errors;
@@ -100,11 +103,11 @@ export class QueryManager implements IManager {
             if (errors && errors.length > 0)
                 return this.createResponse(query, { message: "Validation errors", errors: errors });
             if (ctx.user)
-                query.userContext = { id: ctx.user.id, scopes: ctx.user.scopes, displayName: ctx.user.displayName };
+                query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName };
             query.schema = <string>info.metadata.schema;
             info.handler.requestContext = ctx;
             info.handler.query = query;
-            let result = await info.handler[info.method](info.metadata.action === "get" ? query.data.id : query.data);
+            let result = await info.handler[info.method](query.data);
             let res = this.createResponse(query);
             res.value = result;
             if (Array.isArray(result))

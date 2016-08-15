@@ -1,4 +1,4 @@
-import {Application} from '../application';
+import {Preloader} from '../preloader';
 import {IContainer} from '../di/resolvers';
 
 export interface ModelOptions {
@@ -6,20 +6,21 @@ export interface ModelOptions {
     extends?: string;
     description?: string;
     bind?: ((data) => any)|boolean;
-    preCreate?: (entity, container?:IContainer) => any;
-    preUpdate?: (entity, container?:IContainer) => any;
-    postGet?: (entity, container?:IContainer) => any;
+    preCreate?: ((entity, container?:IContainer) => any) | boolean;
+    preUpdate?: ((entity, container?:IContainer) => any) | boolean;
+    postGet?: ((entity, container?:IContainer) => any) | boolean;
     validate?: (entity, container?:IContainer) => string;
     storageName?: string;
+    sensibleData?: boolean;
 }
 
-export function Model(name:string, options?: ModelOptions) {
+export function Model(options?: ModelOptions) {
     return function (target: Function) {
-        options = options || {name:name};
-        options.name = name;
+        options = options || {};
+        options.name = options.name || target.name;
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
-        Application.registerPreload(target, (container, domain) => domain.addSchemaDescription(target, name));
+        Preloader.registerPreload(target, (container, domain) => domain.addSchemaDescription(target, options.name));
    }
 }
 
@@ -33,6 +34,7 @@ export interface PropertyOptions {
     item?: string;
     unique?: boolean;
     meta?: any;
+    elem?: string;
     bind?: ((val, entity) => any)|boolean;
     dependsOn?: (entity) => boolean;
     check?: (val) => string;

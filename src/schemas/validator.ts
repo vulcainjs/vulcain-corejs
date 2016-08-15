@@ -14,12 +14,12 @@ export class Validator
         let errors = [];
         if( !schemaDesc || !val ) return errors;
 
-        if( schemaDesc.extends )
+        if( schemaDesc.extends)
         {
             let base = typeof schemaDesc.extends === "string" ? this.domain.getSchema(schemaDesc.extends) : schemaDesc.extends;
             if(base)
             {
-                this.validate( base, val ).forEach(e=> {errors.push( e );});
+                this.validate( base.description, val ).forEach(e=> {errors.push( e );});
             }
         }
 
@@ -64,7 +64,7 @@ export class Validator
                     if( ref && ref.dependsOn && !ref.dependsOn(val)) continue;
                     let schema = this.domain.getSchema( ctx.propertyValue.__schema );
                     if( !schema ) continue;
-                    errors = errors.concat(this.validate( schema, ctx.propertyValue ));
+                    errors = errors.concat(this.validate( schema.description, ctx.propertyValue ));
                 }
                 else
                 {

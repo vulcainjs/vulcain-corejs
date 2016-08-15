@@ -27,11 +27,15 @@ export class MemoryProvider implements IProvider<any>
         this.state = { data: {} };
 
         if (this.dataFolder) {
-            // console.log("Create memory provider for " + schema.name);
-            if (!fs.existsSync(this.dataFolder))
-                fs.mkdirSync(this.dataFolder);
+            let folder = this.dataFolder;
+            if (!fs.existsSync(folder))
+                fs.mkdirSync(folder);
 
-            this.state.saveToFile = this.dataFolder + "/" + tenant + "/" + schema.description.storageName + ".json";
+            folder = folder + '/' + tenant;
+            if (!fs.existsSync(folder))
+                fs.mkdirSync(folder);
+
+            this.state.saveToFile = folder + "/" + schema.description.storageName + ".json";
 
             if (fs.existsSync(this.state.saveToFile)) {
                 this.state.data = JSON.parse(fs.readFileSync(this.state.saveToFile, "UTF-8"));

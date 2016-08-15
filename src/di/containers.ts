@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import {Preloader} from '../preloader';
 import {Scope} from './scope';
 import {IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver} from './resolvers';
 import {IContainer, BusUsage} from '../di/resolvers';
@@ -12,6 +13,7 @@ import {VulcainLogger} from 'vulcain-configurationsjs'
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import {LifeTime} from './annotations';
+import {Files} from '../utils/files';
 
 export class Container implements IContainer {
 
@@ -29,6 +31,11 @@ export class Container implements IContainer {
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
+    }
+
+    injectFrom(path: string) {
+        Files.traverse(path);
+        return this;
     }
 
     useRabbitBusAdapter(address:string, usage = BusUsage.all) {
@@ -196,6 +203,6 @@ export class TestContainer extends Container {
         this.injectInstance(domain, DefaultServiceNames.Domain);
 
         addServices && addServices(this);
-        Application.runPreloads(this, domain);
+        Preloader.runPreloads(this, domain);
     }
 }

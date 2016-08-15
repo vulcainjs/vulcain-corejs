@@ -1,3 +1,4 @@
+import {Preloader} from './preloader';
 import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
 import {ICommandBusAdapter, IEventBusAdapter} from './bus/busAdapter';
 import {LocalAdapter} from './bus/localAdapter';
@@ -14,27 +15,11 @@ import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
+import {UserContext} from './servers/requestContext';
 
-export class Application
-{
-    private static _preloads: Array<Function> = [];
-
-    static registerPreload(fn: Function, callback: (Container: IContainer, domain: Domain) => void) {
-        let key = fn.name;
-        Application._preloads.push(callback);
-    }
-
-    static runPreloads(container: IContainer, domain: Domain) {
-        if (Application._preloads) {
-            for (const callback of Application._preloads) {
-                callback(container, domain);
-            }
-            Application._preloads = null;
-        }
-    }
-
+export abstract class Application {
     private _executablePath: string;
-    private _container:IContainer;
+    private _container: IContainer;
     private _domain: Domain;
     public enableHystrixStream: boolean;
     private _basePath: string;
@@ -42,6 +27,18 @@ export class Application
 
     setStaticRoot(basePath: string) {
         this.adapter.setStaticRoot(basePath);
+    }
+
+    setTestUser(user: UserContext) {
+        if (!user)
+            throw new Error("Test user can not be null");
+        if (!user.id || !user.name || !user.scopes)
+            throw new Error("Invalid test user - Properties must be set.");
+        if (!DynamicConfiguration.isLocalCluster) {
+            console.log("Warning : TestUser ignored");
+            return;
+        }
+        this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
     /**
@@ -71,20 +68,27 @@ export class Application
      * @param container Global component container
      * @param app  (optional)Server adapter
      */
-    constructor(container?: IContainer) {
+    constructor(domainName?: string, container?: IContainer) {
         this._executablePath = Path.dirname(module.filename);
         this._basePath = this.findBasePath();
         this._container = container || new Container();
         this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
+
+        domainName = domainName || process.env.VULCAIN_DOMAIN;
+        if (!domainName)
+            throw new Error("Domain name is required.");
+
+        this._domain = new Domain(domainName, this._container);
+        this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
     }
 
     private startHystrixStream() {
         if (!this.enableHystrixStream)
             return;
 
-        this.adapter.useMiddleware("get", Conventions.defaultHystrixPath,  (request, response) => {
+        this.adapter.useMiddleware("get", Conventions.defaultHystrixPath, (request, response) => {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
             response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.append('Pragma', 'no-cache');
@@ -111,13 +115,19 @@ export class Application
         });
     }
 
-    start(domainName:string, port: number, preinitializeServerAdapter?: (abstractAdapter:AbstractAdapter) => void) {
-        domainName = domainName || process.env.VULCAIN_DOMAIN;
-        if (!domainName)
-            throw new Error("Domain name is required.");
+    protected initializeDefaultServices(container: IContainer) {
+    }
 
-        this._domain = new Domain(domainName, this._container);
-        this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
+    protected initializeServices(container: IContainer) {
+    }
+
+    protected initializeServerAdapter(abstractAdapter: AbstractAdapter) {
+    }
+
+    abstract runAsync();
+
+    start(port: number) {
+        this.initializeDefaultServices(this.container);
 
         let local = new LocalAdapter();
         let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
@@ -133,30 +143,43 @@ export class Application
 
         eventBus.startAsync().then(() => {
             commandBus.startAsync().then(() => {
-                this.registerModelsInternal()
-                this.registerServicesInternal();
-                this.registerHandlersInternal();
+                try {
+                    this.registerModelsInternal()
+                    this.registerServicesInternal();
+                    this.registerHandlersInternal();
 
-                Application.runPreloads(this.container, this._domain);
+                    this.initializeServices(this.container);
 
-                this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
-                if (!this.adapter) {
-                    this.adapter = new ExpressAdapter(this.domain.name, this._container);
-                    this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
-                    preinitializeServerAdapter && preinitializeServerAdapter(this.adapter);
+                    Preloader.runPreloads(this.container, this._domain);
+
+                    this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
+                    if (!this.adapter) {
+                        this.adapter = new ExpressAdapter(this.domain.name, this._container);
+                        this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
+                        this.initializeServerAdapter(this.adapter);
+                    }
+                    this.startHystrixStream()
+                    this.adapter.start(port);
                 }
-                this.startHystrixStream()
-                this.adapter.start(port);
+                catch (err) {
+                    console.log(err);
+                }
             });
         });
     }
-
 
     private registerModelsInternal() {
         this.registerModels(Path.join(this._executablePath, "defaults/models"));
 
         let path = Conventions.defaultModelsFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
-        this.registerModels( Path.join(this._basePath, path) );
+        this.registerModels(Path.join(this._basePath, path));
+    }
+
+    protected injectFrom(path: string) {
+        if(!Path.isAbsolute(path))
+            path = Path.join(this._basePath, path);
+        this._container.injectFrom(path);
+        return this._container;
     }
 
     /**
@@ -164,23 +187,19 @@ export class Application
      * @param path Where to find models component relative to base path (default=/api/models)
      * @returns {Container}
      */
-    registerModels(path:string)
-    {
-        Files.traverse( path, ( name, val ) =>
-        {
-            if(!this.domain.findSchemaDescription(val.name))
-                this.domain.addSchemaDescription( val );
-        } );
+    private registerModels(path: string) {
+        if(!Path.isAbsolute(path))
+            path = Path.join(this._basePath, path);
+        Files.traverse(path);
 
         return this._container;
     }
-
 
     private registerHandlersInternal() {
         this.registerHandlers(Path.join(this._executablePath, "defaults/handlers"));
 
         let path = Conventions.defaultHandlersFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
-        this.registerHandlers( Path.join(this._basePath, path) );
+        this.registerHandlers(Path.join(this._basePath, path));
     }
 
     /**
@@ -188,9 +207,10 @@ export class Application
      * @param path Where to find models component relative to base path (default=/api/models)
      * @returns {Container}
      */
-    registerHandlers(path:string)
-    {
-        Files.traverse( path );
+    private registerHandlers(path: string) {
+        if(!Path.isAbsolute(path))
+            path = Path.join(this._basePath, path);
+        Files.traverse(path);
         return this._container;
     }
 
@@ -206,25 +226,11 @@ export class Application
      * @param path Where to find services component relative to base path (default=/core/services)
      * @returns {Container}
      */
-    private registerServices(path:string) {
-        Files.traverse(path, (name, val) => {
-            let attr = Reflect.getMetadata(Symbol.for("di:export"), val);
-            if (attr && attr.lifeTime) {
-                switch (<LifeTime>attr.lifeTime) {
-                    case LifeTime.Singleton:
-                        this._container.injectSingleton(val);
-                        break;
-                    case LifeTime.Scoped:
-                        this._container.injectScoped(val);
-                        break;
-                    case LifeTime.Transient:
-                        this._container.injectTransient(val);
-                        break;
-                }
-            }
-            else
-                this._container.injectTransient(val);
-        });
+    private registerServices(path: string) {
+        if(!Path.isAbsolute(path))
+            path = Path.join(this._basePath, path);
+
+        Files.traverse(path);
 
         return this._container;
     }

@@ -22,7 +22,7 @@ export interface CommandInfo {
     commandKey: string,
     commandGroup: string,
     timeout: number,
-    isErrorHandler: (Error: any) => any,
+    isErrorHandler: (error: any) => any,
     metricsConfig: any,
     circuitConfig: any,
     requestVolumeRejectionThreshold: number

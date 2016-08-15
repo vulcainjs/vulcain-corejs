@@ -9,7 +9,7 @@ interface PoolItem {
     count: number;
 }
 
-@Injectable(DefaultServiceNames.ProviderFactory, LifeTime.Singleton)
+@Injectable(LifeTime.Singleton, DefaultServiceNames.ProviderFactory)
 export class ProviderFactory
 {
     private pool = new Map<string, PoolItem>();

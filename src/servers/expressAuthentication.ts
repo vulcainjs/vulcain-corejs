@@ -2,11 +2,12 @@
 var passport = require('passport');
 import passportStrategy = require('passport-strategy');
 var BearerStrategy = require('passport-http-bearer').Strategy
-import {Injectable, Inject, LifeTime} from '../di/annotations';
+import {Injectable, Inject, LifeTime, DefaultServiceNames} from '../di/annotations';
 import {ITokenService} from '../defaults/services';
+import {IContainer} from '../di/resolvers';
 const AnonymousStrategy = require('passport-anonymous');
 
-@Injectable("Authentication", LifeTime.Singleton)
+@Injectable(LifeTime.Singleton)
 export class Authentication
 {
     constructor(  @Inject("TokenService")tokens:ITokenService )

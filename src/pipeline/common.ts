@@ -2,6 +2,7 @@
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
+import {UserContext} from '../servers/requestContext';
 
 export class RuntimeError extends Error { }
 
@@ -21,12 +22,7 @@ export interface CommonRequestData {
     domain: string;
     schema: string;
     inputSchema?: string;
-    userContext?: {
-        id?: string;
-        name?: string;
-        scopes?: Array<string>;
-        displayName: string;
-    };
+    userContext?: UserContext
 }
 
 export interface CommonRequestResponse<T> {
@@ -121,11 +117,7 @@ export class HandlerFactory {
         for (const action in actions) {
             let actionMetadata: CommonActionMetadata = actions[action];
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
-            if (!actionMetadata.action) {
-                let tmp = action;
-                if (tmp.endsWith("Async")) tmp = tmp.substr(0, tmp.length - 5);
-                actionMetadata.action = tmp;
-            }
+            actionMetadata.action = actionMetadata.action || action;
 
             if (!actionMetadata.inputSchema && useSchemaByDefault) {
                 actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
@@ -151,7 +143,7 @@ export class HandlerFactory {
             keys.push(actionMetadata.action);
             let handlerKey =  keys.join('.').toLowerCase();
             if (this.handlers.has(handlerKey))
-                console.log(`Duplicate action ${actionMetadata.action} for handler ${handlerKey}`);
+                console.log(`*** Duplicate action ${actionMetadata.action} for handler ${target.name}`);
 
             // Merge metadata
             let item: HandlerItem = {
@@ -160,7 +152,7 @@ export class HandlerFactory {
                 handler: target
             }
             this.handlers.set(handlerKey, item);
-            console.log("Handler registered for domain %s metadata: %j", domainName, item.metadata);
+            console.log("Handler registered for domain %s with key %s metadata: %j", domainName, handlerKey, item.metadata);
         }
     }
 

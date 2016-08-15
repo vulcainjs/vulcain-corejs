@@ -19,6 +19,7 @@ export interface IContainer {
     injectScoped(fn, ...args): IContainer;
     injectScoped(fn, name?: string, ...args): IContainer;
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
+    injectFrom(path: string): IContainer;
     get<T>(name: string, optional?: boolean, assertLifeTime?:LifeTime):T;
     resolve(fn, ...args);
     dispose();

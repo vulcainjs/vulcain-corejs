@@ -22,9 +22,17 @@ export enum Pipeline {
     Http
 }
 
+export interface UserContext {
+    id: string;
+    displayName?: string;
+    email?: string;
+    name: string;
+    scopes: Array<string>;
+}
+
 export class RequestContext {
     static TestTenant = "_test_";
-    public user: any;
+    public user: UserContext;
     public cache: Map<string, any>;
     public logger: Logger;
     public container: IContainer;
@@ -47,12 +55,12 @@ export class RequestContext {
     static createMock(container?: IContainer, user?:any, req?) {
         let ctx = new RequestContext(container || new Container(), Pipeline.inProcess);
         ctx.tenant = RequestContext.TestTenant;
-        ctx.user = user || {id:"test", scopes:["*"], name:"test", password:"", displayName:"test", email:"test", data:{}, disabled:false};
+        ctx.user = user || { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test" };
         return ctx;
     }
 
     get scopes(): Array<string> {
-        return this.user && this.user.scopes
+        return this.user && this.user.scopes || [];
     }
 
     hasScope(scope: string): number {
@@ -60,10 +68,11 @@ export class RequestContext {
         if (!this.user) return 401;
         if (scope === "*") return 0;
 
-        if (!this.user.scopes || this.user.scopes.length == 0) return 403;
-        if (this.user.scopes[0] === "*") return 0;
+        const scopes = this.scopes;
 
-        let scopes = scope.split(',').map(s => s.trim());
+        if (!scopes || scopes.length == 0) return 403;
+        if (scopes[0] === "*") return 0;
+
         for (let userScope of this.user.scopes) {
             for (let sc of scopes) {
                 if (userScope === sc) return 0;

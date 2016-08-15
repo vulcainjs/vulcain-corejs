@@ -8,12 +8,14 @@ import {CommonRequestData} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
 import {BadRequestError, Logger} from 'vulcain-configurationsjs';
-import {RequestContext} from './requestContext';
+import {RequestContext, UserContext} from './requestContext';
+import {DefaultServiceNames} from '../di/annotations';
 
 export abstract class AbstractAdapter {
     private _logger: Logger;
     private commandManager;
     private queryManager;
+    private testUser: UserContext;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -25,6 +27,7 @@ export abstract class AbstractAdapter {
     constructor(protected domainName:string, protected container: IContainer) {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
+        this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
     }
 
     public abstract start(port:number);
@@ -63,7 +66,8 @@ export abstract class AbstractAdapter {
             try {
                 let metadata = <ActionMetadata>manager.getMetadata(command);
                 ctx.logger = self._logger;
-
+                ctx.user = ctx.user || this.testUser;
+                
                 let code;
                 if (metadata.scope && (code = ctx.hasScope(metadata.scope))) {
                     resolve({ code: code, value: http.STATUS_CODES[code] });

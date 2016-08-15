@@ -1,3 +1,5 @@
+import './preloader';
+
 // Schemas
 export * from './schemas/schema'
 export * from './schemas/annotations'
@@ -14,9 +16,9 @@ export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from 
 export {ValidationError} from './pipeline/common';
 
 export {AbstractAdapter} from './servers/abstractAdapter';
-export {RequestContext, Pipeline} from './servers/requestContext'
+export {RequestContext, Pipeline, UserContext} from './servers/requestContext'
 
-export {DefaultActionHandler, DefaultQueryHandler} from './defaults/crudHandlers';
+export {DefaultActionHandler, DefaultQueryHandler, IDefaultActionService, IDefaultQueryService, DefaultRepositoryCommand} from './defaults/crudHandlers';
 
 // Bus adapter
 export * from './bus/busAdapter'

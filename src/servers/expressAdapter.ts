@@ -2,7 +2,7 @@
 import * as express from 'express';
 import {IManager} from '../pipeline/common';
 import {AbstractAdapter} from './abstractAdapter';
-import {RequestContext, Pipeline} from './requestContext';
+import {RequestContext, Pipeline, UserContext} from './requestContext';
 import {IContainer} from '../di/resolvers';
 import {Authentication} from './expressAuthentication';
 import {DefaultServiceNames} from '../di/annotations';
@@ -16,6 +16,7 @@ export class ExpressAdapter extends AbstractAdapter {
 
     constructor(domainName: string, container: IContainer) {
         super(domainName, container);
+
         this.express = express();
         this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
@@ -38,48 +39,33 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.express.get(Conventions.defaultUrlprefix + '/:domain/:schema/:id', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schema/id/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
-            let id = req.params.id;
-            query.schema = req.params.schema || req.query.$schema;
-            query.data = { id: id };
+            query.schema = req.params.schema;
+            let requestArgs = this.populateFromQuery(req);
+            if (requestArgs.count === 0)
+                query.data = req.params.id;
+            else {
+                query.data = requestArgs.data;
+                query.data.id = req.params.id;
+            }
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 
-        this.express.get(Conventions.defaultUrlprefix + '/:domain/:id', auth, async (req: express.Request, res: express.Response) => {
-            let query: QueryData = <any>{ domain: this.domainName };
-            query.action = "get";
-            let id = req.params.id;
-            query.schema = req.query.$schema;
-            query.data = { id: id };
-            this.executeRequest(this.executeQueryRequest, query, req, res);
-        });
-
-        this.express.get(Conventions.defaultUrlprefix + '/:domain', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schema/:action?', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
-                query.action = req.query.$action || "search";
+                query.action = req.params.action || req.query.$action || "search";
                 query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
                 query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
-                query.schema = req.query.$schema;
-                query.data = {};
-                Object.keys(req.query).forEach(name => {
-                    switch (name) {
-                        case "$action":
-                        case "$schema":
-                        case "$page":
-                        case "$maxByPage":
-                            break;
-                        default:
-                            query.data[name] = req.query[name];
-                    }
-                });
+                query.schema = req.params.schema || req.query.$schema;
+                query.data = this.populateFromQuery(req).data;
                 this.executeRequest(this.executeQueryRequest, query, req, res);
             }
             catch (e) {
-                res.status(400).send({Error:e.message||e.toString, Status:"Error"});
+                res.status(400).send({ error: e.message || e.toString, status: "Error" });
             }
         });
 
@@ -96,6 +82,27 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
         });
+    }
+
+    private populateFromQuery(req) {
+        let data = {};
+        let count = 0;;
+        Object.keys(req.query).forEach(name => {
+            switch (name) {
+                case "$action":
+                case "$schema":
+                case "$page":
+                case "$maxByPage":
+                    break;
+                case "$query":
+                    data = JSON.parse(req.query[name]);
+                    break;
+                default:
+                    count++;
+                    data[name] = req.query[name];
+            }
+        });
+        return { data, count };
     }
 
     private normalizeCommand(req: express.Request) {
@@ -138,15 +145,13 @@ export class ExpressAdapter extends AbstractAdapter {
         }
     }
 
-    setStaticRoot(basePath:string)
-    {
+    setStaticRoot(basePath: string) {
         console.log("Set wwwroot to " + basePath);
-        if(!basePath) throw new Error("BasePath is required.");
+        if (!basePath) throw new Error("BasePath is required.");
         this.express.use(express.static(basePath));
     }
 
-    start(port:number)
-    {
+    start(port: number) {
         this.express.listen(port, (err) => {
             console.log('Listening on port ' + port);
         });
