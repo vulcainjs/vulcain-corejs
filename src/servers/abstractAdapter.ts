@@ -67,15 +67,15 @@ export abstract class AbstractAdapter {
                 let metadata = <ActionMetadata>manager.getMetadata(command);
                 ctx.logger = self._logger;
                 ctx.user = ctx.user || this.testUser;
-                
+
                 let code;
                 if (metadata.scope && (code = ctx.hasScope(metadata.scope))) {
-                    resolve({ code: code, value: http.STATUS_CODES[code] });
+                    resolve({ code: 200, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[code] } } });
                     return;
                 }
             }
             catch (e) {
-                resolve({ value: e.message || e.toString(), code: 500, headers: headers });
+                resolve({ value: { status: "Error", error: { message: e.message || e } }, code: 500, headers: headers });
                 return;
             }
 
@@ -89,7 +89,11 @@ export abstract class AbstractAdapter {
                     resolve({ value: result, headers: headers });
                 })
                 .catch(result => {
-                    if (result instanceof Error) {
+                    if (result instanceof BadRequestError) {
+                        resolve({ code: 400, value: {status: "Error", error: {message:result.message}}, headers: headers });
+                        return
+                    }
+                    else if (result instanceof Error) {
                         result = { status: "Error", error: { message: result.message } };
                     }
                     resolve( { code: 500, value: result, headers:headers });

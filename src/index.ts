@@ -18,7 +18,7 @@ export {ValidationError} from './pipeline/common';
 export {AbstractAdapter} from './servers/abstractAdapter';
 export {RequestContext, Pipeline, UserContext} from './servers/requestContext'
 
-export {DefaultActionHandler, DefaultQueryHandler, IDefaultActionService, IDefaultQueryService, DefaultRepositoryCommand} from './defaults/crudHandlers';
+export {DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand} from './defaults/crudHandlers';
 
 // Bus adapter
 export * from './bus/busAdapter'

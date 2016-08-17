@@ -62,7 +62,7 @@ export class QueryManager implements IManager {
     }
 
     getMetadata(command: CommonRequestData) {
-        let info = QueryManager.handlerFactory.getInfo<QueryMetadata>(this.container, command.domain, command.schema, command.action);
+        let info = QueryManager.handlerFactory.getInfo<QueryMetadata>(null, command.domain, command.schema, command.action);
         return info.metadata;
     }
 
@@ -96,7 +96,7 @@ export class QueryManager implements IManager {
     }
 
     async runAsync(query: QueryData, ctx:RequestContext) {
-        let info = QueryManager.handlerFactory.getInfo<QueryActionMetadata>(this.container, query.domain, query.schema, query.action);
+        let info = QueryManager.handlerFactory.getInfo<QueryActionMetadata>(ctx.container, query.domain, query.schema, query.action);
 
         try {
             let errors = await this.validateRequestData(info, query);

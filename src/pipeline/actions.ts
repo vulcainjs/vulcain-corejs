@@ -150,7 +150,7 @@ export class CommandManager implements IManager {
     }
 
     async runAsync(command: ActionData, ctx: RequestContext) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(this.container, command.domain, command.schema, command.action);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || ActionEventMode.always;
 
         try {
@@ -193,12 +193,12 @@ export class CommandManager implements IManager {
     }
 
     async consumeTaskAsync(command: ActionData) {
-        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(this.container, command.domain, command.schema, command.action);
+        let ctx = new RequestContext(this.container, Pipeline.Http);
+        let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || ActionEventMode.always;
 
         let res;
         try {
-            let ctx = new RequestContext(this.container, Pipeline.Http);
             ctx.user = command.userContext;
             info.handler.requestContext = ctx;
             info.handler.command = command;
@@ -239,9 +239,9 @@ export class CommandManager implements IManager {
             events = metadata.filter(events);
 
         events.subscribe((evt: EventData) => {
-            let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(this.container, evt.domain, evt.schema, evt.action, true);
+            let ctx = new RequestContext(this.container, Pipeline.eventNotification);
+            let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(ctx.container, evt.domain, evt.schema, evt.action, true);
             if (info) {
-                let ctx = new RequestContext(this.container, Pipeline.eventNotification);
                 ctx.user = (evt.userContext && evt.userContext.user) || {};
                 info.handler.requestContext = ctx;
                 info.handler.event = evt;

@@ -39,7 +39,7 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.express.get(Conventions.defaultUrlprefix + '/:schema/id/:id', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schema/get/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
             query.schema = req.params.schema;
@@ -53,7 +53,7 @@ export class ExpressAdapter extends AbstractAdapter {
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 
-        this.express.get(Conventions.defaultUrlprefix + '/:schema/:action?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schema?/:action?', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
@@ -65,7 +65,7 @@ export class ExpressAdapter extends AbstractAdapter {
                 this.executeRequest(this.executeQueryRequest, query, req, res);
             }
             catch (e) {
-                res.status(400).send({ error: e.message || e.toString, status: "Error" });
+                res.status(400).send({ error: e.message || e, status: "Error" });
             }
         });
 
@@ -140,7 +140,7 @@ export class ExpressAdapter extends AbstractAdapter {
             this.endRequest(begin, command, res.statusCode);
         }
         catch (e) {
-            res.status(500).send(e);
+            res.status(500).send({ error: e.message || e });
             this.endRequest(begin, command, 500);
         }
     }

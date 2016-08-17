@@ -2,7 +2,7 @@ import {ActionData, ActionResponse, ActionMetadata, EventData, ActionEventMode} 
 import {RequestContext, Pipeline} from '../servers/requestContext';
 import {QueryData, QueryMetadata, QueryActionMetadata} from './query';
 import {IContainer} from '../di/resolvers';
-import {Inject} from '../di/annotations';
+import {Inject, DefaultServiceNames} from '../di/annotations';
 import 'reflect-metadata';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -24,7 +24,7 @@ export abstract class AbstractActionHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
         }
         return this._requestContext;
     }
@@ -56,7 +56,7 @@ export abstract class AbstractEventHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
         }
         return this._requestContext;
     }
@@ -90,7 +90,7 @@ export abstract class AbstractQueryHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
         }
         return this._requestContext;
     }

@@ -14,6 +14,7 @@ export class DefaultServiceNames
     static Container = "Container";
     static ProviderFactory = "ProviderFactory";
     static TestUser = "TestUser";
+    static RequestContext = "RequestContext";
 }
 
 export enum LifeTime {

@@ -10,6 +10,9 @@ import {BadRequestError} from 'vulcain-configurationsjs'
 var moment = require("moment");
 
 export class TimeoutError extends Error {
+    constructor(ms:number) {
+        super("Timeout error - Command take more than " + ms + "ms");
+    }
 }
 
 export class CommandRuntimeError extends Error {
@@ -81,7 +84,7 @@ export class HystrixCommand {
                             if (this.properties.executionTimeoutInMilliseconds.value > 0) {
                                 promises.push(
                                     new Promise((resolve, reject) =>
-                                        setTimeout(() => { if (executing) reject(new TimeoutError()); },
+                                        setTimeout(() => { if (executing) reject(new TimeoutError(this.properties.executionTimeoutInMilliseconds.value)); },
                                             this.properties.executionTimeoutInMilliseconds.value)
                                     )
                                 );
@@ -147,7 +150,7 @@ export class HystrixCommand {
     }
 
     private async getFallbackOrThrowException(eventType: EventType, failureType: FailureType, message: string, error: Error): Promise<any> {
-        this.logInfo(error.message);
+        this.logInfo(error.message || error.toString());
         try {
             if (this.isUnrecoverable(error)) {
                 this.logInfo("Unrecoverable error for command so will throw CommandRuntimeError and not apply fallback " + error);
@@ -156,7 +159,7 @@ export class HystrixCommand {
             }
             let fallback = (<any>this.command).fallbackAsync;
             if (!fallback) {
-                this.logInfo("No fallback for command.");
+                this.logInfo("No fallback for command");
                 throw new CommandRuntimeError(failureType, this.properties.commandName, this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
@@ -210,7 +213,7 @@ export class HystrixCommand {
     }
 
     private getLogMessagePrefix() {
-        return this.properties.commandName + " (" + (this.context && this.context.correlationId) + ")";
+        return this.properties.commandName + " (" + (this.context && this.context.correlationId)  + ")";
     }
 
     ///

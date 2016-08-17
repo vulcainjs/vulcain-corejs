@@ -53,7 +53,7 @@ export interface ICommandContext {
 export abstract class AbstractCommand<T> {
     private _localProxy: string;
     public context:ICommandContext;
-    provider: IProvider<any>;
+    provider: IProvider<T>;
     schema: Schema;
 
     constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer, @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) { }
@@ -105,14 +105,13 @@ export abstract class AbstractCommand<T> {
      * get a domain element
      * @param serviceName - full service name
      * @param version - version of the service
-     * @param domain  - service domain name
      * @param id - Element id
      * @param schema - optional element schema
      * @returns A vulcain request response
      */
-    protected async getRequestAsync<T>(serviceName: string, version: number, domain:string, id:string, schema?:string): Promise<QueryResponse<T>> {
-        let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/${domain}/${schema}/${id}`
-                         : `http://${this.createServiceName(serviceName, version)}/api/${domain}/${id}`;
+    protected async getRequestAsync<T>(serviceName: string, version: number, id:string, schema?:string): Promise<QueryResponse<T>> {
+        let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
+                         : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
@@ -121,13 +120,13 @@ export abstract class AbstractCommand<T> {
         return data;
     }
 
-    protected async getQueryAsync<T>(serviceName: string, version: number, domain:string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+    protected async getAllAsync<T>(serviceName: string, version: number, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${domain}`, query);
+        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
@@ -136,9 +135,24 @@ export abstract class AbstractCommand<T> {
         return data;
     }
 
-    protected async postActionAsync(serviceName: string, version: number, domain: string, action: string, data: any): Promise<ActionResponse<T>> {
+    protected async getQueryAsync<T>(serviceName: string, version: number, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+        query = query || {};
+        query.$action = action;
+        query.$maxByPage = maxByPage;
+        query.$page = page;
+        query.$schema = schema;
+        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
+
+        let res = await this.sendRequestAsync("get", url);
+        let data: QueryResponse<T> = JSON.parse(res.body);
+        if (res.status !== 200 || data.error)
+            throw new ApplicationRequestError(data.error);
+        return data;
+    }
+
+    protected async sendActionAsync(serviceName: string, version: number, action: string, data: any): Promise<ActionResponse<T>> {
         let command = { action: action, data: data, correlationId: this.context.correlationId };
-        let url = `http://${this.createServiceName(serviceName, version)}/api/${domain}`;
+        let url = `http://${this.createServiceName(serviceName, version)}/api`;
 
         let res = await this.sendRequestAsync("post", url, (req) => req.json(command));
         let result: ActionResponse<T> = JSON.parse(res.body);

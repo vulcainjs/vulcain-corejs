@@ -11,12 +11,12 @@ import {Inject} from '../di/annotations';
 import {Pipeline} from '../servers/requestContext';
 import {Command} from '../commands/command/commandFactory';
 
-@Command({ executionTimeoutInMilliseconds: 1500 })
+@Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     // Execute command
     async runAsync(action: string, data) {
-        return this[action+ "Internal"](data);
+        return this[action + "Internal"](data);
     }
 
     create(entity: any) {
@@ -106,11 +106,6 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
     }
 }
 
-export interface IDefaultActionService<T> {
-    createAsync(entity: T);
-    updateAsync(entity: T);
-    deleteAsync(entity: T);
-}
 
 export class DefaultActionHandler extends AbstractActionHandler {
 
@@ -144,12 +139,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     }
 }
 
-export interface IDefaultQueryService<T> {
-    getAsync(id: any): Promise<T>;
-    getAllAsync(query?: any, maxByPage?:number, page?: number): Promise<Array<T>>;
-}
-
-export class DefaultQueryHandler extends AbstractQueryHandler {
+export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     constructor( @Inject("Container") container: IContainer ) {
         super(container);
@@ -162,13 +152,13 @@ export class DefaultQueryHandler extends AbstractQueryHandler {
     @Query({ action: "get" })
     getAsync(id: any) {
         let cmd = this.getDefaultCommand();
-        return cmd.executeAsync("get", id);
+        return <Promise<T>>cmd.executeAsync("get", id);
     }
 
     @Query({ action: "search" })
     getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<any>> {
         let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || -1, page: page || this.query && this.query.page || 0, query:query || {} };
         let cmd = this.getDefaultCommand();
-        return cmd.executeAsync( "search", options);
+        return <Promise<Array<T>>>cmd.executeAsync( "search", options);
     }
 }

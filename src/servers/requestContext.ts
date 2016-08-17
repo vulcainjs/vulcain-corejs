@@ -4,6 +4,7 @@ import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';
 import {ICommand} from '../commands/command/abstractCommand'
+import {DefaultServiceNames} from '../di/annotations';
 
 class DefaultLogger {
     log(msg: string | Error) {
@@ -45,7 +46,7 @@ export class RequestContext {
         this.cache = new Map<string, any>();
         this.logger = defaultLogger;
         this.container = new Container(container);
-        this.container.injectInstance(this, "RequestContext");
+        this.container.injectInstance(this, DefaultServiceNames.RequestContext);
     }
 
     dispose() {
