@@ -24,7 +24,7 @@ export abstract class AbstractActionHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.InProcess);
         }
         return this._requestContext;
     }
@@ -56,7 +56,7 @@ export abstract class AbstractEventHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.InProcess);
         }
         return this._requestContext;
     }
@@ -90,7 +90,7 @@ export abstract class AbstractQueryHandler {
 
     get requestContext(): RequestContext {
         if (!this._requestContext) {
-            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.inProcess);
+            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.InProcess);
         }
         return this._requestContext;
     }

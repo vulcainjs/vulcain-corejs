@@ -1,3 +1,4 @@
+import { Domain } from './../schemas/schema';
 // Entry point
 import * as express from 'express';
 import * as os from 'os';
@@ -16,6 +17,7 @@ export abstract class AbstractAdapter {
     private commandManager;
     private queryManager;
     private testUser: UserContext;
+    private domain: Domain;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -28,6 +30,7 @@ export abstract class AbstractAdapter {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
+        this.domain = container.get<Domain>(DefaultServiceNames.Domain);
     }
 
     public abstract start(port:number);
@@ -85,6 +88,8 @@ export abstract class AbstractAdapter {
                         headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
                     if (result)
                         delete result.userContext;
+                    this.onHttpResponse(result.value);
+
                     // TODO https://github.com/phretaddin/schemapack
                     resolve({ value: result, headers: headers });
                 })
@@ -99,5 +104,29 @@ export abstract class AbstractAdapter {
                     resolve( { code: 500, value: result, headers:headers });
                 });
         });
+    }
+
+    private onHttpResponse(result) {
+        // onHttpResponse
+        if (result) {
+            if (Array.isArray(result)) {
+                let outputSchema;
+                result.forEach(v => {
+                    if (v.__schema) {
+                        if (!outputSchema || outputSchema.name !== v.__schema)
+                            outputSchema = this.domain.getSchema(v.__schema);
+                        if (outputSchema && outputSchema.description.onHttpResponse)
+                            this.domain.applyMethod("onHttpResponse", outputSchema, [v, this.container]);
+                    }
+                });
+            }
+            else {
+                if (result.__schema) {
+                    let outputSchema = this.domain.getSchema(result.__schema);
+                    if (outputSchema && outputSchema.description.onHttpResponse)
+                        this.domain.applyMethod("onHttpResponse", outputSchema, [result, this.container]);
+                }
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ export let standards = {
             "Reference '{$propertyName}' with cardinality = many must contains an array.",
             "Reference element for property '{$propertyName}' must be of type {$item}."
         ],
-        check: function(val) {
+        validate: function(val) {
             if (this.$cardinality !== "one" && this.$cardinality !== "many")
                 throw new Error("Incorrect cardinality. Allowed values are 'one' or 'many'");
             if(this.$cardinality == "one") {
@@ -37,7 +37,7 @@ export let standards = {
             "Property '{$propertyName}' must be a string.",
             "Property '{$propertyName}' must match the following pattern : {$pattern}"
         ],
-        check: function(val) {
+        validate: function(val) {
             if(this.$required && !val) return this.messages[0];
             if(val && typeof val !== "string") return this.messages[1];
             if(val && this.$pattern && new RegExp(this.$pattern).test(val) === false) return this.messages[2];
@@ -49,7 +49,24 @@ export let standards = {
             "Property '{$propertyName}' is required.",
             "Property '{$propertyName}' must be a number."
         ],
-        check: function(val) {
+        bind: function (val) {
+            return (typeof val === "string") ? parseInt(val) : val;
+        },
+        validate: function(val) {
+            if(this.$required && !val) return this.messages[0];
+            if(val && typeof val !== "number") return this.messages[1];
+        }
+    },
+    "float": {
+        $required:false,
+        messages: [
+            "Property '{$propertyName}' is required.",
+            "Property '{$propertyName}' must be a number."
+        ],
+        bind: function (val) {
+            return (typeof val === "string") ? parseFloat(val) : val;
+        },
+        validate: function(val) {
             if(this.$required && !val) return this.messages[0];
             if(val && typeof val !== "number") return this.messages[1];
         }
@@ -60,7 +77,10 @@ export let standards = {
             "Property '{$propertyName}' is required.",
             "Property '{$propertyName}' must be a boolean."
         ],
-        check: function(val) {
+        bind: function (val) {
+            return (typeof val === "string") ? val==="true" : !!val;
+        },
+        validate: function(val) {
             if(this.$required && !val) return this.messages[0];
             if(val && typeof val !== "boolean") return this.messages[1];
         }
@@ -70,7 +90,7 @@ export let standards = {
         $values: [],
         $required:false,
         message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
-        check: function(val) {
+        validate: function(val) {
             if(!this.$required && !val) return;
             if(this.$values.indexOf(val) === - 1) return this.message;
         }
@@ -91,7 +111,7 @@ export let standards = {
             "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$item}.",
             "Invalid value '{$value}' for '{$propertyName}', value must be an array.",
         ],
-        check    : function (val) {
+        validate    : function (val) {
             if(!this.$required && !val) return;
             if(!Array.isArray(val)) return this.messages[1];
             let error = false;
@@ -108,7 +128,7 @@ export let standards = {
         $max: 1,
         $required: false,
         message: "Invalid value '{$value}' for '{$propertyName}', value must be between {$min} and {$max}",
-        check: function (val) {
+        validate: function (val) {
             return (!val && this.$required) || val >= this.min && val <= this.max;
         }
     }

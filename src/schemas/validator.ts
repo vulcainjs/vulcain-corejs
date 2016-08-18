@@ -136,17 +136,17 @@ export class Validator
         }
         else {
             let type = this.domain._findType("$ref");
-            if (type && type.check) {
+            if (type && type.validate) {
                 let clone:any = this.clone(type, schema);
-                let err = clone.check(val);
+                let err = clone.validate(val);
                 if (err) {
                     errors.push(err);
                     return errors;
                 }
             }
         }
-        if (schema.check) {
-            let err = schema.check(val);
+        if (schema.validate) {
+            let err = schema.validate(val);
             if (err) {
                 errors.push(err);
                 return errors;
@@ -183,9 +183,9 @@ export class Validator
             if( err ) return err;
         }
 
-        if( schema.check )
+        if( schema.validate )
         {
-            return schema.check( val );
+            return schema.validate( val );
         }
     }
 

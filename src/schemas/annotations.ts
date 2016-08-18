@@ -6,12 +6,10 @@ export interface ModelOptions {
     extends?: string;
     description?: string;
     bind?: ((data) => any)|boolean;
-    preCreate?: ((entity, container?:IContainer) => any) | boolean;
-    preUpdate?: ((entity, container?:IContainer) => any) | boolean;
-    postGet?: ((entity, container?:IContainer) => any) | boolean;
+    onHttpResponse?: ((entity, container?:IContainer) => void) | boolean;
     validate?: (entity, container?:IContainer) => string;
     storageName?: string;
-    sensibleData?: boolean;
+    encryptData?: boolean;
 }
 
 export function Model(options?: ModelOptions) {
@@ -37,7 +35,7 @@ export interface PropertyOptions {
     elem?: string;
     bind?: ((val, entity) => any)|boolean;
     dependsOn?: (entity) => boolean;
-    check?: (val) => string;
+    validate?: (val) => string;
 }
 
 export function Property(info:PropertyOptions) {
@@ -55,9 +53,8 @@ export interface ReferenceOptions {
     description?: string;
     meta?: any;
     bind?: ((val) => any)|boolean;
-    serialize?: ((val) => any | boolean)|boolean;
     dependsOn?: (entity) => boolean;
-    check?: (val) => string;
+    validate?: (val) => string;
 }
 
 export function Reference(info: ReferenceOptions) {

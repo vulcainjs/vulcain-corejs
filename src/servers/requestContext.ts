@@ -18,9 +18,10 @@ class DefaultLogger {
 const defaultLogger = new DefaultLogger();
 
 export enum Pipeline {
-    inProcess,
-    eventNotification,
-    Http
+    EventNotification,
+    InProcess,
+    HttpRequest,
+    Test
 }
 
 export interface UserContext {
@@ -54,7 +55,7 @@ export class RequestContext {
     }
 
     static createMock(container?: IContainer, user?:any, req?) {
-        let ctx = new RequestContext(container || new Container(), Pipeline.inProcess);
+        let ctx = new RequestContext(container || new Container(), Pipeline.Test);
         ctx.tenant = RequestContext.TestTenant;
         ctx.user = user || { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test" };
         return ctx;

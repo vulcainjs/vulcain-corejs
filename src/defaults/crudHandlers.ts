@@ -24,14 +24,10 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
     }
 
     protected async createInternal(entity: any) {
-        if (entity && this.schema.description.preCreate)
-            entity = this.schema.apply("preCreate", entity, this.container) || entity;
-        if (entity && this.schema.description.sensibleData)
+        if (entity && this.schema.description.encryptData)
             entity = this.schema.apply("encrypt", entity, this.container) || entity
         entity = await this.create(entity);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
-            entity = this.schema.apply("postGet", entity, this.container) || entity;
-        if (entity && this.schema.description.sensibleData)
+        if (entity && this.schema.description.encryptData)
             entity = this.schema.apply("decrypt", entity, this.container) || entity;
         return entity;
     }
@@ -45,14 +41,11 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
     }
 
     protected async updateInternal(entity: any) {
-        if (entity && this.schema.description.preUpdate)
-            entity = this.schema.apply("preUpdate", entity, this.container) || entity;
-        if (entity && this.schema.description.sensibleData)
+        // TODO move to provider
+        if (entity && this.schema.description.encryptData)
             entity = this.schema.apply("encrypt", entity, this.container) || entity
         entity = await this.update(entity);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
-            entity = this.schema.apply("postGet", entity, this.container) || entity;
-        if (entity && this.schema.description.sensibleData)
+        if (entity && this.schema.description.encryptData)
             entity = this.schema.apply("decrypt", entity, this.container) || entity;
         return entity;
     }
@@ -76,9 +69,7 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     protected async getInternal(id: any) {
         let entity = await this.get(id);
-        if (this.context.pipeline === Pipeline.Http && entity && this.schema.description.postGet)
-            entity = this.schema.apply("postGet", entity, this.container) || entity;
-        if (entity && this.schema.description.sensibleData)
+        if (entity && this.schema.description.encryptData)
             entity = this.schema.apply("decrypt", entity, this.container) || entity;
         return entity;
     }
@@ -93,10 +84,8 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
             let result = [];
             for (let entity of list) {
                 if (entity) {
-                    if (this.context.pipeline === Pipeline.Http && this.schema.description.postGet)
-                        entity = await this.schema.apply("postGet", entity, this.container) || entity;
-                    if (entity && this.schema.description.sensibleData)
-                        entity = await this.schema.apply("decrypt", entity, this.container) || entity;
+                    if (entity && this.schema.description.encryptData)
+                        entity = this.schema.apply("decrypt", entity, this.container) || entity;
                     result.push(entity);
                 }
             }
@@ -156,7 +145,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ action: "search" })
-    getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<any>> {
+    getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
         let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || -1, page: page || this.query && this.query.page || 0, query:query || {} };
         let cmd = this.getDefaultCommand();
         return <Promise<Array<T>>>cmd.executeAsync( "search", options);

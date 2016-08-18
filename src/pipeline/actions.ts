@@ -43,6 +43,7 @@ export interface ActionHandlerMetadata extends CommonHandlerMetadata {
 }
 
 export interface ActionMetadata extends CommonActionMetadata {
+    async?: boolean;
     eventMode?: ActionEventMode;
  }
 
@@ -193,9 +194,9 @@ export class CommandManager implements IManager {
     }
 
     async consumeTaskAsync(command: ActionData) {
-        let ctx = new RequestContext(this.container, Pipeline.Http);
+        let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
-        let eventMode = info.metadata.eventMode || ActionEventMode.always;
+        let eventMode = info.metadata.eventMode || ActionEventMode.successOnly;
 
         let res;
         try {
@@ -239,7 +240,7 @@ export class CommandManager implements IManager {
             events = metadata.filter(events);
 
         events.subscribe((evt: EventData) => {
-            let ctx = new RequestContext(this.container, Pipeline.eventNotification);
+            let ctx = new RequestContext(this.container, Pipeline.EventNotification);
             let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(ctx.container, evt.domain, evt.schema, evt.action, true);
             if (info) {
                 ctx.user = (evt.userContext && evt.userContext.user) || {};

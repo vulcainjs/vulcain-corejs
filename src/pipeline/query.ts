@@ -95,7 +95,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: QueryData, ctx:RequestContext) {
+    async runAsync(query: QueryData, ctx: RequestContext) {
         let info = QueryManager.handlerFactory.getInfo<QueryActionMetadata>(ctx.container, query.domain, query.schema, query.action);
 
         try {
@@ -110,8 +110,10 @@ export class QueryManager implements IManager {
             let result = await info.handler[info.method](query.data);
             let res = this.createResponse(query);
             res.value = result;
-            if (Array.isArray(result))
+            if (result && Array.isArray(result)) {
                 res.total = result.length;
+            }
+            
             return res;
         }
         catch (e) {

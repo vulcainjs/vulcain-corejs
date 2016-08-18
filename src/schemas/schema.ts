@@ -67,11 +67,11 @@ export class Schema {
     }
 
     apply(methodName: string, ...obj) {
-        return this.domain.apply(methodName, this, obj);
+        return this.domain.applyMethod(methodName, this, obj);
     }
 
     decrypt(obj) {
-        return this.domain.apply("decrypt", this, [obj]);
+        return this.domain.applyMethod("decrypt", this, [obj]);
     }
 }
 
@@ -180,7 +180,7 @@ export class Domain
         return this.types.get(parts[0])[parts[1]];
     }
 
-    apply(methodName: string, schemaName, args:Array<any>) {
+    applyMethod(methodName: string, schemaName, args:Array<any>) {
         let entity = args && args[0];
         if (!entity) return null;
 
@@ -211,10 +211,12 @@ export class Domain
                     let method = this.findMethodInTypeHierarchy( methodName, prop );
                     if (!method || typeof method !== "function") continue;
                     let val = entity[ps];
-                    entity[ps] = val && method.apply(prop, [entity[ps], entity].concat(args)) || val;
+                    val = val && method.apply(prop, [val, entity].concat(args)) || val;
+                    entity[ps] = val;
                 }
                 catch( e )
                 {
+                    console.log(e);
                     // ignore
                 }
             }
@@ -241,14 +243,14 @@ export class Domain
                             if (method && typeof method === "function")
                                 method.apply(elemSchema, [elem].concat(args));
                             else
-                                this.apply(methodName, elemSchema, [elem].concat(args));
+                                this.applyMethod(methodName, elemSchema, [elem].concat(args));
                         }
                     }
                     else {
                         if (method && typeof method === "function")
                             method.apply(elemSchema, [refValue].concat(args));
                         else
-                            this.apply(methodName, elemSchema, [refValue].concat(args));
+                            this.applyMethod(methodName, elemSchema, [refValue].concat(args));
                     }
                 }
                 catch (e) {
@@ -257,7 +259,7 @@ export class Domain
             }
         }
         if (schema.extends) {
-            this.apply(methodName, schema.extends, entity);
+            this.applyMethod(methodName, schema.extends, entity);
         }
     }
 
@@ -294,7 +296,7 @@ export class Domain
         obj                = obj || origin;
         if (typeof obj !== "object")
             return obj;
-        
+
         (<any>obj).__schema = (<any>obj).__schema || schemaName;
 
         // Convert properties
