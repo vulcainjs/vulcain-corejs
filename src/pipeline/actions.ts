@@ -121,16 +121,16 @@ export class CommandManager implements IManager {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 command.inputSchema = schema.name;
+
+                // Custom binding if any
+                command.data = schema && schema.bind(command.data);
+
                 errors = this.domain.validate(command.data, schema);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
 
             if (!errors || errors.length === 0) {
-                // Custom binding if any
-                if (schema)
-                    command.data = schema && schema.bind(command.data);
-
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
@@ -152,7 +152,7 @@ export class CommandManager implements IManager {
 
     async runAsync(command: ActionData, ctx: RequestContext) {
         let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(ctx.container, command.domain, command.schema, command.action);
-        let eventMode = info.metadata.eventMode || ActionEventMode.always;
+        let eventMode = info.metadata.eventMode || ActionEventMode.successOnly;
 
         try {
             let errors = await this.validateRequestData(info, command);
@@ -196,7 +196,7 @@ export class CommandManager implements IManager {
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
-        let eventMode = info.metadata.eventMode || ActionEventMode.successOnly;
+        let eventMode = info.metadata.eventMode || ActionEventMode.always;
 
         let res;
         try {

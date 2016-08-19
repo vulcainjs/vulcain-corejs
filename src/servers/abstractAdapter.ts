@@ -67,10 +67,12 @@ export abstract class AbstractAdapter {
             }
 
             try {
+                // Check if handler exists
                 let metadata = <ActionMetadata>manager.getMetadata(command);
                 ctx.logger = self._logger;
                 ctx.user = ctx.user || this.testUser;
 
+                // Verify authorization
                 let code;
                 if (metadata.scope && (code = ctx.hasScope(metadata.scope))) {
                     resolve({ code: 200, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[code] } } });
@@ -82,18 +84,22 @@ export abstract class AbstractAdapter {
                 return;
             }
 
+            // Execute handler
             manager.runAsync(command, ctx)
                 .then(result => {
                     if(command.correlationId)
                         headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
                     if (result)
                         delete result.userContext;
+
+                    // Format value 
                     this.onHttpResponse(result.value);
 
                     // TODO https://github.com/phretaddin/schemapack
                     resolve({ value: result, headers: headers });
                 })
                 .catch(result => {
+                    // Normalize error
                     if (result instanceof BadRequestError) {
                         resolve({ code: 400, value: {status: "Error", error: {message:result.message}}, headers: headers });
                         return

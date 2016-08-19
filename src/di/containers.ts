@@ -63,8 +63,8 @@ export class Container implements IContainer {
     injectInstance(fn, name:string) {
         if(!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
-        if(name !== "Container")
-            console.log("INFO: Register instance component " + name + " as " + (fn.name || '<unnamed>'));
+        if(name !== "Container" && fn.name)
+            console.log("INFO: Register instance component " + name + " as " + fn.name );
         return this;
     }
 
@@ -87,7 +87,8 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
-        console.log("INFO: Register singleton component " + name + " as " + (fn.name || '<unnamed>'));
+        if( fn.name)
+            console.log("INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -113,7 +114,8 @@ export class Container implements IContainer {
         if(!name)
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
-        console.log("INFO: Register transient component " + name + " as " + (fn.name || '<unnamed>'));
+        if( fn.name)
+            console.log("INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -138,7 +140,8 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
-        console.log("INFO: Register scoped component " + name + " as " + fn.name);
+        if( fn.name)
+            console.log("INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 

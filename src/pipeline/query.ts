@@ -73,15 +73,16 @@ export class QueryManager implements IManager {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 query.inputSchema = schema.name;
+
+                // Custom binding if any
+                 query.data = schema.bind(query.data);
+
                 errors = this.domain.validate(query.data, schema);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
+            
             if (!errors || errors.length === 0) {
-                // Custom binding if any
-                if (schema)
-                    query.data = schema.bind(query.data);
-
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
@@ -113,7 +114,7 @@ export class QueryManager implements IManager {
             if (result && Array.isArray(result)) {
                 res.total = result.length;
             }
-            
+
             return res;
         }
         catch (e) {
