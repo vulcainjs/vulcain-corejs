@@ -1,16 +1,14 @@
 import { Domain } from './../schemas/schema';
-// Entry point
-import * as express from 'express';
-import * as os from 'os';
 import * as http from 'http';
 import {IContainer} from '../di/resolvers';
 import {CommandManager, ActionMetadata} from '../pipeline/actions';
-import {CommonRequestData} from '../pipeline/common';
+import {CommonRequestResponse} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
-import {BadRequestError, Logger} from 'vulcain-configurationsjs';
+import {BadRequestError, Logger, DynamicConfiguration } from 'vulcain-configurationsjs';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
+import * as Statsd from "statsd-client";
 
 export abstract class AbstractAdapter {
     private _logger: Logger;
@@ -18,6 +16,8 @@ export abstract class AbstractAdapter {
     private queryManager;
     private testUser: UserContext;
     private domain: Domain;
+    private statsd: Statsd;
+    private globalPrefix: string;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -26,14 +26,16 @@ export abstract class AbstractAdapter {
         return (ts[0] * 1000) + (ts[1] / 1000000);
     }
 
-    constructor(protected domainName:string, protected container: IContainer) {
+    constructor(protected domainName: string, protected container: IContainer) {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
+        this.statsd = new Statsd({ host: "telegraf", socketTimeout: 10000 });
+        this.globalPrefix = DynamicConfiguration.clusterName + "." + DynamicConfiguration.serviceName + '.' + DynamicConfiguration.serviceVersion + '.';
     }
 
-    public abstract start(port:number);
+    public abstract start(port: number);
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
 
@@ -41,19 +43,33 @@ export abstract class AbstractAdapter {
         return process.hrtime();
     }
 
-    protected endRequest(begin: number[], command:CommonRequestData, code:number) {
+    protected endRequest(begin: number[], response, code: number) {
         const ms = this.calcDelayInMs(begin);
+        let prefix = this.globalPrefix + response.action + ".";
+        if (response.schema)
+            prefix += response.schema + '.';
+
+        let tags = [response.source];
+
+        this.statsd.timing(prefix + "responseTime", ms);
+
+        if (response.status && response.status === "Success") {
+            this.statsd.increment(prefix + "Success");
+        }
+        else {
+            this.statsd.increment(prefix + "Failure");
+        }
     }
 
-    protected executeQueryRequest(query, ctx){
+    protected executeQueryRequest(query, ctx) {
         return this.executeRequestInternal(this.queryManager, query, ctx);
     }
 
-    protected executeCommandRequest(command, ctx){
+    protected executeCommandRequest(command, ctx) {
         return this.executeRequestInternal(this.commandManager, command, ctx);
     }
 
-    private executeRequestInternal(manager: IManager, command, ctx:RequestContext): Promise<{ code: number, value:any, headers:Map<string,string>}> {
+    private executeRequestInternal(manager: IManager, command, ctx: RequestContext): Promise<{ code: number, value: any, headers: Map<string, string> }> {
         let self = this;
         return new Promise((resolve) => {
             let headers = new Map<string, string>();
@@ -87,13 +103,10 @@ export abstract class AbstractAdapter {
             // Execute handler
             manager.runAsync(command, ctx)
                 .then(result => {
-                    if(command.correlationId)
+                    if (command.correlationId)
                         headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
                     if (result)
                         delete result.userContext;
-
-                    // Format value 
-                    this.onHttpResponse(result.value);
 
                     // TODO https://github.com/phretaddin/schemapack
                     resolve({ value: result, headers: headers });
@@ -101,38 +114,14 @@ export abstract class AbstractAdapter {
                 .catch(result => {
                     // Normalize error
                     if (result instanceof BadRequestError) {
-                        resolve({ code: 400, value: {status: "Error", error: {message:result.message}}, headers: headers });
+                        resolve({ code: 400, value: { status: "Error", error: { message: result.message } }, headers: headers });
                         return
                     }
                     else if (result instanceof Error) {
                         result = { status: "Error", error: { message: result.message } };
                     }
-                    resolve( { code: 500, value: result, headers:headers });
+                    resolve({ code: 500, value: result, headers: headers });
                 });
         });
-    }
-
-    private onHttpResponse(result) {
-        // onHttpResponse
-        if (result) {
-            if (Array.isArray(result)) {
-                let outputSchema;
-                result.forEach(v => {
-                    if (v.__schema) {
-                        if (!outputSchema || outputSchema.name !== v.__schema)
-                            outputSchema = this.domain.getSchema(v.__schema);
-                        if (outputSchema && outputSchema.description.onHttpResponse)
-                            this.domain.applyMethod("onHttpResponse", outputSchema, [v, this.container]);
-                    }
-                });
-            }
-            else {
-                if (result.__schema) {
-                    let outputSchema = this.domain.getSchema(result.__schema);
-                    if (outputSchema && outputSchema.description.onHttpResponse)
-                        this.domain.applyMethod("onHttpResponse", outputSchema, [result, this.container]);
-                }
-            }
-        }
     }
 }

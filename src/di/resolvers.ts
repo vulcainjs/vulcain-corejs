@@ -25,7 +25,8 @@ export interface IContainer {
     dispose();
     useRabbitBusAdapter(address: string, usage?: BusUsage);
     useMongoProvider(uri: string, mongoOptions?);
-    useMemoryProvider(folder ?:string);
+    useMemoryProvider(folder?: string);
+    inject(name: string, fn, lifeTime: LifeTime);
 }
 
 export interface IResolver {

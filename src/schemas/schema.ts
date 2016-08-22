@@ -1,4 +1,3 @@
-import {Injectable, LifeTime} from '../di/annotations';
 import {SchemaBuilder} from './schemaBuilder'
 import {standards} from './standards'
 import {Validator} from './validator'

@@ -1,8 +1,6 @@
-// <reference path="../../../../typings/mongoose/mongoose.d.ts"/>
-
 import {IProvider, ListOptions} from "../provider";
 import {Schema} from "../../schemas/schema";
-import {MongoClient, Db, Cursor} from 'mongodb';
+import {MongoClient, Db} from 'mongodb';
 import {Inject} from '../../di/annotations';
 import {Logger} from 'vulcain-configurationsjs'
 import * as P from 'path';

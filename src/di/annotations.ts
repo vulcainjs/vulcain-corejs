@@ -1,6 +1,12 @@
 import 'reflect-metadata';
 import {Preloader} from '../preloader';
 
+/**
+ * List of default service names
+ *
+ * @export
+ * @class DefaultServiceNames
+ */
 export class DefaultServiceNames
 {
     static "Authentication" = "Authentication";
@@ -17,12 +23,34 @@ export class DefaultServiceNames
     static RequestContext = "RequestContext";
 }
 
+/**
+ * Component life time
+ *
+ * @export
+ * @enum {number}
+ */
 export enum LifeTime {
-    Singleton=1,
-    Transient=2,
+    /**
+     * Only one instance
+     */
+    Singleton = 1,
+    /**
+     * Create a new instance every time
+     */
+    Transient = 2,
+    /**
+     * Create one instance per request
+     */
     Scoped=4
 }
 
+/**
+ * Used to initialize a constructor parameter with a component
+ *
+ * @export
+ * @param {string} component name
+ * @param {boolean} [optional] True to not raise an exception if component doesn't exist
+ */
 export function Inject(name: string, optional?: boolean) {
     return function(target, key, i) {
         let injects = Reflect.getOwnMetadata(Symbol.for("di:injects"), target) || [];
@@ -31,6 +59,13 @@ export function Inject(name: string, optional?: boolean) {
     }
 }
 
+/**
+ * Used to declare a component.
+ *
+ * @export
+ * @param {LifeTime} lifeTime of the component
+ * @param {string} [name] - By default this is the class name
+ */
 export function Injectable(lifeTime: LifeTime, name?:string)
 {
     return function(target)
@@ -38,23 +73,7 @@ export function Injectable(lifeTime: LifeTime, name?:string)
         name = name || target.name;
         Preloader.registerPreload( target, ( container, domain ) =>
             {
-                if( lifeTime )
-                {
-                    switch( lifeTime )
-                    {
-                        case LifeTime.Singleton:
-                            container.injectSingleton( target, name );
-                            break;
-                        case LifeTime.Scoped:
-                            container.injectScoped( target, name );
-                            break;
-                        case LifeTime.Transient:
-                            container.injectTransient( target, name );
-                            break;
-                    }
-                }
-                else
-                    container.injectTransient( target, name );
+            container.inject(name, target, lifeTime);
             }
         );
     }

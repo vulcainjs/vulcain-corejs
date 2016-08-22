@@ -1,5 +1,5 @@
 
-import {Domain, Schema} from './schema'
+import {Domain} from './schema'
 import {IContainer} from '../di/resolvers';
 
 export class Validator

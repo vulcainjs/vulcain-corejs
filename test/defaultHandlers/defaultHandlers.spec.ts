@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import {TestContainer, DefaultActionHandler, DefaultQueryHandler, QueryHandler, Query, ActionHandler, Model, Property, RequestContext, IContainer} from '../../dist/index';
 
-@Model("TestModel")
+@Model()
 class TestModel {
     @Property({type:"string", required: true})
     firstName: string;
@@ -20,7 +20,7 @@ class TestActionHandler extends DefaultActionHandler {
 }
 
 @QueryHandler({scope:"?", schema:TestModel, serviceName:"TestQueryService"})
-class TestQueryHandler extends DefaultQueryHandler {
+class TestQueryHandler extends DefaultQueryHandler<TestModel> {
     constructor(container: IContainer) {
         super(container);
         this.requestContext = RequestContext.createMock(container);

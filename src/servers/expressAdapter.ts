@@ -1,8 +1,7 @@
-// Entry point
+import { Application } from '../application';
 import * as express from 'express';
-import {IManager} from '../pipeline/common';
 import {AbstractAdapter} from './abstractAdapter';
-import {RequestContext, Pipeline, UserContext} from './requestContext';
+import {RequestContext, Pipeline} from './requestContext';
 import {IContainer} from '../di/resolvers';
 import {Authentication} from './expressAuthentication';
 import {DefaultServiceNames} from '../di/annotations';
@@ -14,7 +13,7 @@ const cors = require('cors');
 export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
 
-    constructor(domainName: string, container: IContainer) {
+    constructor(domainName: string, container: IContainer, private app:Application) {
         super(domainName, container);
 
         this.express = express();
@@ -122,26 +121,32 @@ export class ExpressAdapter extends AbstractAdapter {
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
         const begin = super.startRequest();
 
+        let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         try {
-            let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
             ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env["VULCAIN_TENANT"] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);
-            if (ctx.responseHeaders) {
-                for (const [k, v] of ctx.responseHeaders) {
+            if (ctx.getResponseHeaders()) {
+                for (const [k, v] of ctx.getResponseHeaders()) {
                     res.setHeader(k, v);
                 }
             }
             res.statusCode = ctx.responseCode || 200;
             res.send(result.value);
-            this.endRequest(begin, command, res.statusCode);
+            this.endRequest(begin, result, res.statusCode);
         }
         catch (e) {
+            let result = command;
+            result.error = { message: e.message || e };
+            result.status = "Error";
             res.status(500).send({ error: e.message || e });
-            this.endRequest(begin, command, 500);
+            this.endRequest(begin, result, 500);
+        }
+        finally {
+            ctx && ctx.dispose();
         }
     }
 
@@ -152,9 +157,11 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     start(port: number) {
-        this.express.listen(port, (err) => {
+        let listener = this.express.listen(port, (err) => {
             console.log('Listening on port ' + port);
         });
+
+        this.app.onServerStarted(listener);
     }
 
     useMiddleware(verb: string, path: string, handler: Function) {

@@ -1,4 +1,4 @@
-import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
+import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
@@ -6,6 +6,7 @@ import * as os from 'os';
 import {RequestContext, UserContext} from '../servers/requestContext';
 import {CommandRuntimeError} from '../commands/command/command';
 import {DefaultServiceNames} from '../di/annotations';
+import {LifeTime} from '../di/annotations';
 
 export interface QueryData extends CommonRequestData {
     data: any;
@@ -20,7 +21,7 @@ export interface QueryResponse<T> extends CommonRequestResponse<T> {
     total?: number;
 }
 
-export interface QueryMetadata extends CommonHandlerMetadata {
+export interface QueryMetadata extends ServiceHandlerMetadata {
 }
 
 export interface QueryActionMetadata extends CommonActionMetadata {
@@ -81,7 +82,7 @@ export class QueryManager implements IManager {
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
-            
+
             if (!errors || errors.length === 0) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
@@ -110,7 +111,7 @@ export class QueryManager implements IManager {
             info.handler.query = query;
             let result = await info.handler[info.method](query.data);
             let res = this.createResponse(query);
-            res.value = result;
+            res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             if (result && Array.isArray(result)) {
                 res.total = result.length;
             }

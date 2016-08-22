@@ -1,7 +1,14 @@
 import * as fs from 'fs'
 import {IProvider, ListOptions} from "../provider";
 import {Schema} from "../../schemas/schema";
-import {Inject} from '../../di/annotations';
+import {MongoQueryParser} from './mongoQueryParser';
+
+interface AstNode {
+    op: string;
+    left?: AstNode|any;
+    right?: AstNode|any;
+}
+
 /**
  * Default memory provider
  */
@@ -73,18 +80,16 @@ export class MemoryProvider implements IProvider<any>
         );
     }
 
-
     public *take(schema: Schema, list, options: ListOptions) {
         let self = this;
         let take = options.maxByPage || -1;
         let skip = take * (options.page || 0);
         let cx = 0;
+        let query = new MongoQueryParser(options.query.filter || options.query)
         if (list) {
             for (let k in list) {
                 let v = list[k];
-                let filter = options.query.filter || options.query;
-                if (!v || filter && !self.filter(schema, v, filter)) continue;
-
+                if (!v || !query.execute(v)) continue;
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {
                     cx++;
@@ -96,91 +101,6 @@ export class MemoryProvider implements IProvider<any>
         }
     }
 
-    private filter(schema: Schema, elem, config, flag?: boolean) {
-        flag = !!flag;
-        let metadata = schema;
-        for (var field in config) {
-            if (!config.hasOwnProperty(field))
-                continue;
-
-            var val;
-            var data = config[field];
-            switch (field) {
-                case "$schema":
-                    val = metadata.name;
-                    break;
-                // case "$filter":
-                //     if( data( elem ) === flag )
-                //         return flag;
-                //     break;
-                case "$or":
-                    if (this.filter(elem, data, true) === flag)
-                        return flag;
-                    break;
-                case "_id":
-                    val = metadata.getId(elem);
-                    break;
-                default:
-                    if (field[0] == '$')
-                        continue;
-                    val = elem[field];
-            }
-
-            var r = !flag;
-            if (data instanceof RegExp) {
-                r = data.test(val);
-            }
-            else if (typeof (data) === "object") {
-                r = this.evalExpression(val, data);
-            }
-            else {
-                r = val === data;
-            }
-
-            if (r === flag)
-                return flag;
-
-        }
-
-        return !flag;
-    }
-
-    private evalExpression(val, query): boolean {
-        for (var op in query) {
-            if (!query.hasOwnProperty(op)) continue;
-
-            var lit = query[op];
-            switch (op) {
-                case "$eq":
-                    if (val === lit) continue;
-                    return false;
-                case "$lt":
-                    if (val < lit) continue;
-                    return false;
-                case "$gt":
-                    if (val > lit) continue;
-                    return false;
-                case "$le":
-                    if (val <= lit) continue;
-                    return false;
-                case "$ge":
-                    if (val >= lit) continue;
-                    return false;
-                case "$ne":
-                    if (val !== lit) continue;
-                    return false;
-                case "$in":
-                    if (lit.indexOf(val) >= 0) continue;
-                    return false;
-                case "$startsWith":
-                    if ((<string>val).startsWith(lit)) continue;
-                    return false;
-                default:
-                    throw new Error("Operator not implemented");
-            }
-        }
-        return true;
-    }
 
     async findOneAsync(schema: Schema, query) {
         let options = <ListOptions>{};

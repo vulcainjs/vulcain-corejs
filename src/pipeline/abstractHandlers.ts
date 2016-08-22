@@ -1,6 +1,6 @@
-import {ActionData, ActionResponse, ActionMetadata, EventData, ActionEventMode} from './actions';
+import {ActionData, EventData, EventNotificationMode} from './actions';
 import {RequestContext, Pipeline} from '../servers/requestContext';
-import {QueryData, QueryMetadata, QueryActionMetadata} from './query';
+import {QueryData} from './query';
 import {IContainer} from '../di/resolvers';
 import {Inject, DefaultServiceNames} from '../di/annotations';
 import 'reflect-metadata';
@@ -8,16 +8,15 @@ const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
 export interface IActionMetadata {
-    eventMode?: ActionEventMode;
+    eventMode?: EventNotificationMode;
     action: string;
     scope?: string;
     schema: string;
     inputSchema?: string;
 }
 
-export abstract class AbstractActionHandler {
-    action: ActionData;
-    private _requestContext: RequestContext;
+export abstract class AbstractHandler {
+   private _requestContext: RequestContext;
 
     constructor( @Inject("Container") protected container: IContainer) {
     }
@@ -42,36 +41,17 @@ export abstract class AbstractActionHandler {
     }
 }
 
+export abstract class AbstractActionHandler extends AbstractHandler{
+    action: ActionData;
+}
+
 export interface IEventMetadata {
     action: string;
     schema: string;
 }
 
-export abstract class AbstractEventHandler {
+export abstract class AbstractEventHandler extends AbstractHandler {
     event: EventData;
-    private _requestContext: RequestContext;
-
-    constructor( @Inject("Container") protected container: IContainer) {
-    }
-
-    get requestContext(): RequestContext {
-        if (!this._requestContext) {
-            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.InProcess);
-        }
-        return this._requestContext;
-    }
-
-    set requestContext(ctx: RequestContext) {
-        this._requestContext = ctx;
-    }
-
-    get metadata() : IEventMetadata {
-        return Reflect.getMetadata(symMetadata, this.constructor);
-    }
-
-    get metadataEvents() {
-        return Reflect.getMetadata(symActions, this.constructor);
-    }
 }
 
 export interface IQueryMetadata {
@@ -81,28 +61,6 @@ export interface IQueryMetadata {
     inputSchema?: string;
 }
 
-export abstract class AbstractQueryHandler {
+export abstract class AbstractQueryHandler extends AbstractHandler {
     query: QueryData;
-    private _requestContext: RequestContext;
-
-    constructor( @Inject("Container") protected container: IContainer) {
-    }
-
-    get requestContext(): RequestContext {
-        if (!this._requestContext) {
-            this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true) || new RequestContext(this.container, Pipeline.InProcess);
-        }
-        return this._requestContext;
-    }
-
-    set requestContext(ctx: RequestContext) {
-        this._requestContext = ctx;
-    }
-
-    get metadata(): IQueryMetadata {
-        return Reflect.getMetadata(symMetadata, this.constructor);
-    }
-    get metadataActions() {
-        return Reflect.getMetadata(symActions, this.constructor);
-    }
 }

@@ -1,5 +1,5 @@
 import ActualTime from "../../utils/actualTime";
-import {CommandMetricsFactory, CommandMetrics} from "../metrics/commandMetrics";
+import {CommandMetricsFactory} from "../metrics/commandMetrics";
 import {CommandProperties} from "./commandProperties";
 
 export interface CircuitBreaker {

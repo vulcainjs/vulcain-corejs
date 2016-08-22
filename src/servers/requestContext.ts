@@ -1,4 +1,3 @@
-import {Schema} from '../schemas/schema'
 import {Logger} from 'vulcain-configurationsjs';
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
@@ -6,16 +5,7 @@ import {CommandFactory} from '../commands/command/commandFactory';
 import {ICommand} from '../commands/command/abstractCommand'
 import {DefaultServiceNames} from '../di/annotations';
 
-class DefaultLogger {
-    log(msg: string | Error) {
-        console.log((msg && (<Error>msg).message) || msg)
-    }
-    info(msg: string | Error) {
-        console.log((msg && (<Error>msg).message) || msg)
-    }
-}
-
-const defaultLogger = new DefaultLogger();
+let defaultLogger: Logger;
 
 export enum Pipeline {
     EventNotification,
@@ -35,17 +25,33 @@ export interface UserContext {
 export class RequestContext {
     static TestTenant = "_test_";
     public user: UserContext;
-    public cache: Map<string, any>;
+    private _cache: Map<string, any>;
     public logger: Logger;
     public container: IContainer;
     public requestHeaders: { [name: string]: string };
-    public responseHeaders: Map<string,string>;
+    private _responseHeaders: Map<string,string>;
     public responseCode: number;
     public tenant: string;
 
+    getResponseHeaders() {
+        return this._responseHeaders;
+    }
+
+    addHeader(name: string, value: string) {
+        if (!this._responseHeaders)
+            this._responseHeaders = new Map<string, string>();
+        this._responseHeaders.set(name, value);
+    }
+
+    get cache() {
+        if (!this._cache) {
+            this._cache = new Map<string, any>();
+        }
+        return this._cache;
+    }
+
     constructor(container: IContainer, public pipeline: Pipeline) {
-        this.cache = new Map<string, any>();
-        this.logger = defaultLogger;
+        this.logger = (defaultLogger = defaultLogger || container.get<Logger>(DefaultServiceNames.Logger));
         this.container = new Container(container);
         this.container.injectInstance(this, DefaultServiceNames.RequestContext);
     }

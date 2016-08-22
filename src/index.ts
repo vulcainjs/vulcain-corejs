@@ -10,7 +10,7 @@ export {Conventions} from './utils/conventions';
 
 // Pipeline
 export * from './pipeline/annotations'
-export {ActionEventMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
+export {EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
 export {QueryData,QueryActionMetadata, QueryMetadata, QueryResponse} from './pipeline/query';
 export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
 export {ValidationError} from './pipeline/common';
@@ -36,7 +36,7 @@ export {Inject, Injectable, LifeTime, DefaultServiceNames} from './di/annotation
 
 // Commands
 export {Command, CommandFactory as __commandFactory} from './commands/command/commandFactory'
-import {EventType, FailureType, ExecutionResult} from './commands/command/executionResult'
+export {EventType, FailureType, ExecutionResult} from './commands/command/executionResult'
 export {AbstractCommand, ICommand, ApplicationRequestError} from './commands/command/abstractCommand'
 export {HystrixSSEStream} from './commands/http/hystrixSSEStream'
 export {CommandRuntimeError, TimeoutError} from './commands/command/command'

@@ -1,6 +1,7 @@
 
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
+import {LifeTime} from '../di/annotations';
 import {Domain} from '../schemas/schema';
 import {UserContext} from '../servers/requestContext';
 
@@ -48,11 +49,15 @@ export interface CommonActionMetadata {
 export interface CommonMetadata {
     description?: string;
     schema?: string|Function;
-    serviceName?: string;
 }
 
 export interface CommonHandlerMetadata extends CommonMetadata {
     scope: string;
+}
+
+export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
+    serviceName?: string;
+    serviceLifeTime?: LifeTime;
 }
 
 export interface IManager {
@@ -68,7 +73,7 @@ export interface HandlerItem {
 }
 
 export class HandlerFactory {
-    handlers: Map<string,HandlerItem> = new Map<string, HandlerItem>();
+    handlers: Map<string, HandlerItem> = new Map<string, HandlerItem>();
     private isMonoSchema: boolean = undefined;
 
     private ensuresOptimized(domain) {
@@ -102,9 +107,10 @@ export class HandlerFactory {
         }
     }
 
-    register(container:IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: CommonMetadata, useSchemaByDefault=false) {
+    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, useSchemaByDefault = false) {
 
         let domainName = domain.name;
+        handlerMetadata = handlerMetadata || {scope:"*"};
 
         if (handlerMetadata.schema) {
             // test if exists
@@ -112,7 +118,7 @@ export class HandlerFactory {
             handlerMetadata.schema = tmp.name;
         }
 
-        container.injectScoped(target, handlerMetadata.serviceName || target.name );
+        container.inject(handlerMetadata.serviceName || target.name, target, handlerMetadata.serviceLifeTime || LifeTime.Scoped);
 
         for (const action in actions) {
             let actionMetadata: CommonActionMetadata = actions[action];
@@ -141,7 +147,7 @@ export class HandlerFactory {
             if (schema)
                 keys.push(schema);
             keys.push(actionMetadata.action);
-            let handlerKey =  keys.join('.').toLowerCase();
+            let handlerKey = keys.join('.').toLowerCase();
             if (this.handlers.has(handlerKey))
                 console.log(`*** Duplicate action ${actionMetadata.action} for handler ${target.name}`);
 
@@ -188,5 +194,28 @@ export class HandlerFactory {
             console.log(e);
             throw new Error(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
         }
+    }
+
+    static obfuscateSensibleData(domain: Domain, container: IContainer, result) {
+        if (result) {
+            if (Array.isArray(result)) {
+                let outputSchema;
+                result.forEach(v => {
+                    if (v.__schema) {
+                        if (!outputSchema || outputSchema.name !== v.__schema)
+                            outputSchema = domain.getSchema(v.__schema);
+                        if (outputSchema && outputSchema.description.onHttpResponse)
+                            domain.applyMethod("onHttpResponse", outputSchema, [v, container]);
+                    }
+                });
+            }
+            else if (result.__schema) {
+                let outputSchema = domain.getSchema(result.__schema);
+                if (outputSchema && outputSchema.description.onHttpResponse)
+                    domain.applyMethod("onHttpResponse", outputSchema, [result, container]);
+            }
+        }
+
+        return result;
     }
 }

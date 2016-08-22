@@ -1,15 +1,16 @@
 import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
-import {Application} from '../application';
 import {DefaultServiceNames} from '../di/annotations';
-import {HandlerFactory, CommonRequestData, CommonMetadata, ValidationError, RuntimeError, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata} from './common';
+import {HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata} from './common';
 const moment = require('moment');
 const guid = require('node-uuid');
 import * as os from 'os';
 import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
 import {CommandRuntimeError} from '../commands/command/command';
+import {EventHandlerFactory} from './eventHandlerFactory';
+import {LifeTime} from '../di/annotations';
 
 export interface ActionData extends CommonRequestData {
     correlationId: string;
@@ -22,29 +23,30 @@ export interface ActionData extends CommonRequestData {
 }
 
 export interface ConsumeEventMetadata {
-    action?: string;
-    schema?: string;
+    subscribeToDomain?: string;
+    subscribeToAction?: string;
+    subscribeToSchema?: string;
     filter?: (observable: RX.Observable<EventData>) => RX.Observable<EventData>;
 }
 
 export interface EventMetadata extends CommonMetadata {
-    domain: string;
+    subscribeToDomain?: string;
 }
 
-export enum ActionEventMode {
+export enum EventNotificationMode {
     always,
     successOnly,
     never
 }
 
-export interface ActionHandlerMetadata extends CommonHandlerMetadata {
+export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
     async?: boolean;
-    eventMode?: ActionEventMode;
+    eventMode?: EventNotificationMode;
 }
 
 export interface ActionMetadata extends CommonActionMetadata {
     async?: boolean;
-    eventMode?: ActionEventMode;
+    eventMode?: EventNotificationMode;
  }
 
 export interface ActionResponse<T> extends CommonRequestResponse<T> {
@@ -70,7 +72,7 @@ export class CommandManager implements IManager {
     private _initialized = false;
 
     static commandHandlersFactory = new HandlerFactory();
-    static eventHandlersFactory= new HandlerFactory();
+    static eventHandlersFactory = new EventHandlerFactory();
 
     /**
      * Get the current domain model
@@ -152,7 +154,7 @@ export class CommandManager implements IManager {
 
     async runAsync(command: ActionData, ctx: RequestContext) {
         let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(ctx.container, command.domain, command.schema, command.action);
-        let eventMode = info.metadata.eventMode || ActionEventMode.successOnly;
+        let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
 
         try {
             let errors = await this.validateRequestData(info, command);
@@ -175,9 +177,9 @@ export class CommandManager implements IManager {
                 let result = await info.handler[info.method](command.data);
                 command.status = "Success";
                 let res = this.createResponse(command);
-                res.value = result;
+                res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 res.completedAt = moment.utc().format();
-                if (eventMode === ActionEventMode.always || eventMode === ActionEventMode.successOnly) {
+                if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                     this.messageBus.sendEvent(res);
                 }
                 return res;
@@ -196,7 +198,7 @@ export class CommandManager implements IManager {
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
-        let eventMode = info.metadata.eventMode || ActionEventMode.always;
+        let eventMode = info.metadata.eventMode || EventNotificationMode.always;
 
         let res;
         try {
@@ -206,10 +208,10 @@ export class CommandManager implements IManager {
             let result = await info.handler[info.method](command.data);
             command.status = "Success";
             res = this.createResponse(command);
-            res.value = result;
+            res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             res.commandMode = "async";
             res.completedAt = moment.utc().format();
-            if (eventMode === ActionEventMode.always || eventMode === ActionEventMode.successOnly) {
+            if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                 this.messageBus.sendEvent(res);
             }
         }
@@ -218,7 +220,7 @@ export class CommandManager implements IManager {
             res = this.createResponse(command, { message: error });
             res.commandMode = "async";
             res.completedAt = moment.utc().format();
-            if (eventMode === ActionEventMode.always) {
+            if (eventMode === EventNotificationMode.always) {
                 this.messageBus.sendEvent(res);
             }
         }
@@ -227,26 +229,41 @@ export class CommandManager implements IManager {
     subscribeToEvents() {
         if (!this._initialized) {
             this._initialized = true;
-            for (let item of CommandManager.eventHandlersFactory.handlers.values()) {
+            for (let item of CommandManager.eventHandlersFactory.allHandlers()) {
                 this.bindEventHandler(<ConsumeEventMetadata>item.metadata);
             }
         }
     }
 
     bindEventHandler(metadata: ConsumeEventMetadata) {
-        let events = this.messageBus.getEventsQueue(this.domain.name);
-        events = events.filter((e) => e.action === metadata.action && e.schema === metadata.schema);
+        let events = this.messageBus.getEventsQueue(metadata.subscribeToDomain || this.domain.name);
+        events = events.filter((e) => (metadata.subscribeToSchema === "*" || e.schema === metadata.subscribeToSchema));
         if (metadata.filter)
             events = metadata.filter(events);
 
         events.subscribe((evt: EventData) => {
-            let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-            let info = CommandManager.eventHandlersFactory.getInfo<EventMetadata>(ctx.container, evt.domain, evt.schema, evt.action, true);
-            if (info) {
-                ctx.user = (evt.userContext && evt.userContext.user) || {};
-                info.handler.requestContext = ctx;
-                info.handler.event = evt;
-                info.handler[info.method](evt.value);
+            let handlers = CommandManager.eventHandlersFactory.getFilteredHandlers(evt.domain, evt.schema, evt.action);
+            for (let info of handlers) {
+                let handler;
+                try {
+                    let ctx = new RequestContext(this.container, Pipeline.EventNotification);
+                    ctx.user = (evt.userContext && evt.userContext.user) || {};
+
+                    handler = ctx.container.resolve(info.handler);
+                    handler.requestContext = ctx;
+                    handler.event = evt;
+                }
+                catch (e) {
+                    console.log(`Unable to create handler ${info.handler.name}`);
+                }
+
+                try {
+                    handler[info.methodName](evt);
+                }
+                catch (e) {
+                    let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
+                    console.log(`Error with event handler ${info.handler.name} event : ${evt} - Error : ${error}`);
+                }
             }
         });
     }

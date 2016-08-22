@@ -15,6 +15,13 @@ import {Application} from '../application';
 import {LifeTime} from './annotations';
 import {Files} from '../utils/files';
 
+/**
+ *
+ *
+ * @export
+ * @class Container
+ * @implements {IContainer}
+ */
 export class Container implements IContainer {
 
     private resolvers: Map<string,IResolver> = new Map<string,IResolver>();
@@ -33,11 +40,24 @@ export class Container implements IContainer {
         this.resolvers.clear();
     }
 
+    /**
+     * Inject all components from files containing in the specified folder.
+     * Files are loaded recursively
+     *
+     * @param {string} folder path relative to the current directory
+     * @returns the current container
+     */
     injectFrom(path: string) {
         Files.traverse(path);
         return this;
     }
 
+    /**
+     *
+     *
+     * @param {string} address
+     * @param {any} [usage=BusUsage.all]
+     */
     useRabbitBusAdapter(address:string, usage = BusUsage.all) {
         let bus = new RabbitAdapter(address);
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
@@ -46,10 +66,21 @@ export class Container implements IContainer {
             this.injectInstance(bus, DefaultServiceNames.ActionBusAdapter);
     }
 
+    /**
+     *
+     *
+     * @param {string} uri
+     * @param {any} [mongoOptions]
+     */
     useMongoProvider(uri: string, mongoOptions?) {
         this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 
+    /**
+     *
+     *
+     * @param {string} [folder]
+     */
     useMemoryProvider(folder?:string) {
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
     }
@@ -145,6 +176,24 @@ export class Container implements IContainer {
         return this;
     }
 
+    inject(name: string, fn, lifeTime: LifeTime) {
+        if (lifeTime) {
+            switch (lifeTime) {
+                case LifeTime.Singleton:
+                    this.injectSingleton(fn, name);
+                    break;
+                case LifeTime.Scoped:
+                    this.injectScoped(fn, name);
+                    break;
+                case LifeTime.Transient:
+                    this.injectTransient(fn, name);
+                    break;
+            }
+        }
+        else
+            this.injectTransient(fn, name);
+    }
+
     /**
      *
      * @param fn
@@ -179,11 +228,13 @@ export class Container implements IContainer {
     }
 
     /**
-     *
-     * @param name
-     * @param scope
-     * @param optional
-     * @returns {any}
+     * Get a component by name.
+     * Throw an exception if the component doesn't exist
+     * @template T
+     * @param {string} component name
+     * @param {boolean} [optional] if true no exception are raised if the component doesn't exist
+     * @param {LifeTime} [assertLifeTime] If provide check if the registered component has the expected {LifeTime}
+     * @returns A component
      */
     get<T>(name:string, optional?:boolean, assertLifeTime?:LifeTime) {
         let res = this.findResolver(name);
@@ -197,7 +248,20 @@ export class Container implements IContainer {
     }
 }
 
+/**
+ * Default container for test
+ *
+ * @export
+ * @class TestContainer
+ * @extends {Container}
+ */
 export class TestContainer extends Container {
+    /**
+     * Creates an instance of TestContainer.
+     *
+     * @param {string} domainName 
+     * @param {(Container: IContainer) => void} [addServices] Additional services to register
+     */
     constructor(public domainName: string, addServices?: (Container: IContainer) => void) {
         super();
         this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);

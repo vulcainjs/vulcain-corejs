@@ -1,8 +1,6 @@
 import {Injectable, LifeTime} from '../../di/annotations';
 import {ITokenService} from '../services';
 import {Inject} from '../../di/annotations';
-import {IProvider} from '../../providers/provider';
-import {Domain} from '../../schemas/schema';
 import * as fs from 'fs';
 var jwt = require('jsonwebtoken');
 

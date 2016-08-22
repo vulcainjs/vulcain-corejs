@@ -1,7 +1,7 @@
 import {CommandMetricsFactory} from "../metrics/commandMetrics";
 import {CircuitBreakerFactory} from "./circuitBreaker";
 import {HystrixCommand} from "./command";
-import {AbstractCommand, ICommand} from './abstractCommand'
+import {ICommand} from './abstractCommand'
 import {CommandProperties} from './commandProperties'
 
 export interface CommandConfiguration {

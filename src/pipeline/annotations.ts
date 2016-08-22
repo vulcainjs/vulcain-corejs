@@ -2,8 +2,6 @@ import 'reflect-metadata';
 import {Preloader} from '../preloader';
 import {CommandManager, ActionMetadata, ActionHandlerMetadata, EventMetadata, ConsumeEventMetadata} from './actions';
 import {QueryManager, QueryMetadata, QueryActionMetadata} from './query';
-import {Application} from '../application';
-import {Domain} from '../schemas/schema';
 
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -50,7 +48,7 @@ export function Action(actionMetadata?: ActionMetadata) {
             }
         }
         let output = Reflect.getMetadata("design:returntype", target, key);
-        if (output && output.name !== "Promise" && output.name !== "Object" ) {
+        if (output && !(output.name in ["Promise", "Object", "void 0", "null" ])) {
             actions[key].outputSchema = output.name;
         }
         if (!actions[key].action) {
@@ -97,7 +95,7 @@ export function Query(actionMetadata?: QueryActionMetadata) {
     }
 }
 
-export function EventHandler(metadata: EventMetadata) {
+export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
 
         let actions = getMetadata(symActions, target);
@@ -116,11 +114,6 @@ export function Consume(consumeMetadata?: ConsumeEventMetadata) {
 	return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = consumeMetadata || {};
-        if (!actions[key].action) {
-            let tmp = key.toLowerCase();
-            if (tmp.endsWith("async")) tmp = tmp.substr(0, tmp.length - 5);
-            actions[key].action = tmp;
-        }
         Reflect.defineMetadata(symActions, actions, target.constructor);
 	}
 }

@@ -3,13 +3,12 @@ import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStrea
 import {ICommandBusAdapter, IEventBusAdapter} from './bus/busAdapter';
 import {LocalAdapter} from './bus/localAdapter';
 import * as Path from 'path'
-import * as fs from 'fs'
 import { Domain } from './schemas/schema'
 import { Container } from './di/containers'
 import { Files } from './utils/files'
 import { ExpressAdapter } from './servers/expressAdapter'
 import 'reflect-metadata'
-import {LifeTime, DefaultServiceNames} from './di/annotations';
+import {DefaultServiceNames} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
 import {DynamicConfiguration, VulcainLogger} from 'vulcain-configurationsjs'
@@ -25,10 +24,6 @@ export abstract class Application {
     private _basePath: string;
     public adapter: AbstractAdapter;
 
-    setStaticRoot(basePath: string) {
-        this.adapter.setStaticRoot(basePath);
-    }
-
     setTestUser(user: UserContext) {
         if (!user)
             throw new Error("Test user can not be null");
@@ -40,6 +35,8 @@ export abstract class Application {
         }
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
+
+    onServerStarted(server: any) { }
 
     /**
      * Current component container
@@ -154,7 +151,7 @@ export abstract class Application {
 
                     this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
                     if (!this.adapter) {
-                        this.adapter = new ExpressAdapter(this.domain.name, this._container);
+                        this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
                         this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
                         this.initializeServerAdapter(this.adapter);
                     }
