@@ -2,33 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf864c71-f1a5-4ed8-81e3-185de3a60281" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/pipeline/taskManager.ts" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/application.ts" afterPath="$PROJECT_DIR$/src/application.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/commands/command/abstractCommand.ts" afterPath="$PROJECT_DIR$/src/commands/command/abstractCommand.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/commands/command/circuitBreaker.ts" afterPath="$PROJECT_DIR$/src/commands/command/circuitBreaker.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/commands/command/commandFactory.ts" afterPath="$PROJECT_DIR$/src/commands/command/commandFactory.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/defaults/crudHandlers.ts" afterPath="$PROJECT_DIR$/src/defaults/crudHandlers.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/defaults/services/tokenService.ts" afterPath="$PROJECT_DIR$/src/defaults/services/tokenService.ts" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/di/annotations.ts" afterPath="$PROJECT_DIR$/src/di/annotations.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/di/containers.ts" afterPath="$PROJECT_DIR$/src/di/containers.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/di/resolvers.ts" afterPath="$PROJECT_DIR$/src/di/resolvers.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/index.ts" afterPath="$PROJECT_DIR$/src/index.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pipeline/abstractHandlers.ts" afterPath="$PROJECT_DIR$/src/pipeline/abstractHandlers.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pipeline/actions.ts" afterPath="$PROJECT_DIR$/src/pipeline/actions.ts" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pipeline/annotations.ts" afterPath="$PROJECT_DIR$/src/pipeline/annotations.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pipeline/common.ts" afterPath="$PROJECT_DIR$/src/pipeline/common.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pipeline/query.ts" afterPath="$PROJECT_DIR$/src/pipeline/query.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/providers/memory/provider.ts" afterPath="$PROJECT_DIR$/src/providers/memory/provider.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/providers/mongo/provider.ts" afterPath="$PROJECT_DIR$/src/providers/mongo/provider.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/schemas/schema.ts" afterPath="$PROJECT_DIR$/src/schemas/schema.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/schemas/validator.ts" afterPath="$PROJECT_DIR$/src/schemas/validator.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/servers/abstractAdapter.ts" afterPath="$PROJECT_DIR$/src/servers/abstractAdapter.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/servers/expressAdapter.ts" afterPath="$PROJECT_DIR$/src/servers/expressAdapter.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/servers/expressAuthentication.ts" afterPath="$PROJECT_DIR$/src/servers/expressAuthentication.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/servers/requestContext.ts" afterPath="$PROJECT_DIR$/src/servers/requestContext.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/defaultHandlers/defaultHandlers.spec.ts" afterPath="$PROJECT_DIR$/test/defaultHandlers/defaultHandlers.spec.ts" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/preloader.ts" afterPath="$PROJECT_DIR$/src/preloader.ts" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/schemas/annotations.ts" afterPath="$PROJECT_DIR$/src/schemas/annotations.ts" />
     </list>
     <ignored path="empty-node.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -75,11 +53,9 @@
       <file leaf-file-name="memory.spec.ts" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/providers/memory.spec.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="36" column="0" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="600">
+              <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -87,7 +63,7 @@
       <file leaf-file-name="runnable.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/node_modules/mocha/lib/runnable.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
+            <state relative-caret-position="4815">
               <caret line="321" column="3" selection-start-line="321" selection-start-column="3" selection-end-line="321" selection-end-column="3" />
               <folding />
             </state>
@@ -97,8 +73,8 @@
       <file leaf-file-name="provider.ts" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/providers/memory/provider.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2370">
-              <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
+            <state relative-caret-position="1455">
+              <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -524,6 +500,7 @@
       <workItem from="1471791258918" duration="2173000" />
       <workItem from="1471796547297" duration="1724000" />
       <workItem from="1471799340379" duration="326000" />
+      <workItem from="1471969453819" duration="17000" />
     </task>
     <servers />
   </component>
@@ -560,31 +537,31 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="17215000" />
+    <option name="totallyTimeSpent" value="17232000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="826" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Gulp" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24947146" sideWeight="0.5434343" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24947146" sideWeight="0.45656565" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Gulp" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24947146" sideWeight="0.54904634" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24947146" sideWeight="0.4509537" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="npm" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32833788" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32970026" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32561308" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32833788" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32561308" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -603,7 +580,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/providers/memory/provider.ts</url>
-          <line>66</line>
+          <line>67</line>
           <option name="timeStamp" value="31" />
         </line-breakpoint>
       </breakpoints>
@@ -957,8 +934,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/providers/memory/provider.ts">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2370">
-          <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
+        <state relative-caret-position="1455">
+          <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
           <folding>
             <element signature="e#0#24#0" expanded="true" />
           </folding>
@@ -969,13 +946,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
           <caret line="26" column="71" selection-start-line="26" selection-start-column="71" selection-end-line="26" selection-end-column="71" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/node_modules/mocha/lib/runnable.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
+        <state relative-caret-position="4815">
           <caret line="321" column="3" selection-start-line="321" selection-start-column="3" selection-end-line="321" selection-end-column="3" />
           <folding />
         </state>
@@ -983,11 +959,9 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/providers/memory.spec.ts">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="36" column="0" selection-start-line="36" selection-start-column="0" selection-end-line="36" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="600">
+          <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

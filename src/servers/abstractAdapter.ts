@@ -31,7 +31,7 @@ export abstract class AbstractAdapter {
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
-        this.statsd = new Statsd({ host: "telegraf", socketTimeout: 10000 });
+        this.statsd = new Statsd({ host: process.env["VULCAIN_METRICS_AGENT"] || "telegraf", socketTimeout: 10000 });
         this.globalPrefix = DynamicConfiguration.clusterName + "." + DynamicConfiguration.serviceName + '.' + DynamicConfiguration.serviceVersion + '.';
     }
 
@@ -52,11 +52,12 @@ export abstract class AbstractAdapter {
         let tags = [response.source];
 
         this.statsd.timing(prefix + "responseTime", ms);
+        this.statsd.increment(prefix + "Total");
 
         if (response.status && response.status === "Success") {
             this.statsd.increment(prefix + "Success");
         }
-        else {
+        else if (response.status && response.status === "Error") {
             this.statsd.increment(prefix + "Failure");
         }
     }

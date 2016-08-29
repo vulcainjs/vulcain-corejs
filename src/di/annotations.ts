@@ -71,7 +71,7 @@ export function Injectable(lifeTime: LifeTime, name?:string)
     return function(target)
     {
         name = name || target.name;
-        Preloader.registerPreload( target, ( container, domain ) =>
+        Preloader.registerService( target, ( container, domain ) =>
             {
             container.inject(name, target, lifeTime);
             }

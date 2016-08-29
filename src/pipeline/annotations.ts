@@ -30,7 +30,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerPreload( target, (container, domain) => {
+        Preloader.registerHandler( target, (container, domain) => {
             CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata, true);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
@@ -65,7 +65,7 @@ export function QueryHandler(metadata: QueryMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerPreload( target, (container, domain) => {
+        Preloader.registerHandler( target, (container, domain) => {
             QueryManager.handlerFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
@@ -100,7 +100,7 @@ export function EventHandler(metadata?: EventMetadata) {
 
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerPreload( target, (container, domain) => {
+        Preloader.registerHandler( target, (container, domain) => {
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
