@@ -58,8 +58,8 @@ export class Container implements IContainer {
      * @param {string} address
      * @param {any} [usage=BusUsage.all]
      */
-    useRabbitBusAdapter(address:string, usage = BusUsage.all) {
-        let bus = new RabbitAdapter(address);
+    useRabbitBusAdapter(address?:string, usage = BusUsage.all) {
+        let bus = new RabbitAdapter(address || "rabbit");
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)
@@ -259,7 +259,7 @@ export class TestContainer extends Container {
     /**
      * Creates an instance of TestContainer.
      *
-     * @param {string} domainName 
+     * @param {string} domainName
      * @param {(Container: IContainer) => void} [addServices] Additional services to register
      */
     constructor(public domainName: string, addServices?: (Container: IContainer) => void) {

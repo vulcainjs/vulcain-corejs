@@ -32,7 +32,7 @@ export abstract class AbstractAdapter {
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
         this.statsd = new Statsd({ host: process.env["VULCAIN_METRICS_AGENT"] || "telegraf", socketTimeout: 10000 });
-        this.globalPrefix = DynamicConfiguration.clusterName + "." + DynamicConfiguration.serviceName + '.' + DynamicConfiguration.serviceVersion + '.';
+        this.globalPrefix = DynamicConfiguration.environment + "." + DynamicConfiguration.serviceName + '.' + DynamicConfiguration.serviceVersion + '.';
     }
 
     public abstract start(port: number);

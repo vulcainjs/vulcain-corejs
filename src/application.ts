@@ -29,7 +29,7 @@ export abstract class Application {
             throw new Error("Test user can not be null");
         if (!user.id || !user.name || !user.scopes)
             throw new Error("Invalid test user - Properties must be set.");
-        if (!DynamicConfiguration.isLocalCluster) {
+        if (!DynamicConfiguration.isLocalEnvironment) {
             console.log("Warning : TestUser ignored");
             return;
         }
@@ -50,6 +50,15 @@ export abstract class Application {
      */
     get domain() {
         return this._domain;
+    }
+
+    /**
+     * Get the current environment
+     *
+     * @readonly
+     */
+    get environment() {
+        return DynamicConfiguration.environment;
     }
 
     private findBasePath() {

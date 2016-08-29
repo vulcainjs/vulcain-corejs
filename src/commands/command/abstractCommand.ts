@@ -314,7 +314,7 @@ export abstract class AbstractCommand<T> {
         request.header("X-VULCAIN-CORRELATION-ID", this.context.correlationId);
         request.header("X-VULCAIN-SERVICE-NAME", DynamicConfiguration.serviceName);
         request.header("X-VULCAIN-SERVICE-VERSION", DynamicConfiguration.serviceVersion);
-        request.header("X-VULCAIN-CLUSTER", DynamicConfiguration.clusterName);
+        request.header("X-VULCAIN-ENV", DynamicConfiguration.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
         request.header("X-VULCAIN-TENANT", this.context.tenant);
 
