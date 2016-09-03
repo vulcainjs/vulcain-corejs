@@ -23,7 +23,7 @@ export interface IContainer {
     get<T>(name: string, optional?: boolean, assertLifeTime?:LifeTime):T;
     resolve(fn, ...args);
     dispose();
-    useRabbitBusAdapter(address: string, usage?: BusUsage);
+    useRabbitBusAdapter(address?: string, usage?: BusUsage);
     useMongoProvider(uri: string, mongoOptions?);
     useMemoryProvider(folder?: string);
     inject(name: string, fn, lifeTime: LifeTime);

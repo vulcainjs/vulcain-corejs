@@ -115,7 +115,6 @@ export class QueryManager implements IManager {
             if (result && Array.isArray(result)) {
                 res.total = result.length;
             }
-
             return res;
         }
         catch (e) {

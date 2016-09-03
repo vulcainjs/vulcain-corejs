@@ -143,7 +143,6 @@ export class ExpressAdapter extends AbstractAdapter {
         catch (e) {
             let result = command;
             result.error = { message: e.message || e };
-            result.status = "Error";
             res.status(500).send({ error: e.message || e });
             this.endRequest(begin, result, 500);
         }

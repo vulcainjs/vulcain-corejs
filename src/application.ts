@@ -36,6 +36,11 @@ export abstract class Application {
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
+    /**
+     * 
+     *
+     * @param {*} server
+     */
     onServerStarted(server: any) { }
 
     /**
@@ -59,6 +64,15 @@ export abstract class Application {
      */
     get environment() {
         return DynamicConfiguration.environment;
+    }
+
+    /**
+     * Get if the app runs in local context
+     *
+     * @readonly
+     */
+    get isLocalEnvironment() {
+        return DynamicConfiguration.isLocalEnvironment;
     }
 
     private findBasePath() {

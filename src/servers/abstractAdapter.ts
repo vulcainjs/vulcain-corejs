@@ -54,10 +54,10 @@ export abstract class AbstractAdapter {
         this.statsd.timing(prefix + "responseTime", ms);
         this.statsd.increment(prefix + "Total");
 
-        if (response.status && response.status === "Success") {
+        if (!response.error) {
             this.statsd.increment(prefix + "Success");
         }
-        else if (response.status && response.status === "Error") {
+        else {
             this.statsd.increment(prefix + "Failure");
         }
     }
