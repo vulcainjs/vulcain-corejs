@@ -121,7 +121,7 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
-        const begin = super.startRequest();
+        const begin = super.startRequest(command);
 
         let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         try {

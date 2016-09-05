@@ -9,6 +9,7 @@ import {BadRequestError, Logger, DynamicConfiguration } from 'vulcain-configurat
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
 import * as Statsd from "statsd-client";
+import * as util from 'util';
 
 export abstract class AbstractAdapter {
     private _logger: Logger;
@@ -17,7 +18,7 @@ export abstract class AbstractAdapter {
     private testUser: UserContext;
     private domain: Domain;
     private statsd: Statsd;
-    private globalPrefix: string;
+    private tags: string;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -32,33 +33,34 @@ export abstract class AbstractAdapter {
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
         this.statsd = new Statsd({ host: process.env["VULCAIN_METRICS_AGENT"] || "telegraf", socketTimeout: 10000 });
-        this.globalPrefix = DynamicConfiguration.environment + "." + DynamicConfiguration.serviceName + '.' + DynamicConfiguration.serviceVersion + '.';
+        this.tags = ",environment=" +DynamicConfiguration.environment + ",service=" + DynamicConfiguration.serviceName + ',version=' + DynamicConfiguration.serviceVersion;
     }
 
     public abstract start(port: number);
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
 
-    protected startRequest() {
+    protected startRequest(command) {
+        util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
 
     protected endRequest(begin: number[], response, code: number) {
         const ms = this.calcDelayInMs(begin);
-        let prefix = this.globalPrefix + response.action + ".";
-        if (response.schema)
-            prefix += response.schema + '.';
+        let prefix = "";
+        if (response.value.schema)
+            prefix = response.value.schema + '.';
 
-        let tags = [response.source];
+        prefix += response.value.action + ".";
 
-        this.statsd.timing(prefix + "responseTime", ms);
-        this.statsd.increment(prefix + "Total");
+        this.statsd.timing(prefix + "responseTime" + this.tags, ms);
+        this.statsd.increment(prefix + "total" + this.tags);
 
         if (!response.error) {
-            this.statsd.increment(prefix + "Success");
+            this.statsd.increment(prefix + "success" + this.tags);
         }
         else {
-            this.statsd.increment(prefix + "Failure");
+            this.statsd.increment(prefix + "failure" + this.tags);
         }
     }
 

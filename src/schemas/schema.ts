@@ -122,23 +122,45 @@ export class Domain
         return schemaName;
     }
 
-    getSchema( name:string|Function )
+    /**
+     * Get a registered schema by name
+     * Throws an exception if not exists
+     * @param {string} schema name
+     * @returns a schema
+     */
+    getSchema(name: string | Function)
     {
         if( typeof name === "string")
             return new Schema(this, name);
         return new Schema(this, this.addSchemaDescription(name));
     }
 
+    /**
+     * Get all schemas
+     *
+     * @readonly
+     */
     get schemas()
     {
         return Array.from( this._schemaDescriptions.values() );
     }
 
+    /**
+     * Do not use directly
+     *
+     * @param {string} name
+     * @returns
+     */
     findSchemaDescription( name:string )
     {
         return this._schemaDescriptions.get( name );
     }
 
+    /**
+     * Do not use directly
+     *
+     * @readonly
+     */
     get schemaDescriptions()
     {
         return Array.from( this._schemaDescriptions.values() );
@@ -179,11 +201,15 @@ export class Domain
         return this.types.get(parts[0])[parts[1]];
     }
 
-    applyMethod(methodName: string, schemaName, args:Array<any>) {
+    applyMethod(methodName: string, schemaName, args: Array<any>) {
+
+        // Check entity
         let entity = args && args[0];
         if (!entity) return null;
 
+        // Normalize method arguments
         args.splice(0, 1);
+        
         let schema = schemaName;
 
         if (typeof schemaName === "string") {
