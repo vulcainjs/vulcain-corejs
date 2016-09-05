@@ -38,7 +38,7 @@ gulp.task("compile-test", ['compile-ts'], function () {
     var tsResult = gulp.src([
         "./test/**/*.ts",
         "./typings/index.d.ts"
-    ], { base: 'test/' })
+    ], { base: './test/' })
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject));
 
@@ -70,7 +70,7 @@ function incrementVersion() {
 }
 
 // https://www.npmjs.com/package/gulp-typescript
-gulp.task("compile-ts", [ ], function ()
+gulp.task("compile-ts", ['clean' ], function ()
 {
     //incrementVersion();
     var tsProject = ts.createProject(
@@ -97,4 +97,4 @@ gulp.task("compile-ts", [ ], function ()
     );
 });
 
-gulp.task('clean', function(done) { fse.remove('dist', done);});
+gulp.task('clean', function(done) { fse.remove('dist', fse.remove('dist-test',done));});

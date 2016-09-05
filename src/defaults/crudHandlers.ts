@@ -18,11 +18,11 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
     }
 
     protected async createInternal(entity: any) {
-        if (entity && this.schema.description.encryptData)
-            entity = this.schema.apply("encrypt", entity, this.container) || entity
+        if (entity && this.schema.description.hasSensibleData)
+            entity = this.schema.encrypt(entity) || entity
         entity = await this.create(entity);
-        if (entity && this.schema.description.encryptData)
-            entity = this.schema.apply("decrypt", entity, this.container) || entity;
+        if (entity && this.schema.description.hasSensibleData)
+            entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
@@ -36,11 +36,11 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     protected async updateInternal(entity: any) {
         // TODO move to provider
-        if (entity && this.schema.description.encryptData)
-            entity = this.schema.apply("encrypt", entity, this.container) || entity
+        if (entity && this.schema.description.hasSensibleData)
+            entity = this.schema.encrypt(entity) || entity
         entity = await this.update(entity);
-        if (entity && this.schema.description.encryptData)
-            entity = this.schema.apply("decrypt", entity, this.container) || entity;
+        if (entity && this.schema.description.hasSensibleData)
+            entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
@@ -63,8 +63,8 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     protected async getInternal(id: any) {
         let entity = await this.get(id);
-        if (entity && this.schema.description.encryptData)
-            entity = this.schema.apply("decrypt", entity, this.container) || entity;
+        if (entity && this.schema.description.hasSensibleData)
+            entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
@@ -78,8 +78,8 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
             let result = [];
             for (let entity of list) {
                 if (entity) {
-                    if (entity && this.schema.description.encryptData)
-                        entity = this.schema.apply("decrypt", entity, this.container) || entity;
+                    if (entity && this.schema.description.hasSensibleData)
+                        entity = this.schema.decrypt(entity) || entity;
                     result.push(entity);
                 }
             }

@@ -6,10 +6,9 @@ export interface ModelOptions {
     extends?: string;
     description?: string;
     bind?: ((data) => any)|boolean;
-    onHttpResponse?: ((entity, container?:IContainer) => void) | boolean;
     validate?: (entity, container?:IContainer) => string;
     storageName?: string;
-    encryptData?: boolean;
+    hasSensibleData?: boolean;
 }
 
 export function Model(options?: ModelOptions) {
@@ -36,6 +35,7 @@ export interface PropertyOptions {
     bind?: ((val, entity) => any)|boolean;
     dependsOn?: (entity) => boolean;
     validate?: (val) => string;
+    sensible?: boolean;
 }
 
 export function Property(info:PropertyOptions) {

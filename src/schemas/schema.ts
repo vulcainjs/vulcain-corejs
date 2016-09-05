@@ -2,6 +2,8 @@ import {SchemaBuilder} from './schemaBuilder'
 import {standards} from './standards'
 import {Validator} from './validator'
 import {IContainer} from '../di/resolvers';
+import {SchemaVisitor} from './visitor';
+import {DynamicConfiguration} from 'vulcain-configurationsjs';
 
 /**
  * Schema definition
@@ -65,12 +67,33 @@ export class Schema {
         return obj[this.getIdProperty()];
     }
 
-    apply(methodName: string, ...obj) {
-        return this.domain.applyMethod(methodName, this, obj);
+    encrypt(entity) {
+        if (!entity || !this.description.hasSensibleData) return entity;
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
+            visitProperty(val, prop) {
+                if (val && prop.sensible)
+                    this.current[prop.name] = DynamicConfiguration.encrypt(val);
+            }
+        }
+        let v = new SchemaVisitor(this.domain, visitor);
+        v.visit(this, entity);
+        return entity;
     }
 
-    decrypt(obj) {
-        return this.domain.applyMethod("decrypt", this, [obj]);
+    decrypt(entity) {
+        if (!entity || !this.description.hasSensibleData) return entity;
+
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
+            visitProperty(val, prop) {
+                if (val && prop.sensible)
+                    this.current[prop.name] = DynamicConfiguration.decrypt(val);
+            }
+        }
+        let v = new SchemaVisitor(this.domain, visitor);
+        v.visit(this, entity);
+        return entity;
     }
 }
 
@@ -109,7 +132,7 @@ export class Domain
             if (tmp)
                 return schema.name;
 
-            schema = SchemaBuilder.build(schema);
+            schema = SchemaBuilder.build(this, schema);
         }
 
         schemaName = name || schema.name;
@@ -201,91 +224,20 @@ export class Domain
         return this.types.get(parts[0])[parts[1]];
     }
 
-    applyMethod(methodName: string, schemaName, args: Array<any>) {
-
-        // Check entity
-        let entity = args && args[0];
-        if (!entity) return null;
-
-        // Normalize method arguments
-        args.splice(0, 1);
-        
-        let schema = schemaName;
-
-        if (typeof schemaName === "string") {
-            schemaName = schemaName || entity && (<any>entity).__schema;
-            schema = this._schemaDescriptions.get(schemaName);
-            if (!schema) return;
+    /**
+     * Remove all sensible data
+     *
+     * @param {any} entity
+     * @param {any} schemaName
+     * @returns
+     */
+    obfuscate(entity, schemaName) {
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
+            visitProperty(val, prop) { if (prop.sensible) delete this.current[prop.name];}
         }
-        else {
-            if (!schema) return;
-            schema = schema.description || schema;
-        }
-
-        if (typeof schema[methodName] === "function")
-            entity = schema[methodName].apply(schema, [entity].concat(args)) || entity;
-
-        for( const ps in schema.properties )
-        {
-            if( !schema.properties.hasOwnProperty( ps ) ) continue;
-            let prop = schema.properties[ps];
-            if( prop )
-            {
-                try
-                {
-                    let method = this.findMethodInTypeHierarchy( methodName, prop );
-                    if (!method || typeof method !== "function") continue;
-                    let val = entity[ps];
-                    val = val && method.apply(prop, [val, entity].concat(args)) || val;
-                    entity[ps] = val;
-                }
-                catch( e )
-                {
-                    console.log(e);
-                    // ignore
-                }
-            }
-        }
-
-        for (const ref in schema.references) {
-            if (!schema.references.hasOwnProperty(ref)) continue;
-            let relationshipSchema = schema.references[ref];
-            let refValue = entity[ref];
-            if (relationshipSchema && refValue) {
-                try {
-                    let item = relationshipSchema.item;
-                    if (item === "any" && refValue && refValue.__schema) {
-                        item = refValue.__schema;
-                    }
-                    let elemSchema = this.findSchemaDescription(item);
-                    if (!elemSchema && item !== "any") {
-                        continue;
-                    }
-
-                    let method = this.findMethodInTypeHierarchy(methodName, elemSchema);
-                    if (this.isMany(relationshipSchema)) {
-                        for (let elem of refValue) {
-                            if (method && typeof method === "function")
-                                method.apply(elemSchema, [elem].concat(args));
-                            else
-                                this.applyMethod(methodName, elemSchema, [elem].concat(args));
-                        }
-                    }
-                    else {
-                        if (method && typeof method === "function")
-                            method.apply(elemSchema, [refValue].concat(args));
-                        else
-                            this.applyMethod(methodName, elemSchema, [refValue].concat(args));
-                    }
-                }
-                catch (e) {
-                    // ignore
-                }
-            }
-        }
-        if (schema.extends) {
-            this.applyMethod(methodName, schema.extends, entity);
-        }
+        let v = new SchemaVisitor(this, visitor);
+        v.visit(schemaName, entity);
     }
 
     /**
@@ -439,6 +391,9 @@ export class Domain
         else {
             if(!schema) throw new Error("Invalid schema");
         }
+
+        if (!schema.idProperty)
+            throw new Error("No property id define for schema " + schema.name);
 
         return schema.idProperty;
     }

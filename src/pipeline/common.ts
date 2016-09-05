@@ -204,15 +204,15 @@ export class HandlerFactory {
                     if (v.__schema) {
                         if (!outputSchema || outputSchema.name !== v.__schema)
                             outputSchema = domain.getSchema(v.__schema);
-                        if (outputSchema && outputSchema.description.onHttpResponse)
-                            domain.applyMethod("onHttpResponse", outputSchema, [v, container]);
+                        if (outputSchema && outputSchema.description.hasSensibleData)
+                            domain.obfuscate(v, outputSchema);
                     }
                 });
             }
             else if (result.__schema) {
                 let outputSchema = domain.getSchema(result.__schema);
-                if (outputSchema && outputSchema.description.onHttpResponse)
-                    domain.applyMethod("onHttpResponse", outputSchema, [result, container]);
+                if (outputSchema && outputSchema.description.hasSensibleData)
+                    domain.obfuscate(result, outputSchema);
             }
         }
 

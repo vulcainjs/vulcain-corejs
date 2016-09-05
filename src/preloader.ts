@@ -34,7 +34,9 @@ export class Preloader {
     }
 
     private static run(key: string, container, domain) {
-        for (const item of Preloader._preloads[key]) {
+        let items = Preloader._preloads[key];
+        if (!items) return;
+        for (const item of items) {
             item.callback(container, domain);
         }
     }
@@ -45,7 +47,7 @@ export class Preloader {
             Preloader.run(Services, container, domain);
             Preloader.run(Handlers, container, domain);
 
-            Preloader._preloads = null;
+            Preloader._preloads = {};
         }
     }
 }
