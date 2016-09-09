@@ -14,6 +14,7 @@ import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import {LifeTime} from './annotations';
 import {Files} from '../utils/files';
+import {Conventions} from '../utils/conventions';
 
 /**
  *
@@ -59,7 +60,7 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?:string, usage = BusUsage.all) {
-        let bus = new RabbitAdapter(address || "amqp://rabbit");
+        let bus = new RabbitAdapter(address || "amqp://" + (process.env[Conventions.ENV_RABBIT_SERVER] || "rabbit"));
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)

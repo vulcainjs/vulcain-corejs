@@ -10,6 +10,7 @@ import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
 import * as Statsd from "statsd-client";
 import * as util from 'util';
+import {Conventions} from '../utils/conventions';
 
 export abstract class AbstractAdapter {
     private _logger: Logger;
@@ -32,7 +33,7 @@ export abstract class AbstractAdapter {
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
-        this.statsd = new Statsd({ host: process.env["VULCAIN_METRICS_AGENT"] || "telegraf", socketTimeout: 10000 });
+        this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
         this.tags = ",environment=" +DynamicConfiguration.environment + ",service=" + DynamicConfiguration.serviceName + ',version=' + DynamicConfiguration.serviceVersion;
     }
 
@@ -92,9 +93,8 @@ export abstract class AbstractAdapter {
                 ctx.user = ctx.user || this.testUser;
 
                 // Verify authorization
-                let code;
-                if (metadata.scope && (code = ctx.hasScope(metadata.scope))) {
-                    resolve({ code: 200, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[code] } } });
+                if (metadata.scope && ctx.hasScope(metadata.scope)) {
+                    resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }
             }

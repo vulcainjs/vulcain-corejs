@@ -127,7 +127,7 @@ export class ExpressAdapter extends AbstractAdapter {
         try {
             if (req.user && !req.user.__empty__)
                 ctx.user = req.user;
-            ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env["VULCAIN_TENANT"] || RequestContext.TestTenant;
+            ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);

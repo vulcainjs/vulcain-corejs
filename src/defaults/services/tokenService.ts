@@ -2,6 +2,7 @@ import {Injectable, LifeTime} from '../../di/annotations';
 import {ITokenService} from '../services';
 import {Inject} from '../../di/annotations';
 import * as fs from 'fs';
+import {Conventions} from '../../utils/conventions';
 var jwt = require('jsonwebtoken');
 
 @Injectable( LifeTime.Singleton)
@@ -19,10 +20,10 @@ export class TokenService implements ITokenService {
         @Inject( "Container" ) private container
     )
     {
-        this.issuer= process.env["VULCAIN_TOKEN_ISSUER"];
-        this.tokenExpiration= process.env["VULCAIN_TOKEN_EXPIRATION"] || "20m";
-        this.secretKey = process.env["VULCAIN_SECRET_KEY"] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
-        let privateKeyPath = process.env["VULCAIN_PRIVATE_KEY_PATH"];
+        this.issuer= process.env[Conventions.ENV_TOKEN_ISSUER];
+        this.tokenExpiration= process.env[Conventions.ENV_TOKEN_EXPIRATION] || "20m";
+        this.secretKey = process.env[Conventions.ENV_SECRET_KEY] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
+        let privateKeyPath = process.env[Conventions.ENV_PRIVATE_KEY_PATH];
         if(privateKeyPath && fs.exists( privateKeyPath ))
         {
             this.privateKey = fs.readFileSync( privateKeyPath );

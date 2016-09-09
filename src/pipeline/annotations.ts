@@ -25,6 +25,13 @@ function getMetadata(key, target) {
     return metadata;
 }
 
+/**
+ * Define an action handler class
+ *
+ * @export
+ * @param {ActionHandlerMetadata} metadata
+ * @returns
+ */
 export function ActionHandler(metadata: ActionHandlerMetadata) {
     return function (target: Function) {
         metadata.scope = metadata.scope || "?";
@@ -37,6 +44,13 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
     }
 }
 
+/**
+ * Define an action handler
+ *
+ * @export
+ * @param {ActionMetadata} [actionMetadata]
+ * @returns
+ */
 export function Action(actionMetadata?: ActionMetadata) {
     return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
@@ -60,6 +74,13 @@ export function Action(actionMetadata?: ActionMetadata) {
     }
 }
 
+/**
+ * Define a query handler class
+ *
+ * @export
+ * @param {QueryMetadata} metadata
+ * @returns
+ */
 export function QueryHandler(metadata: QueryMetadata) {
     return function (target: Function) {
         metadata.scope = metadata.scope || "?";
@@ -72,6 +93,13 @@ export function QueryHandler(metadata: QueryMetadata) {
     }
 }
 
+/**
+ * Define a query handler
+ *
+ * @export
+ * @param {QueryActionMetadata} [actionMetadata]
+ * @returns
+ */
 export function Query(actionMetadata?: QueryActionMetadata) {
     return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
@@ -95,6 +123,13 @@ export function Query(actionMetadata?: QueryActionMetadata) {
     }
 }
 
+/**
+ * Define an event handler class
+ *
+ * @export
+ * @param {EventMetadata} [metadata]
+ * @returns
+ */
 export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
 
@@ -108,7 +143,11 @@ export function EventHandler(metadata?: EventMetadata) {
 }
 
 /**
+ * Define an event handler
  *
+ * @export
+ * @param {ConsumeEventMetadata} [consumeMetadata]
+ * @returns
  */
 export function Consume(consumeMetadata?: ConsumeEventMetadata) {
 	return (target, key) => {

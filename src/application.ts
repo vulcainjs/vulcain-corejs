@@ -16,6 +16,13 @@ import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import {UserContext} from './servers/requestContext';
 
+/**
+ * Application base class
+ *
+ * @export
+ * @abstract
+ * @class Application
+ */
 export abstract class Application {
     private _executablePath: string;
     private _container: IContainer;
@@ -24,6 +31,12 @@ export abstract class Application {
     private _basePath: string;
     public adapter: AbstractAdapter;
 
+    /**
+     * Set the user to use in local development
+     *
+     * @param {UserContext} user
+     * @returns
+     */
     setTestUser(user: UserContext) {
         if (!user)
             throw new Error("Test user can not be null");
@@ -37,7 +50,7 @@ export abstract class Application {
     }
 
     /**
-     * 
+     * Called when the server adapter is started
      *
      * @param {*} server
      */
@@ -96,7 +109,7 @@ export abstract class Application {
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
 
-        domainName = domainName || process.env.VULCAIN_DOMAIN;
+        domainName = domainName;
         if (!domainName)
             throw new Error("Domain name is required.");
 
@@ -135,17 +148,45 @@ export abstract class Application {
         });
     }
 
+    /**
+     * Override this method to initialize default containers
+     *
+     * @protected
+     * @param {IContainer} container
+     */
     protected initializeDefaultServices(container: IContainer) {
     }
 
+    /**
+     * Override this method to add your custom services
+     *
+     * @protected
+     * @param {IContainer} container
+     */
     protected initializeServices(container: IContainer) {
     }
 
+    /**
+     * Called before the server adapter is started
+     *
+     * @protected
+     * @param {AbstractAdapter} abstractAdapter
+     */
     protected initializeServerAdapter(abstractAdapter: AbstractAdapter) {
     }
 
+    /**
+     * Entry application point
+     *
+     * @abstract
+     */
     abstract runAsync();
 
+    /**
+     * Initialize and start application
+     *
+     * @param {number} port
+     */
     start(port: number) {
         this.initializeDefaultServices(this.container);
 
@@ -195,6 +236,13 @@ export abstract class Application {
         this.registerModels(Path.join(this._basePath, path));
     }
 
+    /**
+     * Inject all components from a specific folder (relative to the current folder)
+     *
+     * @protected
+     * @param {string} path Folder path
+     * @returns The current container
+     */
     protected injectFrom(path: string) {
         if(!Path.isAbsolute(path))
             path = Path.join(this._basePath, path);

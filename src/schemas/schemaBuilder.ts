@@ -29,7 +29,7 @@ export class SchemaBuilder {
         for(let n in properties) {
             let propAttr = properties[n];
             if (propAttr) {
-                if (!domain._findType(propAttr.type))
+                if (propAttr.type !== "any" && !domain._findType(propAttr.type))
                     throw new Error(`Unknown type ${propAttr.type}`);
 
                 if (propAttr.isKey) {
@@ -51,7 +51,7 @@ export class SchemaBuilder {
             else if (schema.properties.name)
                 schema.idProperty = "name"
         }
-        
+
         const symReferences = Symbol.for("design:references");
         let references = Reflect.getOwnMetadata(symReferences, obj.prototype);
         for(let n in references) {

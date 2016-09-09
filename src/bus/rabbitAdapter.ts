@@ -1,3 +1,4 @@
+import { DynamicConfiguration } from 'vulcain-configurationsjs';
 import * as amqp from 'amqplib';
 import {EventData, ActionData} from '../pipeline/actions';
 
@@ -11,6 +12,7 @@ class RabbitAdapter {
     constructor(private address: string) {
         if (!address.startsWith("amqp://"))
             this.address = "amqp://" + address;
+        this.address += "/" + DynamicConfiguration.environment;
     }
 
     startAsync() {
@@ -24,7 +26,7 @@ class RabbitAdapter {
                 return resolve(self);
             }
 
-
+            // TODO connection error
             self.initialized = true;
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {

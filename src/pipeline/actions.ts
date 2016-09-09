@@ -11,6 +11,7 @@ import * as RX from 'rx';
 import {CommandRuntimeError} from '../commands/command/command';
 import {EventHandlerFactory} from './eventHandlerFactory';
 import {LifeTime} from '../di/annotations';
+import {Conventions} from '../utils/conventions';
 
 export interface ActionData extends CommonRequestData {
     correlationId: string;
@@ -91,7 +92,7 @@ export class CommandManager implements IManager {
 
     constructor(public container: IContainer) {
         this._hostname = os.hostname();
-        this._service = process.env.VULCAIN_SERVICE_NAME + "-" + process.env.VULCAIN_SERVICE_VERSION;
+        this._service = process.env[Conventions.ENV_SERVICE_NAME] + "-" + process.env[Conventions.ENV_SERVICE_VERSION];
         if (!this._service)
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
         this.messageBus = new MessageBus(this);

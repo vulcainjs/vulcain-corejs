@@ -19,8 +19,29 @@ export interface IContainer {
     injectScoped(fn, ...args): IContainer;
     injectScoped(fn, name?: string, ...args): IContainer;
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
+    /**
+     * Inject all components founded recursivly in a folder.
+     *
+     * @param {string} path Root folder relative to current folder
+     * @returns {IContainer}
+     */
     injectFrom(path: string): IContainer;
-    get<T>(name: string, optional?: boolean, assertLifeTime?:LifeTime):T;
+    /**
+     * Get a component by name
+     *
+     * @template T
+     * @param {string} name Component name
+     * @param {boolean} [optional] if true doesn't throw an exception if the component doesn't exist
+     * @param {LifeTime} [assertLifeTime] If provided check if the component has been injected with the same lifetime value
+     * @returns {T} A component
+     */
+    get<T>(name: string, optional?: boolean, assertLifeTime?: LifeTime): T;
+    /**
+     * Create a new component resolving all its dependencies
+     *
+     * @param {any} fn A component class
+     * @param {any} args Custom arguments
+     */
     resolve(fn, ...args);
     dispose();
     useRabbitBusAdapter(address?: string, usage?: BusUsage);
