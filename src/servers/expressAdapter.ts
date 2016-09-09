@@ -125,7 +125,7 @@ export class ExpressAdapter extends AbstractAdapter {
 
         let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         try {
-            if (req.user && !req.user.__empty__)
+            if (req.user )
                 ctx.user = req.user;
             ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;

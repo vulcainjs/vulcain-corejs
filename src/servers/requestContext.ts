@@ -156,7 +156,7 @@ export class RequestContext {
      */
     hasScope(scope: string): boolean {
         if (!scope || scope === "?") return true;
-
+        if (!this.user) return false;
         if (scope === "*") return true;
 
         const scopes = this.scopes;

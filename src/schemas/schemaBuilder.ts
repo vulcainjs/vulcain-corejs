@@ -30,7 +30,7 @@ export class SchemaBuilder {
             let propAttr = properties[n];
             if (propAttr) {
                 if (propAttr.type !== "any" && !domain._findType(propAttr.type))
-                    throw new Error(`Unknown type ${propAttr.type}`);
+                    throw new Error(`Unknown type ${propAttr.type} for property ${n} of schema ${schema.name}`);
 
                 if (propAttr.isKey) {
                     if (schema.idProperty)
@@ -61,7 +61,7 @@ export class SchemaBuilder {
                 if (refAttr.item !== "any") {
                     itemSchema = domain.findSchemaDescription(refAttr.item);
                     if (!itemSchema)
-                        throw new Error(`Unknown referenced schema ${refAttr.item}`);
+                        throw new Error(`Unknown referenced schema ${refAttr.item} for reference ${n} of schema ${schema.name}`);
                 }
 
                 schema.references[n] = refAttr;

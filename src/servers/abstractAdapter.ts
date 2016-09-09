@@ -93,7 +93,7 @@ export abstract class AbstractAdapter {
                 ctx.user = ctx.user || this.testUser;
 
                 // Verify authorization
-                if (metadata.scope && ctx.hasScope(metadata.scope)) {
+                if (metadata.scope && !ctx.hasScope(metadata.scope)) {
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }
