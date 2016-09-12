@@ -37,6 +37,8 @@ export interface UserContext {
  */
 export class RequestContext {
     static TestTenant = "_test_";
+    static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
+    
     /**
      * Current user or null
      *
@@ -127,7 +129,7 @@ export class RequestContext {
     static createMock(container?: IContainer, user?:UserContext) {
         let ctx = new RequestContext(container || new Container(), Pipeline.Test);
         ctx.tenant = RequestContext.TestTenant;
-        ctx.user = user || { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
+        ctx.user = user || RequestContext.TestUser;
         return ctx;
     }
 

@@ -14,7 +14,7 @@ import {AbstractAdapter} from './servers/abstractAdapter';
 import {System, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
-import {UserContext} from './servers/requestContext';
+import { UserContext, RequestContext } from './servers/requestContext';
 
 /**
  * Application base class
@@ -37,9 +37,8 @@ export abstract class Application {
      * @param {UserContext} user
      * @returns
      */
-    setTestUser(user: UserContext) {
-        if (!user)
-            throw new Error("Test user can not be null");
+    setTestUser(user?: UserContext) {
+        user = user || RequestContext.TestUser;
         if (!user.id || !user.name || !user.scopes)
             throw new Error("Invalid test user - Properties must be set.");
         if (!System.isLocalEnvironment) {
