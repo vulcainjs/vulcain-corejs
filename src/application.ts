@@ -11,7 +11,7 @@ import 'reflect-metadata'
 import {DefaultServiceNames} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
-import {DynamicConfiguration, VulcainLogger} from 'vulcain-configurationsjs'
+import {System, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import {UserContext} from './servers/requestContext';
@@ -42,7 +42,7 @@ export abstract class Application {
             throw new Error("Test user can not be null");
         if (!user.id || !user.name || !user.scopes)
             throw new Error("Invalid test user - Properties must be set.");
-        if (!DynamicConfiguration.isLocalEnvironment) {
+        if (!System.isLocalEnvironment) {
             console.log("Warning : TestUser ignored");
             return;
         }
@@ -68,24 +68,6 @@ export abstract class Application {
      */
     get domain() {
         return this._domain;
-    }
-
-    /**
-     * Get the current environment
-     *
-     * @readonly
-     */
-    get environment() {
-        return DynamicConfiguration.environment;
-    }
-
-    /**
-     * Get if the app runs in local context
-     *
-     * @readonly
-     */
-    get isLocalEnvironment() {
-        return DynamicConfiguration.isLocalEnvironment;
     }
 
     private findBasePath() {

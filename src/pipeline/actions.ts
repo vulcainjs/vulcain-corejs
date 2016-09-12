@@ -167,7 +167,7 @@ export class CommandManager implements IManager {
             command.startedAt = moment.utc().format();
             command.service = this._service;
             if (ctx && ctx.user)
-                command.userContext = <UserContext>{ id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName };
+                command.userContext = <UserContext>{ id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
             else
                 command.userContext = <any>{};
 

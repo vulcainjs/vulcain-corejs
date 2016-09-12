@@ -105,7 +105,7 @@ export class QueryManager implements IManager {
             if (errors && errors.length > 0)
                 return this.createResponse(query, { message: "Validation errors", errors: errors });
             if (ctx.user)
-                query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName };
+                query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
             query.schema = <string>info.metadata.schema;
             info.handler.requestContext = ctx;
             info.handler.query = query;

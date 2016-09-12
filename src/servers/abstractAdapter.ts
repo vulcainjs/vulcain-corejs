@@ -5,7 +5,7 @@ import {CommandManager, ActionMetadata} from '../pipeline/actions';
 import {CommonRequestResponse} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
-import {BadRequestError, Logger, DynamicConfiguration } from 'vulcain-configurationsjs';
+import {BadRequestError, Logger, System } from 'vulcain-configurationsjs';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
 import * as Statsd from "statsd-client";
@@ -34,7 +34,7 @@ export abstract class AbstractAdapter {
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
         this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
-        this.tags = ",environment=" +DynamicConfiguration.environment + ",service=" + DynamicConfiguration.serviceName + ',version=' + DynamicConfiguration.serviceVersion;
+        this.tags = ",environment=" +System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
     }
 
     public abstract start(port: number);

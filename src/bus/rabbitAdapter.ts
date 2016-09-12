@@ -1,4 +1,4 @@
-import { DynamicConfiguration } from 'vulcain-configurationsjs';
+import { System } from 'vulcain-configurationsjs';
 import * as amqp from 'amqplib';
 import {EventData, ActionData} from '../pipeline/actions';
 
@@ -12,7 +12,7 @@ class RabbitAdapter {
     constructor(private address: string) {
         if (!address.startsWith("amqp://"))
             this.address = "amqp://" + address;
-        this.address += "/" + DynamicConfiguration.environment;
+        this.address += "/" + System.environment;
     }
 
     startAsync() {

@@ -1,7 +1,7 @@
 var rest = require('unirest');
 import * as types from './types';
 import * as os from 'os';
-import {DynamicConfiguration, Logger} from 'vulcain-configurationsjs'
+import {DynamicConfiguration, System} from 'vulcain-configurationsjs'
 import {ExecutionResult} from './executionResult'
 import {Schema} from '../../schemas/schema';
 import {IProvider} from '../../providers/provider';
@@ -103,12 +103,6 @@ export interface ICommandContext {
      */
     cache: Map<string, any>;
     /**
-     * Get the logger
-     *
-     * @type {Logger}
-     */
-    logger: Logger;
-    /**
      *
      *
      * @type {Pipeline}
@@ -184,6 +178,7 @@ export abstract class AbstractCommand<T> {
         if (!version || version < 0)
             throw new Error("Invalid version number");
 
+        // Check if there is a service $redirect config property
         let name = [serviceName, version, "$redirect"].join('.');
         let prop = DynamicConfiguration.getProperty<any>(name);
         if (prop && prop.value) {
@@ -312,9 +307,9 @@ export abstract class AbstractCommand<T> {
     protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {
         let request: types.IHttpRequest = rest[verb](url);
         request.header("X-VULCAIN-CORRELATION-ID", this.context.correlationId);
-        request.header("X-VULCAIN-SERVICE-NAME", DynamicConfiguration.serviceName);
-        request.header("X-VULCAIN-SERVICE-VERSION", DynamicConfiguration.serviceVersion);
-        request.header("X-VULCAIN-ENV", DynamicConfiguration.environment);
+        request.header("X-VULCAIN-SERVICE-NAME", System.serviceName);
+        request.header("X-VULCAIN-SERVICE-VERSION", System.serviceVersion);
+        request.header("X-VULCAIN-ENV", System.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
         request.header("X-VULCAIN-TENANT", this.context.tenant);
 

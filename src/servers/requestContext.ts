@@ -26,6 +26,7 @@ export interface UserContext {
     email?: string;
     name: string;
     scopes: Array<string>;
+    tenant: string;
 }
 
 /**
@@ -126,7 +127,7 @@ export class RequestContext {
     static createMock(container?: IContainer, user?:UserContext) {
         let ctx = new RequestContext(container || new Container(), Pipeline.Test);
         ctx.tenant = RequestContext.TestTenant;
-        ctx.user = user || { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test" };
+        ctx.user = user || { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
         return ctx;
     }
 
@@ -155,6 +156,8 @@ export class RequestContext {
      * @returns {number}
      */
     hasScope(scope: string): boolean {
+        if (this.user && this.user.tenant !== this.tenant) return false;
+
         if (!scope || scope === "?") return true;
         if (!this.user) return false;
         if (scope === "*") return true;

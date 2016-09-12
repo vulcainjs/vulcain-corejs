@@ -3,7 +3,7 @@ import {standards} from './standards'
 import {Validator} from './validator'
 import {IContainer} from '../di/resolvers';
 import {SchemaVisitor} from './visitor';
-import {DynamicConfiguration} from 'vulcain-configurationsjs';
+import {System} from 'vulcain-configurationsjs';
 
 /**
  * Schema definition
@@ -73,7 +73,7 @@ export class Schema {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
             visitProperty(val, prop) {
                 if (val && prop.sensible)
-                    this.current[prop.name] = DynamicConfiguration.encrypt(val);
+                    this.current[prop.name] = System.encrypt(val);
             }
         }
         let v = new SchemaVisitor(this.domain, visitor);
@@ -88,7 +88,7 @@ export class Schema {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
             visitProperty(val, prop) {
                 if (val && prop.sensible)
-                    this.current[prop.name] = DynamicConfiguration.decrypt(val);
+                    this.current[prop.name] = System.decrypt(val);
             }
         }
         let v = new SchemaVisitor(this.domain, visitor);
@@ -391,9 +391,6 @@ export class Domain
         else {
             if(!schema) throw new Error("Invalid schema");
         }
-
-        if (!schema.idProperty)
-            throw new Error("No property id define for schema " + schema.name);
 
         return schema.idProperty;
     }
