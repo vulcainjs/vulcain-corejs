@@ -172,11 +172,11 @@ export abstract class AbstractCommand<T> {
      * @param {number} version
      * @returns
      */
-    private createServiceName(serviceName: string, version: number) {
+    private createServiceName(serviceName: string, version: string) {
         if (!serviceName)
             throw new Error("You must provide a service name");
-        if (!version || version < 0)
-            throw new Error("Invalid version number");
+        if (!version || !version.match(/[0-9]+\.[0-9]+/))
+            throw new Error("Invalid version number. Must be on the form major.minor");
 
         // Check if there is a service $redirect config property
         let name = [serviceName, version, "$redirect"].join('.');
@@ -205,7 +205,7 @@ export abstract class AbstractCommand<T> {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequestAsync<T>(serviceName: string, version: number, id:string, schema?:string): Promise<QueryResponse<T>> {
+    protected async getRequestAsync<T>(serviceName: string, version: string, id:string, schema?:string): Promise<QueryResponse<T>> {
         let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
                          : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
@@ -230,7 +230,7 @@ export abstract class AbstractCommand<T> {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getAllAsync<T>(serviceName: string, version: number, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+    protected async getAllAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
@@ -259,7 +259,7 @@ export abstract class AbstractCommand<T> {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQueryAsync<T>(serviceName: string, version: number, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+    protected async getQueryAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
@@ -284,7 +284,7 @@ export abstract class AbstractCommand<T> {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected async sendActionAsync(serviceName: string, version: number, action: string, data: any): Promise<ActionResponse<T>> {
+    protected async sendActionAsync<T>(serviceName: string, version: string, action: string, data: any): Promise<ActionResponse<T>> {
         let command = { action: action, data: data, correlationId: this.context.correlationId };
         let url = `http://${this.createServiceName(serviceName, version)}/api`;
 

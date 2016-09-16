@@ -6,8 +6,8 @@ import {AbstractCommand} from './abstractCommand'
 import {SemaphoreFactory, Semaphore} from './semaphore'
 import {EventType, FailureType, ExecutionResult} from './executionResult'
 import {BadRequestError} from 'vulcain-configurationsjs'
-
-var moment = require("moment");
+import * as util from 'util';
+const moment = require("moment");
 
 export class TimeoutError extends Error {
     constructor(ms:number) {
@@ -159,11 +159,12 @@ export class HystrixCommand {
             }
             let fallback = (<any>this.command).fallbackAsync;
             if (!fallback) {
-                this.logInfo("No fallback for command");
+                //this.logInfo("No fallback for command");
                 throw new CommandRuntimeError(failureType, this.properties.commandName, this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
                 try {
+                    this.logInfo("Use fallback for command");
                     let result = await fallback.apply(this.command, this._arguments);
                     this.metrics.markFallbackSuccess();
                     this.status.addEvent(EventType.FALLBACK_SUCCESS);

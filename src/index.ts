@@ -4,9 +4,14 @@ import './preloader';
 export * from './schemas/schema'
 export * from './schemas/annotations'
 
+// Auth
+export {AuthenticationStrategies} from './auth/authenticationStrategies';
+export {ApiKeyStrategy} from './auth/apiKeyStrategy';
+
 // Core
 export * from './application'
 export {Conventions} from './utils/conventions';
+export {Metrics} from './utils/metrics';
 
 // Pipeline
 export * from './pipeline/annotations'

@@ -21,6 +21,8 @@ export class DefaultServiceNames
     static ProviderFactory = "ProviderFactory";
     static TestUser = "TestUser";
     static RequestContext = "RequestContext";
+    static Metrics = "Metrics";
+    static ApiKeyService = "ApiKeyService";
 }
 
 /**

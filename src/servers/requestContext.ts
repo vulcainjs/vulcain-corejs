@@ -38,7 +38,7 @@ export interface UserContext {
 export class RequestContext {
     static TestTenant = "_test_";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
-    
+
     /**
      * Current user or null
      *
@@ -158,7 +158,7 @@ export class RequestContext {
      * @returns {number}
      */
     hasScope(scope: string): boolean {
-        if (this.user && this.user.tenant !== this.tenant) return false;
+        if (this.user && this.user.tenant && this.user.tenant !== this.tenant) return false;
 
         if (!scope || scope === "?") return true;
         if (!this.user) return false;

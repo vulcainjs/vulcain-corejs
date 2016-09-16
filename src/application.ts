@@ -1,3 +1,5 @@
+import { ApiKeyService } from './auth/apiKeyService';
+import { Metrics } from './utils/metrics';
 import {Preloader} from './preloader';
 import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
 import {ICommandBusAdapter, IEventBusAdapter} from './bus/busAdapter';
@@ -15,6 +17,7 @@ import {System, VulcainLogger} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
+import * as util from 'util';
 
 /**
  * Application base class
@@ -30,6 +33,18 @@ export abstract class Application {
     public enableHystrixStream: boolean;
     private _basePath: string;
     public adapter: AbstractAdapter;
+
+    /**
+     * Enable api key authentication
+     *
+     * @param {string} apiKeyServiceName Vulcain service name
+     * @param {string} [version="1.0"] Service version
+     *
+     * @memberOf Application
+     */
+    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
+        this.container.injectInstance(new ApiKeyService(apiKeyServiceName, version), DefaultServiceNames.ApiKeyService);
+    }
 
     /**
      * Set the user to use in local development
@@ -89,6 +104,7 @@ export abstract class Application {
         this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
+        this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
 
         domainName = domainName;
         if (!domainName)
@@ -96,6 +112,7 @@ export abstract class Application {
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
+        util.log("Starting application");
     }
 
     private startHystrixStream() {

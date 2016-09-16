@@ -8,9 +8,9 @@ import {IManager} from '../pipeline/common';
 import {BadRequestError, Logger, System } from 'vulcain-configurationsjs';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
-import * as Statsd from "statsd-client";
 import * as util from 'util';
 import {Conventions} from '../utils/conventions';
+import {Metrics} from '../utils/metrics';
 
 export abstract class AbstractAdapter {
     private _logger: Logger;
@@ -18,8 +18,7 @@ export abstract class AbstractAdapter {
     private queryManager;
     private testUser: UserContext;
     private domain: Domain;
-    private statsd: Statsd;
-    private tags: string;
+    private metrics: Metrics;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -33,8 +32,7 @@ export abstract class AbstractAdapter {
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
-        this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
-        this.tags = ",environment=" +System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+        this.metrics = container.get<Metrics>(DefaultServiceNames.Metrics);
     }
 
     public abstract start(port: number);
@@ -54,14 +52,19 @@ export abstract class AbstractAdapter {
 
         prefix += response.value.action + ".";
 
-        this.statsd.timing(prefix + "responseTime" + this.tags, ms);
-        this.statsd.increment(prefix + "total" + this.tags);
+        this.metrics.timing(prefix + "responseTime", ms);
+        this.metrics.increment(prefix + "total");
+
+        this.metrics.timing("allRequests.responseTime", ms);
+        this.metrics.increment("allRequests.total");
 
         if (!response.error) {
-            this.statsd.increment(prefix + "success" + this.tags);
+            this.metrics.increment(prefix + "success");
+            this.metrics.increment("allRequests.success");
         }
         else {
-            this.statsd.increment(prefix + "failure" + this.tags);
+            this.metrics.increment(prefix + "failure");
+            this.metrics.increment("allRequests.failure");
         }
     }
 
