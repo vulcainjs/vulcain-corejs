@@ -1,3 +1,5 @@
+import { RequestContext } from './../servers/requestContext';
+import { Conventions } from './../utils/conventions';
 import passportStrategy = require('passport-strategy');
 
 export class ApiKeyStrategy extends passportStrategy.Strategy {
@@ -51,10 +53,11 @@ export class ApiKeyStrategy extends passportStrategy.Strategy {
             self.success(user, info);
         }
 
+        let params = {apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant}
         if (self._passReqToCallback) {
-            this._verify(req, apiKey, verified);
+            this._verify(req, params, verified);
         } else {
-            this._verify(apiKey, verified);
+            this._verify(params, verified);
         }
     }
 }

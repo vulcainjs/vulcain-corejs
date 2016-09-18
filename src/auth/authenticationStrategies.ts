@@ -1,3 +1,5 @@
+import { Conventions } from './../utils/conventions';
+import { RequestContext } from './../servers/requestContext';
 import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService } from '../defaults/services';
 const BearerStrategy = require('passport-http-bearer').Strategy
@@ -11,7 +13,7 @@ export class AuthenticationStrategies {
         {
             try
             {
-                let token = await (<any>tokens).verifyTokenAsync(accessToken );
+                let token = await (<any>tokens).verifyTokenAsync( accessToken );
 
                 // No token found
                 if( !token )
@@ -36,11 +38,11 @@ export class AuthenticationStrategies {
 
     static initApiKey( apiKeys:ITokenService )
     {
-        let strategy = new ApiKeyStrategy( async ( apiKey, callback ) =>
+        let strategy = new ApiKeyStrategy( async ( params, callback ) =>
         {
             try
             {
-                let token = await (<any>apiKeys).verifyTokenAsync(apiKey );
+                let token = await (<any>apiKeys).verifyTokenAsync( params );
 
                 // No token found
                 if( !token )

@@ -7,6 +7,7 @@ export * from './schemas/annotations'
 // Auth
 export {AuthenticationStrategies} from './auth/authenticationStrategies';
 export {ApiKeyStrategy} from './auth/apiKeyStrategy';
+export { VerifyTokenParameter } from './defaults/services';
 
 // Core
 export * from './application'

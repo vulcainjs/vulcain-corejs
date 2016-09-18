@@ -27,7 +27,8 @@ export interface CommonRequestData {
 }
 
 export interface CommonRequestResponse<T> {
-    userContext: any,
+    tenant: string;
+    userContext: UserContext,
     source: string;
     domain: string;
     action: string;

@@ -48,8 +48,9 @@ export class QueryManager implements IManager {
         this._hostname = os.hostname();
     }
 
-    private createResponse(query: QueryData, error?: ErrorResponse) {
+    private createResponse(ctx: RequestContext, query: QueryData, error?: ErrorResponse) {
         let res: QueryResponse<any> = {
+            tenant: ctx.tenant,
             userContext: query.userContext,
             source: this._hostname,
             schema: query.schema,
@@ -103,14 +104,14 @@ export class QueryManager implements IManager {
         try {
             let errors = await this.validateRequestData(info, query);
             if (errors && errors.length > 0)
-                return this.createResponse(query, { message: "Validation errors", errors: errors });
+                return this.createResponse(ctx, query, { message: "Validation errors", errors: errors });
             if (ctx.user)
                 query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
             query.schema = <string>info.metadata.schema;
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.data);
-            let res = this.createResponse(query);
+            let res = this.createResponse(ctx, query);
             res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             if (result && Array.isArray(result)) {
                 res.total = result.length;
@@ -119,7 +120,7 @@ export class QueryManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            return this.createResponse(query, { message: error });
+            return this.createResponse(ctx, query, { message: error });
         }
     }
 }

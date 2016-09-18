@@ -48,7 +48,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
 export interface ActionMetadata extends CommonActionMetadata {
     async?: boolean;
     eventMode?: EventNotificationMode;
- }
+}
 
 export interface ActionResponse<T> extends CommonRequestResponse<T> {
     correlationId: string;
@@ -60,6 +60,13 @@ export interface ActionResponse<T> extends CommonRequestResponse<T> {
     commandMode?: string;
 }
 
+/**
+ * Response for event
+ *
+ * @export
+ * @interface EventData
+ * @extends {ActionResponse<any>}
+ */
 export interface EventData extends ActionResponse<any> {
 
 }
@@ -99,8 +106,9 @@ export class CommandManager implements IManager {
         this.subscribeToEvents();
     }
 
-    private createResponse(command: ActionData, error?: ErrorResponse) {
+    private createResponse(ctx: RequestContext, command: ActionData, error?: ErrorResponse) {
         let res: ActionResponse<any> = {
+            tenant: ctx.tenant,
             source: this._hostname,
             startedAt: command.startedAt,
             service: command.service,
@@ -160,16 +168,13 @@ export class CommandManager implements IManager {
         try {
             let errors = await this.validateRequestData(info, command);
             if (errors && errors.length > 0)
-                return this.createResponse(command, { message: "Validation errors", errors: errors });
+                return this.createResponse(ctx, command, { message: "Validation errors", errors: errors });
 
             command.schema = <string>info.metadata.schema;
             command.correlationId = command.correlationId || guid.v4();
             command.startedAt = moment.utc().format();
             command.service = this._service;
-            if (ctx && ctx.user)
-                command.userContext = <UserContext>{ id: ctx.user.id, name: ctx.user.name, scopes: ctx.scopes, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
-            else
-                command.userContext = <any>{};
+            command.userContext = ctx.user || <any>{};
 
             if (!(<ActionHandlerMetadata>info.metadata).async) {
 
@@ -177,7 +182,7 @@ export class CommandManager implements IManager {
                 info.handler.command = command;
                 let result = await info.handler[info.method](command.data);
                 command.status = "Success";
-                let res = this.createResponse(command);
+                let res = this.createResponse(ctx, command);
                 res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 res.completedAt = moment.utc().format();
                 if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
@@ -187,12 +192,12 @@ export class CommandManager implements IManager {
             } else {
                 // Pending
                 this.messageBus.pushTask(command);
-                return this.createResponse(command);
+                return this.createResponse(ctx, command);
             }
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            return this.createResponse(command, { message: error });
+            return this.createResponse(ctx, command, { message: error });
         }
     }
 
@@ -208,7 +213,7 @@ export class CommandManager implements IManager {
             info.handler.command = command;
             let result = await info.handler[info.method](command.data);
             command.status = "Success";
-            res = this.createResponse(command);
+            res = this.createResponse(ctx, command);
             res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             res.commandMode = "async";
             res.completedAt = moment.utc().format();
@@ -218,7 +223,7 @@ export class CommandManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            res = this.createResponse(command, { message: error });
+            res = this.createResponse(ctx, command, { message: error });
             res.commandMode = "async";
             res.completedAt = moment.utc().format();
             if (eventMode === EventNotificationMode.always) {
@@ -248,7 +253,7 @@ export class CommandManager implements IManager {
                 let handler;
                 try {
                     let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-                    ctx.user = (evt.userContext && evt.userContext.user) || {};
+                    ctx.user = evt.userContext || <any>{};
 
                     handler = ctx.container.resolve(info.handler);
                     handler.requestContext = ctx;
