@@ -176,6 +176,7 @@ export class CommandManager implements IManager {
             command.service = this._service;
             command.userContext = ctx.user || <any>{};
 
+            // Register asynchronous task
             if (!(<ActionHandlerMetadata>info.metadata).async) {
 
                 info.handler.requestContext = ctx;
@@ -209,6 +210,7 @@ export class CommandManager implements IManager {
         let res;
         try {
             ctx.user = command.userContext;
+            ctx.tenant = command.userContext.tenant;
             info.handler.requestContext = ctx;
             info.handler.command = command;
             let result = await info.handler[info.method](command.data);
