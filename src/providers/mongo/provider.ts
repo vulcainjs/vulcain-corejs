@@ -3,7 +3,6 @@ import {Schema} from "../../schemas/schema";
 import {MongoClient, Db} from 'mongodb';
 import {Inject} from '../../di/annotations';
 import {Logger} from 'vulcain-configurationsjs'
-import * as P from 'path';
 
 /**
  * Default mongo provider
@@ -14,6 +13,7 @@ export class MongoProvider implements IProvider<any>
     public state: {
         keyPropertyName?: string;
         uri: string;
+        dispose?: () => void;
     }
 
     constructor( @Inject("Logger") private _logger: Logger, uri: string, private options?) {
@@ -26,7 +26,7 @@ export class MongoProvider implements IProvider<any>
         if (!tenant)
             throw new Error("tenant is required");
 
-        this.state.uri = P.join(this.state.uri, tenant);
+        this.state.uri = this.state.uri + "/" + tenant;
         this.state.keyPropertyName = schema.getIdProperty();
 
         let keys;
@@ -66,6 +66,9 @@ export class MongoProvider implements IProvider<any>
                     else
                     {
                         self._mongo = db;
+                        self.state.dispose = () => {
+                            db.close();
+                        };
                         resolve(db);
                     }
                 });

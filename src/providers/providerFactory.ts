@@ -29,6 +29,8 @@ export class ProviderFactory
                     min = value.count;
                 }
             }
+            let state = this.states.get(keyToRemove);
+            state.dispose && state.dispose();
             this.states.delete(keyToRemove);
         }
         this.pool.set(key, { count: 1, provider: provider });

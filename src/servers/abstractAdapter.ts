@@ -116,6 +116,7 @@ export abstract class AbstractAdapter {
 
                     // TODO https://github.com/phretaddin/schemapack
                     resolve({ value: result, headers: headers });
+                    ctx.dispose();
                 })
                 .catch(result => {
                     // Normalize error
@@ -127,6 +128,7 @@ export abstract class AbstractAdapter {
                         result = { status: "Error", error: { message: result.message } };
                     }
                     resolve({ code: 500, value: result, headers: headers });
+                    ctx.dispose();
                 });
         });
     }

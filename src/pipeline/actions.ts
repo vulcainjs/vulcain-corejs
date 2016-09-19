@@ -232,6 +232,9 @@ export class CommandManager implements IManager {
                 this.messageBus.sendEvent(res);
             }
         }
+        finally {
+            ctx.dispose();
+        }
     }
 
     subscribeToEvents() {
