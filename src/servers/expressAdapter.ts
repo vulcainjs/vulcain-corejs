@@ -127,7 +127,7 @@ export class ExpressAdapter extends AbstractAdapter {
         try {
             if (req.user )
                 ctx.user = req.user;
-            ctx.tenant = req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
+            ctx.tenant = req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);
@@ -138,13 +138,13 @@ export class ExpressAdapter extends AbstractAdapter {
             }
             res.statusCode = ctx.responseCode || 200;
             res.send(result.value);
-            this.endRequest(begin, result, res.statusCode);
+            this.endRequest(begin, result);
         }
         catch (e) {
             let result = command;
             result.error = { message: e.message || e };
             res.status(500).send({ error: e.message || e });
-            this.endRequest(begin, result, 500);
+            this.endRequest(begin, result, e);
         }
         finally {
             ctx && ctx.dispose();

@@ -44,7 +44,7 @@ export abstract class AbstractAdapter {
         return process.hrtime();
     }
 
-    protected endRequest(begin: number[], response, code: number) {
+    protected endRequest(begin: number[], response, e?: Error) {
         const ms = this.calcDelayInMs(begin);
         let prefix = "";
         if (response.value.schema)
@@ -66,6 +66,19 @@ export abstract class AbstractAdapter {
             this.metrics.increment(prefix + "failure");
             this.metrics.increment("allRequests.failure");
         }
+
+        let trace: any = {
+            service: System.serviceName,
+            version: System.serviceVersion,
+            duration: ms,
+            timestamp: System.nowAsString(),
+            info: response
+        };
+
+        if (e)
+            trace.stackTrace = e.stack;
+
+        console.log(JSON.stringify(trace));
     }
 
     protected executeQueryRequest(query, ctx) {
@@ -93,8 +106,10 @@ export abstract class AbstractAdapter {
                 // Check if handler exists
                 let metadata = <ActionMetadata>manager.getMetadata(command);
                 ctx.logger = self._logger;
-                ctx.user = ctx.user || this.testUser;
-
+                if (!ctx.user) {
+                    ctx.user = this.testUser;
+                    ctx.user.tenant = ctx.tenant;
+                }
                 // Verify authorization
                 if (metadata.scope && !ctx.hasScope(metadata.scope)) {
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });

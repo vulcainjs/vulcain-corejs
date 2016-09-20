@@ -128,8 +128,8 @@ export class RequestContext {
      */
     static createMock(container?: IContainer, user?:UserContext) {
         let ctx = new RequestContext(container || new Container(), Pipeline.Test);
-        ctx.tenant = RequestContext.TestTenant;
         ctx.user = user || RequestContext.TestUser;
+        ctx.user.tenant = ctx.tenant = RequestContext.TestTenant;
         return ctx;
     }
 
