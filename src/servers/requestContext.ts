@@ -40,6 +40,21 @@ export class RequestContext {
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
 
     /**
+     * Request correlation id
+     *
+     * @type {string}
+     */
+    correlationId: string;
+
+    /**
+     * Request correlation path
+     *
+     * @type {string}
+     * @memberOf ICommandContext
+     */
+    correlationPath: string;
+    
+    /**
      * Current user or null
      *
      * @type {UserContext}

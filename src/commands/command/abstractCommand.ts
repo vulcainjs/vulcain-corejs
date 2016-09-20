@@ -96,6 +96,14 @@ export interface ICommandContext {
      * @type {string}
      */
     correlationId: string;
+
+    /**
+     * Request correlation path
+     *
+     * @type {string}
+     * @memberOf ICommandContext
+     */
+    correlationPath: string;
     /**
      * Request cache (Only valid for this request)
      *
@@ -295,6 +303,20 @@ export abstract class AbstractCommand<T> {
         return result;
     }
 
+    private calculateRequestPath() {
+        if (this.context.correlationId[this.context.correlationId.length - 1] === "-")
+            this.context.correlationPath += "1";
+        else {
+            let parts = this.context.correlationPath.split('-');
+            let ix = parts.length - 1;
+            let nb = parseInt(parts[ix]) + 1;
+            parts[ix] = nb.toString();
+            this.context.correlationPath = parts.join('-');
+        }
+        
+        return this.context.correlationPath;
+    }
+
     /**
      * Send a http request
      *
@@ -307,6 +329,7 @@ export abstract class AbstractCommand<T> {
     protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {
         let request: types.IHttpRequest = rest[verb](url);
         request.header("X-VULCAIN-CORRELATION-ID", this.context.correlationId);
+        request.header("X-VULCAIN-CORRELATION-PATH", this.calculateRequestPath() + "-");
         request.header("X-VULCAIN-SERVICE-NAME", System.serviceName);
         request.header("X-VULCAIN-SERVICE-VERSION", System.serviceVersion);
         request.header("X-VULCAIN-ENV", System.environment);

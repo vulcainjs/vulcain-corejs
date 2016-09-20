@@ -44,7 +44,7 @@ export abstract class AbstractAdapter {
         return process.hrtime();
     }
 
-    protected endRequest(begin: number[], response, e?: Error) {
+    protected endRequest(begin: number[], response, ctx:RequestContext, e?: Error) {
         const ms = this.calcDelayInMs(begin);
         let prefix = "";
         if (response.value.schema)
@@ -72,8 +72,11 @@ export abstract class AbstractAdapter {
             version: System.serviceVersion,
             duration: ms,
             timestamp: System.nowAsString(),
-            info: response
+            info: Object.assign({}, response.value),
+            correlationId: ctx.correlationId,
+            correlationPath: ctx.correlationPath
         };
+        delete trace.info.value;
 
         if (e)
             trace.stackTrace = e.stack;

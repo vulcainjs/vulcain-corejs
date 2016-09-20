@@ -9,6 +9,7 @@ import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const guid = require('node-uuid');
 
 export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
@@ -127,6 +128,8 @@ export class ExpressAdapter extends AbstractAdapter {
         try {
             if (req.user )
                 ctx.user = req.user;
+            ctx.correlationId = req.headers["X-VULCAIN-CORRELATION-ID"] || guid.v4();
+            ctx.correlationPath = req.headers["X-VULCAIN-CORRELATION-PATH"] || "-";
             ctx.tenant = req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
@@ -138,13 +141,13 @@ export class ExpressAdapter extends AbstractAdapter {
             }
             res.statusCode = ctx.responseCode || 200;
             res.send(result.value);
-            this.endRequest(begin, result);
+            this.endRequest(begin, result, ctx);
         }
         catch (e) {
             let result = command;
             result.error = { message: e.message || e };
             res.status(500).send({ error: e.message || e });
-            this.endRequest(begin, result, e);
+            this.endRequest(begin, result, ctx, e);
         }
         finally {
             ctx && ctx.dispose();

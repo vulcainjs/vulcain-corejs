@@ -4,7 +4,6 @@ import {Domain} from '../schemas/schema';
 import {DefaultServiceNames} from '../di/annotations';
 import {HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata} from './common';
 const moment = require('moment');
-const guid = require('node-uuid');
 import * as os from 'os';
 import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
@@ -14,7 +13,6 @@ import {LifeTime} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 
 export interface ActionData extends CommonRequestData {
-    correlationId: string;
     data: any;
     service: string;
     // Internal
@@ -171,7 +169,8 @@ export class CommandManager implements IManager {
                 return this.createResponse(ctx, command, { message: "Validation errors", errors: errors });
 
             command.schema = <string>info.metadata.schema;
-            command.correlationId = command.correlationId || guid.v4();
+            command.correlationId = ctx.correlationId;
+            command.correlationPath = ctx.correlationPath;
             command.startedAt = moment.utc().format();
             command.service = this._service;
             command.userContext = ctx.user || <any>{};

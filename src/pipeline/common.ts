@@ -19,6 +19,8 @@ export interface ErrorResponse {
 }
 
 export interface CommonRequestData {
+    correlationId: string;
+    correlationPath: string;
     action: string;
     domain: string;
     schema: string;

@@ -108,6 +108,8 @@ export class QueryManager implements IManager {
             if (ctx.user)
                 query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
             query.schema = <string>info.metadata.schema;
+            query.correlationId = ctx.correlationId;
+            query.correlationPath = ctx.correlationPath;
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.data);
