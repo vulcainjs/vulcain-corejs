@@ -1,11 +1,9 @@
-import {Logger} from 'vulcain-configurationsjs';
+import {VulcainLogger} from 'vulcain-configurationsjs';
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';
 import {ICommand} from '../commands/command/abstractCommand'
 import {DefaultServiceNames} from '../di/annotations';
-
-let defaultLogger: Logger;
 
 export enum Pipeline {
     EventNotification,
@@ -27,6 +25,36 @@ export interface UserContext {
     name: string;
     scopes: Array<string>;
     tenant: string;
+}
+
+export interface Logger {
+    /**
+     * Log an error
+     *
+     * @param {Error} error Error instance
+     * @param {string} [msg] Additional message
+     *
+     */
+    error(ctx: RequestContext, error: Error, msg?: string);
+
+    /**
+     * Log a message info
+     *
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    info(ctx: RequestContext,  msg: string, ...params: Array<any>);
+
+    /**
+     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     *
+     * @param {any} requestContext Current requestContext
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    verbose(ctx: RequestContext,  msg: string, ...params: Array<any>);
 }
 
 /**
@@ -53,7 +81,7 @@ export class RequestContext {
      * @memberOf ICommandContext
      */
     correlationPath: string;
-    
+
     /**
      * Current user or null
      *
@@ -61,7 +89,7 @@ export class RequestContext {
      */
     public user: UserContext;
     private _cache: Map<string, any>;
-    public logger: Logger;
+    private _logger: Logger;
     public container: IContainer;
     /**
      * Headers for the current request
@@ -124,7 +152,7 @@ export class RequestContext {
      * @param {Pipeline} pipeline
      */
     constructor(container: IContainer, public pipeline: Pipeline) {
-        this.logger = (defaultLogger = defaultLogger || container.get<Logger>(DefaultServiceNames.Logger));
+        this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container);
         this.container.injectInstance(this, DefaultServiceNames.RequestContext);
     }
@@ -141,7 +169,7 @@ export class RequestContext {
      * @param {UserContext} [user]
      * @returns
      */
-    static createMock(container?: IContainer, user?:UserContext) {
+    static createMock(container?: IContainer, user?: UserContext) {
         let ctx = new RequestContext(container || new Container(), Pipeline.Test);
         ctx.user = user || RequestContext.TestUser;
         ctx.user.tenant = ctx.tenant = RequestContext.TestTenant;
@@ -213,7 +241,41 @@ export class RequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommand(name: string, schema?:string) {
+    getCommand(name: string, schema?: string) {
         return CommandFactory.get(name, this, schema);
+    }
+
+    /**
+     * Log an error
+     *
+     * @param {Error} error Error instance
+     * @param {string} [msg] Additional message
+     *
+     */
+    error(error: Error, msg?: string) {
+        this._logger.error(this, error, msg);
+    }
+
+    /**
+     * Log a message info
+     *
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    info(msg: string, ...params: Array<any>) {
+        this._logger.info(this, msg, ...params);
+    }
+
+    /**
+     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     *
+     * @param {any} requestContext Current requestContext
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    verbose(msg: string, ...params: Array<any>) {
+        this._logger.verbose(this, msg, ...params);
     }
 }

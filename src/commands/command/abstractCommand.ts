@@ -186,10 +186,18 @@ export abstract class AbstractCommand<T> {
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
             throw new Error("Invalid version number. Must be on the form major.minor");
 
-        // Check if there is a service $redirect config property
-        let name = [serviceName, version, "$redirect"].join('.');
+        if (System.isDevelopment) {
+            let alias = System.resolveAlias(serviceName, version);
+            if (alias)
+                return alias;
+        }
+
+        // Check if there is a service $redirect config property in shared properties
+        // Consul = shared/$redirect/serviceName-version
+        let name = `$redirect.${serviceName}-${version}`;
         let prop = DynamicConfiguration.getProperty<any>(name);
         if (prop && prop.value) {
+            if (prop.value.serviceName && !prop.value.version) return prop.value;
             serviceName = prop.value.serviceName || serviceName;
             version = prop.value.version || version;
         }
@@ -313,7 +321,7 @@ export abstract class AbstractCommand<T> {
             parts[ix] = nb.toString();
             this.context.correlationPath = parts.join('-');
         }
-        
+
         return this.context.correlationPath;
     }
 

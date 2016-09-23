@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import { Application } from '../application';
 import * as express from 'express';
 import {AbstractAdapter} from './abstractAdapter';
@@ -155,14 +156,14 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     setStaticRoot(basePath: string) {
-        console.log("Set wwwroot to " + basePath);
+        System.log.info(null, "Set wwwroot to " + basePath);
         if (!basePath) throw new Error("BasePath is required.");
         this.express.use(express.static(basePath));
     }
 
     start(port: number) {
         let listener = this.express.listen(port, (err) => {
-            console.log('Listening on port ' + port);
+            System.log.info(null, 'Listening on port ' + port);
         });
 
         this.app.onServerStarted(listener);

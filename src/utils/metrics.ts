@@ -10,27 +10,29 @@ export class Metrics {
     private tags: string;
 
     constructor() {
-        this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
-        this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+        if (!System.isDevelopment) {
+            this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
+            this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+        }
     }
 
     increment(metric:string, delta?:number) {
-        this.statsd.increment(metric + this.tags, delta);
+        this.statsd && this.statsd.increment(metric + this.tags, delta);
     }
 
     decrement(metric:string, delta?:number) {
-        this.statsd.decrement(metric + this.tags, delta);
+        this.statsd && this.statsd.decrement(metric + this.tags, delta);
     }
 
     counter(metric:string, delta:number) {
-        this.statsd.counter(metric + this.tags, delta);
+        this.statsd && this.statsd.counter(metric + this.tags, delta);
     }
 
     gauge(metric:string, value:number) {
-        this.statsd.gauge(metric + this.tags, value);
+        this.statsd && this.statsd.gauge(metric + this.tags, value);
     }
 
     timing(metric:string, duration:number) {
-        this.statsd.timing(metric + this.tags, duration);
+        this.statsd && this.statsd.timing(metric + this.tags, duration);
     }
 }

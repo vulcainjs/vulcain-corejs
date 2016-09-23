@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
 import {ErrorResponse} from './common';
 const guid = require('node-uuid');
@@ -29,7 +30,7 @@ export class MessageBus {
     }
 
     private consumeEventAsync(event: EventData) {
-        console.log("Receive event : %j", event);
+        System.log.info(null, "Receive event : %j", JSON.stringify(event));
         (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).onNext(event);
     }
 

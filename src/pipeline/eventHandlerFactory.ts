@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import { HandlerItem } from './../pipeline/common';
 import { EventMetadata, ConsumeEventMetadata } from './../pipeline/actions';
 import { IContainer } from './../di/resolvers';
@@ -64,7 +65,7 @@ export class EventHandlerFactory {
             }
 
             bySchemas.push(item);
-            console.log("Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema);
+            System.log.info(null, "Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema);
         }
     }
 

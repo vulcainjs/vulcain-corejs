@@ -5,7 +5,7 @@ import {CommandManager, ActionMetadata} from '../pipeline/actions';
 import {CommonRequestResponse} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
-import {BadRequestError, Logger, System } from 'vulcain-configurationsjs';
+import {BadRequestError, System } from 'vulcain-configurationsjs';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
 import * as util from 'util';
@@ -13,7 +13,6 @@ import {Conventions} from '../utils/conventions';
 import {Metrics} from '../utils/metrics';
 
 export abstract class AbstractAdapter {
-    private _logger: Logger;
     private commandManager;
     private queryManager;
     private testUser: UserContext;
@@ -68,20 +67,17 @@ export abstract class AbstractAdapter {
         }
 
         let trace: any = {
-            service: System.serviceName,
-            version: System.serviceVersion,
             duration: ms,
-            timestamp: System.nowAsString(),
-            info: Object.assign({}, response.value),
-            correlationId: ctx.correlationId,
-            correlationPath: ctx.correlationPath
+            info: Object.assign({}, response.value)
         };
+
         delete trace.info.value;
 
-        if (e)
+        if (e) {
             trace.stackTrace = e.stack;
-
-        console.log(JSON.stringify(trace));
+            trace.message = e.message;
+        }
+        System.log.write(ctx, trace);
     }
 
     protected executeQueryRequest(query, ctx) {
@@ -108,7 +104,6 @@ export abstract class AbstractAdapter {
             try {
                 // Check if handler exists
                 let metadata = <ActionMetadata>manager.getMetadata(command);
-                ctx.logger = self._logger;
                 if (!ctx.user) {
                     ctx.user = this.testUser;
                     ctx.user.tenant = ctx.tenant;

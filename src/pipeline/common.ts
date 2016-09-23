@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
@@ -103,7 +104,7 @@ export class HandlerFactory {
             for (const item of this.handlers.values()) {
                 let handlerKey = [domain, item.metadata.action].join('.').toLowerCase();
                 if (handlers.has(handlerKey))
-                    console.log(`Duplicate action ${item.metadata.action} for handler ${handlerKey}`);
+                    System.log.info(null, `Duplicate action ${item.metadata.action} for handler ${handlerKey}`);
                 handlers.set(handlerKey, item);
             }
             this.handlers = handlers;
@@ -152,7 +153,7 @@ export class HandlerFactory {
             keys.push(actionMetadata.action);
             let handlerKey = keys.join('.').toLowerCase();
             if (this.handlers.has(handlerKey))
-                console.log(`*** Duplicate action ${actionMetadata.action} for handler ${target.name}`);
+                System.log.info(null, `*** Duplicate action ${actionMetadata.action} for handler ${target.name}`);
 
             // Merge metadata
             let item: HandlerItem = {
@@ -161,7 +162,7 @@ export class HandlerFactory {
                 handler: target
             }
             this.handlers.set(handlerKey, item);
-            console.log("Handler registered for domain %s with key %s metadata: %j", domainName, handlerKey, item.metadata);
+            System.log.info(null, "Handler registered for domain %s with key %s metadata: %j", domainName, handlerKey, JSON.stringify(item.metadata));
         }
     }
 
@@ -193,8 +194,8 @@ export class HandlerFactory {
             return { handler: handler, metadata: <T>info.metadata, method: info.methodName };
         }
         catch (e) {
-            console.log(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
-            console.log(e);
+            System.log.info(null, `Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
+            System.log.error(null, e);
             throw new Error(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
         }
     }

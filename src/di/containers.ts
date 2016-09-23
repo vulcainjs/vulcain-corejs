@@ -9,7 +9,7 @@ import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
 import {ProviderFactory} from '../providers/providerFactory';
-import {VulcainLogger} from 'vulcain-configurationsjs'
+import {System, VulcainLogger} from 'vulcain-configurationsjs'
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import {LifeTime} from './annotations';
@@ -31,6 +31,7 @@ export class Container implements IContainer {
     constructor(private parent?: IContainer) {
         this.scope = new Scope(parent && (<any>parent).scope);
         this.injectInstance(this, DefaultServiceNames.Container);
+        this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         if (!parent) {
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
         }
@@ -96,7 +97,7 @@ export class Container implements IContainer {
         if(!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
         if(name !== "Container" && fn.name)
-            console.log("INFO: Register instance component " + name + " as " + fn.name );
+            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name );
         return this;
     }
 
@@ -120,7 +121,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
         if( fn.name)
-            console.log("INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -147,7 +148,7 @@ export class Container implements IContainer {
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if( fn.name)
-            console.log("INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -173,7 +174,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
         if( fn.name)
-            console.log("INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -265,7 +266,6 @@ export class TestContainer extends Container {
      */
     constructor(public domainName: string, addServices?: (Container: IContainer) => void) {
         super();
-        this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         let domain = new Domain(domainName, this);
         this.injectInstance(domain, DefaultServiceNames.Domain);

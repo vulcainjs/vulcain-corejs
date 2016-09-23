@@ -13,7 +13,7 @@ import 'reflect-metadata'
 import {DefaultServiceNames} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
-import {System, VulcainLogger} from 'vulcain-configurationsjs'
+import {System} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
@@ -56,8 +56,8 @@ export abstract class Application {
         user = user || RequestContext.TestUser;
         if (!user.id || !user.name || !user.scopes)
             throw new Error("Invalid test user - Properties must be set.");
-        if (!System.isLocalEnvironment) {
-            console.log("Warning : TestUser ignored");
+        if (!System.isDevelopment) {
+            System.log.info(null, "Warning : TestUser ignored");
             return;
         }
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
@@ -101,7 +101,6 @@ export abstract class Application {
         this._executablePath = Path.dirname(module.filename);
         this._basePath = this.findBasePath();
         this._container = container || new Container();
-        this._container.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
@@ -123,22 +122,22 @@ export abstract class Application {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
             response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.append('Pragma', 'no-cache');
-            console.log("get hystrix.stream");
+            System.log.info(null, "get hystrix.stream");
 
             let subscription = hystrixStream.toObservable().subscribe(
                 function onNext(sseData) {
                     response.write('data: ' + sseData + '\n\n');
                 },
                 function onError(error) {
-                    console.log("hystrixstream: error");
+                    System.log.info(null, "hystrixstream: error");
                 },
                 function onComplete() {
-                    console.log("end hystrix.stream");
+                    System.log.info(null, "end hystrix.stream");
                     return response.end();
                 }
             );
             request.on("close", () => {
-                console.log("close hystrix.stream");
+                System.log.info(null, "close hystrix.stream");
                 subscription.dispose();
             })
 
@@ -221,7 +220,7 @@ export abstract class Application {
                     this.adapter.start(port);
                 }
                 catch (err) {
-                    console.log(err);
+                    System.log.error(null, err);
                 }
             });
         });

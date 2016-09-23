@@ -1,9 +1,9 @@
+import { System } from 'vulcain-configurationsjs';
 import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {DefaultServiceNames} from '../di/annotations';
 import {HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata} from './common';
-const moment = require('moment');
 import * as os from 'os';
 import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
@@ -11,6 +11,7 @@ import {CommandRuntimeError} from '../commands/command/command';
 import {EventHandlerFactory} from './eventHandlerFactory';
 import {LifeTime} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
+const guid = require('node-uuid');
 
 export interface ActionData extends CommonRequestData {
     data: any;
@@ -171,7 +172,7 @@ export class CommandManager implements IManager {
             command.schema = <string>info.metadata.schema;
             command.correlationId = ctx.correlationId;
             command.correlationPath = ctx.correlationPath;
-            command.startedAt = moment.utc().format();
+            command.startedAt = System.nowAsString();
             command.service = this._service;
             command.userContext = ctx.user || <any>{};
 
@@ -184,7 +185,7 @@ export class CommandManager implements IManager {
                 command.status = "Success";
                 let res = this.createResponse(ctx, command);
                 res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
-                res.completedAt = moment.utc().format();
+                res.completedAt = System.nowAsString();
                 if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                     this.messageBus.sendEvent(res);
                 }
@@ -203,6 +204,8 @@ export class CommandManager implements IManager {
 
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
+                    ctx.correlationId =  guid.v4();
+            ctx.correlationPath =  "-";
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || EventNotificationMode.always;
 
@@ -217,7 +220,7 @@ export class CommandManager implements IManager {
             res = this.createResponse(ctx, command);
             res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             res.commandMode = "async";
-            res.completedAt = moment.utc().format();
+            res.completedAt = System.nowAsString();
             if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                 this.messageBus.sendEvent(res);
             }
@@ -226,7 +229,7 @@ export class CommandManager implements IManager {
             let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
             res = this.createResponse(ctx, command, { message: error });
             res.commandMode = "async";
-            res.completedAt = moment.utc().format();
+            res.completedAt = System.nowAsString();
             if (eventMode === EventNotificationMode.always) {
                 this.messageBus.sendEvent(res);
             }
@@ -255,16 +258,18 @@ export class CommandManager implements IManager {
             let handlers = CommandManager.eventHandlersFactory.getFilteredHandlers(evt.domain, evt.schema, evt.action);
             for (let info of handlers) {
                 let handler;
-                try {
-                    let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-                    ctx.user = evt.userContext || <any>{};
+                let ctx = new RequestContext(this.container, Pipeline.EventNotification);
+            ctx.correlationId =  guid.v4();
+            ctx.correlationPath =  "-";
 
+                try {
+                    ctx.user = evt.userContext || <any>{};
                     handler = ctx.container.resolve(info.handler);
                     handler.requestContext = ctx;
                     handler.event = evt;
                 }
                 catch (e) {
-                    console.log(`Unable to create handler ${info.handler.name}`);
+                    System.log.error(ctx, e, `Unable to create handler ${info.handler.name}`);
                 }
 
                 try {
@@ -272,7 +277,7 @@ export class CommandManager implements IManager {
                 }
                 catch (e) {
                     let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                    console.log(`Error with event handler ${info.handler.name} event : ${evt} - Error : ${error}`);
+                    System.log.info(ctx, `Error with event handler ${info.handler.name} event : ${evt} - Error : ${error}`);
                 }
             }
         });

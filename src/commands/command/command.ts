@@ -5,7 +5,7 @@ import ActualTime from "../../utils/actualTime"
 import {AbstractCommand} from './abstractCommand'
 import {SemaphoreFactory, Semaphore} from './semaphore'
 import {EventType, FailureType, ExecutionResult} from './executionResult'
-import {BadRequestError} from 'vulcain-configurationsjs'
+import {BadRequestError, System} from 'vulcain-configurationsjs'
 import * as util from 'util';
 const moment = require("moment");
 
@@ -206,7 +206,7 @@ export class HystrixCommand {
     }
 
     private logInfo(msg: string) {
-        console.log(moment().format(), ":", this.getLogMessagePrefix() + "> " + msg);
+        System.log.info(this.context, this.properties.commandName + ": " + msg);
     }
 
     private isUnrecoverable(e) {
@@ -214,7 +214,7 @@ export class HystrixCommand {
     }
 
     private getLogMessagePrefix() {
-        return this.properties.commandName + " (" + (this.context && this.context.correlationId)  + ")";
+        return this.properties.commandName;
     }
 
     ///

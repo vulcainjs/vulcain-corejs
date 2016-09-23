@@ -1,8 +1,8 @@
+import { Logger } from './../../servers/requestContext';
 import {IProvider, ListOptions} from "../provider";
 import {Schema} from "../../schemas/schema";
 import {MongoClient, Db} from 'mongodb';
 import {Inject} from '../../di/annotations';
-import {Logger} from 'vulcain-configurationsjs'
 
 /**
  * Default mongo provider
@@ -45,11 +45,11 @@ export class MongoProvider implements IProvider<any>
                     let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.name, keys,{ w: 1, background: true, name: indexName, unique: true })
                         .catch(err => {
-                            this._logger.log(err);
+                            this._logger.error(null, err);
                         });
                 })
                 .catch(err => {
-                    this._logger.log(err);
+                    this._logger.error(null, err);
                 });
         }
         return this.state;

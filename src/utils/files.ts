@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import * as Path from 'path'
 import * as fs from 'fs'
 
@@ -25,8 +26,7 @@ export class Files
                      }
                      catch(err)
                      {
-                         console.log(`ERROR when trying to load component ${fn} : ${err.message || err}`);
-                         console.log(err.stack);
+                         System.log.info(null, `ERROR when trying to load component ${fn} : ${err.stack}`);
                          process.exit(1);
                      }
                  }
