@@ -18,6 +18,8 @@ import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
 import * as util from 'util';
+import {ServiceExplorer} from './defaults/serviceExplorer'; // Don't remove (auto register)
+import {ServiceDescriptors} from './pipeline/serviceDescriptions';
 
 /**
  * Application base class
@@ -104,6 +106,7 @@ export abstract class Application {
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
+        this._container.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
 
         domainName = domainName;
         if (!domainName)
@@ -111,7 +114,7 @@ export abstract class Application {
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
-        util.log("Starting application");
+        System.log.info(null, "Starting application");
     }
 
     private startHystrixStream() {

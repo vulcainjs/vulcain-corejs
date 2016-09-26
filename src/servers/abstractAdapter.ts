@@ -39,7 +39,7 @@ export abstract class AbstractAdapter {
     public abstract useMiddleware(verb: string, path: string, handler: Function);
 
     protected startRequest(command) {
-        util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
+       // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
 

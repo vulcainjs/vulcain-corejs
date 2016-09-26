@@ -71,10 +71,12 @@ export class Container implements IContainer {
     /**
      *
      *
-     * @param {string} uri
+     * @param {string} mongo server address
      * @param {any} [mongoOptions]
      */
-    useMongoProvider(uri: string, mongoOptions?) {
+    useMongoProvider(address?: string, mongoOptions?) {
+        let uri = address && System.resolveAlias(address);
+        uri = "mongodb://" + (uri || "mongo");
         this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 
