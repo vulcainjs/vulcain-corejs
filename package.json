@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.0.24",
+  "version": "1.0.26",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "files": [
@@ -56,6 +56,6 @@
     "tslint": "^3.15.1",
     "typings": "^1.4.0",
     "unirest": "^0.5.0",
-    "vulcain-configurationsjs": "^1.0.15"
+    "vulcain-configurationsjs": "^1.0.16"
   }
 }

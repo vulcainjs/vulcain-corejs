@@ -56,10 +56,11 @@ export class QueryManager implements IManager {
             schema: query.schema,
             domain: query.domain,
             action: query.action,
-            error: error,
             maxByPage: query.maxByPage,
             page: query.page
         }
+        if (error)
+            res.error = error;
         return res;
     }
 
@@ -121,8 +122,8 @@ export class QueryManager implements IManager {
             return res;
         }
         catch (e) {
-            let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            return this.createResponse(ctx, query, { message: error });
+            let error = (e instanceof CommandRuntimeError) ? e.error : e;
+            return this.createResponse(ctx, query, error);
         }
     }
 }

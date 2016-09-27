@@ -4,7 +4,6 @@ import * as express from 'express';
 import {AbstractAdapter} from './abstractAdapter';
 import {RequestContext, Pipeline} from './requestContext';
 import {IContainer} from '../di/resolvers';
-import {Authentication} from './expressAuthentication';
 import {DefaultServiceNames} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
@@ -23,8 +22,12 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
 
-        let auth = (this.container.get<Authentication>(DefaultServiceNames.Authentication, true) || container.resolve(Authentication)).init();
+        let auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
         let self = this;
+
+        this.express.get('/health', (req: express.Request, res: express.Response) => {
+            res.status(200).end();
+        });
 
         this.express.get(Conventions.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
             let domain: any = this.container.get("Domain");
@@ -40,10 +43,10 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.express.get(Conventions.defaultUrlprefix + '/:schema/get/:id', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
-            query.schema = req.params.schema;
+            query.schema = req.params.schema ||  req.query.$schema;;
             let requestArgs = this.populateFromQuery(req);
             if (requestArgs.count === 0)
                 query.data = req.params.id;
@@ -54,14 +57,13 @@ export class ExpressAdapter extends AbstractAdapter {
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 
-        this.express.get(Conventions.defaultUrlprefix + '/:schema?/:action?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
-                query.action = req.params.action || req.query.$action || "search";
+                this.getActionSchema(query, req, "search");
                 query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
                 query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
-                query.schema = req.params.schema || req.query.$schema;
                 query.data = this.populateFromQuery(req).data;
                 this.executeRequest(this.executeQueryRequest, query, req, res);
             }
@@ -71,17 +73,9 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // All actions by post
-        this.express.post(Conventions.defaultUrlprefix + '/:schema/:action?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.post(Conventions.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
             const cmd = this.normalizeCommand(req);
             this.executeRequest(this.executeCommandRequest, cmd, req, res);
-        });
-
-        this.express.post(Conventions.defaultUrlprefix + '/:schema?', auth, async (req: express.Request, res: express.Response) => {
-            this.executeRequest(this.executeCommandRequest, this.normalizeCommand(req), req, res);
-        });
-
-        this.express.get('/health', (req: express.Request, res: express.Response) => {
-            res.status(200).end();
         });
     }
 
@@ -106,6 +100,27 @@ export class ExpressAdapter extends AbstractAdapter {
         return { data, count };
     }
 
+    private getActionSchema(query, req: express.Request, defaultAction?) {
+        let a: string;
+        let s: string;
+
+        if (req.params.schemaAction) {
+            if (req.params.schemaAction.indexOf('.') >= 0) {
+                let parts = req.params.schemaAction.split('.');
+                a = parts[0];
+                s = parts.length > 1 && parts[1];
+            }
+            else
+                a = req.params.schemaAction;
+        }
+        else {
+            a = req.query.$action;
+            s = req.query.$schema;
+        }
+        query.action = query.action || a || defaultAction;
+        query.schema = query.schema || s;
+    }
+
     private normalizeCommand(req: express.Request) {
         let command = req.body;
 
@@ -114,10 +129,7 @@ export class ExpressAdapter extends AbstractAdapter {
             command = { data: command };
         }
         command.domain = this.domainName;
-        let a = req.params.action || req.params.schema;
-        let s = req.params.action && req.params.schema;
-        command.action = command.action || req.query.$action || a;
-        command.schema = command.schema || req.query.$schema || s;
+        this.getActionSchema(command, req);
         command.data = command.data || {};
         return command;
     }

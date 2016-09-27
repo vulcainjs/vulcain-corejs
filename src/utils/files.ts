@@ -26,7 +26,7 @@ export class Files
                      }
                      catch(err)
                      {
-                         System.log.info(null, `ERROR when trying to load component ${fn} : ${err.stack}`);
+                         System.log.error(null, err, `ERROR when trying to load component ${fn}`);
                          process.exit(1);
                      }
                  }

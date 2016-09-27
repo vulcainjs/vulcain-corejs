@@ -1,3 +1,4 @@
+import { Authentication } from './servers/expressAuthentication';
 import { ApiKeyService } from './auth/apiKeyService';
 import { Metrics } from './utils/metrics';
 import {Preloader} from './preloader';
@@ -18,7 +19,7 @@ import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
 import * as util from 'util';
-import {ServiceExplorer} from './defaults/serviceExplorer'; // Don't remove (auto register)
+import './defaults/serviceExplorer'; // Don't remove (auto register)
 import {ServiceDescriptors} from './pipeline/serviceDescriptions';
 
 /**
@@ -107,7 +108,8 @@ export abstract class Application {
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
         this._container.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
-
+        this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
+        
         domainName = domainName;
         if (!domainName)
             throw new Error("Domain name is required.");

@@ -4,117 +4,134 @@ import {Schema} from '../schemas/schema';
 import {EventNotificationMode, CommandManager} from './actions';
 import {Injectable, LifeTime, Inject, DefaultServiceNames} from '../di/annotations';
 
-export interface PropertyDescription {
+export class PropertyDescription {
     name: string;
     required: boolean;
+    description: string;
     type: string;
     reference: "no" | "many" | "one";
 }
 
-export interface SchemaDescription {
+export class SchemaDescription {
     name: string;
     properties: Array<PropertyDescription>;
 }
 
-export interface ActionDescription {
+export class ActionDescription {
     kind: "action" | "query";
     description: string;
     action: string;
     scope: string;
-    schema: SchemaDescription;
-    inputSchema: SchemaDescription;
-    outputSchema: SchemaDescription;
+    inputSchema: PropertyDescription;
+    outputSchema: PropertyDescription;
 }
 
-export interface ServiceDescription {
+export class ServiceDescription {
     domain: string;
     services: Array<ActionDescription>;
-    schemas: Map<string, SchemaDescription>;
+    schemas: Array<SchemaDescription>;
 }
 
 export class ServiceDescriptors {
 
     private descriptions: ServiceDescription;
+    private schemas = new Map<string, SchemaDescription>();
 
     constructor(@Inject(DefaultServiceNames.Domain) private domain: Domain) { }
 
     getAll() {
         if (this.descriptions) return this.descriptions;
 
-        this.descriptions = { services: [], schemas: new Map<string, SchemaDescription>(), domain: this.domain.name };
+        this.descriptions = { services: [], schemas: new Array<SchemaDescription>(), domain: this.domain.name };
         for (let item of CommandManager.commandHandlersFactory.handlers.values()) {
+
             let desc: ActionDescription = {
                 kind: "action",
                 description: item.metadata.description,
                 action: item.metadata.action,
                 scope: item.metadata.scope,
-                schema: item.metadata.schema && this.getSchemaDescription(item.metadata.schema),
                 inputSchema: item.metadata.schema && this.getSchemaDescription(item.metadata.inputSchema),
                 outputSchema: item.metadata.schema && this.getSchemaDescription(item.metadata.outputSchema)
             };
             this.descriptions.services.push(desc);
         }
         for (let item of QueryManager.handlerFactory.handlers.values()) {
+            let schema = item.metadata.schema && this.getSchemaDescription(item.metadata.schema);
+            if (item.metadata.action === "_serviceDescriptions") continue;
+
             let desc: ActionDescription = {
                 kind: "query",
                 description: item.metadata.description,
                 action: item.metadata.action,
                 scope: item.metadata.scope,
-                schema: item.metadata.schema && this.getSchemaDescription(item.metadata.schema),
-                inputSchema: item.metadata.schema && this.getSchemaDescription(item.metadata.inputSchema),
-                outputSchema: item.metadata.schema && this.getSchemaDescription(item.metadata.outputSchema)
+                inputSchema: item.metadata.inputSchema && this.getSchemaDescription(item.metadata.inputSchema),
+                outputSchema: (item.metadata.outputSchema && this.getSchemaDescription(item.metadata.outputSchema)) || schema
             };
 
             this.descriptions.services.push(desc);
         }
+
+        this.schemas = null;
         return this.descriptions;
     }
 
-    private getSchemaDescription(schemaName: string|Function) {
+    private getSchemaDescription(schemaName: string | Function) {
+        if (typeof schemaName === "string") {
+            let type = this.getPropertyType(schemaName);
+            if (type)
+                return type.name;
+        }
+
         let schema = this.domain.getSchema(schemaName);
         if (!schema)
             throw new Error("Unknow schema " + schemaName);
 
-        let desc: SchemaDescription = this.descriptions.schemas.get(schema.name);
-        if(desc) return desc;
+        let desc: SchemaDescription = this.schemas.get(schema.name);
+        if (desc) return desc.name;
 
         desc = { name: schema.name, properties: [] };
-        this.descriptions.schemas.set(schema.name, desc);
+        this.schemas.set(schema.name, desc);
+        this.descriptions.schemas.push(desc);
 
-        schema.description.properties.forEach(p => {
-            let type = this.getPropertyType(p.name);
+        for (let k of Object.keys(schema.description.properties)) {
+            const p = schema.description.properties[k];
+            let type = this.getPropertyType(p.type);
             if (type) {
-                let pdesc: PropertyDescription = { name: p.name, reference: "no", type: type, required: p.required };
+                let pdesc: PropertyDescription = <any>{ name: k, type: type.name, required: p.required, description: p.description };
                 // Insert required at the beginning
                 if (!pdesc.required)
                     desc.properties.push(pdesc);
                 else
-                    desc.properties.unshift
+                    desc.properties.unshift(pdesc);
             }
-        });
-        schema.description.references.forEach(r => {
-            if (this.descriptions.schemas.has(r.name)) return;
+        }
+        for (let k of Object.keys(schema.description.references)) {
+            const r = schema.description.references[k];
+            if (this.schemas.has(r.name)) return r.name;
             this.getSchemaDescription(r.item);
 
             let pdesc: PropertyDescription = {
-                name: r.name,
+                name: k,
                 reference: r.cardinality,
                 type: r.item,
-                required: r.required
+                required: r.required,
+                description: r.description
             };
             // Insert required at the beginning
             if (!pdesc.required)
                 desc.properties.push(pdesc);
             else
-                desc.properties.unshift
-        });
-        return desc;
+                desc.properties.unshift(pdesc);
+        }
+        return desc.name;
     }
 
     private getPropertyType(name: string) {
         while (true) {
-            let type = this.domain._findType(name);
+            let type = this.domain._findType(name.toLowerCase());
             if (!type || !type.type) {
+                if(type)
+                    type.name = name.toLowerCase();
                 return type;
             }
             name = type.type;

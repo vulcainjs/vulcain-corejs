@@ -89,7 +89,6 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
     }
 }
 
-
 export class DefaultActionHandler extends AbstractActionHandler {
 
     constructor( @Inject("Container") container: IContainer) {

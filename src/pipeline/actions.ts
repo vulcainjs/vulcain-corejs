@@ -118,9 +118,10 @@ export class CommandManager implements IManager {
             domain: command.domain,
             status: error ? "Error" : command.status,
             correlationId: command.correlationId,
-            error: error,
             taskId: command.taskId
         }
+        if (error)
+            res.error = error;
         return res;
     }
 
@@ -197,8 +198,8 @@ export class CommandManager implements IManager {
             }
         }
         catch (e) {
-            let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            return this.createResponse(ctx, command, { message: error });
+            let error = (e instanceof CommandRuntimeError) ? e.error : e;
+            return this.createResponse(ctx, command, error);
         }
     }
 
@@ -277,7 +278,7 @@ export class CommandManager implements IManager {
                 }
                 catch (e) {
                     let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                    System.log.info(ctx, `Error with event handler ${info.handler.name} event : ${evt} - Error : ${error}`);
+                    System.log.error(ctx, e, `Error with event handler ${info.handler.name} event : ${evt}`);
                 }
             }
         });

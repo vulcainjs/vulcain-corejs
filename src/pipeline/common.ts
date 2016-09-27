@@ -162,7 +162,7 @@ export class HandlerFactory {
                 handler: target
             }
             this.handlers.set(handlerKey, item);
-            System.log.info(null, "Handler registered for domain %s with key %s metadata: %j", domainName, handlerKey, JSON.stringify(item.metadata));
+            System.log.info(null, "Handler registered for domain %s with key %s metadata: %j", domainName, handlerKey, item.metadata);
         }
     }
 
@@ -194,8 +194,7 @@ export class HandlerFactory {
             return { handler: handler, metadata: <T>info.metadata, method: info.methodName };
         }
         catch (e) {
-            System.log.info(null, `Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
-            System.log.error(null, e);
+            System.log.error(null, e, `Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
             throw new Error(`Unable to create handler for domain ${domain}, action ${action}, schema ${schema}`);
         }
     }

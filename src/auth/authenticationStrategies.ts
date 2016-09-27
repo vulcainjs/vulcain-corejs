@@ -4,8 +4,13 @@ import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService } from '../defaults/services';
 const BearerStrategy = require('passport-http-bearer').Strategy
 const passport = require('passport');
+const AnonymousStrategy = require('passport-anonymous');
 
 export class AuthenticationStrategies {
+
+    static initAnonymous() {
+        passport.use(new AnonymousStrategy());
+    }
 
     static initBearer( tokens:ITokenService )
     {
