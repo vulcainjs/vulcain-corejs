@@ -90,7 +90,7 @@ export abstract class AbstractAdapter {
 
     private executeRequestInternal(manager: IManager, command, ctx: RequestContext): Promise<{ code: number, value: any, headers: Map<string, string> }> {
         let self = this;
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             let headers = new Map<string, string>();
             if (!command || !command.domain) {
                 resolve({ value: "domain is required.", code: 400, headers: headers });
@@ -104,7 +104,7 @@ export abstract class AbstractAdapter {
             try {
                 // Check if handler exists
                 let metadata = <ActionMetadata>manager.getMetadata(command);
-                if (!ctx.user) {
+                if (!ctx.user && this.testUser) {
                     ctx.user = this.testUser;
                     ctx.user.tenant = ctx.tenant;
                 }
@@ -115,7 +115,7 @@ export abstract class AbstractAdapter {
                 }
             }
             catch (e) {
-                resolve({ value: { status: "Error", error: { message: e.message || e } }, code: 500, headers: headers });
+                reject(e);
                 return;
             }
 

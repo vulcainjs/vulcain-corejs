@@ -123,8 +123,8 @@ export class ExpressAdapter extends AbstractAdapter {
         if (req.params.schemaAction) {
             if (req.params.schemaAction.indexOf('.') >= 0) {
                 let parts = req.params.schemaAction.split('.');
-                a = parts[0];
-                s = parts.length > 1 && parts[1];
+                s = parts[0];
+                a = parts[1];
             }
             else
                 a = req.params.schemaAction;
@@ -168,7 +168,7 @@ export class ExpressAdapter extends AbstractAdapter {
                     res.setHeader(k, v);
                 }
             }
-            res.statusCode = ctx.responseCode || 200;
+            res.statusCode = result.code || ctx.responseCode || 200;
             res.send(result.value);
             this.endRequest(begin, result, ctx);
         }
