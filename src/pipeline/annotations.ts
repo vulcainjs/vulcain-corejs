@@ -62,7 +62,7 @@ export function Action(actionMetadata?: ActionMetadata) {
             }
         }
         let output = Reflect.getMetadata("design:returntype", target, key);
-        if (output && !(output.name in ["Promise", "Object", "void 0", "null" ])) {
+        if (output && ["Promise", "Object", "void 0", "null" ].indexOf(output.name) < 0) {
             actions[key].outputSchema = output.name;
         }
         if (!actions[key].action) {
@@ -111,7 +111,7 @@ export function Query(actionMetadata?: QueryActionMetadata) {
             }
         }
         let output = Reflect.getMetadata("design:returntype", target, key);
-        if (output && output.name !== "Promise" && output.name !== "Object" ) {
+        if (output && ["Promise", "Object", "void 0", "null" ].indexOf(output.name) < 0) {
             actions[key].outputSchema = output.name;
         }
         if (!actions[key].action) {

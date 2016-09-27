@@ -199,7 +199,7 @@ export class CommandManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return this.createResponse(ctx, command, error);
+            return this.createResponse(ctx, command, {message: error.message});
         }
     }
 

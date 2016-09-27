@@ -43,7 +43,8 @@ export class Schema {
         this.description = domain.findSchemaDescription(name);
         if (this.description)
             name = this.description.name;
-        if (this.description == null) throw new Error(`Schema ${name} not found.`);
+        if (this.description == null)
+            throw new Error(`Schema ${name} not found.`);
     }
 
     /**
@@ -125,7 +126,8 @@ export class Domain
             );
             return schemaName;
         }
-        if( !schema ) throw new Error("Invalid schema argument");
+        if (!schema)
+            throw new Error("Invalid schema argument (null or empty) ");
 
         if (typeof schema === "function") {
             let tmp = this._schemaDescriptions.get(schema.name);

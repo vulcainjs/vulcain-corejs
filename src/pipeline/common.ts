@@ -78,14 +78,19 @@ export interface HandlerItem {
 
 export class HandlerFactory {
     handlers: Map<string, HandlerItem> = new Map<string, HandlerItem>();
-    private isMonoSchema: boolean = undefined;
+    private _isMonoSchema: boolean = undefined;
 
-    private ensuresOptimized(domain) {
-        if (!domain || this.isMonoSchema !== undefined)
+    public isMonoSchema(domain: string) {
+        this.ensuresOptimized(domain);
+        return this._isMonoSchema;
+    }
+
+    private ensuresOptimized(domainName:string) {
+        if (!domainName || this._isMonoSchema !== undefined)
             return;
 
         // Check if all schema are the same so schema will be optional on request
-        this.isMonoSchema = true;
+        this._isMonoSchema = true;
         let schema;
         for (const item of this.handlers.values()) {
             if (!item.metadata.schema)
@@ -93,16 +98,16 @@ export class HandlerFactory {
             if (!schema)
                 schema = item.metadata.schema;
             else if (item.metadata.schema !== schema) {
-                this.isMonoSchema = false;
+                this._isMonoSchema = false;
                 break;
             }
         }
 
-        if (this.isMonoSchema) {
+        if (this._isMonoSchema) {
             let handlers = new Map<string, HandlerItem>();
             // Normalize all keys
             for (const item of this.handlers.values()) {
-                let handlerKey = [domain, item.metadata.action].join('.').toLowerCase();
+                let handlerKey = [domainName, item.metadata.action].join('.').toLowerCase();
                 if (handlers.has(handlerKey))
                     System.log.info(null, `Duplicate action ${item.metadata.action} for handler ${handlerKey}`);
                 handlers.set(handlerKey, item);
@@ -168,13 +173,11 @@ export class HandlerFactory {
 
     getInfo<T extends CommonMetadata>(container: IContainer, domain: string, schema: string, action: string, optional?: boolean) {
 
-        this.ensuresOptimized(domain);
-
         let d = domain && domain.toLowerCase();
         let a = action && action.toLowerCase();
         let handlerKey;
         let info;
-        if (!this.isMonoSchema && schema) {
+        if (!this.isMonoSchema(domain) && schema) {
             handlerKey = d + "." + schema.toLowerCase() + "." + a;
             info = this.handlers.get(handlerKey);
         }

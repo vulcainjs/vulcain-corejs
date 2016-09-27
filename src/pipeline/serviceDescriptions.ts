@@ -22,8 +22,9 @@ export class ActionDescription {
     description: string;
     action: string;
     scope: string;
-    inputSchema: PropertyDescription;
-    outputSchema: PropertyDescription;
+    inputSchema: string;
+    outputSchema: string;
+    verb: string;
 }
 
 export class ServiceDescription {
@@ -45,8 +46,13 @@ export class ServiceDescriptors {
         this.descriptions = { services: [], schemas: new Array<SchemaDescription>(), domain: this.domain.name };
         for (let item of CommandManager.commandHandlersFactory.handlers.values()) {
 
+            let verb = !item.metadata.schema || CommandManager.commandHandlersFactory.isMonoSchema(this.domain.name)
+                ? item.metadata.action
+                : this.getSchemaDescription(item.metadata.schema) + "." + item.metadata.action;
+
             let desc: ActionDescription = {
                 kind: "action",
+                verb: verb,
                 description: item.metadata.description,
                 action: item.metadata.action,
                 scope: item.metadata.scope,
@@ -59,15 +65,23 @@ export class ServiceDescriptors {
             let schema = item.metadata.schema && this.getSchemaDescription(item.metadata.schema);
             if (item.metadata.action === "_serviceDescriptions") continue;
 
+            let verb = !item.metadata.schema || CommandManager.commandHandlersFactory.isMonoSchema(this.domain.name)
+                ? item.metadata.action
+                : this.getSchemaDescription(item.metadata.schema) + "." + item.metadata.action;
+
             let desc: ActionDescription = {
                 kind: "query",
+                verb: verb,
                 description: item.metadata.description,
                 action: item.metadata.action,
                 scope: item.metadata.scope,
                 inputSchema: item.metadata.inputSchema && this.getSchemaDescription(item.metadata.inputSchema),
                 outputSchema: (item.metadata.outputSchema && this.getSchemaDescription(item.metadata.outputSchema)) || schema
             };
-
+            if (desc.action === "get" && !desc.inputSchema)
+                desc.inputSchema = "string";
+            if (desc.action !== "get")
+                desc.outputSchema = desc.outputSchema + "[]";
             this.descriptions.services.push(desc);
         }
 
@@ -77,6 +91,7 @@ export class ServiceDescriptors {
 
     private getSchemaDescription(schemaName: string | Function) {
         if (typeof schemaName === "string") {
+            if (schemaName === "any") return schemaName;
             let type = this.getPropertyType(schemaName);
             if (type)
                 return type.name;

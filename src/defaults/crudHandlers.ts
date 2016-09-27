@@ -68,12 +68,12 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
         return entity;
     }
 
-    search(options: any) {
+    all(options: any) {
         return this.provider.getAllAsync(this.schema, options);
     }
 
-    protected async searchInternal(options: any) {
-        let list = await this.search(options);
+    protected async allInternal(options: any) {
+        let list = await this.all(options);
         if (list) {
             let result = [];
             for (let entity of list) {
@@ -137,10 +137,10 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         return <Promise<T>>cmd.executeAsync("get", id);
     }
 
-    @Query({ action: "search" })
+    @Query({ action: "all" })
     getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
         let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || -1, page: page || this.query && this.query.page || 0, query:query || {} };
         let cmd = this.getDefaultCommand();
-        return <Promise<Array<T>>>cmd.executeAsync( "search", options);
+        return <Promise<Array<T>>>cmd.executeAsync( "all", options);
     }
 }

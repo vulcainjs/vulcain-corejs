@@ -123,7 +123,7 @@ export class QueryManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return this.createResponse(ctx, query, error);
+            return this.createResponse(ctx, query, {message: error.message });
         }
     }
 }

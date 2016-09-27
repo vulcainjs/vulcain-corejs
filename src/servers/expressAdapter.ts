@@ -43,7 +43,7 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-        this.express.get(Conventions.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
+/*        this.express.get(Conventions.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
             query.schema = req.params.schema ||  req.query.$schema;;
@@ -56,15 +56,31 @@ export class ExpressAdapter extends AbstractAdapter {
             }
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
-
-        this.express.get(Conventions.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
+*/
+        this.express.get(Conventions.defaultUrlprefix + '/:schemaAction?/:id?', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
-                this.getActionSchema(query, req, "search");
-                query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
-                query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
-                query.data = this.populateFromQuery(req).data;
+                this.getActionSchema(query, req, "all");
+                if (query.action === "get") {
+                    if (!req.params.id) {
+                        res.status(400).send({ error: "Id is required", status: "Error" });
+                        return;
+                    }
+
+                    let requestArgs = this.populateFromQuery(req);
+                    if (requestArgs.count === 0)
+                        query.data = req.params.id;
+                    else {
+                        query.data = requestArgs.data;
+                        query.data.id = req.params.id;
+                    }
+                }
+                else {
+                    query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
+                    query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
+                    query.data = this.populateFromQuery(req).data;
+                }
                 this.executeRequest(this.executeQueryRequest, query, req, res);
             }
             catch (e) {
