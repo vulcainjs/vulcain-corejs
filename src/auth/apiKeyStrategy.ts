@@ -1,6 +1,6 @@
 import { RequestContext } from './../servers/requestContext';
 import { Conventions } from './../utils/conventions';
-import passportStrategy = require('passport-strategy');
+import * as passportStrategy from 'passport-strategy';
 
 export class ApiKeyStrategy extends passportStrategy.Strategy {
 

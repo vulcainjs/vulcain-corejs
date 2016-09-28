@@ -30,7 +30,6 @@ export class MessageBus {
     }
 
     private consumeEventAsync(event: EventData) {
-        System.log.info(null, "Receive event : %j", event);
         (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).onNext(event);
     }
 

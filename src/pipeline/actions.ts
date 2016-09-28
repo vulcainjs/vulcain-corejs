@@ -205,8 +205,10 @@ export class CommandManager implements IManager {
 
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
-                    ctx.correlationId =  guid.v4();
-            ctx.correlationPath =  "-";
+        ctx.correlationId = guid.v4();
+        ctx.correlationPath =  "event-";
+        System.log.write(ctx, { eventReceived: event });
+
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || EventNotificationMode.always;
 
@@ -227,8 +229,8 @@ export class CommandManager implements IManager {
             }
         }
         catch (e) {
-            let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-            res = this.createResponse(ctx, command, { message: error });
+            let error = (e instanceof CommandRuntimeError) ? e.error : e;
+            res = this.createResponse(ctx, command, { message: error.message });
             res.commandMode = "async";
             res.completedAt = System.nowAsString();
             if (eventMode === EventNotificationMode.always) {
