@@ -164,7 +164,7 @@ export class CommandManager implements IManager {
     async runAsync(command: ActionData, ctx: RequestContext) {
         let info = CommandManager.commandHandlersFactory.getInfo<ActionHandlerMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
-
+        System.log.write(ctx, { RunAction: command });
         try {
             let errors = await this.validateRequestData(info, command);
             if (errors && errors.length > 0)
@@ -207,7 +207,7 @@ export class CommandManager implements IManager {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         ctx.correlationId = guid.v4();
         ctx.correlationPath =  "event-";
-        System.log.write(ctx, { eventReceived: event });
+        System.log.write(ctx, { runEvent: command });
 
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
         let eventMode = info.metadata.eventMode || EventNotificationMode.always;

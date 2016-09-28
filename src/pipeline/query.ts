@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
@@ -101,6 +102,7 @@ export class QueryManager implements IManager {
 
     async runAsync(query: QueryData, ctx: RequestContext) {
         let info = QueryManager.handlerFactory.getInfo<QueryActionMetadata>(ctx.container, query.domain, query.schema, query.action);
+        System.log.write(ctx, { runQuery: query });
 
         try {
             let errors = await this.validateRequestData(info, query);
