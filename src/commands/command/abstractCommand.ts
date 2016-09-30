@@ -252,7 +252,7 @@ export abstract class AbstractCommand<T> {
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
@@ -281,7 +281,7 @@ export abstract class AbstractCommand<T> {
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
