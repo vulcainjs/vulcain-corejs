@@ -47,7 +47,7 @@ export interface CommonActionMetadata {
     scope?: string;
     schema?: string|Function;
     inputSchema?: string | Function;
-    outputSchema?: string;
+    outputSchema?: string | Function;
 }
 
 export interface CommonMetadata {
@@ -116,7 +116,7 @@ export class HandlerFactory {
         }
     }
 
-    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, useSchemaByDefault = false) {
+    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind:string) {
 
         let domainName = domain.name;
         handlerMetadata = handlerMetadata || {scope:"*"};
@@ -134,12 +134,20 @@ export class HandlerFactory {
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
             actionMetadata.action = actionMetadata.action || action;
 
-            if (!actionMetadata.inputSchema && useSchemaByDefault) {
-                actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
+            if(kind === "action") {
+                if (!actionMetadata.inputSchema) {
+                    actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
+                }
+                if (!actionMetadata.outputSchema) {
+                    actionMetadata.outputSchema = actionMetadata.inputSchema;
+                }
             }
-            if (!actionMetadata.outputSchema) {
-                actionMetadata.outputSchema = <string>actionMetadata.inputSchema;
+            else {
+                if (!actionMetadata.outputSchema) {
+                    actionMetadata.outputSchema = actionMetadata.schema || handlerMetadata.schema;
+                }
             }
+
             if (actionMetadata.schema) {
                 // test if exists
                 let tmp = domain.getSchema(actionMetadata.schema);

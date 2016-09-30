@@ -159,7 +159,7 @@ export class ExpressAdapter extends AbstractAdapter {
                 ctx.user = req.user;
             ctx.correlationId = req.headers["X-VULCAIN-CORRELATION-ID"] || guid.v4();
             ctx.correlationPath = req.headers["X-VULCAIN-CORRELATION-PATH"] || "-";
-            ctx.tenant = req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
+            ctx.tenant = (ctx.user && ctx.user.tenant) || req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);

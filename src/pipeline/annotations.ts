@@ -38,7 +38,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         let actions = getMetadata(symActions, target);
 
         Preloader.registerHandler( target, (container, domain) => {
-            CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata, true);
+            CommandManager.commandHandlersFactory.register(container, domain, target, actions, metadata, "action");
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }
@@ -87,7 +87,7 @@ export function QueryHandler(metadata: QueryMetadata) {
         let actions = getMetadata(symActions, target);
 
         Preloader.registerHandler( target, (container, domain) => {
-            QueryManager.handlerFactory.register(container, domain, target, actions, metadata);
+            QueryManager.handlerFactory.register(container, domain, target, actions, metadata, "query");
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     }
