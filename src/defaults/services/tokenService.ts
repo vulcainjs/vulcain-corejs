@@ -18,10 +18,10 @@ export class TokenService implements ITokenService {
 
     constructor(@Inject( "Container" ) private container)
     {
-        this.issuer= process.env[Conventions.ENV_TOKEN_ISSUER];
-        this.tokenExpiration= process.env[Conventions.ENV_TOKEN_EXPIRATION] || "20m";
-        this.secretKey = process.env[Conventions.ENV_SECRET_KEY] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
-        let privateKeyPath = process.env[Conventions.ENV_PRIVATE_KEY_PATH];
+        this.issuer= process.env[Conventions.instance.ENV_TOKEN_ISSUER];
+        this.tokenExpiration= process.env[Conventions.instance.ENV_TOKEN_EXPIRATION] || "20m";
+        this.secretKey = process.env[Conventions.instance.ENV_SECRET_KEY] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
+        let privateKeyPath = process.env[Conventions.instance.ENV_PRIVATE_KEY_PATH];
         if(privateKeyPath && fs.exists( privateKeyPath ))
         {
             this.privateKey = fs.readFileSync( privateKeyPath );

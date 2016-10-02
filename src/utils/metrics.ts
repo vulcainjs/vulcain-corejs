@@ -11,7 +11,7 @@ export class Metrics {
 
     constructor() {
         if (!System.isDevelopment) {
-            this.statsd = new Statsd({ host: process.env[Conventions.ENV_METRICS_AGENT] || "telegraf", socketTimeout: 10000 });
+            this.statsd = new Statsd({ host: process.env[Conventions.instance.ENV_METRICS_AGENT] || Conventions.instance.defaultStatsdAddress, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
         }
     }

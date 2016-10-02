@@ -61,7 +61,7 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?:string, usage = BusUsage.all) {
-        let bus = new RabbitAdapter(address || "amqp://" + (process.env[Conventions.ENV_RABBIT_SERVER] || "rabbit"));
+        let bus = new RabbitAdapter(address || "amqp://" + (process.env[Conventions.instance.ENV_RABBIT_SERVER] || Conventions.instance.defaultRabbitAddress));
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)
@@ -75,8 +75,8 @@ export class Container implements IContainer {
      * @param {any} [mongoOptions]
      */
     useMongoProvider(address?: string, mongoOptions?) {
-        let uri = address && System.resolveAlias(address);
-        uri = "mongodb://" + (uri || "mongo");
+        let uri = System.resolveAlias(address || Conventions.instance.defaultMongoAddress);
+        uri = "mongodb://" + (uri || Conventions.instance.defaultMongoAddress);
         this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 

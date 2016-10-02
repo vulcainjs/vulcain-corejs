@@ -1,5 +1,6 @@
 import {DynamicConfiguration, IDynamicProperty} from 'vulcain-configurationsjs'
 import {CommandConfiguration} from './commandFactory'
+import { Conventions } from './../../utils/conventions';
 
 let HystrixPropertiesNames = {
     HYSTRIX_HEALTH_SNAPSHOT_IN_MS: "hystrix.health.snapshot.validityInMilliseconds",
@@ -18,23 +19,6 @@ let HystrixPropertiesNames = {
 
     HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD: "hystrix.isolation.semaphore.maxConcurrentRequests",
     HYSTRIX_REQUEST_VOLUME_REJECTION_THRESHOLD: "hystrix.fallback.semaphore.maxConcurrentRequests"
-};
-
-let defaults = {
-    "hystrix.health.snapshot.validityInMilliseconds": 500,
-    "hystrix.force.circuit.open":false,
-    "hystrix.force.circuit.closed":false,
-    "hystrix.circuit.enabled":true,
-    "hystrix.circuit.sleepWindowInMilliseconds":5000,
-    "hystrix.circuit.errorThresholdPercentage":50,
-    "hystrix.circuit.volumeThreshold": 10,
-    "hystrix.execution.timeoutInMilliseconds":1500,
-    "hystrix.metrics.statistical.window.timeInMilliseconds":60000,
-    "hystrix.metrics.statistical.window.bucketsNumber":30,
-    "hystrix.metrics.percentile.window.timeInMilliseconds":60000,
-    "hystrix.metrics.percentile.window.bucketsNumber":6,
-    "hystrix.isolation.semaphore.maxConcurrentRequests":10,
-    "hystrix.fallback.semaphore.maxConcurrentRequests":10
 };
 
 export class CommandProperties {
@@ -174,7 +158,7 @@ export class CommandProperties {
 
     private get<TValue>(name: string, defaultValue?:TValue) {
         return DynamicConfiguration.asChainedProperty<TValue>(
-            defaultValue || defaults[name],
+            defaultValue || Conventions.instance.hystrix[name],
             this.commandName + "." + name,
             name);
     }
