@@ -252,7 +252,7 @@ export abstract class AbstractCommand<T> {
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
@@ -281,7 +281,7 @@ export abstract class AbstractCommand<T> {
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = this.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
 
         let res = await this.sendRequestAsync("get", url);
         let data: QueryResponse<T> = JSON.parse(res.body);
@@ -359,45 +359,6 @@ export abstract class AbstractCommand<T> {
                 reject(err);
             }
         });
-    }
-
-    /**
-     * create an url from segments
-     * Segments of type string are concatened to provide the path
-     * Segments of type object are appending in the query string
-     * Null segments are ignored.
-     * @protected
-     * @param {string} base url
-     * @param {(...Array<string|any>)} urlSegments
-     * @returns an url
-     */
-    protected createUrl(baseurl: string, ...urlSegments: Array<string|any>) {
-
-        if (urlSegments) {
-            if( baseurl[baseurl.length-1] !== "/")
-                baseurl += "/";
-
-            baseurl += urlSegments.filter((s: any) => typeof s === 'string').map((s: string) => encodeURIComponent(s)).join('/');
-
-            var query = urlSegments.filter((s: any) => typeof s !== 'string');
-            if (query.length) {
-                var sep = '?';
-                query.forEach((obj: any) => {
-                    for (var p in obj ) {
-                        if ( !obj.hasOwnProperty(p) ) {
-                            continue;
-                        }
-                        if (obj[p]) {
-                            baseurl = baseurl.concat(sep, p, '=', encodeURIComponent(obj[p]));
-                            sep = '&';
-                        }
-                    }
-                });
-            }
-            return baseurl;
-        } else {
-            return baseurl;
-        }
     }
 
     /**

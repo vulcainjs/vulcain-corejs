@@ -53,7 +53,7 @@ export class ApiKeyStrategy extends passportStrategy.Strategy {
             self.success(user, info);
         }
 
-        let params = {apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant}
+        let params = {apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.instance.ENV_TENANT] || RequestContext.TestTenant}
         if (self._passReqToCallback) {
             this._verify(req, params, verified);
         } else {

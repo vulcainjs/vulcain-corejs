@@ -98,7 +98,7 @@ export class CommandManager implements IManager {
 
     constructor(public container: IContainer) {
         this._hostname = os.hostname();
-        this._service = process.env[Conventions.ENV_SERVICE_NAME] + "-" + process.env[Conventions.ENV_SERVICE_VERSION];
+        this._service = process.env[Conventions.instance.ENV_SERVICE_NAME] + "-" + process.env[Conventions.instance.ENV_SERVICE_VERSION];
         if (!this._service)
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
         this.messageBus = new MessageBus(this);

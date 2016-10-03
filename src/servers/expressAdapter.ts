@@ -29,7 +29,7 @@ export class ExpressAdapter extends AbstractAdapter {
             res.status(200).end();
         });
 
-        this.express.get(Conventions.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.instance.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
             let domain: any = this.container.get("Domain");
             let name = req.params.name;
             if (name) {
@@ -43,7 +43,7 @@ export class ExpressAdapter extends AbstractAdapter {
         // Query can have only two options:
         //  - single query with an id (and optional schema)
         //  - search query with a query expression in data
-/*        this.express.get(Conventions.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
+/*        this.express.get(Conventions.instance.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
             let query: QueryData = <any>{ domain: this.domainName };
             query.action = "get";
             query.schema = req.params.schema ||  req.query.$schema;;
@@ -57,7 +57,7 @@ export class ExpressAdapter extends AbstractAdapter {
             this.executeRequest(this.executeQueryRequest, query, req, res);
         });
 */
-        this.express.get(Conventions.defaultUrlprefix + '/:schemaAction?/:id?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.instance.defaultUrlprefix + '/:schemaAction?/:id?', auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
@@ -89,7 +89,7 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // All actions by post
-        this.express.post(Conventions.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.post(Conventions.instance.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
             const cmd = this.normalizeCommand(req);
             this.executeRequest(this.executeCommandRequest, cmd, req, res);
         });
@@ -159,7 +159,7 @@ export class ExpressAdapter extends AbstractAdapter {
                 ctx.user = req.user;
             ctx.correlationId = req.headers["X-VULCAIN-CORRELATION-ID"] || guid.v4();
             ctx.correlationPath = req.headers["X-VULCAIN-CORRELATION-PATH"] || "-";
-            ctx.tenant = req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.ENV_TENANT] || RequestContext.TestTenant;
+            ctx.tenant = (ctx.user && ctx.user.tenant) || req.headers["X-VULCAIN-TENANT"] || process.env[Conventions.instance.ENV_TENANT] || RequestContext.TestTenant;
             ctx.requestHeaders = req.headers;
 
             let result = await handler.apply(this, [command, ctx]);

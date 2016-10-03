@@ -109,7 +109,7 @@ export abstract class Application {
         this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
         this._container.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
         this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
-        
+
         domainName = domainName;
         if (!domainName)
             throw new Error("Domain name is required.");
@@ -123,7 +123,7 @@ export abstract class Application {
         if (!this.enableHystrixStream)
             return;
 
-        this.adapter.useMiddleware("get", Conventions.defaultHystrixPath, (request, response) => {
+        this.adapter.useMiddleware("get", Conventions.instance.defaultHystrixPath, (request, response) => {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
             response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.append('Pragma', 'no-cache');
@@ -234,7 +234,7 @@ export abstract class Application {
     private registerModelsInternal() {
         this.registerModels(Path.join(this._executablePath, "defaults/models"));
 
-        let path = Conventions.defaultModelsFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        let path = Conventions.instance.defaultModelsFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
         this.registerModels(Path.join(this._basePath, path));
     }
 
@@ -268,7 +268,7 @@ export abstract class Application {
     private registerHandlersInternal() {
         this.registerHandlers(Path.join(this._executablePath, "defaults/handlers"));
 
-        let path = Conventions.defaultHandlersFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        let path = Conventions.instance.defaultHandlersFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
         this.registerHandlers(Path.join(this._basePath, path));
     }
 
@@ -287,7 +287,7 @@ export abstract class Application {
     private registerServicesInternal() {
         this.registerServices(Path.join(this._executablePath, "defaults/services"));
 
-        let path = Conventions.defaultServicesFolderPattern.replace("${base}", Conventions.defaultApplicationFolder);
+        let path = Conventions.instance.defaultServicesFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
         this.registerServices(Path.join(this._basePath, path));
     }
 

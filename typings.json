@@ -29,6 +29,7 @@
     "rx.time-lite": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.time-lite.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
     "rx.virtualtime": "github:DefinitelyTyped/DefinitelyTyped/rx/rx.virtualtime.d.ts#a5c07a6098b3b934380c13bb575d4ea5f3d73ffd",
     "serve-static": "registry:dt/serve-static#0.0.0+20160606155157",
+    "statsd-client": "registry:dt/statsd-client#0.1.0+20160809061446",
     "when": "registry:dt/when#2.4.0+20160317120654"
   },
   "globalDevDependencies": {
