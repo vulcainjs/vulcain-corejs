@@ -1,3 +1,4 @@
+import { System } from 'vulcain-configurationsjs';
 import { QueryManager } from './query';
 import { Domain } from './../schemas/schema';
 import {Schema} from '../schemas/schema';
@@ -18,7 +19,7 @@ export class SchemaDescription {
 }
 
 export class ActionDescription {
-    kind: "action" | "query";
+    kind: "action" | "query" | "get";
     description: string;
     action: string;
     scope: string;
@@ -29,12 +30,13 @@ export class ActionDescription {
 
 export class ServiceDescription {
     domain: string;
+    serviceName: string;
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
 }
 
 export class ServiceDescriptors {
-
+    private static natives = ["string", "String", "boolean", "Boolean", "number", "Number", "any", "Object"];
     private descriptions: ServiceDescription;
     private schemas = new Map<string, SchemaDescription>();
 
@@ -43,7 +45,12 @@ export class ServiceDescriptors {
     getAll() {
         if (this.descriptions) return this.descriptions;
 
-        this.descriptions = { services: [], schemas: new Array<SchemaDescription>(), domain: this.domain.name };
+        this.descriptions = {
+            services: [],
+            schemas: new Array<SchemaDescription>(),
+            domain: this.domain.name,
+            serviceName: System.serviceName
+        };
         for (let item of CommandManager.commandHandlersFactory.handlers.values()) {
 
             let verb = !item.metadata.schema || CommandManager.commandHandlersFactory.isMonoSchema(this.domain.name)
@@ -70,7 +77,7 @@ export class ServiceDescriptors {
                 : this.getSchemaDescription(item.metadata.schema) + "." + item.metadata.action;
 
             let desc: ActionDescription = {
-                kind: "query",
+                kind: item.metadata.action === "get" ? "get" : "query",
                 verb: verb,
                 description: item.metadata.description,
                 action: item.metadata.action,
@@ -91,7 +98,7 @@ export class ServiceDescriptors {
 
     private getSchemaDescription(schemaName: string | Function) {
         if (typeof schemaName === "string") {
-            if (schemaName === "any") return schemaName;
+            if( ServiceDescriptors.natives.indexOf(schemaName) >= 0) return schemaName;
             let type = this.getPropertyType(schemaName);
             if (type)
                 return type.name;

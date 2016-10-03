@@ -9,7 +9,7 @@ import {Command} from '../commands/command/commandFactory';
 export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     // Execute command
-    async runAsync(action: string, data) {
+    runAsync(action: string, data) {
         return this[action + "Internal"](data);
     }
 
