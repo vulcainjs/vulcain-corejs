@@ -153,7 +153,7 @@ export class RequestContext {
      */
     constructor(container: IContainer, public pipeline: Pipeline) {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
-        this.container = new Container(container);
+        this.container = new Container(container, this);
         this.container.injectInstance(this, DefaultServiceNames.RequestContext);
     }
 
@@ -235,7 +235,7 @@ export class RequestContext {
 
     /**
      * Create a new command
-     * Throws an execption if the command is unknown
+     * Throws an exception if the command is unknown
      *
      * @param {string} name Command name
      * @param {string} [schema] Optional schema used to initialize the provider

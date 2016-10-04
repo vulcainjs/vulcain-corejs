@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.0.33",
+  "version": "1.0.35",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "files": [
@@ -38,7 +38,7 @@
     "express": "^4.14.0",
     "fast-stats": "0.0.3",
     "gulp-istanbul": "^1.1.1",
-    "gulp-tslint": "^6.1.1",
+    "gulp-tslint": "^6.1.2",
     "gulp-typescript": "^2.14.1",
     "jsonwebtoken": "^7.1.9",
     "moment": "^2.15.1",

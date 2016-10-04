@@ -15,6 +15,7 @@ import {Application} from '../application';
 import {LifeTime} from './annotations';
 import {Files} from '../utils/files';
 import {Conventions} from '../utils/conventions';
+import { RequestContext } from './../servers/requestContext';
 
 /**
  *
@@ -28,8 +29,8 @@ export class Container implements IContainer {
     private resolvers: Map<string,IResolver> = new Map<string,IResolver>();
     public scope: Scope;
 
-    constructor(private parent?: IContainer) {
-        this.scope = new Scope(parent && (<any>parent).scope);
+    constructor(private parent?: IContainer, private requestContext?: RequestContext) {
+        this.scope = new Scope(parent && (<any>parent).scope, requestContext);
         this.injectInstance(this, DefaultServiceNames.Container);
         this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
         if (!parent) {

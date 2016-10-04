@@ -126,6 +126,7 @@ export class ScopedResolver extends Resolver
             if(name && instance)
                 container.scope.set(name, instance);
         }
+        instance.requestContext = container.scope.requestContext;
         return instance;
     }
 }

@@ -199,14 +199,14 @@ export class CommandManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return this.createResponse(ctx, command, {message: error.message});
+            return this.createResponse(ctx, command, { message: error.message });
         }
     }
 
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
-        ctx.correlationId = guid.v4();
-        ctx.correlationPath =  "event-";
+        ctx.correlationId = command.correlationId || guid.v4();
+        ctx.correlationPath = "event-";
         System.log.write(ctx, { runEvent: command });
 
         let info = CommandManager.commandHandlersFactory.getInfo<ActionMetadata>(ctx.container, command.domain, command.schema, command.action);
@@ -236,6 +236,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always) {
                 this.messageBus.sendEvent(res);
             }
+            System.log.error(ctx, e, `Error when processing async action ${info.handler.name} command : ${command}`);
         }
         finally {
             ctx.dispose();
@@ -262,8 +263,8 @@ export class CommandManager implements IManager {
             for (let info of handlers) {
                 let handler;
                 let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-            ctx.correlationId =  guid.v4();
-            ctx.correlationPath =  "-";
+                ctx.correlationId = evt.correlationId || guid.v4();
+                ctx.correlationPath = "-";
 
                 try {
                     ctx.user = evt.userContext || <any>{};

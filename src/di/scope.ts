@@ -1,7 +1,8 @@
+import { RequestContext } from './../servers/requestContext';
 export class Scope {
     private cache = new Map<string, any>();
 
-    constructor(private parent?: Scope) { }
+    constructor(private parent?: Scope, public requestContext?: RequestContext) { }
 
     getInstance(name: string) {
         if (!name)
