@@ -27,7 +27,7 @@ export class Conventions {
         if (!Conventions._instance) {
             Conventions._instance = new Conventions();
             try {
-                if (fs.statSync("vulcain.conventions")) {
+                if (fs.existsSync("vulcain.conventions")) {
                     const data = JSON.parse(fs.readFileSync("vulcain.conventions", "utf8"));
                     Conventions.deepAssign(data, Conventions._instance);
                 }
