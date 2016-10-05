@@ -4,6 +4,7 @@ import { Domain } from './../schemas/schema';
 import {Schema} from '../schemas/schema';
 import {EventNotificationMode, CommandManager} from './actions';
 import {Injectable, LifeTime, Inject, DefaultServiceNames} from '../di/annotations';
+import { Model } from './../schemas/annotations';
 
 export class PropertyDescription {
     name: string;
@@ -28,6 +29,7 @@ export class ActionDescription {
     verb: string;
 }
 
+@Model()
 export class ServiceDescription {
     domain: string;
     serviceName: string;
@@ -72,7 +74,7 @@ export class ServiceDescriptors {
         }
         for (let item of QueryManager.handlerFactory.handlers.values()) {
             let schema = item.metadata.schema && this.getSchemaDescription(item.metadata.schema);
-            if (item.metadata.action === "_serviceDescriptions") continue;
+            if (item.metadata.action === "_serviceDescription") continue;
 
             let verb = !item.metadata.schema || CommandManager.commandHandlersFactory.isMonoSchema(this.domain.name)
                 ? item.metadata.action
