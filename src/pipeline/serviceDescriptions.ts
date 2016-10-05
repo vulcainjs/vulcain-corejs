@@ -31,6 +31,7 @@ export class ActionDescription {
 export class ServiceDescription {
     domain: string;
     serviceName: string;
+    serviceVersion: string;
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
 }
@@ -49,7 +50,8 @@ export class ServiceDescriptors {
             services: [],
             schemas: new Array<SchemaDescription>(),
             domain: this.domain.name,
-            serviceName: System.serviceName
+            serviceName: System.serviceName,
+            serviceVersion: System.serviceVersion
         };
         for (let item of CommandManager.commandHandlersFactory.handlers.values()) {
 
