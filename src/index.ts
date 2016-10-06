@@ -47,3 +47,4 @@ export {AbstractCommand, ICommand, ApplicationRequestError} from './commands/com
 export {HystrixSSEStream} from './commands/http/hystrixSSEStream'
 export {CommandRuntimeError, TimeoutError} from './commands/command/command'
 export {IHttpRequest, IHttpResponse} from './commands/command/types'
+export {AbstractServiceCommand} from './commands/command/abstractServiceCommand'

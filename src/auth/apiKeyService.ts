@@ -1,9 +1,9 @@
 import { VerifyTokenParameter } from './../defaults/services';
 import { IContainer } from '../di/resolvers';
 import { ITokenService } from '../defaults/services';
-import {AbstractCommand} from '../commands/command/abstractCommand';
 import {CommandFactory} from '../commands/command/commandFactory';
 import {Command} from '../commands/command/commandFactory';
+import { AbstractServiceCommand } from './../commands/command/abstractServiceCommand';
 
 export class ApiKeyService implements ITokenService {
     constructor(private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
@@ -16,7 +16,7 @@ export class ApiKeyService implements ITokenService {
 }
 
 @Command({ executionTimeoutInMilliseconds: 500 })
-class ApiKeyVerifyCommand extends AbstractCommand<boolean> {
+class ApiKeyVerifyCommand extends AbstractServiceCommand {
     static commandName = "ApiKeyVerifyCommand";
 
     protected async runAsync(apiKeyServiceName:string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
