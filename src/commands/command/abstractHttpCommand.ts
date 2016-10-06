@@ -1,0 +1,74 @@
+const rest = require('unirest');
+import * as types from './types';
+import { System } from 'vulcain-configurationsjs';
+import { ICommandContext } from './abstractCommand';
+import { DefaultServiceNames, Inject } from './../../di/annotations';
+import { IContainer } from './../../di/resolvers';
+
+export abstract class AbstractHttpCommand {
+
+    public requestContext: ICommandContext;
+
+    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer, @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) { }
+
+    runAsync(...args): Promise<any> {
+        return (<any>this).execAsync(...args);
+    }
+
+    protected async execAsync(verb:string, url:string, data? ): Promise<any> {
+        let method = this[verb + "Async"];
+        if (!method)
+            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);
+        return await method(url, data)
+    }
+
+    protected postAsync(url: string, data) {
+        return this.sendRequestAsync('post', url, req => req.json(data));
+    }
+
+    protected getAsync(url: string) {
+        return this.sendRequestAsync('get', url);
+    }
+
+    protected deleteAsync(url: string) {
+        return this.sendRequestAsync('delete', url);
+    }
+
+    protected putAsync(url: string, data) {
+        return this.sendRequestAsync('put', url, req => req.json(data));
+    }
+
+    /**
+     * Send a http request
+     *
+     * @protected
+     * @param {string} http verb to use
+     * @param {string} url
+     * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
+     * @returns request response
+     */
+    protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {
+        let request: types.IHttpRequest = rest[verb](url);
+
+        prepareRequest && prepareRequest(request);
+
+        return new Promise<types.IHttpResponse>((resolve, reject) => {
+            try {
+                request.end((response) => {
+                    if (response.error) {
+                        System.log.info(this.requestContext, `Http request ${verb} ${url} failed with status code ${response.status}`)
+                        reject(response.error);
+                    }
+                    else {
+                        System.log.info(this.requestContext, `Http request ${verb} ${url} completed with status code ${response.status}`)
+                        resolve(response);
+                    }
+                });
+            }
+            catch (err) {
+                System.log.error(this.requestContext, err, `Error on http request ${verb} ${url}`)
+                reject(err);
+            }
+        });
+    }
+}

@@ -40,7 +40,7 @@ export class HystrixCommand {
     private metrics: CommandMetrics;
 
     constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context) {
-        command.context = context;
+        command.requestContext = context;
         this.metrics =  CommandMetricsFactory.getOrCreate(properties);
     }
 

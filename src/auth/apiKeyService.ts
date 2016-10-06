@@ -19,7 +19,7 @@ export class ApiKeyService implements ITokenService {
 class ApiKeyVerifyCommand extends AbstractServiceCommand {
     static commandName = "ApiKeyVerifyCommand";
 
-    protected async runAsync(apiKeyServiceName:string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
+    async runAsync(apiKeyServiceName:string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
         let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "verifyToken", data);
         return !resp.error && resp.value;
     }

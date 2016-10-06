@@ -20,9 +20,9 @@ export abstract class AbstractServiceCommand {
     /**
      *
      *
-     * @type {ICommandContext}
+     * @type {ICommandrequestContext}
      */
-    public context:ICommandContext;
+    public requestContext: ICommandContext;
 
     /**
      * Creates an instance of AbstractCommand.
@@ -161,7 +161,7 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<ActionResponse<T>>}
      */
     protected async sendActionAsync<T>(serviceName: string, version: string, action: string, data: any): Promise<ActionResponse<T>> {
-        let command = { action: action, data: data, correlationId: this.context.correlationId };
+        let command = { action: action, data: data, correlationId: this.requestContext.correlationId };
         let url = `http://${this.createServiceName(serviceName, version)}/api`;
 
         let res = await this.sendRequestAsync("post", url, (req) => req.json(command));
@@ -172,17 +172,17 @@ export abstract class AbstractServiceCommand {
     }
 
     private calculateRequestPath() {
-        if (this.context.correlationId[this.context.correlationId.length - 1] === "-")
-            this.context.correlationPath += "1";
+        if (this.requestContext.correlationId[this.requestContext.correlationId.length - 1] === "-")
+            this.requestContext.correlationPath += "1";
         else {
-            let parts = this.context.correlationPath.split('-');
+            let parts = this.requestContext.correlationPath.split('-');
             let ix = parts.length - 1;
             let nb = parseInt(parts[ix]) + 1;
             parts[ix] = nb.toString();
-            this.context.correlationPath = parts.join('-');
+            this.requestContext.correlationPath = parts.join('-');
         }
 
-        return this.context.correlationPath;
+        return this.requestContext.correlationPath;
     }
 
     /**
@@ -196,39 +196,50 @@ export abstract class AbstractServiceCommand {
      */
     protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {
         let request: types.IHttpRequest = rest[verb](url);
-        request.header("X-VULCAIN-CORRELATION-ID", this.context.correlationId);
+        request.header("X-VULCAIN-CORRELATION-ID", this.requestContext.correlationId);
         request.header("X-VULCAIN-CORRELATION-PATH", this.calculateRequestPath() + "-");
         request.header("X-VULCAIN-SERVICE-NAME", System.serviceName);
         request.header("X-VULCAIN-SERVICE-VERSION", System.serviceVersion);
         request.header("X-VULCAIN-ENV", System.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
-        request.header("X-VULCAIN-TENANT", this.context.tenant);
+        request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
 
         prepareRequest && prepareRequest(request);
 
         return new Promise<types.IHttpResponse>((resolve, reject) => {
             try {
                 request.end((response) => {
-                    if (response.error)
+                    if (response.error) {
+                        System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`)
                         reject(response.error);
-                    else
+                    }
+                    else {
+                        System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`)
                         resolve(response);
+                    }
                 });
             }
             catch (err) {
+                System.log.error(this.requestContext, err, `Error on service request ${verb} ${url}`)
                 reject(err);
             }
         });
     }
 
-    /**
-     * execute command
-     * @protected
-     * @abstract
-     * @param {any} args
-     * @returns {Promise<T>}
-     */
-    protected abstract runAsync(...args): Promise<any>;
+    protected exec(kind: string, serviceName: string, version: string, action: string, data): Promise<any> {
+        switch (kind) {
+            case 'action':
+                return this.sendActionAsync(serviceName, version, action, data);
+            case 'query':
+                return this.getQueryAsync(serviceName, version, action, data.args, data.page, data.maxByPage);
+            case 'get':
+                return this.getRequestAsync(serviceName, version, data);
+        }
+    }
+
+    runAsync(...args): Promise<any> {
+        return (<any>this).execAsync(...args);
+    }
 
     // Must be defined in command
    // protected fallbackAsync(err, ...args)

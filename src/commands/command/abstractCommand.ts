@@ -138,7 +138,7 @@ export abstract class AbstractCommand<T> {
      *
      * @type {ICommandContext}
      */
-    public context:ICommandContext;
+    public requestContext:ICommandContext;
     /**
      *
      *
@@ -168,7 +168,7 @@ export abstract class AbstractCommand<T> {
     setSchema(schema: string) {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = this.providerFactory.getProvider(this.context.tenant, this.schema);
+            this.provider = this.providerFactory.getProvider(this.requestContext.tenant, this.schema);
         }
     }
 
@@ -179,7 +179,7 @@ export abstract class AbstractCommand<T> {
      * @param {any} args
      * @returns {Promise<T>}
      */
-    protected abstract runAsync(...args): Promise<T>;
+    abstract runAsync(...args): Promise<T>;
 
     // Must be defined in command
    // protected fallbackAsync(err, ...args)
