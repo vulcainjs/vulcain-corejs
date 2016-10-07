@@ -35,7 +35,7 @@ export class ApplicationRequestError extends Error {
      *
      * @param {ErrorResponse} error
      */
-    constructor(error: ErrorResponse) {
+    constructor(error: ErrorResponse, public statusCode=500) {
         super((error && error.message) || "Unknow error");
         this.errors = error && error.errors;
     }

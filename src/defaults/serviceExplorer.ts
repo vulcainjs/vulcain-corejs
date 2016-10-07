@@ -11,7 +11,7 @@ export class ServiceExplorer {
                  @Inject(DefaultServiceNames.Container) private container: IContainer) {
      }
 
-    @Query({outputSchema:"ServiceDescription", action: "_serviceDescription"})
+    @Query({outputSchema:"ServiceDescription", description: "Get all service handler description", action: "_serviceDescription"})
     getServiceDescriptions(): ServiceDescription {
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         return descriptors.getAll();

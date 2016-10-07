@@ -112,6 +112,14 @@ export class RequestContext {
     public tenant: string;
 
     /**
+     * Request host name
+     *
+     * @type {string}
+     * @memberOf RequestContext
+     */
+    public hostName: string;
+
+    /**
      * Do not use
      *
      * @returns
