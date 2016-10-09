@@ -41,6 +41,7 @@ export class ServiceDescription {
     domain: string;
     serviceName: string;
     serviceVersion: string;
+    alternateAddress: string;
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
 }
@@ -115,7 +116,8 @@ export class ServiceDescriptors {
             schemas: new Array<SchemaDescription>(),
             domain: this.domain.name,
             serviceName: System.serviceName,
-            serviceVersion: System.serviceVersion
+            serviceVersion: System.serviceVersion,
+            alternateAddress: null
         };
 
         for (let item of this.handlers.filter(h=>h.kind==="action")) {

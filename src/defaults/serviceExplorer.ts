@@ -12,8 +12,10 @@ export class ServiceExplorer {
      }
 
     @Query({outputSchema:"ServiceDescription", description: "Get all service handler description", action: "_serviceDescription"})
-    getServiceDescriptions(): ServiceDescription {
+    async getServiceDescriptions() {
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        return descriptors.getAll();
+        let result = await descriptors.getAll();
+        result.alternateAddress = (<any>this).requestContext.hostName;
+        return result;
     }
 }
