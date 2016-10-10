@@ -285,7 +285,7 @@ export class Domain
         if (typeof obj !== "object")
             return obj;
 
-        (<any>obj).__schema = (<any>obj).__schema || schemaName;
+        (<any>obj).__schema = (<any>obj).__schema || schema.name;
 
         // Convert properties
         for( const ps in schema.properties )
