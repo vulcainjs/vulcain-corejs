@@ -215,14 +215,14 @@ export class ServiceDescriptors {
         }
         for (let k of Object.keys(schema.description.references)) {
             const r = schema.description.references[k];
-            if (schemas.has(r.name)) return r.name;
+            if (schemas.has(k)) return k;
             this.getSchemaDescription(schemas, r.item);
 
             let pdesc: PropertyDescription = {
                 name: k,
                 reference: r.cardinality,
                 type: r.item,
-                required: r.required,
+                required: false,
                 description: r.description
             };
             // Insert required at the beginning

@@ -138,7 +138,7 @@ export class CommandManager implements IManager {
                 // Custom binding if any
                 command.data = schema && schema.bind(command.data);
 
-                errors = this.domain.validate(command.data, schema);
+                errors = schema.validate(command.data);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }

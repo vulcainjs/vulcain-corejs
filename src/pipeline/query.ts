@@ -85,7 +85,7 @@ export class QueryManager implements IManager {
                 // Custom binding if any
                  query.data = schema.bind(query.data);
 
-                errors = this.domain.validate(query.data, schema);
+                errors = schema.validate(query.data);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }

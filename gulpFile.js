@@ -38,17 +38,22 @@ gulp.task("compile-test", ['compile-ts'], function () {
     var tsResult = gulp.src([
         "./test/**/*.ts",
         "./typings/index.d.ts"
-    ], { base: './test/' })
+    ])
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject));
 
-    return tsResult.js
-        .pipe(sourcemaps.write('.', {includeContent:false, sourceRoot: rootDir + "/test"}))
-        .pipe(gulp.dest("dist-test/"));
+    return merge([
+            tsResult.dts
+                .pipe(gulp.dest('dist-test')),
+            tsResult.js
+                .pipe(sourcemaps.write('.', {includeContent:false, sourceRoot: rootDir + "/test"}))
+                .pipe(gulp.dest('dist-test'))
+        ]
+    );
 });
 
 gulp.task("istanbul:hook", function() {
-    return gulp.src(['dist/**/*.js'])
+    return gulp.src(['dist-test/**/*.js'])
         // Covering files
         .pipe(istanbul())
         // Force `require` to return covered files

@@ -1,10 +1,61 @@
 import { System } from 'vulcain-configurationsjs';
-
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
 import {LifeTime} from '../di/annotations';
 import {Domain} from '../schemas/schema';
 import {UserContext} from '../servers/requestContext';
+
+/**
+ * This class provide a way to customize the http response.
+ *
+ * @export
+ * @class HttpResponse
+ */
+export class HttpResponse {
+    /**
+     * Http code (default is 200)
+     *
+     * @type {number}
+     * @memberOf HttpResponse
+     */
+    public statusCode: number;
+    /**
+     * List of response headers
+     *
+     * @type {Map<string, string>}
+     * @memberOf HttpResponse
+     */
+    public headers: Map<string, string>;
+    /**
+     * Define a specific ContentType
+     *
+     * @type {string}
+     * @memberOf HttpResponse
+     */
+    public contentType: string;
+    /**
+     * Response content
+     *
+     * @type {*}
+     * @memberOf HttpResponse
+     */
+    public content: any;
+
+    constructor() {
+        this.headers = new Map<string, string>();
+        this.statusCode = 200;
+    }
+
+        /**
+     * Add a custom header value to the response
+     *
+     * @param {string} name
+     * @param {string} value
+     */
+    addHeader(name: string, value: string) {
+        this.headers.set(name, value);
+    }
+}
 
 export class RuntimeError extends Error { }
 

@@ -1,16 +1,37 @@
-import {SchemaBuilder} from './schemaBuilder'
+import { SchemaBuilder } from './schemaBuilder';
 import {standards} from './standards'
 import {Validator} from './validator'
 import {IContainer} from '../di/resolvers';
 import {SchemaVisitor} from './visitor';
 import {System} from 'vulcain-configurationsjs';
 import { PropertyOptions } from './annotations';
+import { CommandProperties } from './../commands/command/commandProperties';
+import { DefaultServiceNames } from './../di/annotations';
+import { ReferenceOptions } from './annotations';
+
+export interface ErrorMessage {
+    message: string,
+    id: string,
+    property?: string
+}
+
+export interface SchemaDescription {
+    name: string;
+    properties: { [index: string]: PropertyOptions };
+    references: { [index: string]: ReferenceOptions };
+    extends?: SchemaDescription | string;
+    hasSensibleData?: boolean;
+    bind?: (obj) => any;
+    validate?: (val, Container: IContainer) => string;
+    storageName?: string;
+    idProperty?: string;
+}
 
 /**
  * Schema definition
  */
 export class Schema {
-    public description;
+    public description: SchemaDescription;
     private _domain:Domain;
 
     /**
@@ -21,16 +42,16 @@ export class Schema {
         return this._domain;
     }
 
-    get extends()
+    get extends(): SchemaDescription
     {
         if( !this.description.extends ) return null;
         if( typeof this.description.extends === "string" )
         {
-            return this._domain.findSchemaDescription( this.description.extends );
+            return this._domain.findSchemaDescription( <string>this.description.extends );
         }
         else
         {
-            return this.description.extends;
+            return <SchemaDescription>this.description.extends;
         }
     }
     /**
@@ -42,10 +63,9 @@ export class Schema {
         this._domain = domain;
 
         this.description = domain.findSchemaDescription(name);
-        if (this.description)
-            name = this.description.name;
         if (this.description == null)
             throw new Error(`Schema ${name} not found.`);
+            name = this.description.name;
     }
 
     /**
@@ -54,7 +74,7 @@ export class Schema {
      * @returns {null|any|{}}
      */
     bind(origin, old?)  {
-        return this.domain.bind(origin, this, old);
+        return this.domain.bind(origin, this.description, old);
     }
 
     validate(obj) {
@@ -79,7 +99,7 @@ export class Schema {
             }
         }
         let v = new SchemaVisitor(this.domain, visitor);
-        v.visit(this, entity);
+        v.visit(this.description, entity);
         return entity;
     }
 
@@ -94,7 +114,7 @@ export class Schema {
             }
         }
         let v = new SchemaVisitor(this.domain, visitor);
-        v.visit(this, entity);
+        v.visit(this.description, entity);
         return entity;
     }
 }
@@ -104,12 +124,14 @@ export class Schema {
  */
 export class Domain
 {
-    private _schemaDescriptions:Map<string, any>;
+    private _schemaDescriptions:Map<string, SchemaDescription>;
     private types:Map<string, any>;
+    private builder: SchemaBuilder;
 
-    constructor(public name:string, private container: IContainer, defaultTypes?, private throwErrorOnInvalidType?:boolean )
+    constructor(public name:string, private container: IContainer, defaultTypes? )
     {
-        this._schemaDescriptions = new Map<string,any>();
+        this.builder = new SchemaBuilder(this);
+        this._schemaDescriptions = new Map<string,SchemaDescription>();
         this.types    = new Map<string,any>();
         this.types.set( "", defaultTypes || standards );
     }
@@ -135,7 +157,7 @@ export class Domain
             if (tmp)
                 return schema.name;
 
-            schema = SchemaBuilder.build(this, schema);
+            schema = this.builder.build(schema);
         }
 
         schemaName = name || schema.name;
@@ -208,7 +230,7 @@ export class Domain
         this.types.set( ns, types );
     }
 
-    private findMethodInTypeHierarchy( name:string, schema )
+    private findMethodInTypeHierarchy( name:string, schema ): Function|boolean
     {
         if( !schema ) return null;
         if( schema[name] || schema[name] === false ) return schema[name];
@@ -234,13 +256,13 @@ export class Domain
      * @param {any} schemaName
      * @returns
      */
-    obfuscate(entity, schemaName) {
+    obfuscate(entity, schema: Schema) {
         let visitor = {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData },
             visitProperty(val, prop) { if (prop.sensible) delete this.current[prop.name];}
         }
         let v = new SchemaVisitor(this, visitor);
-        v.visit(schemaName, entity);
+        v.visit(schema.description, entity);
     }
 
     /**
@@ -250,24 +272,10 @@ export class Domain
      * @param obj : existing object to use
      * @returns {any}
      */
-    bind( origin, schemaName?:string|any, obj? )
+    bind( origin, schemaName?:string|SchemaDescription, obj? )
     {
         if( !origin ) return null;
-        let schema = schemaName;
-
-        if( typeof schemaName === "string" )
-        {
-            schemaName = schemaName || obj && (<any>obj).__schema;
-            schema     = this._schemaDescriptions.get( schemaName );
-            if( !schema ) throw new Error("Unknow schema " + schemaName);
-        }
-        else
-        {
-            if( !schema ) throw new Error("Invalid schema");
-            schema = schema.description || schema;
-            schemaName = schema.name;
-        }
-
+        let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, obj);
         if( typeof schema.bind == "function" )
         {
             obj = schema.bind( origin );
@@ -289,9 +297,13 @@ export class Domain
                 try
                 {
                     let convert = this.findMethodInTypeHierarchy( "bind", prop );
-                    if( convert === false ) continue;
-                    let val = convert && typeof convert === "function" && convert.apply( prop, [origin[ps], origin] ) || origin[ps];
-                    if( val !== undefined )
+                    if (convert === false) continue; // skip value
+
+                    let val = origin[ps];
+                    if (convert && typeof convert === "function")
+                        val = convert.apply(prop, [val, origin]);
+
+                    if (val !== undefined)
                     {
                         obj[ps] = val;
                     }
@@ -327,19 +339,22 @@ export class Domain
 
                     let bind = this.findMethodInTypeHierarchy( "bind", relationshipSchema );
                     if( bind === false ) continue;
-                    if( this.isMany( relationshipSchema ) )
-                    {
+                    if (this.isMany(relationshipSchema)) {
                         obj[ref] = [];
-                        for( let elem of refValue )
-                        {
-                            obj[ref].push(bind && typeof bind === "function" && bind.apply(relationshipSchema, [elem]) ||
-                                !elemSchema && item === "any" ? elem : this.bind(elem, elemSchema));
+                        for (let elem of refValue) {
+                            if (bind && typeof bind === "function") {
+                                obj[ref].push(bind.apply(relationshipSchema, [elem]));
+                            } else {
+                                obj[ref].push(!elemSchema && item === "any" ? elem : this.bind(elem, elemSchema));
+                            }
                         }
                     }
-                    else
-                    {
-                        obj[ref] = bind && typeof bind === "function" && bind.apply(relationshipSchema, [refValue]) ||
-                            !elemSchema && item === "any" ? refValue : this.bind(refValue, elemSchema);
+                    else {
+                        if (bind && typeof bind === "function") {
+                            obj[ref].push(bind.apply(relationshipSchema, [refValue]));
+                        } else {
+                            obj[ref].push(!elemSchema && item === "any" ? refValue : this.bind(refValue, elemSchema));
+                        }
                     }
                 }
                 catch( e )
@@ -367,36 +382,29 @@ export class Domain
      * @param schemaName : schema to use (default=current schema)
      * @returns Array<string> : A list of errors
      */
-    validate(val, schemaName?:string|any) {
+    validate(val, schemaName?:string|SchemaDescription) {
         if(!val) return [];
-        let schema = schemaName;
-
-        if(typeof schemaName === "string") {
-            schemaName = schemaName || val && val.__schema;
-            schema = this._schemaDescriptions.get(schemaName);
-            if(!schema) throw new Error("Unknown schema " + schemaName);
-        }
-        else {
-            if (!schema) throw new Error("Invalid schema");
-            schema = schema.description || schema;
-        }
-
-        var validator = new Validator(this, this.container, this.throwErrorOnInvalidType);
+        let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
+        var validator = new Validator(this, this.container);
         return validator.validate(schema,val);
     }
 
-    getIdProperty(schemaName?:string|any) {
-        let schema = schemaName;
-
-        if(typeof schemaName === "string") {
-            schemaName = schemaName;
-            schema = this._schemaDescriptions.get(schemaName);
-            if(!schema) throw new Error("Unknown schema " + schemaName);
+    resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {
+        let schema: SchemaDescription;
+        if (!schemaName || typeof schemaName === "string") {
+            schemaName = schemaName || val && val.__schema;
+            schema = this._schemaDescriptions.get(<string>schemaName);
+            if (!schema) throw new Error("Unknown schema " + schemaName);
         }
         else {
-            if(!schema) throw new Error("Invalid schema");
+            schema = <SchemaDescription>schemaName;
+            if (!schema) throw new Error("Invalid schema");
         }
+        return schema;
+    }
 
+    getIdProperty(schemaName?:string|SchemaDescription) {
+        let schema = this.resolveSchemaDescription(schemaName);
         return schema.idProperty;
     }
 }
