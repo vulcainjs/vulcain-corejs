@@ -11,6 +11,7 @@ import {DefaultServiceNames} from '../di/annotations';
 import * as util from 'util';
 import {Conventions} from '../utils/conventions';
 import {Metrics} from '../utils/metrics';
+import { HttpResponse } from './../pipeline/common';
 
 export abstract class AbstractAdapter {
     private commandManager;
@@ -124,13 +125,18 @@ export abstract class AbstractAdapter {
             // Execute handler
             manager.runAsync(command, ctx)
                 .then(result => {
-                    if (command.correlationId)
-                        headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
-                    if (result)
-                        delete result.userContext;
+                    if (result instanceof HttpResponse) {
+                        resolve(result);
+                    }
+                    else {
+                        if (command.correlationId)
+                            headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
+                        if (result)
+                            delete result.userContext;
 
-                    // TODO https://github.com/phretaddin/schemapack
-                    resolve({ value: result, headers: headers });
+                        // TODO https://github.com/phretaddin/schemapack
+                        resolve({ value: result, headers: headers });
+                    }
                     ctx.dispose();
                 })
                 .catch(result => {

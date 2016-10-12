@@ -3,7 +3,7 @@ import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {DefaultServiceNames} from '../di/annotations';
-import {HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata} from './common';
+import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata, HttpResponse } from './common';
 import * as os from 'os';
 import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
@@ -49,6 +49,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
 export interface ActionMetadata extends CommonActionMetadata {
     async?: boolean;
     eventMode?: EventNotificationMode;
+    outputSchema: string | Function;
 }
 
 export interface ActionResponse<T> extends CommonRequestResponse<T> {
@@ -130,7 +131,7 @@ export class CommandManager implements IManager {
     private async validateRequestData(info, command) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
-        if (inputSchema) {
+        if (inputSchema && inputSchema !== "none") {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 command.inputSchema = schema.name;
@@ -166,7 +167,7 @@ export class CommandManager implements IManager {
         return info;
     }
 
-    async runAsync(command: ActionData, ctx: RequestContext) {
+    async runAsync(command: ActionData, ctx: RequestContext): Promise<any> {
         let info = this.getInfoHandler(command, ctx.container);
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         System.log.write(ctx, { RunAction: command });
@@ -188,6 +189,9 @@ export class CommandManager implements IManager {
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
                 let result = await info.handler[info.method](command.data);
+                if (result instanceof HttpResponse) {
+                    return result; // skip normal process
+                }
                 command.status = "Success";
                 let res = this.createResponse(ctx, command);
                 res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
@@ -224,6 +228,9 @@ export class CommandManager implements IManager {
             info.handler.requestContext = ctx;
             info.handler.command = command;
             let result = await info.handler[info.method](command.data);
+            if (result instanceof HttpResponse) {
+                throw new Error("Custom Http Response is not valid in an async action");
+            }
             command.status = "Success";
             res = this.createResponse(ctx, command);
             res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);

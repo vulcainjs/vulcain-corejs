@@ -1,10 +1,11 @@
 import { System } from 'vulcain-configurationsjs';
 import { Domain, Schema } from './../schemas/schema';
-import {EventNotificationMode} from './actions';
+import { EventNotificationMode, ActionMetadata } from './actions';
 import {Injectable, LifeTime, Inject, DefaultServiceNames} from '../di/annotations';
 import { Model } from './../schemas/annotations';
 import { IContainer } from './../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata, CommonMetadata, RuntimeError } from './common';
+import { QueryActionMetadata } from './query';
 
 export interface HandlerItem {
     methodName: string;
@@ -27,6 +28,7 @@ export class SchemaDescription {
 }
 
 export class ActionDescription {
+    schema: string;
     kind: "action" | "query" | "get";
     description: string;
     action: string;
@@ -121,10 +123,11 @@ export class ServiceDescriptors {
         };
 
         for (let item of this.handlers.filter(h=>h.kind==="action")) {
+            let schema = this.getSchemaDescription(schemas, item.metadata.schema);
 
             let verb = !item.metadata.schema || this.monoSchema
                 ? item.metadata.action
-                : this.getSchemaDescription(schemas, item.metadata.schema) + "." + item.metadata.action;
+                : schema + "." + item.metadata.action;
 
             verb = verb.toLowerCase();
             if( this.routes.has(verb))
@@ -132,26 +135,29 @@ export class ServiceDescriptors {
 
             System.log.info(null, "Handler registered for action verb %s", verb);
             this.routes.set(verb, item);
+            let metadata = <ActionMetadata>item.metadata;
 
             let desc: ActionDescription = {
+                schema: schema,
                 kind: "action",
                 verb: verb,
-                description: item.metadata.description,
-                action: item.metadata.action,
-                scope: item.metadata.scope,
-                inputSchema: item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.inputSchema),
-                outputSchema: item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.outputSchema)
+                description: metadata.description,
+                action: metadata.action,
+                scope: metadata.scope,
+                inputSchema:  this.getSchemaDescription(schemas, metadata.inputSchema, schema),
+                outputSchema:  this.getSchemaDescription(schemas, metadata.outputSchema, schema)
                 };
 
             this.descriptions.services.push(desc);
         }
 
         for (let item of this.handlers.filter(h=>h.kind==="query")) {
+
             let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
 
             let verb = !item.metadata.schema || this.monoSchema
                 ? item.metadata.action
-                : this.getSchemaDescription(schemas, item.metadata.schema) + "." + item.metadata.action;
+                : schema + "." + item.metadata.action;
 
             verb = verb.toLowerCase();
             if( this.routes.has(verb))
@@ -161,15 +167,16 @@ export class ServiceDescriptors {
             this.routes.set(verb, item);
 
             if (item.metadata.action === "_serviceDescription") continue;
-
+            let metadata = <QueryActionMetadata>item.metadata;
             let desc: ActionDescription = {
-                kind: item.metadata.action === "get" ? "get" : "query",
+                schema: schema,
+                kind: metadata.action === "get" ? "get" : "query",
                 verb: verb,
-                description: item.metadata.description,
-                action: item.metadata.action,
-                scope: item.metadata.scope,
-                inputSchema: item.metadata.inputSchema && this.getSchemaDescription(schemas, item.metadata.inputSchema),
-                outputSchema: (item.metadata.outputSchema && this.getSchemaDescription(schemas, item.metadata.outputSchema)) || schema
+                description: metadata.description,
+                action: metadata.action,
+                scope: metadata.scope,
+                inputSchema: this.getSchemaDescription(schemas, metadata.inputSchema),
+                outputSchema: this.getSchemaDescription(schemas, metadata.outputSchema, schema)
             };
 
             if (desc.action === "get" && !desc.inputSchema)
@@ -182,15 +189,20 @@ export class ServiceDescriptors {
         this.handlers = null;
     }
 
-    private getSchemaDescription(    schemas : Map<string, SchemaDescription>, schemaName: string | Function) {
+    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string|Function, defaultValue?) {
+        if ( schemaName === "none")
+            return;
+        if (!schemaName)
+            return defaultValue;
+
+        let schema: Schema;
         if (typeof schemaName === "string") {
-            if( ServiceDescriptors.natives.indexOf(schemaName) >= 0) return schemaName;
+            if (ServiceDescriptors.natives.indexOf(schemaName) >= 0) return schemaName;
             let type = this.getPropertyType(schemaName);
             if (type)
                 return type.name;
         }
-
-        let schema = this.domain.getSchema(schemaName);
+        schema = this.domain.getSchema(schemaName);
         if (!schema)
             throw new Error("Unknow schema " + schemaName);
 
@@ -262,31 +274,6 @@ export class ServiceDescriptors {
             let actionMetadata: CommonActionMetadata = actions[action];
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
             actionMetadata.action = actionMetadata.action || action;
-
-            if(kind === "action") {
-                if (!actionMetadata.inputSchema) {
-                    actionMetadata.inputSchema = actionMetadata.schema || handlerMetadata.schema;
-                }
-                if (!actionMetadata.outputSchema) {
-                    actionMetadata.outputSchema = actionMetadata.inputSchema;
-                }
-            }
-            else {
-                if (!actionMetadata.outputSchema) {
-                    actionMetadata.outputSchema = actionMetadata.schema || handlerMetadata.schema;
-                }
-            }
-
-            if (actionMetadata.schema) {
-                // test if exists
-                let tmp = domain.getSchema(actionMetadata.schema);
-                actionMetadata.schema = tmp.name;
-            }
-            if (actionMetadata.inputSchema) {
-                // test if exists
-                let tmp = domain.getSchema(actionMetadata.inputSchema);
-                actionMetadata.inputSchema = tmp.name;
-            }
 
             // Merge metadata
             let item: HandlerItem = {

@@ -98,7 +98,6 @@ export interface CommonActionMetadata {
     scope?: string;
     schema?: string|Function;
     inputSchema?: string | Function;
-    outputSchema?: string | Function;
 }
 
 export interface CommonMetadata {

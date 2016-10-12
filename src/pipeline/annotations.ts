@@ -59,15 +59,22 @@ export function Action(actionMetadata: ActionMetadata) {
     return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = actionMetadata || {};
-        if (!actions[key].inputSchema) {
+        if (actions[key].inputSchema === undefined) { // null means take schema name
             let params = Reflect.getMetadata("design:paramtypes", target, key);
-            if (params && params.length > 0 && params[0].name !== "Object") {
-                actions[key].inputSchema = params[0];
+            if (params && params.length > 0) {
+                actions[key].inputSchema = params[0].name !== "Object" ? params[0] : null; // Force null to take the schema as default value
+            }
+            else {
+                actions[key].inputSchema = "none"; // set to to none to ignore this schema
             }
         }
+
         let output = Reflect.getMetadata("design:returntype", target, key);
-        if (output && ["Promise", "Object", "void 0", "null" ].indexOf(output.name) < 0) {
-            actions[key].outputSchema = output.name;
+        if (actions[key].outputSchema === undefined) {
+            actions[key].outputSchema = "none";
+            if (output && ["Promise", "Object"].indexOf(output.name) < 0) {
+                actions[key].outputSchema = output.name;
+            }
         }
         if (!actions[key].action) {
             let tmp = key.toLowerCase();

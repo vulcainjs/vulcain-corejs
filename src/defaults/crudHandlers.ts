@@ -95,7 +95,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         super(container);
     }
 
-    @Action({ action: "create", description: "Create a new entity" })
+    @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
     createAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");
@@ -103,7 +103,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         return cmd.executeAsync( "create", entity);
     }
 
-    @Action({ action: "update", description: "Update an entity" })
+    @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
     updateAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");
@@ -111,7 +111,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         return cmd.executeAsync( "update", entity);
     }
 
-    @Action({ action: "delete", description: "Delete an entity" })
+    @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
     deleteAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");

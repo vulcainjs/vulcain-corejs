@@ -1,3 +1,4 @@
+import { EventType } from './../commands/command/executionResult';
 const uuid = require('node-uuid')
 
 export let standards = {
@@ -53,11 +54,22 @@ export let standards = {
             if ( (typeof val !== "number") || isNaN(val)) return this.message;
         }
     },
-    "minLength": {
-        $min: 0,
-        message: "Property '{$propertyName}' must have at least {$min} characters.",
+    "length": {
+        type: "string",
+        $min: undefined,
+        $max: undefined,
+        messages: [
+            "Property '{$propertyName}' must have at least {$min} characters.",
+            "Property '{$propertyName}' must have no more than {$max} characters."
+        ],
         validate: function (val) {
-            if ( (typeof val !== "string") || val.length < this.$min) return this.message;
+            let len = val.length;
+            if (this.min !== undefined) {
+                if (len < this.$min) return this.messages[0];
+            }
+            if (this.max !== undefined) {
+                if (len > this.$max) return this.messages[1];
+            }
         }
     },
     "integer": {

@@ -222,12 +222,18 @@ export class Domain
         this.types.set( ns, old );
     }
 
-    addType( type, ns?:string )
+    addType( name: string, type:string, info: any, ns:string="" )
     {
-        if( !type || !type.name ) throw new Error("Invalid type argument");
-        let types = this.types.get(ns) || {};
-        types.set[type.name] = type;
-        this.types.set( ns, types );
+        if (!name || !type) throw new Error("Invalid type argument");
+        let subType = this._findType(type);
+        if (!subType) throw new Error("Unknow type " + type);
+
+        let types = this.types.get(ns);
+        if (!types) {
+            types = {};
+            this.types.set(ns, types);
+        }
+        types[name] = SchemaBuilder.clone(subType, info);
     }
 
     private findMethodInTypeHierarchy( name:string, schema ): Function|boolean

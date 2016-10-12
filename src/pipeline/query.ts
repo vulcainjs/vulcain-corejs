@@ -1,5 +1,5 @@
 import { System } from 'vulcain-configurationsjs';
-import {HandlerFactory, CommonRequestData,CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager} from './common';
+import { HandlerFactory, CommonRequestData, CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager, HttpResponse } from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
@@ -27,7 +27,7 @@ export interface QueryMetadata extends ServiceHandlerMetadata {
 }
 
 export interface QueryActionMetadata extends CommonActionMetadata {
-
+    outputSchema?: string | Function;
 }
 
 export class QueryManager implements IManager {
@@ -77,7 +77,7 @@ export class QueryManager implements IManager {
     private async validateRequestData(info, query) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
-        if (inputSchema) {
+        if (inputSchema && inputSchema !== "none") {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
                 query.inputSchema = schema.name;
@@ -104,7 +104,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: QueryData, ctx: RequestContext) {
+    async runAsync(query: QueryData, ctx: RequestContext): Promise<any> {
         let info = this.getInfoHandler(query, ctx.container);
         System.log.write(ctx, { runQuery: query });
 
@@ -120,6 +120,9 @@ export class QueryManager implements IManager {
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.data);
+            if (result instanceof HttpResponse) {
+                return result; // skip normal process
+            }
             let res = this.createResponse(ctx, query);
             res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
             if (result && Array.isArray(result)) {

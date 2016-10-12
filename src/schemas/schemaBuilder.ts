@@ -90,14 +90,14 @@ export class SchemaBuilder {
 
         let type = this.domain._findType(typeName);
         if (type) {
-            let clonedType = this.clone(type, attributeInfo);
+            let clonedType = SchemaBuilder.clone(type, attributeInfo);
             // Type inheritence (in reverse order)
             let stypeName = type.type;
             while (stypeName) {
                 let stype = this.domain._findType(stypeName);
                 if (!stype)
                     break;
-                chain.unshift(this.clone(stype, attributeInfo));
+                chain.unshift(SchemaBuilder.clone(stype, attributeInfo));
                 stypeName = stype.type;
             }
             // Then type
@@ -110,7 +110,7 @@ export class SchemaBuilder {
             for (let {name, info} of validators) {
                 let validator = this.domain._findType(name);
                 if (validator)
-                    chain.push(this.clone(validator, info));
+                    chain.push(SchemaBuilder.clone(validator, info));
             }
         }
         return chain;
@@ -118,12 +118,12 @@ export class SchemaBuilder {
 
     // Copy all schema property names from 'from'
     // TODO use extends
-    private clone(schema, from): any {
+    static clone(schema, from): any {
         let clone = {};
         for (let key of Object.keys(schema)) {
             if (key && key[0] === "$") {
                 let pname = key.substr(1);
-                clone[key] = from[pname] || schema[key];
+                clone[key] = (from && from[pname]) || schema[key];
             }
             else if (key !== "validators") {
                 clone[key] = schema[key];

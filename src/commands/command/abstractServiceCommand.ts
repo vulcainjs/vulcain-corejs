@@ -177,7 +177,7 @@ export abstract class AbstractServiceCommand {
         else {
             let parts = this.requestContext.correlationPath.split('-');
             let ix = parts.length - 1;
-            let nb = parseInt(parts[ix]) + 1;
+            let nb = (parseInt(parts[ix]) || 0) + 1;
             parts[ix] = nb.toString();
             this.requestContext.correlationPath = parts.join('-');
         }
@@ -209,18 +209,25 @@ export abstract class AbstractServiceCommand {
         return new Promise<types.IHttpResponse>((resolve, reject) => {
             try {
                 request.end((response) => {
-                    if (response.error) {
-                        System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`)
-                        reject(response.error);
+                    if (response.error || response.status !== 200) {
+                        let err = new Error(response.body);
+                        System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);
+                        reject(err);
+                        return;
+                    }
+                    let vulcainResponse = response.body;
+                    if(vulcainResponse.error) {
+                        System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`);
+                        reject(new ApplicationRequestError(vulcainResponse.error, response.status));
                     }
                     else {
-                        System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`)
-                        resolve(response);
+                        System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`);
+                        resolve(vulcainResponse.value);
                     }
                 });
             }
             catch (err) {
-                System.log.error(this.requestContext, err, `Error on service request ${verb} ${url}`)
+                System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed`);
                 reject(err);
             }
         });
@@ -238,7 +245,7 @@ export abstract class AbstractServiceCommand {
     }
 
     runAsync(...args): Promise<any> {
-        return (<any>this).execAsync(...args);
+        return (<any>this).exec(...args);
     }
 
     // Must be defined in command

@@ -166,18 +166,18 @@ export class ExpressAdapter extends AbstractAdapter {
             ctx.hostName = req.hostname;
 
             let result = await handler.apply(this, [command, ctx]);
-            if (result.value instanceof HttpResponse) {
-                let response: HttpResponse = result.value;
-                if (response.headers) {
-                    for (const [k, v] of response.headers) {
+            if (result instanceof HttpResponse) {
+                let customResponse: HttpResponse = result;
+                if (customResponse.headers) {
+                    for (const [k, v] of customResponse.headers) {
                         res.setHeader(k, v);
                     }
                 }
-                res.statusCode = response.statusCode || 200;
-                if (response.contentType)
-                    res.contentType(response.contentType);
-                if (response.content)
-                    res.send(response.content);
+                res.statusCode = customResponse.statusCode || 200;
+                if (customResponse.contentType)
+                    res.contentType(customResponse.contentType);
+                if (customResponse.content)
+                    res.send(customResponse.content);
                 else
                     res.send();
             }
