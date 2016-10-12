@@ -6,7 +6,8 @@ import { ApplicationRequestError, ICommandContext } from './abstractCommand';
 import { ActionResponse } from './../../pipeline/actions';
 import * as types from './types';
 import * as os from 'os';
-var rest = require('unirest');
+import {CommonRequestResponse } from '../../pipeline/common';
+const rest = require('unirest');
 
 /**
  *
@@ -81,15 +82,12 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequestAsync<T>(serviceName: string, version: string, id:string, schema?:string): Promise<QueryResponse<T>> {
+    protected getRequestAsync<T>(serviceName: string, version: string, id:string, schema?:string): Promise<QueryResponse<T>> {
         let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
                          : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
-        let res = await this.sendRequestAsync("get", url);
-        let data: QueryResponse<T> = JSON.parse(res.body);
-        if (res.status !== 200)
-            throw new ApplicationRequestError(data.error);
-        return data;
+        let res = this.sendRequestAsync("get", url);
+        return res;
     }
 
     /**
@@ -106,19 +104,15 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getAllAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+    protected getAllAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
-
-        let res = await this.sendRequestAsync("get", url);
-        let data: QueryResponse<T> = JSON.parse(res.body);
-        if (res.status !== 200 || data.error)
-            throw new ApplicationRequestError(data.error);
-        return data;
+        let res = this.sendRequestAsync("get", url);
+        return res;
     }
 
     /**
@@ -135,7 +129,7 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQueryAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+    protected getQueryAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
         query = query || {};
         query.$action = action;
         query.$maxByPage = maxByPage;
@@ -143,11 +137,8 @@ export abstract class AbstractServiceCommand {
         query.$schema = schema;
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
 
-        let res = await this.sendRequestAsync("get", url);
-        let data: QueryResponse<T> = JSON.parse(res.body);
-        if (res.status !== 200 || data.error)
-            throw new ApplicationRequestError(data.error);
-        return data;
+        let res = this.sendRequestAsync("get", url);
+        return res;
     }
 
     /**
@@ -160,15 +151,12 @@ export abstract class AbstractServiceCommand {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected async sendActionAsync<T>(serviceName: string, version: string, action: string, data: any): Promise<ActionResponse<T>> {
+    protected sendActionAsync<T>(serviceName: string, version: string, action: string, data: any): Promise<ActionResponse<T>> {
         let command = { action: action, data: data, correlationId: this.requestContext.correlationId };
         let url = `http://${this.createServiceName(serviceName, version)}/api`;
 
-        let res = await this.sendRequestAsync("post", url, (req) => req.json(command));
-        let result: ActionResponse<T> = JSON.parse(res.body);
-        if (res.status !== 200 || result.status === "Error")
-            throw new ApplicationRequestError(data.error);
-        return result;
+        let res = this.sendRequestAsync("post", url, (req) => req.json(command));
+        return res;
     }
 
     private calculateRequestPath() {
@@ -206,9 +194,10 @@ export abstract class AbstractServiceCommand {
 
         prepareRequest && prepareRequest(request);
 
-        return new Promise<types.IHttpResponse>((resolve, reject) => {
+        this.requestContext.logInfo("Calling vulcain service on " + url);
+        return new Promise<CommonRequestResponse<any>>((resolve, reject) => {
             try {
-                request.end((response) => {
+                request.end((response:types.IHttpResponse) => {
                     if (response.error || response.status !== 200) {
                         let err = new Error(response.body);
                         System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);

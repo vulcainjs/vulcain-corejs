@@ -232,7 +232,7 @@ export class RequestContext {
      * @param {string} [msg] Additional message
      *
      */
-    error(error: Error, msg?: string) {
+    logError(error: Error, msg?: string) {
         this._logger.error(this, error, msg);
     }
 
@@ -243,7 +243,7 @@ export class RequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    info(msg: string, ...params: Array<any>) {
+    logInfo(msg: string, ...params: Array<any>) {
         this._logger.info(this, msg, ...params);
     }
 
@@ -255,7 +255,7 @@ export class RequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    verbose(msg: string, ...params: Array<any>) {
+    logVerbose(msg: string, ...params: Array<any>) {
         this._logger.verbose(this, msg, ...params);
     }
 }

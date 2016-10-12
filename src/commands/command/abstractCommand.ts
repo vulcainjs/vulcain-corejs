@@ -123,6 +123,26 @@ export interface ICommandContext {
      * @type {string}
      */
     tenant: string;
+    logError(error: Error, msg?: string);
+
+    /**
+     * Log a message info
+     *
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logInfo(msg: string, ...params: Array<any>);
+
+    /**
+     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     *
+     * @param {any} requestContext Current requestContext
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logVerbose(msg: string, ...params: Array<any>);
 }
 
 /**
