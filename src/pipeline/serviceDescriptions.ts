@@ -168,7 +168,8 @@ export class ServiceDescriptors {
             System.log.info(null, "Handler registered for query verb %s", verb);
             this.routes.set(verb, item);
 
-            if (item.metadata.action === "_serviceDescription") continue;
+            if (item.metadata.action.startsWith("_service")) continue;
+
             let metadata = <QueryActionMetadata>item.metadata;
             let desc: ActionDescription = {
                 schema: schema,

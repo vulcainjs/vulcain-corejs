@@ -33,7 +33,7 @@ export interface CommandInfo {
 
 
 export class HystrixCommand {
-
+    public commandKey: string;
     public status: ExecutionResult = new ExecutionResult();
     private running: boolean;
     private _arguments;
