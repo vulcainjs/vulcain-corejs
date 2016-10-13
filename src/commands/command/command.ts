@@ -22,18 +22,17 @@ export class CommandRuntimeError extends Error {
 }
 
 export interface CommandInfo {
-    commandKey: string,
-    commandGroup: string,
-    timeout: number,
-    isErrorHandler: (error: any) => any,
-    metricsConfig: any,
-    circuitConfig: any,
-    requestVolumeRejectionThreshold: number
+    commandKey: string;
+    commandGroup: string;
+    timeout: number;
+    isErrorHandler: (error: any) => any;
+    metricsConfig: any;
+    circuitConfig: any;
+    requestVolumeRejectionThreshold: number;
 }
 
 
 export class HystrixCommand {
-    public commandKey: string;
     public status: ExecutionResult = new ExecutionResult();
     private running: boolean;
     private _arguments;

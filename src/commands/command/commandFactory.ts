@@ -52,7 +52,6 @@ export class CommandFactory {
         if (cache) {
             let resolvedCommand = context ? context.container.resolve(cache.command): new (<any>cache.command)();
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context);
-            cmd.commandKey = commandKey;
             schema && cmd.setSchemaOnCommand(schema);
             return cmd;
         }
