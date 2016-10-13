@@ -14,7 +14,7 @@ export interface IHttpResponse {
     notAcceptable: boolean;
     notFound: boolean;
     forbidden: boolean;
-    error: boolean;
+    error: any;
     cookies: any;
     httpVersion: string;
     httpVersionMajor: number;

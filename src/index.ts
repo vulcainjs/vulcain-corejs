@@ -1,4 +1,5 @@
 import './preloader';
+import { HttpRedirectResponse } from './pipeline/common';
 
 // Schemas
 export * from './schemas/schema'
@@ -19,7 +20,7 @@ export * from './pipeline/annotations'
 export {EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData} from './pipeline/actions';
 export {QueryData,QueryActionMetadata, QueryMetadata, QueryResponse} from './pipeline/query';
 export {AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler} from './pipeline/abstractHandlers';
-export {ValidationError, HttpResponse} from './pipeline/common';
+export {ValidationError, HttpResponse, HttpRedirectResponse} from './pipeline/common';
 
 export {AbstractAdapter} from './servers/abstractAdapter';
 export {RequestContext, Pipeline, UserContext} from './servers/requestContext'

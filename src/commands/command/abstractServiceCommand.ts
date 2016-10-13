@@ -199,7 +199,7 @@ export abstract class AbstractServiceCommand {
             try {
                 request.end((response:types.IHttpResponse) => {
                     if (response.error || response.status !== 200) {
-                        let err = new Error(response.body);
+                        let err = new Error(response.error ? response.error.message : response.body);
                         System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;

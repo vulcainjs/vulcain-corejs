@@ -26,6 +26,7 @@ export class PropertyDescription {
 export class SchemaDescription {
     name: string;
     properties: Array<PropertyDescription>;
+    dependencies: Set<string>;
 }
 
 export class ActionDescription {
@@ -187,6 +188,7 @@ export class ServiceDescriptors {
             this.descriptions.services.push(desc);
         }
 
+        this.sortSchemasDependencies();
         this.handlers = null;
     }
 
@@ -210,7 +212,7 @@ export class ServiceDescriptors {
         let desc: SchemaDescription = schemas.get(schema.name);
         if (desc) return desc.name;
 
-        desc = { name: schema.name, properties: [] };
+        desc = { name: schema.name, properties: [], dependencies:new Set<string>() };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
 
@@ -241,6 +243,10 @@ export class ServiceDescriptors {
                 description: r.description,
                 metadata
             };
+
+            if(r.item !== "any")
+                desc.dependencies.add(r.item);
+
             // Insert required at the beginning
             if (!pdesc.required)
                 desc.properties.push(pdesc);
@@ -264,6 +270,16 @@ export class ServiceDescriptors {
             }
             name = type.type || type.item;
         }
+    }
+
+    private sortSchemasDependencies() {
+
+        this.descriptions.schemas = this.descriptions.schemas.sort((a: SchemaDescription, b: SchemaDescription) => {
+            if (a.dependencies.has(b.name))
+                return 1;
+            return -1;
+        });
+        this.descriptions.schemas.forEach((s: SchemaDescription) => delete s.dependencies);
     }
 
     register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind:string) {

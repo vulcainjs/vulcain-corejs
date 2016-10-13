@@ -57,6 +57,16 @@ export class HttpResponse {
     }
 }
 
+export class HttpRedirectResponse extends HttpResponse {
+    constructor(url: string) {
+        super();
+        if (!url)
+            throw new Error("Url is required");
+        this.statusCode = 302;
+        this.addHeader("Location", url);
+    }
+}
+
 export class RuntimeError extends Error { }
 
 export interface ValidationError {
