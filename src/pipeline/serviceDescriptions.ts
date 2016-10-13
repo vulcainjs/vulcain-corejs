@@ -20,6 +20,7 @@ export class PropertyDescription {
     description: string;
     type: string;
     reference: "no" | "many" | "one";
+    metadata: any;
 }
 
 export class SchemaDescription {
@@ -49,7 +50,7 @@ export class ServiceDescription {
 }
 
 export class ServiceDescriptors {
-    private static natives = ["string", "String", "boolean", "Boolean", "number", "Number", "any", "Object"];
+    static nativeTypes = ["string", "String", "boolean", "Boolean", "number", "Number", "any", "Object"];
     private descriptions: ServiceDescription;
     private handlers = new Array<HandlerItem>();
     private routes = new Map<string, HandlerItem>();
@@ -197,7 +198,7 @@ export class ServiceDescriptors {
 
         let schema: Schema;
         if (typeof schemaName === "string") {
-            if (ServiceDescriptors.natives.indexOf(schemaName) >= 0) return schemaName;
+            if (ServiceDescriptors.nativeTypes.indexOf(schemaName) >= 0) return schemaName;
             let type = this.getPropertyType(schemaName);
             if (type)
                 return type.name;
@@ -215,9 +216,10 @@ export class ServiceDescriptors {
 
         for (let k of Object.keys(schema.description.properties)) {
             const p = schema.description.properties[k];
-            let type = this.getPropertyType(p.type);
+            let type = this.getPropertyType(p.item || p.type);
             if (type) {
-                let pdesc: PropertyDescription = <any>{ name: k, type: type.name, required: p.required, description: p.description };
+                let metadata = { type: p.type, item: p.item, values: p.values, required: p.required, description: p.description };
+                let pdesc: PropertyDescription = <any>{ name: k, type: p.item ? type.name + "[]" : type.name, required: p.required, description: p.description, metadata };
                 // Insert required at the beginning
                 if (!pdesc.required)
                     desc.properties.push(pdesc);
@@ -230,12 +232,14 @@ export class ServiceDescriptors {
             if (schemas.has(k)) return k;
             this.getSchemaDescription(schemas, r.item);
 
+            let metadata = { item: r.item, cardinality: r.cardinality, required: r.required, description: r.description };
             let pdesc: PropertyDescription = {
                 name: k,
                 reference: r.cardinality,
-                type: r.item,
+                type: r.cardinality === "many" ? r.item + "[]" : r.item,
                 required: false,
-                description: r.description
+                description: r.description,
+                metadata
             };
             // Insert required at the beginning
             if (!pdesc.required)
@@ -248,13 +252,17 @@ export class ServiceDescriptors {
 
     private getPropertyType(name: string) {
         while (true) {
-            let type = this.domain._findType(name.toLowerCase());
-            if (!type || !type.type) {
+            let type = this.domain._findType(name);
+            if (!type) {
+                name = name.toLowerCase();
+                type = this.domain._findType(name);
+            }
+            if (!type || (!type.type && !type.item))  {
                 if(type)
-                    type.name = name.toLowerCase();
+                    type.name = name;
                 return type;
             }
-            name = type.type;
+            name = type.type || type.item;
         }
     }
 
