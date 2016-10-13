@@ -163,7 +163,7 @@ export class ExpressAdapter extends AbstractAdapter {
             ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
             ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT") || process.env[Conventions.instance.ENV_TENANT] || RequestContext.TestTenant;
             ctx.headers = req.headers;
-            ctx.hostName = req.hostname;
+            ctx.hostName = req.get('Host');
 
             let result = await handler.apply(this, [command, ctx]);
             if (result instanceof HttpResponse) {
