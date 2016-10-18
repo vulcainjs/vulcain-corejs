@@ -2,7 +2,7 @@ import { Conventions } from './../utils/conventions';
 import { RequestContext } from './../servers/requestContext';
 import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService } from '../defaults/services';
-const BearerStrategy = require('passport-http-bearer').Strategy
+import { BearerStrategy } from './bearerStrategy';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');
 
@@ -34,9 +34,6 @@ export class AuthenticationStrategies {
                 return callback( null, false );
             }
         });
-
-        // Workaround to remove Basic realm header to avoid a browser popup
-        strategy._challenge = ()=>null;
 
         passport.use( strategy );
     }

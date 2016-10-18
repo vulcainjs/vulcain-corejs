@@ -8,6 +8,7 @@ import {DefaultServiceNames} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
 import { HttpResponse } from './../pipeline/common';
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const guid = require('node-uuid');
@@ -19,6 +20,7 @@ export class ExpressAdapter extends AbstractAdapter {
         super(domainName, container);
 
         this.express = express();
+        this.express.use(cookieParser());
         this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
