@@ -141,6 +141,8 @@ export class ServiceDescriptors {
             System.log.info(null, "Handler registered for action verb %s", verb);
             this.routes.set(verb, item);
             let metadata = <ActionMetadata>item.metadata;
+            metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema, schema);
+            metadata.outputSchema = !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema);
 
             let desc: ActionDescription = {
                 schema: schema,
@@ -150,13 +152,13 @@ export class ServiceDescriptors {
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,
-                inputSchema: this.getSchemaDescription(schemas, metadata.inputSchema, schema),
-                outputSchema: !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema)
+                inputSchema: <string>metadata.inputSchema,
+                outputSchema: <string>metadata.outputSchema
             };
 
             if (metadata.async)
                 this.descriptions.hasAsyncTasks = true;
-            
+
             this.descriptions.services.push(desc);
         }
 
@@ -178,6 +180,9 @@ export class ServiceDescriptors {
             if (item.metadata.action.startsWith("_service")) continue;
 
             let metadata = <QueryActionMetadata>item.metadata;
+            metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema);
+            metadata.outputSchema = this.getSchemaDescription(schemas, metadata.outputSchema, schema);
+
             let desc: ActionDescription = {
                 schema: schema,
                 kind: metadata.action === "get" ? "get" : "query",
@@ -186,8 +191,8 @@ export class ServiceDescriptors {
                 action: metadata.action,
                 scope: metadata.scope,
                 async: false,
-                inputSchema: this.getSchemaDescription(schemas, metadata.inputSchema),
-                outputSchema: this.getSchemaDescription(schemas, metadata.outputSchema, schema)
+                inputSchema: <string>metadata.inputSchema,
+                outputSchema: <string>metadata.outputSchema
             };
 
             if (desc.action === "get" && !desc.inputSchema)
