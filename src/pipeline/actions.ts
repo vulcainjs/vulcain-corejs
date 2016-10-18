@@ -104,7 +104,10 @@ export class CommandManager implements IManager {
         this._service = process.env[Conventions.instance.ENV_SERVICE_NAME] + "-" + process.env[Conventions.instance.ENV_SERVICE_VERSION];
         if (!this._service)
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
-        this.messageBus = new MessageBus(this);
+    }
+
+    public startMessageBus(hasAsyncTasks:boolean) {
+        this.messageBus = new MessageBus(this, hasAsyncTasks);
         this.subscribeToEvents();
     }
 
@@ -169,6 +172,9 @@ export class CommandManager implements IManager {
 
     async runAsync(command: ActionData, ctx: RequestContext): Promise<any> {
         let info = this.getInfoHandler(command, ctx.container);
+        if (info.kind !== "action")
+            throw new Error("Query handler must be requested with GET.");
+
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         System.log.write(ctx, { RunAction: command });
         try {

@@ -64,10 +64,10 @@ export let standards = {
         ],
         validate: function (val) {
             let len = val.length;
-            if (this.min !== undefined) {
+            if (this.$min !== undefined) {
                 if (len < this.$min) return this.messages[0];
             }
-            if (this.max !== undefined) {
+            if (this.$max !== undefined) {
                 if (len > this.$max) return this.messages[1];
             }
         }

@@ -1,7 +1,7 @@
 import { System } from 'vulcain-configurationsjs';
 import { Domain, Schema } from './../schemas/schema';
 import { EventNotificationMode, ActionMetadata } from './actions';
-import {Injectable, LifeTime, Inject, DefaultServiceNames} from '../di/annotations';
+import { Injectable, LifeTime, Inject, DefaultServiceNames } from '../di/annotations';
 import { Model } from './../schemas/annotations';
 import { IContainer } from './../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata, CommonMetadata, RuntimeError } from './common';
@@ -11,7 +11,7 @@ export interface HandlerItem {
     methodName: string;
     handler;
     metadata: CommonActionMetadata;
-    kind: string;
+    kind: "action" | "query" | "event";
 }
 
 export class PropertyDescription {
@@ -38,6 +38,7 @@ export class ActionDescription {
     inputSchema: string;
     outputSchema: string;
     verb: string;
+    async: boolean;
 }
 
 @Model()
@@ -48,6 +49,7 @@ export class ServiceDescription {
     alternateAddress: string;
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
+    hasAsyncTasks: boolean;
 }
 
 export class ServiceDescriptors {
@@ -57,9 +59,9 @@ export class ServiceDescriptors {
     private routes = new Map<string, HandlerItem>();
     private monoSchema: boolean = true;
 
-    constructor(@Inject(DefaultServiceNames.Domain) private domain: Domain) { }
+    constructor( @Inject(DefaultServiceNames.Domain) private domain: Domain) { }
 
-    getAll() {
+    getDescriptions() {
         this.createHandlersTable();
         return this.descriptions;
     }
@@ -87,7 +89,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, metadata: <T>item.metadata, method: item.methodName };
+            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, kind: item.kind };
         }
         catch (e) {
             System.log.error(null, e, `Unable to create handler action ${action}, schema ${schema}`);
@@ -104,7 +106,7 @@ export class ServiceDescriptors {
         // Check if there is only one Schema
         let lastSchema: string;
         this.handlers.forEach(item => {
-           if (!item.metadata.schema)
+            if (!item.metadata.schema)
                 return;
             if (!lastSchema)
                 lastSchema = <string>item.metadata.schema;
@@ -121,10 +123,11 @@ export class ServiceDescriptors {
             domain: this.domain.name,
             serviceName: System.serviceName,
             serviceVersion: System.serviceVersion,
-            alternateAddress: null
+            alternateAddress: null,
+            hasAsyncTasks: false
         };
 
-        for (let item of this.handlers.filter(h=>h.kind==="action")) {
+        for (let item of this.handlers.filter(h => h.kind === "action")) {
             let schema = this.getSchemaDescription(schemas, item.metadata.schema);
 
             let verb = !item.metadata.schema || this.monoSchema
@@ -132,7 +135,7 @@ export class ServiceDescriptors {
                 : schema + "." + item.metadata.action;
 
             verb = verb.toLowerCase();
-            if( this.routes.has(verb))
+            if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for action ${item.metadata.action} for handler ${item.handler.name}`);
 
             System.log.info(null, "Handler registered for action verb %s", verb);
@@ -142,18 +145,22 @@ export class ServiceDescriptors {
             let desc: ActionDescription = {
                 schema: schema,
                 kind: "action",
+                async: metadata.async,
                 verb: verb,
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,
-                inputSchema:  this.getSchemaDescription(schemas, metadata.inputSchema, schema),
-                outputSchema:  this.getSchemaDescription(schemas, metadata.outputSchema, schema)
-                };
+                inputSchema: this.getSchemaDescription(schemas, metadata.inputSchema, schema),
+                outputSchema: !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema)
+            };
 
+            if (metadata.async)
+                this.descriptions.hasAsyncTasks = true;
+            
             this.descriptions.services.push(desc);
         }
 
-        for (let item of this.handlers.filter(h=>h.kind==="query")) {
+        for (let item of this.handlers.filter(h => h.kind === "query")) {
 
             let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
 
@@ -162,7 +169,7 @@ export class ServiceDescriptors {
                 : schema + "." + item.metadata.action;
 
             verb = verb.toLowerCase();
-            if( this.routes.has(verb))
+            if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for query ${item.metadata.action} for handler ${item.handler.name}`);
 
             System.log.info(null, "Handler registered for query verb %s", verb);
@@ -178,6 +185,7 @@ export class ServiceDescriptors {
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,
+                async: false,
                 inputSchema: this.getSchemaDescription(schemas, metadata.inputSchema),
                 outputSchema: this.getSchemaDescription(schemas, metadata.outputSchema, schema)
             };
@@ -193,8 +201,8 @@ export class ServiceDescriptors {
         this.handlers = null;
     }
 
-    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string|Function, defaultValue?) {
-        if ( schemaName === "none")
+    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?) {
+        if (schemaName === "none")
             return;
         if (!schemaName)
             return defaultValue;
@@ -213,7 +221,7 @@ export class ServiceDescriptors {
         let desc: SchemaDescription = schemas.get(schema.name);
         if (desc) return desc.name;
 
-        desc = { name: schema.name, properties: [], dependencies:new Set<string>() };
+        desc = { name: schema.name, properties: [], dependencies: new Set<string>() };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
 
@@ -245,7 +253,7 @@ export class ServiceDescriptors {
                 metadata
             };
 
-            if(r.item !== "any")
+            if (r.item !== "any")
                 desc.dependencies.add(r.item);
 
             // Insert required at the beginning
@@ -264,8 +272,8 @@ export class ServiceDescriptors {
                 name = name.toLowerCase();
                 type = this.domain._findType(name);
             }
-            if (!type || (!type.type && !type.item))  {
-                if(type)
+            if (!type || (!type.type && !type.item)) {
+                if (type)
                     type.name = name;
                 return type;
             }
@@ -283,9 +291,9 @@ export class ServiceDescriptors {
         this.descriptions.schemas.forEach((s: SchemaDescription) => delete s.dependencies);
     }
 
-    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind:string) {
+    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind: "action" | "query") {
 
-        handlerMetadata = handlerMetadata || {scope:"*"};
+        handlerMetadata = handlerMetadata || { scope: "*" };
 
         if (handlerMetadata.schema) {
             // test if exists

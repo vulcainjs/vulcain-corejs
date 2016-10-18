@@ -22,9 +22,11 @@ export class MessageBus {
         return events;
     }
 
-    constructor(private manager: CommandManager) {
+    constructor(private manager: CommandManager, hasAsyncActions:boolean) {
         this.commandBus = manager.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter);
-        this.commandBus.listenForTask(manager.domain.name, manager.serviceName, manager.consumeTaskAsync.bind(manager));
+
+        if (hasAsyncActions) // Register for async tasks only if necessary
+            this.commandBus.listenForTask(manager.domain.name, manager.serviceName, manager.consumeTaskAsync.bind(manager));
 
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
     }

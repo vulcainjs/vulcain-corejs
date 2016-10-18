@@ -6,7 +6,7 @@ import {Domain} from '../../dist/schemas/schema';
 @Model()
 class BaseModel {
     @Property({ type: "string", required: true })
-    @Validator("minLength", {min:2})
+    @Validator("length", {min:2})
     baseText: string;
 }
 

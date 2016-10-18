@@ -3,6 +3,7 @@ import { Domain, SchemaDescription } from './schema';
 import 'reflect-metadata'
 import { PropertyOptions, ReferenceOptions } from './annotations';
 import { ModelOptions } from './annotations';
+import { System } from 'vulcain-configurationsjs';
 
 export class SchemaBuilder {
 
@@ -109,7 +110,9 @@ export class SchemaBuilder {
         if (validators) {
             for (let {name, info} of validators) {
                 let validator = this.domain._findType(name);
-                if (validator)
+                if (!validator)
+                    throw new Error(`Unknow validator ${name}`);
+                else
                     chain.push(SchemaBuilder.clone(validator, info));
             }
         }

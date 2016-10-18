@@ -20,7 +20,8 @@ import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
 import * as util from 'util';
 import './defaults/serviceExplorer'; // Don't remove (auto register)
-import {ServiceDescriptors} from './pipeline/serviceDescriptions';
+import './defaults/dependencyExplorer'; // Don't remove (auto register)
+import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 
 /**
  * Application base class

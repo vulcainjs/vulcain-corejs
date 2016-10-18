@@ -135,7 +135,7 @@ export abstract class AbstractServiceCommand {
         query.$maxByPage = maxByPage;
         query.$page = page;
         query.$schema = schema;
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, query);
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query:query });
 
         let res = this.sendRequestAsync("get", url);
         return res;

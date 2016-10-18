@@ -12,9 +12,10 @@ import * as util from 'util';
 import {Conventions} from '../utils/conventions';
 import {Metrics} from '../utils/metrics';
 import { HttpResponse } from './../pipeline/common';
+import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 
 export abstract class AbstractAdapter {
-    private commandManager;
+    private commandManager: CommandManager;
     private queryManager;
     private testUser: UserContext;
     private domain: Domain;
@@ -33,6 +34,10 @@ export abstract class AbstractAdapter {
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
         this.metrics = container.get<Metrics>(DefaultServiceNames.Metrics);
+
+        let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        let hasAsyncTasks = descriptors.getDescriptions().hasAsyncTasks;
+        this.commandManager.startMessageBus(hasAsyncTasks);
     }
 
     public abstract start(port: number);

@@ -37,6 +37,15 @@ class RabbitAdapter {
         });
     }
 
+    /**
+     * Send domain event (event raises by an action)
+     * Domain events are shared by all services belonging to any domains
+     *
+     * @param {string} domain
+     * @param {EventData} event
+     *
+     * @memberOf RabbitAdapter
+     */
     sendEvent(domain:string, event:EventData) {
         if (!this.channel) throw "error";
         domain = domain.toLowerCase() + "_events";
@@ -45,6 +54,14 @@ class RabbitAdapter {
         this.channel.publish(domain, '', new Buffer(JSON.stringify(event)));
     }
 
+    /**
+     * Listening for domain events
+     *
+     * @param {string} domain
+     * @param {Function} handler
+     *
+     * @memberOf RabbitAdapter
+     */
     listenForEvent(domain: string, handler: Function) {
         let self = this;
         domain = domain.toLowerCase() + "_events";
@@ -57,6 +74,16 @@ class RabbitAdapter {
         });
     }
 
+    /**
+     * Task = asynchronous action
+     * Shared by service instances
+     *
+     * @param {string} domain
+     * @param {string} serviceId
+     * @param {ActionData} command
+     *
+     * @memberOf RabbitAdapter
+     */
     publishTask(domain:string, serviceId:string, command:ActionData) {
         if (!this.channel) throw "error";
         domain = domain.toLowerCase();
@@ -65,6 +92,15 @@ class RabbitAdapter {
         this.channel.publish(domain, serviceId, new Buffer(JSON.stringify(command)), {persistent:true});
     }
 
+    /**
+     * Listening for asynchronous task
+     *
+     * @param {string} domain
+     * @param {string} serviceId
+     * @param {Function} handler
+     *
+     * @memberOf RabbitAdapter
+     */
     listenForTask(domain: string, serviceId: string, handler: Function) {
         let self = this;
         domain = domain.toLowerCase();

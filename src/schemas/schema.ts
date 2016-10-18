@@ -236,15 +236,6 @@ export class Domain
         types[name] = SchemaBuilder.clone(subType, info);
     }
 
-    private findMethodInTypeHierarchy( name:string, schema ): Function|boolean
-    {
-        if( !schema ) return null;
-        if( schema[name] || schema[name] === false ) return schema[name];
-        let stype = schema.type;
-        let parent = this._findType( stype );
-        return this.findMethodInTypeHierarchy( name, parent );
-    }
-
     _findType(name:string) {
         if(!name) return null;
         let parts = name.split('.');
@@ -302,12 +293,7 @@ export class Domain
             {
                 try
                 {
-                    let convert = this.findMethodInTypeHierarchy( "bind", prop );
-                    if (convert === false) continue; // skip value
-
-                    let val = origin[ps];
-                    if (convert && typeof convert === "function")
-                        val = convert.apply(prop, [val, origin]);
+                    let val = this.applyBinding(prop, origin, origin[ps]);
 
                     if (val !== undefined)
                     {
@@ -343,24 +329,18 @@ export class Domain
                         continue;
                     }
 
-                    let bind = this.findMethodInTypeHierarchy( "bind", relationshipSchema );
-                    if( bind === false ) continue;
                     if (this.isMany(relationshipSchema)) {
                         obj[ref] = [];
                         for (let elem of refValue) {
-                            if (bind && typeof bind === "function") {
-                                obj[ref].push(bind.apply(relationshipSchema, [elem]));
-                            } else {
-                                obj[ref].push(!elemSchema && item === "any" ? elem : this.bind(elem, elemSchema));
-                            }
+                            let val = this.applyBinding(relationshipSchema, elemSchema, elem);
+                            if(val!== undefined)
+                                obj[ref].push(!elemSchema && item === "any" ? val : this.bind(val, elemSchema));
                         }
                     }
                     else {
-                        if (bind && typeof bind === "function") {
-                            obj[ref].push(bind.apply(relationshipSchema, [refValue]));
-                        } else {
-                            obj[ref].push(!elemSchema && item === "any" ? refValue : this.bind(refValue, elemSchema));
-                        }
+                        let val = this.applyBinding(relationshipSchema, elemSchema, refValue);
+                        if(val!== undefined)
+                            obj[ref] = !elemSchema && item === "any" ? val : this.bind(val, elemSchema);
                     }
                 }
                 catch( e )
@@ -376,6 +356,19 @@ export class Domain
         return obj;
     }
 
+    private applyBinding(prop, origin, val) {
+        let mainTypeValidator = prop.validators[prop.validators.length - 1];
+        if (mainTypeValidator["bind"] === false) return undefined; // skip value
+
+        for (let validator of prop.validators) {
+            let convert = validator["bind"];
+            if (convert === false) continue;
+
+            if (convert && typeof convert === "function")
+                val = convert.apply(prop, [val, origin]);
+        }
+        return val;
+    }
 
     private isMany( relSchema )
     {

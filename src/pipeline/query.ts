@@ -106,6 +106,9 @@ export class QueryManager implements IManager {
 
     async runAsync(query: QueryData, ctx: RequestContext): Promise<any> {
         let info = this.getInfoHandler(query, ctx.container);
+        if (info.kind !== "query")
+            throw new Error("Action handler must be requested with POST.");
+
         System.log.write(ctx, { runQuery: query });
 
         try {
