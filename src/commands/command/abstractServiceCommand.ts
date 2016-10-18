@@ -58,12 +58,12 @@ export abstract class AbstractServiceCommand {
         let name = `$redirect.${serviceName}-${version}`;
         let prop = DynamicConfiguration.getProperty<any>(name);
         if (prop && prop.value) {
-            if (prop.value.serviceName && !prop.value.version) return prop.value;
+            if (!prop.value.serviceName && !prop.value.version) return prop.value;
             serviceName = prop.value.serviceName || serviceName;
             version = prop.value.version || version;
         }
 
-        return (serviceName + version).replace(/[\.-]/g, '').toLowerCase();
+        return (serviceName + version).replace(/[\.-]/g, '').toLowerCase() + ":8080";
     }
 
     /**
@@ -104,38 +104,12 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getAllAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
-        query = query || {};
-        query.$action = action;
-        query.$maxByPage = maxByPage;
-        query.$page = page;
-        query.$schema = schema;
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query: JSON.stringify(query) });
-        let res = this.sendRequestAsync("get", url);
-        return res;
-    }
-
-    /**
-     *
-     *
-     * @protected
-     * @template T
-     * @param {string} serviceName
-     * @param {number} version
-     * @param {string} action
-     * @param {*} [query]
-     * @param {number} [page]
-     * @param {number} [maxByPage]
-     * @param {string} [schema]
-     * @returns {Promise<QueryResponse<T>>}
-     */
-    protected getQueryAsync<T>(serviceName: string, version: string, action:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
-        query = query || {};
-        query.$action = action;
-        query.$maxByPage = maxByPage;
-        query.$page = page;
-        query.$schema = schema;
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api`, { $query:query });
+    protected getQueryAsync<T>(serviceName: string, version: string, verb:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
+        let args:any = {};
+        args.$maxByPage = maxByPage;
+        args.$page = page;
+        args.$query = query && JSON.stringify(query);
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args );
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -151,9 +125,9 @@ export abstract class AbstractServiceCommand {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected sendActionAsync<T>(serviceName: string, version: string, action: string, data: any): Promise<ActionResponse<T>> {
-        let command = { action: action, data: data, correlationId: this.requestContext.correlationId };
-        let url = `http://${this.createServiceName(serviceName, version)}/api`;
+    protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any): Promise<ActionResponse<T>> {
+        let command = { data: data, correlationId: this.requestContext.correlationId };
+        let url = `http://${this.createServiceName(serviceName, version)}/api/${verb}`;
 
         let res = this.sendRequestAsync("post", url, (req) => req.json(command));
         return res;
@@ -222,12 +196,12 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected exec(kind: string, serviceName: string, version: string, action: string, data): Promise<any> {
+    protected exec(kind: string, serviceName: string, version: string, verb: string, data): Promise<any> {
         switch (kind) {
             case 'action':
-                return this.sendActionAsync(serviceName, version, action, data);
+                return this.sendActionAsync(serviceName, version, verb, data);
             case 'query':
-                return this.getQueryAsync(serviceName, version, action, data.args, data.page, data.maxByPage);
+                return this.getQueryAsync(serviceName, version, verb, data.args, data.page, data.maxByPage);
             case 'get':
                 return this.getRequestAsync(serviceName, version, data);
         }

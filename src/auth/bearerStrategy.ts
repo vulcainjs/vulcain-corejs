@@ -38,10 +38,10 @@ export class BearerStrategy extends passportStrategy.Strategy {
         if (parts.length < 2) { return this.fail(400); }
 
         let scheme = parts[0]
-        , apiKey = parts[1];
+        , jwtToken = parts[1];
 
         if (!/^Bearer$/i.test(scheme)) { return this.fail(null); }
-        if (!apiKey) { return this.fail(null); }
+        if (!jwtToken) { return this.fail(null); }
 
         let self = this;
 
@@ -51,7 +51,6 @@ export class BearerStrategy extends passportStrategy.Strategy {
             self.success(user, info);
         }
 
-        let params = {apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.instance.ENV_TENANT] || RequestContext.TestTenant}
-        this._verify(params, verified);
+        this._verify(jwtToken, verified);
     }
 }
