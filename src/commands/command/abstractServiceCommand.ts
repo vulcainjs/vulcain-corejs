@@ -185,7 +185,7 @@ export abstract class AbstractServiceCommand {
                     }
                     else {
                         System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`);
-                        resolve(vulcainResponse.value);
+                        resolve(vulcainResponse);
                     }
                 });
             }
@@ -196,14 +196,20 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected exec(kind: string, serviceName: string, version: string, verb: string, data): Promise<any> {
+    protected async exec(kind: string, serviceName: string, version: string, verb: string, data, page, maxByPage): Promise<any> {
         switch (kind) {
-            case 'action':
-                return this.sendActionAsync(serviceName, version, verb, data);
-            case 'query':
-                return this.getQueryAsync(serviceName, version, verb, data.args, data.page, data.maxByPage);
-            case 'get':
-                return this.getRequestAsync(serviceName, version, data);
+            case 'action': {
+                let response = await this.sendActionAsync(serviceName, version, verb, data);
+                return response.value;
+            }
+            case 'query': {
+                let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
+                return { value: response.value, total: response.total, page };
+            }
+            case 'get': {
+                let response = await this.getRequestAsync(serviceName, version, data);
+                return response.value;
+            }
         }
     }
 
