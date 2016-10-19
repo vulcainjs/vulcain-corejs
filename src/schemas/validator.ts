@@ -131,7 +131,7 @@ export class Validator
                 let t = itemType;
                 if (val.__schema && val.__schema !== schema.item)
                     t = this.domain._findType(val.__schema);
-                errors = this.validate(t, val);
+                errors = errors.concat(this.validate(t, val));
             }
         }
         return errors;
@@ -150,7 +150,7 @@ export class Validator
 
         if (val === undefined || val === null) {
             if (schema.required) {
-                return "Property '{$propertyName}' is required.";
+                return this.__formatMessage("Property '{$propertyName}' is required.", ctx, schema);
             }
             return null;
         }
@@ -163,7 +163,8 @@ export class Validator
 
         if( schema.validate )
         {
-            return schema.validate( val );
+            let err = schema.validate(val);
+            if (err) return this.__formatMessage( err, ctx, schema );
         }
     }
 

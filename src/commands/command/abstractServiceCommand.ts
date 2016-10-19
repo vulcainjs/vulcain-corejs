@@ -204,7 +204,7 @@ export abstract class AbstractServiceCommand {
             }
             case 'query': {
                 let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
-                return { value: response.value, total: response.total, page };
+                return { values: response.value, total: response.total, page };
             }
             case 'get': {
                 let response = await this.getRequestAsync(serviceName, version, data);

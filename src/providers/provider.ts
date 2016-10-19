@@ -19,7 +19,7 @@ export interface IProvider<T>
     getAllAsync(schema: Schema, options:ListOptions ) : Promise<Array<T>>;
     getAsync(schema: Schema, id:string ) : Promise<T>;
     createAsync(schema: Schema, entity:T ) : Promise<T>;
-    updateAsync(schema: Schema, entity:T, old:T ) : Promise<T>;
+    updateAsync(schema: Schema, entity:T, old?:T ) : Promise<T>;
     deleteAsync(schema: Schema, old:string|T ) : Promise<boolean>;
 }
 
