@@ -39,6 +39,7 @@
     "express": "^4.14.0",
     "fast-stats": "0.0.3",
     "gulp-istanbul": "^1.1.1",
+    "gulp-sourcemaps": "^1.8.1",
     "gulp-tslint": "^6.1.2",
     "gulp-typescript": "^2.14.1",
     "jsonwebtoken": "^7.1.9",
@@ -56,6 +57,6 @@
     "tslint": "^3.15.1",
     "typings": "^1.4.0",
     "unirest": "^0.5.0",
-    "vulcain-configurationsjs": "^1.0.20"
+    "vulcain-configurationsjs": "^1.0.28"
   }
 }
