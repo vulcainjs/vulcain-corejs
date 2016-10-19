@@ -80,7 +80,7 @@ export class Container implements IContainer {
      */
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address || Conventions.instance.defaultMongoAddress);
-        uri = "mongodb://" + (uri || Conventions.instance.defaultMongoAddress);
+        uri = "mongodb://" + (uri || address || Conventions.instance.defaultMongoAddress);
         this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 

@@ -34,7 +34,7 @@ export class MongoProvider implements IProvider<any>
             throw new Error("tenant is required");
 
         this.state.uri = this.state.uri + "/" + tenant;
-        this.state.keyPropertyName = schema.getIdProperty();
+        this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
         let keys;
         for (let p in schema.description.properties) {
@@ -93,10 +93,11 @@ export class MongoProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAllAsync(schema: Schema, options: ListOptions): Promise<Array<any>> {
+        let query = options.query ? options.query.filter || options.query : {};
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).find(options.query.filter || options.query, null, options.page, options.maxByPage);
+                let cursor = db.collection(schema.description.storageName).find(query, null, options.page, options.maxByPage);
                 cursor.toArray((err, res) => {
                     if (err)
                         reject(err);
@@ -172,6 +173,9 @@ export class MongoProvider implements IProvider<any>
                     id = old;
                 else
                     id = old[this.state.keyPropertyName];
+                if (!id)
+                    throw new Error("Mongo : Error on delete. Id must not be null");
+
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = id;
                 let db = await this.ensuresDbOpen();
@@ -247,8 +251,11 @@ export class MongoProvider implements IProvider<any>
                         reject(err);
                         return;
                     }
+
+                    let _id = initial._id;
                     initial = Object.assign(initial, entity);
                     initial._updated = new Date().toUTCString();
+                    initial._id = _id;
 
                     collection.updateOne(filter, initial, err => {
                         if (err)

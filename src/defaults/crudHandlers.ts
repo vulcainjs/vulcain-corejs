@@ -139,7 +139,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     @Query({ action: "all", description: "Get all entities" })
     getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
-        let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || -1, page: page || this.query && this.query.page || 0, query:query || {} };
+        let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || 0, page: page || this.query && this.query.page || 0, query:query || {} };
         let cmd = this.getDefaultCommand();
         return <Promise<Array<T>>>cmd.executeAsync( "all", options);
     }
