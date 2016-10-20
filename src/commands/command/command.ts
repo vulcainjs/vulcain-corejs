@@ -5,21 +5,13 @@ import ActualTime from "../../utils/actualTime"
 import {AbstractCommand} from './abstractCommand'
 import {SemaphoreFactory, Semaphore} from './semaphore'
 import {EventType, FailureType, ExecutionResult} from './executionResult'
-import {BadRequestError, System} from 'vulcain-configurationsjs'
 import * as util from 'util';
+import { TimeoutError } from './../../errors/timeoutError';
+import { CommandRuntimeError } from './../../errors/commandRuntimeError';
+import { BadRequestError } from './../../errors/badRequestError';
+import { System } from './../../configurations/globals/system';
 const moment = require("moment");
 
-export class TimeoutError extends Error {
-    constructor(ms:number) {
-        super("Timeout error - Command take more than " + ms + "ms");
-    }
-}
-
-export class CommandRuntimeError extends Error {
-    constructor(public failureType: FailureType, public commandName: string, message: string, public error?) {
-        super(message);
-    }
-}
 
 export interface CommandInfo {
     commandKey: string;

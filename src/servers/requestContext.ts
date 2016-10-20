@@ -1,4 +1,3 @@
-import {VulcainLogger} from 'vulcain-configurationsjs';
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';

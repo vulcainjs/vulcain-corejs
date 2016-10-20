@@ -1,4 +1,3 @@
-import { System } from 'vulcain-configurationsjs';
 import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
 import {LifeTime} from '../di/annotations';
@@ -66,8 +65,6 @@ export class HttpRedirectResponse extends HttpResponse {
         this.addHeader("Location", url);
     }
 }
-
-export class RuntimeError extends Error { }
 
 export interface ValidationError {
     id?: string;

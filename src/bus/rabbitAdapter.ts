@@ -1,6 +1,6 @@
-import { System } from 'vulcain-configurationsjs';
 import * as amqp from 'amqplib';
 import {EventData, ActionData} from '../pipeline/actions';
+import { System } from './../configurations/globals/system';
 
 export /**
  * RabbitAdapter

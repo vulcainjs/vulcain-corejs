@@ -1,14 +1,14 @@
-import { System } from 'vulcain-configurationsjs';
-import { HandlerFactory, CommonRequestData, CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, RuntimeError, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager, HttpResponse } from './common';
+import { HandlerFactory, CommonRequestData, CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager, HttpResponse } from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import * as os from 'os';
 import {RequestContext, UserContext} from '../servers/requestContext';
-import {CommandRuntimeError} from '../commands/command/command';
 import {DefaultServiceNames} from '../di/annotations';
 import {LifeTime} from '../di/annotations';
 import { ServiceDescriptors } from './serviceDescriptions';
+import { System } from './../configurations/globals/system';
+import { CommandRuntimeError } from './../errors/commandRuntimeError';
 
 export interface QueryData extends CommonRequestData {
     maxByPage?: number;

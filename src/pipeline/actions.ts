@@ -1,4 +1,3 @@
-import { System } from 'vulcain-configurationsjs';
 import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
@@ -7,11 +6,12 @@ import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, Commo
 import * as os from 'os';
 import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
 import * as RX from 'rx';
-import {CommandRuntimeError} from '../commands/command/command';
 import {EventHandlerFactory} from './eventHandlerFactory';
 import {LifeTime} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
+import { System } from './../configurations/globals/system';
+import { CommandRuntimeError } from './../errors/commandRuntimeError';
 const guid = require('node-uuid');
 
 export interface ActionData extends CommonRequestData {

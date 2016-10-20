@@ -1,11 +1,12 @@
-import { System } from 'vulcain-configurationsjs';
 import { Domain, Schema } from './../schemas/schema';
 import { EventNotificationMode, ActionMetadata } from './actions';
 import { Injectable, LifeTime, Inject, DefaultServiceNames } from '../di/annotations';
 import { Model } from './../schemas/annotations';
 import { IContainer } from './../di/resolvers';
-import { ServiceHandlerMetadata, CommonActionMetadata, CommonMetadata, RuntimeError } from './common';
+import { ServiceHandlerMetadata, CommonActionMetadata, CommonMetadata } from './common';
 import { QueryActionMetadata } from './query';
+import { RuntimeError } from './../errors/runtimeError';
+import { System } from './../configurations/globals/system';
 
 export interface HandlerItem {
     methodName: string;

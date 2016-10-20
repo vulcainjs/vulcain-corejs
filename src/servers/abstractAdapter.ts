@@ -5,7 +5,6 @@ import {CommandManager, ActionMetadata} from '../pipeline/actions';
 import {CommonRequestResponse} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
-import {BadRequestError, System } from 'vulcain-configurationsjs';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
 import * as util from 'util';
@@ -13,6 +12,8 @@ import {Conventions} from '../utils/conventions';
 import {Metrics} from '../utils/metrics';
 import { HttpResponse } from './../pipeline/common';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
+import { System } from './../configurations/globals/system';
+import { BadRequestError } from './../errors/badRequestError';
 
 export abstract class AbstractAdapter {
     private commandManager: CommandManager;

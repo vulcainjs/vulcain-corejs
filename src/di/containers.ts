@@ -9,7 +9,6 @@ import {LocalAdapter} from '../bus/localAdapter'
 import {MemoryProvider} from "../providers/memory/provider";
 import {MongoProvider} from "../providers/mongo/provider";
 import {ProviderFactory} from '../providers/providerFactory';
-import {System, VulcainLogger} from 'vulcain-configurationsjs'
 import {Domain} from '../schemas/schema';
 import {Application} from '../application';
 import {LifeTime} from './annotations';
@@ -17,6 +16,8 @@ import {Files} from '../utils/files';
 import {Conventions} from '../utils/conventions';
 import { RequestContext } from './../servers/requestContext';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
+import { VulcainLogger } from './../configurations/log/vulcainLogger';
+import { System } from './../configurations/globals/system';
 
 /**
  *

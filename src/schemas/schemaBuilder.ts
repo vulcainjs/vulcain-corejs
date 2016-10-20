@@ -3,7 +3,6 @@ import { Domain, SchemaDescription } from './schema';
 import 'reflect-metadata'
 import { PropertyOptions, ReferenceOptions } from './annotations';
 import { ModelOptions } from './annotations';
-import { System } from 'vulcain-configurationsjs';
 
 export class SchemaBuilder {
 

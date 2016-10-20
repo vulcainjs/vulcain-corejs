@@ -14,7 +14,6 @@ import 'reflect-metadata'
 import {DefaultServiceNames} from './di/annotations';
 import {IContainer} from "./di/resolvers";
 import {AbstractAdapter} from './servers/abstractAdapter';
-import {System} from 'vulcain-configurationsjs'
 import {Conventions} from './utils/conventions';
 import {MemoryProvider} from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
@@ -22,6 +21,7 @@ import * as util from 'util';
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
+import { System } from './configurations/globals/system';
 
 /**
  * Application base class

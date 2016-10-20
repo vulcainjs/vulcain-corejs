@@ -1,4 +1,3 @@
-import { System, BadRequestError } from 'vulcain-configurationsjs';
 import { Application } from '../application';
 import * as express from 'express';
 import {AbstractAdapter} from './abstractAdapter';
@@ -8,6 +7,7 @@ import {DefaultServiceNames} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import {QueryData} from '../pipeline/query';
 import { HttpResponse } from './../pipeline/common';
+import { System } from './../configurations/globals/system';
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -157,7 +157,7 @@ export class ExpressAdapter extends AbstractAdapter {
 
             ctx.correlationId = req.header("X-VULCAIN-CORRELATION-ID") || guid.v4();
             ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
-            ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT") || process.env[Conventions.instance.ENV_TENANT] || RequestContext.TestTenant;
+            ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT") || process.env[Conventions.instance.ENV_VULCAIN_TENANT] || RequestContext.TestTenant;
             ctx.headers = req.headers;
             ctx.hostName = req.get('Host');
 
