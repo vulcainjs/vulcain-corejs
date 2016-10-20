@@ -88,6 +88,7 @@ export interface CommonRequestData {
     schema: string;
     inputSchema?: string;
     userContext?: UserContext
+    data: any;
 }
 
 export interface CommonRequestResponse<T> {

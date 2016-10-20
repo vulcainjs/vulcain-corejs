@@ -1,4 +1,4 @@
-import { System } from 'vulcain-configurationsjs';
+import { System, BadRequestError } from 'vulcain-configurationsjs';
 import { Application } from '../application';
 import * as express from 'express';
 import {AbstractAdapter} from './abstractAdapter';
@@ -15,6 +15,7 @@ const guid = require('node-uuid');
 
 export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
+    private auth;
 
     constructor(domainName: string, container: IContainer, private app:Application) {
         super(domainName, container);
@@ -25,7 +26,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
 
-        let auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
+        this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
         let self = this;
 
         this.express.get('/health', (req: express.Request, res: express.Response) => {
@@ -43,24 +44,7 @@ export class ExpressAdapter extends AbstractAdapter {
                 res.send(domain.schemas)
         });
 
-        // Query can have only two options:
-        //  - single query with an id (and optional schema)
-        //  - search query with a query expression in data
-/*        this.express.get(Conventions.instance.defaultUrlprefix + '/:schema?/get/:id', auth, async (req: express.Request, res: express.Response) => {
-            let query: QueryData = <any>{ domain: this.domainName };
-            query.action = "get";
-            query.schema = req.params.schema ||  req.query.$schema;;
-            let requestArgs = this.populateFromQuery(req);
-            if (requestArgs.count === 0)
-                query.data = req.params.id;
-            else {
-                query.data = requestArgs.data;
-                query.data.id = req.params.id;
-            }
-            this.executeRequest(this.executeQueryRequest, query, req, res);
-        });
-*/
-        this.express.get(Conventions.instance.defaultUrlprefix + '/:schemaAction?/:id?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.get(Conventions.instance.defaultUrlprefix + '/:schemaAction?/:id?', this.auth, async (req: express.Request, res: express.Response) => {
 
             try {
                 let query: QueryData = <any>{ domain: this.domainName };
@@ -92,9 +76,19 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         // All actions by post
-        this.express.post(Conventions.instance.defaultUrlprefix + '/:schemaAction?', auth, async (req: express.Request, res: express.Response) => {
+        this.express.post(Conventions.instance.defaultUrlprefix + '/:schemaAction?', this.auth, async (req: express.Request, res: express.Response) => {
             const cmd = this.normalizeCommand(req);
             this.executeRequest(this.executeCommandRequest, cmd, req, res);
+        });
+    }
+
+    addCustomRoute(verb:string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
+        this.express[verb](path, this.auth, async (req: express.Request, res: express.Response) => {
+            let command:any = callback(req);
+            if (!command || !command.action)
+                throw new Error("Invalid custom command configuration");
+            command.domain = this.domainName;
+            this.executeRequest(this.executeCommandRequest, command, req, res);
         });
     }
 

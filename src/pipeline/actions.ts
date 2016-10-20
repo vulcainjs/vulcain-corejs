@@ -15,7 +15,6 @@ import { ServiceDescriptors } from './serviceDescriptions';
 const guid = require('node-uuid');
 
 export interface ActionData extends CommonRequestData {
-    data: any;
     service: string;
     // Internal
     status?: "Error" | "Success" | "Pending";

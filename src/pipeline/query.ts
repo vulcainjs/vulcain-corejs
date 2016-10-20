@@ -11,7 +11,6 @@ import {LifeTime} from '../di/annotations';
 import { ServiceDescriptors } from './serviceDescriptions';
 
 export interface QueryData extends CommonRequestData {
-    data: any;
     maxByPage?: number;
     page?: number;
 }
