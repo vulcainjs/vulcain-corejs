@@ -1,6 +1,7 @@
-import {DynamicConfiguration, IDynamicProperty} from 'vulcain-configurationsjs'
 import {CommandConfiguration} from './commandFactory'
 import { Conventions } from './../../utils/conventions';
+import { IDynamicProperty } from './../../configurations/dynamicProperty';
+import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 
 let HystrixPropertiesNames = {
     HYSTRIX_HEALTH_SNAPSHOT_IN_MS: "hystrix.health.snapshot.validityInMilliseconds",

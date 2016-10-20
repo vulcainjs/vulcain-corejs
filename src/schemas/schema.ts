@@ -3,11 +3,11 @@ import {standards} from './standards'
 import {Validator} from './validator'
 import {IContainer} from '../di/resolvers';
 import {SchemaVisitor} from './visitor';
-import {System} from 'vulcain-configurationsjs';
 import { PropertyOptions } from './annotations';
 import { CommandProperties } from './../commands/command/commandProperties';
 import { DefaultServiceNames } from './../di/annotations';
 import { ReferenceOptions } from './annotations';
+import { System } from './../configurations/globals/system';
 
 export interface ErrorMessage {
     message: string,

@@ -1,7 +1,7 @@
-import { System } from 'vulcain-configurationsjs';
 import { Conventions } from './conventions';
 import * as Statsd from "statsd-client";
 import {Injectable, LifeTime} from '../di/annotations';
+import { System } from './../configurations/globals/system';
 
 @Injectable(LifeTime.Singleton)
 export class Metrics {

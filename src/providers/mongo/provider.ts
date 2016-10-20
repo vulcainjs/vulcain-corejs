@@ -1,5 +1,4 @@
 import { DefaultServiceNames } from './../../di/annotations';
-import { System } from 'vulcain-configurationsjs';
 import { Logger, RequestContext } from './../../servers/requestContext';
 import {IProvider, ListOptions} from "../provider";
 import {Schema} from "../../schemas/schema";

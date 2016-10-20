@@ -1,4 +1,16 @@
 import './preloader';
+
+// Configurations
+
+export {VulcainManifest, ServiceProxy, ConfigurationProperty} from './configurations/dependencies/annotations';
+export {DynamicConfiguration } from './configurations/dynamicConfiguration';
+export {IDynamicProperty} from './configurations/dynamicProperty';
+export { MemoryConfigurationSource } from './configurations/configurationSources/memoryConfigurationSource';
+export {FileConfigurationSource} from './configurations/configurationSources/fileConfigurationSource';
+export {ConfigurationDataType} from './configurations/configurationSources/configurationSource';
+export { VulcainLogger } from './configurations/log/vulcainLogger';
+export { System } from './configurations/globals/system';
+
 import { HttpRedirectResponse } from './pipeline/common';
 
 // Schemas
@@ -41,12 +53,17 @@ export {IContainer} from './di/resolvers';
 export {TestContainer} from './di/containers';
 export {Inject, Injectable, LifeTime, DefaultServiceNames} from './di/annotations';
 
+// Errors
+export { ApplicationRequestError } from './errors/applicationRequestError';
+export { BadRequestError } from './errors/badRequestError';
+export { CommandRuntimeError } from './errors/commandRuntimeError';
+export { RuntimeError } from './errors/runtimeError';
+
 // Commands
 export {Command, CommandFactory as __commandFactory} from './commands/command/commandFactory'
 export {EventType, FailureType, ExecutionResult} from './commands/command/executionResult'
-export {AbstractCommand, ICommand, ApplicationRequestError} from './commands/command/abstractCommand'
+export {AbstractCommand, ICommand} from './commands/command/abstractCommand'
 export {HystrixSSEStream} from './commands/http/hystrixSSEStream'
-export {CommandRuntimeError, TimeoutError} from './commands/command/command'
 export {IHttpRequest, IHttpResponse} from './commands/command/types'
 export {AbstractServiceCommand} from './commands/command/abstractServiceCommand'
 export {AbstractHttpCommand} from './commands/command/abstractHttpCommand'

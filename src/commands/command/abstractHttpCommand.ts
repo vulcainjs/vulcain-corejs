@@ -1,9 +1,9 @@
 const rest = require('unirest');
 import * as types from './types';
-import { System } from 'vulcain-configurationsjs';
 import { ICommandContext } from './abstractCommand';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
+import { System } from './../../configurations/globals/system';
 
 export abstract class AbstractHttpCommand {
 

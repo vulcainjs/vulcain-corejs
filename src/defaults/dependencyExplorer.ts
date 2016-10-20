@@ -1,6 +1,7 @@
 import { DefaultServiceNames, Inject, LifeTime } from '../di/annotations';
 import {Query, QueryHandler} from '../pipeline/annotations';
-import { System, VulcainManifest } from 'vulcain-configurationsjs';
+import { System } from './../configurations/globals/system';
+import { VulcainManifest } from './../configurations/dependencies/annotations';
 
 @QueryHandler({scope:"?", serviceLifeTime: LifeTime.Singleton})
 export class DependencyExplorer {

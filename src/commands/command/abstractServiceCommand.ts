@@ -1,12 +1,14 @@
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
-import { System, DynamicConfiguration } from 'vulcain-configurationsjs';
 import { QueryResponse } from './../../pipeline/query';
-import { ApplicationRequestError, ICommandContext } from './abstractCommand';
+import { ICommandContext } from './abstractCommand';
 import { ActionResponse } from './../../pipeline/actions';
 import * as types from './types';
 import * as os from 'os';
 import {CommonRequestResponse } from '../../pipeline/common';
+import { System } from './../../configurations/globals/system';
+import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
+import { ApplicationRequestError } from './../../errors/applicationRequestError';
 const rest = require('unirest');
 
 /**

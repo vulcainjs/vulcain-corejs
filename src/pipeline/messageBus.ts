@@ -1,4 +1,3 @@
-import { System } from 'vulcain-configurationsjs';
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
 import {ErrorResponse} from './common';
 const guid = require('node-uuid');

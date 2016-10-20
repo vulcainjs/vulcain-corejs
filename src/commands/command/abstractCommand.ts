@@ -1,7 +1,6 @@
 var rest = require('unirest');
 import * as types from './types';
 import * as os from 'os';
-import {DynamicConfiguration, System} from 'vulcain-configurationsjs'
 import {ExecutionResult} from './executionResult'
 import {Schema} from '../../schemas/schema';
 import {IProvider} from '../../providers/provider';
@@ -14,33 +13,6 @@ import {ActionResponse} from '../../pipeline/actions';
 import {QueryResponse} from '../../pipeline/query';
 import {ValidationError, ErrorResponse} from '../../pipeline/common';
 import { ProviderFactory } from './../../providers/providerFactory';
-
-/**
- *
- *
- * @export
- * @class ApplicationRequestError
- * @extends {Error}
- */
-export class ApplicationRequestError extends Error {
-    /**
-     *
-     *
-     * @private
-     * @type {Array<ValidationError>}
-     */
-    private errors: Array<ValidationError>;
-
-    /**
-     * Creates an instance of ApplicationRequestError.
-     *
-     * @param {ErrorResponse} error
-     */
-    constructor(error: ErrorResponse, public statusCode=500) {
-        super((error && error.message) || "Unknow error");
-        this.errors = error && error.errors;
-    }
-}
 
 /**
  * command

@@ -1,8 +1,8 @@
-import { System } from 'vulcain-configurationsjs';
 import { HandlerItem } from './serviceDescriptions';
 import { EventMetadata, ConsumeEventMetadata } from './../pipeline/actions';
 import { IContainer } from './../di/resolvers';
 import {Domain} from './../schemas/schema';
+import { System } from './../configurations/globals/system';
 
 export class EventHandlerFactory {
     private handlers = new Map<string, Map<string, Array<HandlerItem>>>();

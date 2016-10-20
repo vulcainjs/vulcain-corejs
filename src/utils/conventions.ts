@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { System } from 'vulcain-configurationsjs';
+import { System } from './../configurations/globals/system';
 
 /**
  * Conventions values
@@ -55,6 +55,8 @@ export class Conventions {
 
     defaultStatsdAddress = "telegraf";
     defaultStatsdDelayInMs = 10000;
+    defaultVulcainServerName = "vulcain-server";
+    vulcainFileName = ".vulcain";
 
     /**
      * Environment variable for rabbit server address
@@ -66,11 +68,20 @@ export class Conventions {
     ENV_SECRET_KEY = "VULCAIN_SECRET_KEY";
     ENV_PRIVATE_KEY_PATH = "VULCAIN_PRIVATE_KEY_PATH";
     ENV_METRICS_AGENT = "VULCAIN_METRICS_AGENT";
-
-    ENV_TENANT = "VULCAIN_TENANT";
-
+    ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
+    /**
+     * Api key to get config from vulcain server
+     *
+     *
+     * @memberOf Conventions
+     */
+    ENV_VULCAIN_TOKEN = "VULCAIN_TOKEN";
+    ENV_VULCAIN_ENV = "VULCAIN_ENV";
+    ENV_VULCAIN_DOMAIN = "VULCAIN_DOMAIN";
+    ENV_VULCAIN_SERVER = "VULCAIN_SERVER";
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
+    ENV_VULCAIN_TEST = "VULCAIN_TEST";
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,
