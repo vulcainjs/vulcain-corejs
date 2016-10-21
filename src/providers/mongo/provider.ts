@@ -19,7 +19,7 @@ export class MongoProvider implements IProvider<any>
 
     constructor(
         @Inject(DefaultServiceNames.Logger) private _logger: Logger,
-        @Inject(DefaultServiceNames.RequestContext) private ctx: RequestContext,
+        @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,
         uri: string,
         private options?) {
         this.state = { uri: uri };

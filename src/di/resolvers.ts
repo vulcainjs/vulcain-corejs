@@ -76,10 +76,15 @@ export class Resolver implements IResolver {
         try {injects = Reflect.getMetadata(Symbol.for("di:injects"), this.fn);} catch(e) {}
         let params = [];
 
-        if(injects) {
-            for(var inject in injects) {
-                let info = injects[inject];
-                params.push( container.get<any>(info.name, info.optional))
+        if (injects) {
+            try {
+                for (var inject in injects) {
+                    let info = injects[inject];
+                    params.push(container.get<any>(info.name, info.optional))
+                }
+            }
+            catch (e) {
+                throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`)
             }
         }
 

@@ -3,6 +3,7 @@ import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';
 import {ICommand} from '../commands/command/abstractCommand'
 import {DefaultServiceNames} from '../di/annotations';
+import { System } from '../configurations/globals/system';
 
 export enum Pipeline {
     EventNotification,
@@ -179,20 +180,27 @@ export class RequestContext {
      * @param {string} scope
      * @returns {number}
      */
-    hasScope(scope: string): boolean {
+    hasScope(handlerScope: string): boolean {
         if (this.user && this.user.tenant && this.user.tenant !== this.tenant) return false;
 
-        if (!scope || scope === "?") return true;
+        if (!handlerScope || handlerScope === "?") return true;
         if (!this.user) return false;
-        if (scope === "*") return true;
+        if (handlerScope === "*") return true;
 
-        const scopes = this.scopes;
+        const handlerScopes = handlerScope.split(',').map(s => s.trim());
+        const userScopes = this.scopes;
 
-        if (!scopes || scopes.length == 0) return false;
-        if (scopes[0] === "*") return true;
+        if (!userScopes || userScopes.length == 0) return false;
+        if (userScopes[0] === "*") return true;
 
-        for (let userScope of this.user.scopes) {
-            for (let sc of scopes) {
+        for (let userScope of userScopes) {
+            let parts = userScope.split(':');
+            if (parts.length != 2) return false; // malformed
+
+            if (parts[0] !== System.domainName) continue;
+            userScope = parts[1];
+
+            for (let sc of handlerScopes) {
                 if (userScope === sc) return true;
                 // admin-* means all scope beginning by admin-
                 if (userScope.endsWith("*") && sc.startsWith(userScope.substr(0, userScope.length - 1)))
