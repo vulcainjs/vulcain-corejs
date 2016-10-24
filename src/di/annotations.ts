@@ -9,6 +9,7 @@ import {Preloader} from '../preloader';
  */
 export class DefaultServiceNames
 {
+    static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static "Authentication" = "Authentication";
     static "Logger" = "Logger";

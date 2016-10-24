@@ -52,9 +52,6 @@ export class Preloader {
             Preloader.run(Services, container, domain);
             Preloader.run(Handlers, container, domain);
 
-            let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-            descriptors.createHandlersTable();
-
             Preloader._preloads = {};
         }
     }

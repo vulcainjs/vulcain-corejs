@@ -22,6 +22,8 @@ export class System {
     private static isLocal: boolean;
     private static _manifest: VulcainManifest;
 
+    static defaultDomainName: string;
+
     public static get manifest() {
         if (!System._manifest)
             System._manifest = new VulcainManifest();
@@ -222,7 +224,7 @@ export class System {
             if (env)
                 System._teamNamespace = env;
             else
-                return null;
+                System._teamNamespace = System.defaultDomainName;
         }
         return System._teamNamespace;
     }

@@ -198,11 +198,10 @@ export class RequestContext {
             if (parts.length != 2) return false; // malformed
 
             if (parts[0] !== System.domainName) continue;
-            userScope = parts[1];
 
             for (let sc of handlerScopes) {
                 if (userScope === sc) return true;
-                // admin-* means all scope beginning by admin-
+                // admin:* means all scope beginning by admin:
                 if (userScope.endsWith("*") && sc.startsWith(userScope.substr(0, userScope.length - 1)))
                     return true;
             }

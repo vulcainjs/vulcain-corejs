@@ -7,6 +7,7 @@ import { ServiceHandlerMetadata, CommonActionMetadata, CommonMetadata } from './
 import { QueryActionMetadata } from './query';
 import { RuntimeError } from './../errors/runtimeError';
 import { System } from './../configurations/globals/system';
+import { ScopesDescriptor } from './scopeDescriptors';
 
 export interface HandlerItem {
     methodName: string;
@@ -51,6 +52,7 @@ export class ServiceDescription {
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
     hasAsyncTasks: boolean;
+    scopes: Array<{ name: string, description: string }>;
 }
 
 export class ServiceDescriptors {
@@ -60,7 +62,7 @@ export class ServiceDescriptors {
     private routes = new Map<string, HandlerItem>();
     private monoSchema: boolean = true;
 
-    constructor( @Inject(DefaultServiceNames.Domain) private domain: Domain) { }
+    constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) { }
 
     getDescriptions() {
         this.createHandlersTable();
@@ -102,6 +104,8 @@ export class ServiceDescriptors {
         if (!this.handlers)
             return;
 
+        let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
+
         let schemas = new Map<string, SchemaDescription>();
 
         // Check if there is only one Schema
@@ -125,7 +129,8 @@ export class ServiceDescriptors {
             serviceName: System.serviceName,
             serviceVersion: System.serviceVersion,
             alternateAddress: null,
-            hasAsyncTasks: false
+            hasAsyncTasks: false,
+            scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description } })
         };
 
         for (let item of this.handlers.filter(h => h.kind === "action")) {
@@ -152,10 +157,12 @@ export class ServiceDescriptors {
                 verb: verb,
                 description: metadata.description,
                 action: metadata.action,
-                scope: metadata.scope,
+                scope: null,
                 inputSchema: <string>metadata.inputSchema,
                 outputSchema: <string>metadata.outputSchema
             };
+
+            desc.scope = this.checkScopes(scopes, metadata.scope, desc.verb);
 
             if (metadata.async)
                 this.descriptions.hasAsyncTasks = true;
@@ -190,11 +197,13 @@ export class ServiceDescriptors {
                 verb: verb,
                 description: metadata.description,
                 action: metadata.action,
-                scope: metadata.scope,
+                scope: null,
                 async: false,
                 inputSchema: <string>metadata.inputSchema,
                 outputSchema: <string>metadata.outputSchema
             };
+
+            desc.scope = this.checkScopes(scopes, metadata.scope, desc.verb);
 
             if (desc.action === "get" && !desc.inputSchema)
                 desc.inputSchema = "string";
@@ -205,6 +214,20 @@ export class ServiceDescriptors {
 
         this.sortSchemasDependencies();
         this.handlers = null;
+    }
+
+    private checkScopes(scopes, scope: string, verb:string): string {
+        if (!scope || scope === "?" || scope === "*") return scope;
+
+        let parts = scope.split(',');
+        let result = [];
+        for (let sc of parts) {
+            sc = System.domainName + ":" + sc.trim();
+            if (!scopes.getScopes().find(s => s.name === sc))
+                throw new Error(`${sc} not found in scopes descriptor for ${verb}. You must define it in (Startup)application.defineScopes.`);
+            result.push(sc);
+        }
+        return result.join(',');
     }
 
     private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?) {

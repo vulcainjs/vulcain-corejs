@@ -17,7 +17,7 @@ export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
     private auth;
 
-    constructor(domainName: string, container: IContainer, private app:Application) {
+    constructor(domainName: string, container: IContainer, private app: Application) {
         super(domainName, container);
 
         this.express = express();
@@ -27,6 +27,9 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(bodyParser.json());
 
         this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
+    }
+
+    initialize() {
         let self = this;
 
         this.express.get('/health', (req: express.Request, res: express.Response) => {

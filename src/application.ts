@@ -20,8 +20,10 @@ import { UserContext, RequestContext } from './servers/requestContext';
 import * as util from 'util';
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
+import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
+import { ScopesDescriptor } from './pipeline/scopeDescriptors';
 
 /**
  * Application base class
@@ -114,6 +116,8 @@ export abstract class Application {
         if (!domainName)
             throw new Error("Domain name is required.");
 
+        System.defaultDomainName = domainName;
+
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
         System.log.info(null, "Starting application");
@@ -148,6 +152,10 @@ export abstract class Application {
 
             return subscription;
         });
+    }
+
+    protected defineScopes(scopes: ScopesDescriptor) {
+
     }
 
     /**
@@ -215,11 +223,18 @@ export abstract class Application {
 
                     Preloader.runPreloads(this.container, this._domain);
 
+                    let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
+                    this.defineScopes(scopes);
+
+                    let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+                    descriptors.createHandlersTable();
+
                     this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
                     if (!this.adapter) {
                         this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
                         this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
                         this.initializeServerAdapter(this.adapter);
+                        (<ExpressAdapter>this.adapter).initialize();
                     }
                     this.startHystrixStream()
                     this.adapter.start(port);

@@ -91,6 +91,10 @@ export class SchemaBuilder {
         let type = this.domain._findType(typeName);
         if (type) {
             let clonedType = SchemaBuilder.clone(type, attributeInfo);
+            for (let fn of ["bind", "dependsOn", "validate"]) {
+                clonedType[fn] = attributeInfo[fn];
+            }
+            
             // Type inheritence (in reverse order)
             let stypeName = type.type;
             while (stypeName) {
