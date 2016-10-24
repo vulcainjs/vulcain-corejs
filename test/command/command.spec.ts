@@ -4,8 +4,8 @@ import {CommandProperties} from "../../dist/commands/command/commandProperties";
 import {CommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetrics";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import {TimeoutError, CommandRuntimeError} from '../../dist/commands/command/command'
 import './commands'
+import { CommandRuntimeError } from '../../dist/errors/commandRuntimeError';
 
 describe("Command", function() {
     it("should resolve with expected results", function(done) {

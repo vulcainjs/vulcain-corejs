@@ -61,7 +61,7 @@ export class QueryManager implements IManager {
             page: query.page
         }
         if (error)
-            res.error = error;
+            res.error = { message: error.message, errors: error.errors };
         return res;
     }
 
