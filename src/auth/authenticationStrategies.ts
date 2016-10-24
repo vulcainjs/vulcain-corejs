@@ -26,7 +26,9 @@ export class AuthenticationStrategies {
                     return callback( null, false );
                 }
 
-                token.user.scopes= token.scopes
+                token.user.tenant = token.user.tenant || token.tenantId;
+                token.user.scopes = token.scopes;
+                token.user.data = token.user.data || token.data;
                 callback(null, token.user);
             }
             catch( err )
@@ -52,6 +54,7 @@ export class AuthenticationStrategies {
                     return callback( null, false );
                 }
 
+                token.user.data = token.user.data || token.data;
                 token.user.scopes = Array.isArray(token.token.scopes) ? token.token.scopes : [<string>token.token.scopes];
                 callback(null, token.user);
             }

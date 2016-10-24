@@ -10,10 +10,11 @@ import {Inject} from '../../di/annotations';
  */
 export class MongoProvider implements IProvider<any>
 {
+    private _mongo;
+
     public state: {
         keyPropertyName?: string;
         uri: string;
-        db?;
         dispose?: () => void;
     }
 
@@ -48,13 +49,15 @@ export class MongoProvider implements IProvider<any>
         if (keys) {
             this.ensuresDbOpen()
                 .then(db => {
-                    this.state.db = db;
+                    this._mongo = db;
                     this.state.dispose = () => {
                         db.close();
                     };
-                    this._logger.info(this.ctx, "MONGODB: creating unique index");
                     let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true })
+                        .then(() => {
+                            this._logger.info(this.ctx, "MONGODB: Unique index created for " + this.state.uri);
+                        })
                         .catch(err => {
                             this._logger.error(null, err);
                         });
@@ -70,14 +73,14 @@ export class MongoProvider implements IProvider<any>
 
         let self = this;
         return new Promise((resolve, reject) => {
-            if (!self.state.db) {
+            if (!self._mongo) {
                 MongoClient.connect(self.state.uri, self.options, (err, db) => {
                     if (err) {
                         reject(err);
                         this._logger.error(self.ctx, err, "MONGODB: Error when opening database ");
                     }
                     else {
-                        self.state.db = db;
+                        self._mongo = db;
                         this.state.dispose = () => {
                             db.close();
                         };
@@ -86,7 +89,7 @@ export class MongoProvider implements IProvider<any>
                 });
             }
             else
-                resolve(self.state.db);
+                resolve(self._mongo);
         });
     }
 
@@ -96,13 +99,15 @@ export class MongoProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAllAsync(schema: Schema, options: ListOptions): Promise<Array<any>> {
+        let page = options.page || 0;
+        let maxByPage = options.maxByPage || 100;
         let query = options.query ? options.query.filter || options.query : {};
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
                 let cursor = db.collection(schema.description.storageName).find(query)
-                    .skip(options.page * options.maxByPage)
-                    .limit(options.maxByPage);
+                    .skip(page * maxByPage)
+                    .limit(maxByPage);
                 cursor.toArray((err, res) => {
                     if (err)
                         reject(err);

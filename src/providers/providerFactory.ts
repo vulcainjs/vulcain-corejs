@@ -1,8 +1,8 @@
-import {Injectable, LifeTime, Inject} from '../di/annotations';
-import {DefaultServiceNames} from '../di/annotations';
-import {Schema} from '../schemas/schema';
-import {IProvider} from './provider';
-import {IContainer} from '../di/resolvers';
+import { Injectable, LifeTime, Inject } from '../di/annotations';
+import { DefaultServiceNames } from '../di/annotations';
+import { Schema } from '../schemas/schema';
+import { IProvider } from './provider';
+import { IContainer } from '../di/resolvers';
 
 interface PoolItem {
     provider: IProvider<any>;
@@ -10,12 +10,11 @@ interface PoolItem {
 }
 
 @Injectable(LifeTime.Singleton, DefaultServiceNames.ProviderFactory)
-export class ProviderFactory
-{
+export class ProviderFactory {
     private pool = new Map<string, PoolItem>();
     private states = new Map<string, any>();
 
-    constructor( public maxPoolSize = 20, public maxStatesSize=1000) {
+    constructor(public maxPoolSize = 20, public maxStatesSize = 1000) {
     }
 
     private addToPool(key: string, provider: IProvider<any>) {
@@ -23,7 +22,7 @@ export class ProviderFactory
             // remove the least used
             let keyToRemove;
             let min = 0;
-            for (const [key,value] of this.pool.entries()) {
+            for (const [key, value] of this.pool.entries()) {
                 if (!keyToRemove || value.count < min) {
                     keyToRemove = key;
                     min = value.count;
@@ -32,6 +31,7 @@ export class ProviderFactory
             let state = this.states.get(keyToRemove);
             state.dispose && state.dispose();
             this.states.delete(keyToRemove);
+            this.pool.delete(keyToRemove);
         }
         this.pool.set(key, { count: 1, provider: provider });
     }
@@ -55,10 +55,11 @@ export class ProviderFactory
         let key = tenant + "!" + schema.name;
         let provider = this.getFromPool(key);
         if (!provider) {
-            provider = container.get<IProvider<any>>(DefaultServiceNames.Provider, false, LifeTime.Transient|LifeTime.Scoped);
+            provider = container.get<IProvider<any>>(DefaultServiceNames.Provider, false, LifeTime.Transient | LifeTime.Scoped);
             let state = this.states.get(key);
-            if (state)
+            if (state) {
                 (<any>provider).state = state;
+            }
             else {
                 state = provider.initializeWithSchema(tenant, schema);
                 if (state) {

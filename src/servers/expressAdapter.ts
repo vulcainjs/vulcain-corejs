@@ -82,7 +82,7 @@ export class ExpressAdapter extends AbstractAdapter {
         });
     }
 
-    addCustomRoute(verb:string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
+    addActionCustomRoute(verb:string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
         this.express[verb](path, this.auth, async (req: express.Request, res: express.Response) => {
             let command:any = callback(req);
             if (!command || !command.action)
