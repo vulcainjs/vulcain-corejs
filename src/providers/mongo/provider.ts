@@ -10,10 +10,10 @@ import {Inject} from '../../di/annotations';
  */
 export class MongoProvider implements IProvider<any>
 {
-    private _mongo;
     public state: {
         keyPropertyName?: string;
         uri: string;
+        db?;
         dispose?: () => void;
     }
 
@@ -48,6 +48,10 @@ export class MongoProvider implements IProvider<any>
         if (keys) {
             this.ensuresDbOpen()
                 .then(db => {
+                    this.state.db = db;
+                    this.state.dispose = () => {
+                        db.close();
+                    };
                     this._logger.info(this.ctx, "MONGODB: creating unique index");
                     let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true })
@@ -66,15 +70,15 @@ export class MongoProvider implements IProvider<any>
 
         let self = this;
         return new Promise((resolve, reject) => {
-            if (!self._mongo) {
+            if (!self.state.db) {
                 MongoClient.connect(self.state.uri, self.options, (err, db) => {
                     if (err) {
                         reject(err);
                         this._logger.error(self.ctx, err, "MONGODB: Error when opening database ");
                     }
                     else {
-                        self._mongo = db;
-                        self.state.dispose = () => {
+                        self.state.db = db;
+                        this.state.dispose = () => {
                             db.close();
                         };
                         resolve(db);
@@ -82,7 +86,7 @@ export class MongoProvider implements IProvider<any>
                 });
             }
             else
-                resolve(self._mongo);
+                resolve(self.state.db);
         });
     }
 
@@ -96,7 +100,9 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).find(query, null, options.page, options.maxByPage);
+                let cursor = db.collection(schema.description.storageName).find(query)
+                    .skip(options.page * options.maxByPage)
+                    .limit(options.maxByPage);
                 cursor.toArray((err, res) => {
                     if (err)
                         reject(err);

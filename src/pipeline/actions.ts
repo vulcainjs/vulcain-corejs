@@ -126,7 +126,7 @@ export class CommandManager implements IManager {
             taskId: command.taskId
         }
         if (error)
-            res.error = error;
+            res.error = { message: error.message, errors: error.errors };
         return res;
     }
 
