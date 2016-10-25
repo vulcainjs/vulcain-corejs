@@ -30,7 +30,7 @@ export class BearerStrategy extends passportStrategy.Strategy {
         let authorization = req.headers['authorization'];
         // Perhaps in cookies
         if (!authorization)
-            authorization = req.cookies && req.cookies.authorization;
+            authorization = req.cookies && req.cookies.Authorization;
 
         if (!authorization) { return this.success(false, null); }
 
