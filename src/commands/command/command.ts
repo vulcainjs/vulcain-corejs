@@ -190,7 +190,7 @@ export class HystrixCommand {
             throw e;
         }
 
-        this.logInfo(`Error executing command ${e.stack} Proceeding to fallback logic...`);
+        this.logInfo(`Error executing command ${e && e.stack} Proceeding to fallback logic...`);
         this.metrics.markFailure();
         this.status.failedExecutionException = e;
         return this.getFallbackOrThrowException(EventType.FAILURE, FailureType.COMMAND_EXCEPTION, "failed", e);
