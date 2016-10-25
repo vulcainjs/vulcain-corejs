@@ -55,7 +55,7 @@ export abstract class AbstractHttpCommand {
         return new Promise<types.IHttpResponse>((resolve, reject) => {
             try {
                 request.end((response) => {
-                    if (response.error) {
+                    if (response.status >= 500) {
                         System.log.info(this.requestContext, `Http request ${verb} ${url} failed with status code ${response.status}`)
                         reject(response.error);
                     }
