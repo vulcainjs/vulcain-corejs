@@ -62,7 +62,7 @@ export abstract class Application {
         user = user || RequestContext.TestUser;
         if (!user.id || !user.name || !user.scopes)
             throw new Error("Invalid test user - Properties must be set.");
-        if (!System.isDevelopment) {
+        if (!System.isTestEnvironnment) {
             System.log.info(null, "Warning : TestUser ignored");
             return;
         }

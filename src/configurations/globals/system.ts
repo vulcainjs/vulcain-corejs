@@ -20,6 +20,7 @@ export class System {
     private static _teamNamespace: string;
     private static crypter: CryptoHelper;
     private static isLocal: boolean;
+    private static isTest: boolean;
     private static _manifest: VulcainManifest;
 
     static defaultDomainName: string;
@@ -84,15 +85,20 @@ export class System {
                     System.isLocal = true;
                     this.loadVulcainLocalConfig();
                 }
-                else if (process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true") {
-                    System.isLocal = true;
-                }
             }
             catch(e) {/*ignore*/}
         }
         return System.isLocal;
     }
 
+    static isTestEnvironnment() {
+        if (System.isTest === undefined) {
+            if (System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true") {
+                System.isTest = true;
+            }
+        }
+        return System.isTest;
+    }
     private static loadVulcainLocalConfig() {
         try {
             let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");

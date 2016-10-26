@@ -24,8 +24,9 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    error(requestContext, error: Error, msg?:string) {
-        if (VulcainLogger.enableInfo.value || System.isDevelopment)
+    error(requestContext, error: Error, msg?: string) {
+        if (!error) return;
+        if (VulcainLogger.enableInfo.value || System.isTestEnvironnment)
             this.write(requestContext, msg ? msg + ":" + error.stack : error.stack);
         else
             this.write(requestContext, msg ? msg + ":" + error.message : error.message);
@@ -54,7 +55,7 @@ export class VulcainLogger {
      * @memberOf VulcainLogger
      */
     verbose(requestContext, msg: string, ...params: Array<any>) {
-        if (VulcainLogger.enableInfo.value)
+        if (VulcainLogger.enableInfo.value || System.isTestEnvironnment)
             this.write(requestContext, util.format(msg, ...params));
     }
 
@@ -82,11 +83,11 @@ export class VulcainLogger {
         else {
             trace.info = info;
         }
-        if (System.isDevelopment) {
+        if (System.isTestEnvironnment) {
             util.log(`${trace.correlationId}:${trace.correlationPath} - ${trace.message || (trace.info && JSON.stringify(trace.info))}`);
         }
         else {
             console.log("%j", trace);
-        }    
+        }
     }
 }

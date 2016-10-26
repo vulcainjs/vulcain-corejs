@@ -49,7 +49,7 @@ export abstract class AbstractServiceCommand {
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
             throw new Error("Invalid version number. Must be on the form major.minor");
 
-        if (System.isDevelopment) {
+        if (System.isTestEnvironnment) {
             let alias = System.resolveAlias(serviceName, version);
             if (alias)
                 return alias;

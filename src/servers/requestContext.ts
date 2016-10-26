@@ -181,6 +181,7 @@ export class RequestContext {
      * @returns {number}
      */
     hasScope(handlerScope: string): boolean {
+        this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`)
         if (this.user && this.user.tenant && this.user.tenant !== this.tenant) return false;
 
         if (!handlerScope || handlerScope === "?") return true;
