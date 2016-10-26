@@ -69,7 +69,7 @@ export class QueryManager implements IManager {
         if (!this._serviceDescriptors) {
             this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         }
-        let info = this._serviceDescriptors.getHandlerInfo<QueryMetadata>(container, command.schema, command.action);
+        let info = this._serviceDescriptors.getHandlerInfo<QueryActionMetadata>(container, command.schema, command.action);
         return info;
     }
 

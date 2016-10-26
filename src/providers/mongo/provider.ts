@@ -263,7 +263,7 @@ export class MongoProvider implements IProvider<any>
                     }
 
                     let _id = initial._id;
-                    initial = Object.assign(initial, entity);
+                    initial = Schema.deepAssign(initial, entity);
                     initial._updated = new Date().toUTCString();
                     initial._id = _id;
 

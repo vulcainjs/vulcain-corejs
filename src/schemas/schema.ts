@@ -117,6 +117,20 @@ export class Schema {
         v.visit(this.description, entity);
         return entity;
     }
+
+    static deepAssign(target, source) {
+        if (!source) return target;
+        for (let key of Object.keys(source)) {
+            let val = source[key];
+            if (typeof val === "object") {
+                target[key] = Schema.deepAssign(target[key] || {}, val);
+            }
+            else if(val !== undefined) {
+                target[key] = val;
+            }
+        }
+        return target;
+    }
 }
 
 /**

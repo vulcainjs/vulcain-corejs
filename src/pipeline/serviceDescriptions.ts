@@ -69,11 +69,11 @@ export class ServiceDescriptors {
         return this.descriptions;
     }
 
-    getHandlerInfo<T extends CommonMetadata>(container: IContainer, schema: string, action: string, optional?: boolean) {
+    getHandlerInfo<T extends CommonActionMetadata>(container: IContainer, schema: string, action: string, optional?: boolean) {
         this.createHandlersTable();
 
         let a = action && action.toLowerCase();
-        let item;
+        let item:HandlerItem;
 
         if (this.monoSchema || !schema) {
             item = this.routes.get(a);
@@ -146,7 +146,9 @@ export class ServiceDescriptors {
 
             System.log.info(null, "Handler registered for action verb %s", verb);
             this.routes.set(verb, item);
+
             let metadata = <ActionMetadata>item.metadata;
+            metadata.scope = this.checkScopes(scopes, metadata.scope, verb);
             metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema, schema);
             metadata.outputSchema = !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema);
 
@@ -157,12 +159,10 @@ export class ServiceDescriptors {
                 verb: verb,
                 description: metadata.description,
                 action: metadata.action,
-                scope: null,
+                scope: metadata.scope,
                 inputSchema: <string>metadata.inputSchema,
                 outputSchema: <string>metadata.outputSchema
             };
-
-            desc.scope = this.checkScopes(scopes, metadata.scope, desc.verb);
 
             if (metadata.async)
                 this.descriptions.hasAsyncTasks = true;
@@ -190,6 +190,7 @@ export class ServiceDescriptors {
             let metadata = <QueryActionMetadata>item.metadata;
             metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema);
             metadata.outputSchema = this.getSchemaDescription(schemas, metadata.outputSchema, schema);
+            metadata.scope = this.checkScopes(scopes, metadata.scope, verb);
 
             let desc: ActionDescription = {
                 schema: schema,
@@ -197,13 +198,11 @@ export class ServiceDescriptors {
                 verb: verb,
                 description: metadata.description,
                 action: metadata.action,
-                scope: null,
+                scope: metadata.scope,
                 async: false,
                 inputSchema: <string>metadata.inputSchema,
                 outputSchema: <string>metadata.outputSchema
             };
-
-            desc.scope = this.checkScopes(scopes, metadata.scope, desc.verb);
 
             if (desc.action === "get" && !desc.inputSchema)
                 desc.inputSchema = "string";

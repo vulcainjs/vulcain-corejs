@@ -112,13 +112,13 @@ export abstract class AbstractAdapter {
 
             try {
                 // Check if handler exists
-                let metadata = <ActionMetadata>manager.getInfoHandler(command);
+                let info = manager.getInfoHandler<ActionMetadata>(command);
                 if (!ctx.user && this.testUser) {
                     ctx.user = this.testUser;
                     ctx.user.tenant = ctx.tenant;
                 }
                 // Verify authorization
-                if (metadata.scope && !ctx.hasScope(metadata.scope)) {
+                if (!ctx.hasScope(info.metadata.scope)) {
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }

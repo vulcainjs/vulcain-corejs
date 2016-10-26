@@ -195,7 +195,7 @@ export class RequestContext {
 
         for (let userScope of userScopes) {
             let parts = userScope.split(':');
-            if (parts.length != 2) return false; // malformed
+            if (parts.length < 2) return false; // malformed
 
             if (parts[0] !== System.domainName) continue;
 

@@ -221,7 +221,7 @@ export class MemoryProvider implements IProvider<any>
                     return;
                 }
 
-                entity = Object.assign(list[name], entity);
+                entity = Schema.deepAssign(list[name], entity);
                 list[name] = MemoryProvider.clone(entity);
                 self.save(schema);
                 resolve(entity);
