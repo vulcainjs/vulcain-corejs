@@ -1,11 +1,12 @@
 import {CircuitBreakerFactory} from "../../dist/commands/command/circuitBreaker";
 import {CommandFactory} from '../../dist/commands/command/commandFactory'
 import {CommandProperties} from "../../dist/commands/command/commandProperties";
-import {CommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetrics";
+import {ICommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import './commands'
 import { CommandRuntimeError } from '../../dist/errors/commandRuntimeError';
+import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
 
 describe("Command", function() {
     it("should resolve with expected results", function(done) {
@@ -16,8 +17,8 @@ describe("Command", function() {
         command.executeAsync<string>("success").then(function(result) {
             expect(result).to.be.equal("success");
             var metrics = CommandMetricsFactory.get("TestCommand");
-            expect(metrics.getHealthCounts().totalCount).to.be.equal(1);
-            expect(metrics.getHealthCounts().errorCount).to.be.equal(0);
+            expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
+            expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(0);
             done();
         })
     });
@@ -36,8 +37,8 @@ describe("Command", function() {
                 expect(err).to.be.instanceOf(CommandRuntimeError); // no fallback
 
                 var metrics = CommandMetricsFactory.get("TestCommandTimeout");
-                expect(metrics.getHealthCounts().totalCount).to.be.equal(1);
-                expect(metrics.getHealthCounts().errorCount).to.be.equal(1);
+                expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
+                expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(1);
                 done();
             }
             );
@@ -50,8 +51,8 @@ describe("Command", function() {
         command.executeAsync("success").then(function(result) {
             expect(result).to.be.equal("fallback");
             var metrics = CommandMetricsFactory.get("TestCommandFallback");
-            expect(metrics.getHealthCounts().totalCount).to.be.equal(1);
-            expect(metrics.getHealthCounts().errorCount).to.be.equal(1);
+            expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
+            expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(1);
             done();
         })
     });

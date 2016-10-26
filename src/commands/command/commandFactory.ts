@@ -1,4 +1,4 @@
-import {CommandMetricsFactory} from "../metrics/commandMetrics";
+import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
 import {CircuitBreakerFactory} from "./circuitBreaker";
 import {HystrixCommand} from "./command";
 import {ICommand} from './abstractCommand'

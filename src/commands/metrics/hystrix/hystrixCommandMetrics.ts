@@ -1,10 +1,11 @@
 import {RollingNumber} from "./rollingNumber";
 import {RollingPercentile} from "./rollingPercentile";
 import RollingNumberEvent from "./rollingNumberEvent";
-import ActualTime from "../../utils/actualTime";
-import {CommandProperties} from '../command/commandProperties'
+import ActualTime from "../../../utils/actualTime";
+import {CommandProperties} from '../../command/commandProperties'
+import { ICommandMetrics } from '../../../commands/metrics/commandMetricsFactory';
 
-export class CommandMetrics {
+export class HystrixCommandMetrics implements ICommandMetrics {
     private rollingCount: RollingNumber;
     public commandName: string;
     public commandGroup: string;
@@ -121,34 +122,5 @@ export class CommandMetrics {
     reset() {
         this.rollingCount.reset();
         this.lastHealthCountsSnapshot = ActualTime.getCurrentTime();
-    }
-}
-
-export class CommandMetricsFactory {
-    private static metricsByCommand = new Map<string, CommandMetrics>();
-
-    static getOrCreate(options:CommandProperties): CommandMetrics {
-        let previouslyCached = CommandMetricsFactory.metricsByCommand.get(options.commandName);
-        if (previouslyCached) {
-            return previouslyCached
-        }
-
-        let metrics = new CommandMetrics(options);
-
-        CommandMetricsFactory.metricsByCommand.set(options.commandName, metrics);
-        return metrics;
-
-    }
-
-    static get(commandName:string): CommandMetrics {
-        return CommandMetricsFactory.metricsByCommand.get(commandName);
-    }
-
-    static resetCache() {
-        CommandMetricsFactory.metricsByCommand.clear();
-    }
-
-    static getAllMetrics() {
-        return CommandMetricsFactory.metricsByCommand.values();
     }
 }

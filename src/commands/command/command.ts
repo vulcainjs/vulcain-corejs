@@ -1,4 +1,4 @@
-import {CommandMetricsFactory, CommandMetrics} from "../metrics/commandMetrics";
+import {CommandMetricsFactory, ICommandMetrics} from "../metrics/commandMetricsFactory";
 import {CommandProperties} from './commandProperties'
 import {CircuitBreakerFactory} from "./circuitBreaker";
 import ActualTime from "../../utils/actualTime"
@@ -28,7 +28,7 @@ export class HystrixCommand {
     public status: ExecutionResult = new ExecutionResult();
     private running: boolean;
     private _arguments;
-    private metrics: CommandMetrics;
+    private metrics: ICommandMetrics;
 
     constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context) {
         command.requestContext = context;
@@ -98,11 +98,14 @@ export class HystrixCommand {
                         }
 
                         // Execution complete correctly
-                        let end = ActualTime.getCurrentTime();
-                        this.metrics.addExecutionTime(end - start);
+                        let duration = ActualTime.getCurrentTime() - start;
                         this.metrics.markSuccess();
+                        this.metrics.addExecutionTime(duration);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
+
+                        (<any>this.command).onCommandCompleted && (<any>this.command).onCommandCompleted(duration, true);
+
                         // Update cache
                         // TODO
                         start = -1;
@@ -133,8 +136,11 @@ export class HystrixCommand {
             }
         }
         finally {
-            if (start >= 0)
-                this.recordTotalExecutionTime(start);
+            if (start >= 0) {
+                let duration = ActualTime.getCurrentTime() - start;
+                (<any>this.command).onCommandCompleted && (<any>this.command).onCommandCompleted(duration, false);
+                this.recordTotalExecutionTime(duration);
+            }
             this.metrics.decrementExecutionCount();
             this.status.isExecutionComplete = true;
         }
@@ -211,8 +217,7 @@ export class HystrixCommand {
     ///
     /// Record the duration of execution as response or exception is being returned to the caller.
     ///
-    protected recordTotalExecutionTime(startTime) {
-        let duration = ActualTime.getCurrentTime() - startTime;
+    protected recordTotalExecutionTime(duration) {
         // the total execution time for the user thread including queuing, thread scheduling, run() execution
         this.metrics.addExecutionTime(duration);
 

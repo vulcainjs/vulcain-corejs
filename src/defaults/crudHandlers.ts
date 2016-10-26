@@ -10,6 +10,7 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
+        this.metrics.setTags("TargetSchema=" + this.schema.name, "TargetTenant=" + this.requestContext.tenant);
         return this[action + "Internal"](data);
     }
 

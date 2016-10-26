@@ -1,4 +1,4 @@
-import ActualTime from "../../utils/actualTime";
+import ActualTime from "../../../utils/actualTime";
 import Bucket from "./percentileBucket";
 import {Stats} from 'fast-stats';
 

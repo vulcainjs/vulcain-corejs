@@ -9,6 +9,7 @@ import {CommonRequestResponse } from '../../pipeline/common';
 import { System } from './../../configurations/globals/system';
 import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
+import { Metrics } from '../../utils/metrics';
 const rest = require('unirest');
 
 /**
@@ -27,13 +28,29 @@ export abstract class AbstractServiceCommand {
      */
     public requestContext: ICommandContext;
 
+    private static METRICS_NAME = "Service_Call_";
+
     /**
      * Creates an instance of AbstractCommand.
      *
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer, @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) { }
+    constructor(
+        @Inject(DefaultServiceNames.Metrics) protected metrics: Metrics,
+        @Inject(DefaultServiceNames.Container) protected container: IContainer,
+        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
+        this.initializeMetricsInfo();
+    }
+
+    protected abstract initializeMetricsInfo();
+
+    onCommandCompleted(duration: number, success: boolean) {
+        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + "Duration", duration);
+        this.metrics.increment(AbstractServiceCommand.METRICS_NAME + "Total");
+        if (!success)
+            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + "Failed");
+    }
 
     /**
      *

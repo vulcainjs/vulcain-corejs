@@ -1,4 +1,4 @@
-import ActualTime from "../../utils/actualTime";
+import ActualTime from "../../../utils/actualTime";
 import Bucket from "./counterBucket";
 
 export class RollingNumber {

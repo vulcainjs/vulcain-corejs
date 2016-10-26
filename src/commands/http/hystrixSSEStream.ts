@@ -1,8 +1,9 @@
-import {CommandMetricsFactory, CommandMetrics} from "../metrics/commandMetrics";
+import {CommandMetricsFactory, ICommandMetrics} from "../metrics/commandMetricsFactory";
 import {CircuitBreakerFactory} from "../command/circuitBreaker";
 import * as rx from "rx";
 import ActualTime from "../../utils/actualTime";
-import RollingNumberEvent from "../metrics/rollingNumberEvent";
+import RollingNumberEvent from "../metrics/hystrix/rollingNumberEvent";
+import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {
@@ -12,14 +13,14 @@ export class HystrixSSEStream {
 
                 return rx.Observable.from(CommandMetricsFactory.getAllMetrics());
             })
-            .map((metrics: CommandMetrics) => {
+            .map((metrics: any) => {
                 return HystrixSSEStream.toCommandJson(metrics)
             });
 
         return observableMetrics;
     }
 
-    static toCommandJson(metrics: CommandMetrics) {
+    static toCommandJson(metrics: HystrixCommandMetrics) {
         let json:any = {};
         json.type = "HystrixCommand";
         json.name = metrics.commandName;

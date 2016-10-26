@@ -1,6 +1,7 @@
 import ActualTime from "../../utils/actualTime";
-import {CommandMetricsFactory} from "../metrics/commandMetrics";
+import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
 import {CommandProperties} from "./commandProperties";
+import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
 
 export interface CircuitBreaker {
     allowRequest(): boolean;
@@ -58,7 +59,7 @@ class DefaultCircuitBreaker implements CircuitBreaker {
             return true;
         }
 
-        let {totalCount = 0, errorCount , errorPercentage} = this.metrics.getHealthCounts();
+        let {totalCount = 0, errorCount , errorPercentage} = (<HystrixCommandMetrics>this.metrics).getHealthCounts();
         if (totalCount < this.properties.circuitBreakerRequestVolumeThreshold.value) {
             return false;
         }
@@ -75,7 +76,7 @@ class DefaultCircuitBreaker implements CircuitBreaker {
     markSuccess() {
         if (this.circuitOpen) {
             this.circuitOpen = false;
-            this.metrics.reset();
+            (<HystrixCommandMetrics>this.metrics).reset();
         }
     }
 }

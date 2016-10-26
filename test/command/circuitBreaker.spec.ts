@@ -1,6 +1,6 @@
 import {CircuitBreakerFactory} from "../../dist/commands/command/circuitBreaker";
 import {CommandProperties} from "../../dist/commands/command/commandProperties";
-import {CommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetrics";
+import {ICommandMetrics, CommandMetricsFactory} from "../../dist/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 

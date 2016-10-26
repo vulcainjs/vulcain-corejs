@@ -8,31 +8,43 @@ export class Metrics {
 
     private statsd: Statsd;
     private tags: string;
+    private customTags: string = "";
 
     constructor() {
-        if (!System.isTestEnvironnment) {
+        if (!System.isDevelopment) {
             this.statsd = new Statsd({ host: process.env[Conventions.instance.ENV_METRICS_AGENT] || Conventions.instance.defaultStatsdAddress, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
         }
     }
 
-    increment(metric:string, delta?:number) {
-        this.statsd && this.statsd.increment(metric + this.tags, delta);
+    /**
+     * Add tags as an array of string like <tag-name>=<tag-value>
+     *
+     * @param {...Array<string>} tags
+     *
+     * @memberOf Metrics
+     */
+    setTags(...tags: Array<string>) {
+        this.customTags = "," + tags.join(',');
+    }
+
+    increment(metric: string, delta?: number) {
+        this.statsd && this.statsd.increment(metric + this.tags + this.customTags , delta);
     }
 
     decrement(metric:string, delta?:number) {
-        this.statsd && this.statsd.decrement(metric + this.tags, delta);
+        this.statsd && this.statsd.decrement(metric + this.tags + this.customTags, delta);
     }
 
     counter(metric:string, delta:number) {
-        this.statsd && this.statsd.counter(metric + this.tags, delta);
+        this.statsd && this.statsd.counter(metric + this.tags + this.customTags, delta);
     }
 
     gauge(metric:string, value:number) {
-        this.statsd && this.statsd.gauge(metric + this.tags, value);
+        this.statsd && this.statsd.gauge(metric + this.tags + this.customTags, value);
     }
 
     timing(metric:string, duration:number) {
-        this.statsd && this.statsd.timing(metric + this.tags, duration);
+        this.statsd && this.statsd.timing(metric + this.tags + this.customTags, duration);
     }
 }

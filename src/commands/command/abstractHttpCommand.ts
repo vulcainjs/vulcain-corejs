@@ -4,12 +4,28 @@ import { ICommandContext } from './abstractCommand';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
 import { System } from './../../configurations/globals/system';
+import { Metrics } from '../../utils/metrics';
 
 export abstract class AbstractHttpCommand {
 
     public requestContext: ICommandContext;
+    private static METRICS_NAME = "External_Call_";
 
-    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer, @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) { }
+    constructor(
+        @Inject(DefaultServiceNames.Metrics) protected metrics: Metrics,
+        @Inject(DefaultServiceNames.Container) protected container: IContainer,
+        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
+        this.initializeMetricsInfo();
+    }
+
+    protected abstract initializeMetricsInfo();
+
+    onCommandCompleted(duration: number, success: boolean) {
+        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + "Duration", duration);
+        this.metrics.increment(AbstractHttpCommand.METRICS_NAME + "Total");
+        if (!success)
+            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + "Failed");
+    }
 
     runAsync(...args): Promise<any> {
         return (<any>this).execAsync(...args);
