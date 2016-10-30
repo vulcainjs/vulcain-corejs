@@ -1,6 +1,6 @@
 import {EventData, ActionData} from '../pipeline/actions';
 
-export interface ICommandBusAdapter {
+export interface IActionBusAdapter {
     startAsync();
     publishTask(domain: string, serviceId: string, command: ActionData);
     listenForTask(domain: string, serviceId: string, handler: Function);

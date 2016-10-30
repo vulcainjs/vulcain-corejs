@@ -2,7 +2,7 @@ import {Injectable, LifeTime} from '../../di/annotations';
 import {ITokenService} from '../services';
 import {Inject} from '../../di/annotations';
 import * as fs from 'fs';
-import {Conventions} from '../../utils/conventions';
+import { Conventions } from '../../utils/conventions';
 var jwt = require('jsonwebtoken');
 
 @Injectable( LifeTime.Singleton)
@@ -10,8 +10,6 @@ export class TokenService implements ITokenService {
 
     private issuer:string;
     // https://github.com/auth0/node-jsonwebtoken
-    // Certificate file (SHA 256)
-    private privateKey:Buffer;
     private secretKey:string;
     // https://github.com/rauchg/ms.js
     private tokenExpiration:string;
@@ -19,13 +17,8 @@ export class TokenService implements ITokenService {
     constructor()
     {
         this.issuer= process.env[Conventions.instance.ENV_TOKEN_ISSUER];
-        this.tokenExpiration= process.env[Conventions.instance.ENV_TOKEN_EXPIRATION] || "20m";
-        this.secretKey = process.env[Conventions.instance.ENV_SECRET_KEY] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
-        let privateKeyPath = process.env[Conventions.instance.ENV_PRIVATE_KEY_PATH];
-        if(privateKeyPath && fs.exists( privateKeyPath ))
-        {
-            this.privateKey = fs.readFileSync( privateKeyPath );
-        }
+        this.tokenExpiration= process.env[Conventions.instance.ENV_TOKEN_EXPIRATION] || Conventions.instance.defaultTokenExpiration;
+        this.secretKey = process.env[Conventions.instance.ENV_VULCAIN_SECRET_KEY] || Conventions.instance.defaultSecretKey;
     }
 
     verifyTokenAsync( jwtToken ) : Promise<any>
@@ -37,11 +30,11 @@ export class TokenService implements ITokenService {
                 reject("You must provided a valid token");
                 return;
             }
-            let options:any = {"issuer":this.issuer};
+            let options:any = {"issuer":this.issuer||"vulcain"};
 
             try
             {
-                let key = this.privateKey || this.secretKey;
+                let key = this.secretKey;
                 //options.algorithms=[ALGORITHM];
 
                 jwt.verify( jwtToken, key, options, (err, payload) =>

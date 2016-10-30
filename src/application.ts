@@ -3,7 +3,7 @@ import { ApiKeyService } from './auth/apiKeyService';
 import { Metrics } from './utils/metrics';
 import {Preloader} from './preloader';
 import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
-import {ICommandBusAdapter, IEventBusAdapter} from './bus/busAdapter';
+import {IActionBusAdapter, IEventBusAdapter} from './bus/busAdapter';
 import {LocalAdapter} from './bus/localAdapter';
 import * as Path from 'path'
 import { Domain } from './schemas/schema'
@@ -32,7 +32,7 @@ import { ScopesDescriptor } from './pipeline/scopeDescriptors';
  * @abstract
  * @class Application
  */
-export abstract class Application {
+export class Application {
     private _executablePath: string;
     private _container: IContainer;
     private _domain: Domain;
@@ -186,13 +186,6 @@ export abstract class Application {
     }
 
     /**
-     * Entry application point
-     *
-     * @abstract
-     */
-    abstract runAsync();
-
-    /**
      * Initialize and start application
      *
      * @param {number} port
@@ -206,7 +199,7 @@ export abstract class Application {
             this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
             eventBus = local;
         }
-        let commandBus = this.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+        let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
         if (!commandBus) {
             this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
             commandBus = local;

@@ -49,25 +49,22 @@ export class Conventions {
     defaultServicesFolderPattern = "${base}/services";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
-
     defaultRabbitAddress = "rabbit";
     defaultMongoAddress = "mongo";
-
     defaultStatsdAddress = "telegraf";
     defaultStatsdDelayInMs = 10000;
     defaultVulcainServerName = "vulcain-server";
     vulcainFileName = ".vulcain";
-
+    secretKeyPropertyName = "VulcainSecretKey";
+    defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
+    defaultTokenExpiration = "20m";
+    
     /**
      * Environment variable for rabbit server address
      *
      */
-    ENV_RABBIT_SERVER = "VULCAIN_RABBIT_SERVER";
     ENV_TOKEN_ISSUER = "VULCAIN_TOKEN_ISSUER";
     ENV_TOKEN_EXPIRATION = "VULCAIN_TOKEN_EXPIRATION";
-    ENV_SECRET_KEY = "VULCAIN_SECRET_KEY";
-    ENV_PRIVATE_KEY_PATH = "VULCAIN_PRIVATE_KEY_PATH";
-    ENV_METRICS_AGENT = "VULCAIN_METRICS_AGENT";
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
     /**
      * Api key to get config from vulcain server
@@ -82,6 +79,7 @@ export class Conventions {
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
     ENV_VULCAIN_TEST = "VULCAIN_TEST";
+    ENV_VULCAIN_SECRET_KEY = "VULCAIN_SECRET_KEY";
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,

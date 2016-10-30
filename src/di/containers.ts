@@ -65,8 +65,9 @@ export class Container implements IContainer {
      * @param {string} address
      * @param {any} [usage=BusUsage.all]
      */
-    useRabbitBusAdapter(address?:string, usage = BusUsage.all) {
-        let bus = new RabbitAdapter(address || "amqp://" + (process.env[Conventions.instance.ENV_RABBIT_SERVER] || Conventions.instance.defaultRabbitAddress));
+    useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
+        let uri = System.resolveAlias(address || Conventions.instance.defaultRabbitAddress);
+        let bus = new RabbitAdapter("amqp://" + (uri || address || Conventions.instance.defaultRabbitAddress));
         if( usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if( usage === BusUsage.all || usage === BusUsage.commandOnly)

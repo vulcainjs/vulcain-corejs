@@ -1,13 +1,13 @@
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
 import {ErrorResponse} from './common';
 const guid = require('node-uuid');
-import {ICommandBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
+import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {LocalAdapter} from '../bus/localAdapter';
 import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';
 
 export class MessageBus {
-    private commandBus: ICommandBusAdapter;
+    private commandBus: IActionBusAdapter;
     private eventBus: IEventBusAdapter;
     private _events: Map<string,RX.Subject<EventData>> = new Map<string, RX.Subject<EventData>>();
 
@@ -22,11 +22,12 @@ export class MessageBus {
     }
 
     constructor(private manager: CommandManager, hasAsyncActions:boolean) {
-        this.commandBus = manager.container.get<ICommandBusAdapter>(DefaultServiceNames.ActionBusAdapter);
-
-        if (hasAsyncActions) // Register for async tasks only if necessary
-            this.commandBus.listenForTask(manager.domain.name, manager.serviceName, manager.consumeTaskAsync.bind(manager));
-
+        this.commandBus = manager.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter);
+        if (this.commandBus && hasAsyncActions) // Register for async tasks only if necessary
+        {
+            this.commandBus.listenForTask(manager.domain.name, manager.serviceId, manager.consumeTaskAsync.bind(manager));
+        }
+        
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
     }
 
@@ -37,7 +38,7 @@ export class MessageBus {
     pushTask(command: ActionData) {
         command.status = "Pending";
         command.taskId = guid.v4();
-        this.commandBus.publishTask(command.domain, this.manager.serviceName, command);
+        this.commandBus.publishTask(command.domain, this.manager.serviceId, command);
     }
 
     sendEvent(response: ActionResponse<any>) {

@@ -77,7 +77,7 @@ export class CommandManager implements IManager {
     private messageBus: MessageBus;
     private _domain: Domain;
     private _hostname: string;
-    private _service: string;
+    private _serviceId: string;
     private _initialized = false;
     private _serviceDescriptors: ServiceDescriptors;
 
@@ -94,14 +94,14 @@ export class CommandManager implements IManager {
         return this._domain;
     }
 
-    get serviceName() {
-        return this._service;
+    get serviceId() {
+        return this._serviceId;
     }
 
     constructor(public container: IContainer) {
         this._hostname = os.hostname();
-        this._service = process.env[Conventions.instance.ENV_SERVICE_NAME] + "-" + process.env[Conventions.instance.ENV_SERVICE_VERSION];
-        if (!this._service)
+        this._serviceId = process.env[Conventions.instance.ENV_SERVICE_NAME] + "-" + process.env[Conventions.instance.ENV_SERVICE_VERSION];
+        if (!this._serviceId)
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
     }
 
@@ -185,7 +185,7 @@ export class CommandManager implements IManager {
             command.correlationId = ctx.correlationId;
             command.correlationPath = ctx.correlationPath;
             command.startedAt = System.nowAsString();
-            command.service = this._service;
+            command.service = this._serviceId;
             command.userContext = ctx.user || <any>{};
 
             // Register asynchronous task

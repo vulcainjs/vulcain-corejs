@@ -10,9 +10,11 @@ export class Metrics {
     private tags: string;
     private customTags: string = "";
 
-    constructor() {
+    constructor(address?: string) {
         if (!System.isDevelopment) {
-            this.statsd = new Statsd({ host: process.env[Conventions.instance.ENV_METRICS_AGENT] || Conventions.instance.defaultStatsdAddress, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
+            let host = System.resolveAlias(address || Conventions.instance.defaultStatsdAddress);
+            host = host || address || Conventions.instance.defaultMongoAddress;
+            this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
         }
     }

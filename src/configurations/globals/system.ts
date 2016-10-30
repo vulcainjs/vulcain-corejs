@@ -14,10 +14,9 @@ export class System {
     private static _config;
     private static logger: VulcainLogger;
     private static _environment: string;
-    private static _clusterStorage: string;
     private static _serviceName: string;
     private static _serviceVersion: string;
-    private static _teamNamespace: string;
+    private static _domainName: string;
     private static crypter: CryptoHelper;
     private static isLocal: boolean;
     private static isTest: boolean;
@@ -225,14 +224,14 @@ export class System {
      * @memberOf System
      */
     static get domainName() {
-       if (!System._teamNamespace) {
+       if (!System._domainName) {
             let env = process.env[Conventions.instance.ENV_VULCAIN_DOMAIN];
             if (env)
-                System._teamNamespace = env;
+                System._domainName = env;
             else
-                System._teamNamespace = System.defaultDomainName;
+                System._domainName = System.defaultDomainName;
         }
-        return System._teamNamespace;
+        return System._domainName;
     }
 
     private static get crypto() {

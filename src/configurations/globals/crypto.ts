@@ -3,14 +3,15 @@ import * as fs from "fs";
 import * as crypto from 'crypto';
 import {DynamicConfiguration} from '../dynamicConfiguration';
 import {IDynamicProperty} from '../dynamicProperty';
+import { Conventions } from '../../utils/conventions';
 
 export class CryptoHelper {
 
     private secretKey: string;
 
     constructor() {
-        this.secretKey = System.createSharedConfigurationProperty("VulcainSecretKey",
-            process.env["VULCAIN_SECRET_KEY"] || "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr").value;
+        this.secretKey = System.createSharedConfigurationProperty(Conventions.instance.secretKeyPropertyName,
+            process.env[Conventions.instance.ENV_VULCAIN_SECRET_KEY] || Conventions.instance.defaultSecretKey).value;
     }
 
     encrypt(value) {

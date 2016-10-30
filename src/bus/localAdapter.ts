@@ -14,7 +14,7 @@ class LocalAdapter {
        let self = this;
         self.eventHandler && setTimeout(function () {
             self.eventHandler(event);
-        }, (10));
+        }, (1));
     }
 
     listenForEvent(domain: string, handler: Function) {
@@ -26,7 +26,7 @@ class LocalAdapter {
         self.commandHandler && setTimeout(function () {
            // console.log("Running task: %j", command);
             self.commandHandler(command);
-        }, (10));
+        }, (1));
     }
 
     listenForTask(domain: string, serviceId: string, handler: Function) {

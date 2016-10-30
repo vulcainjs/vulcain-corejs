@@ -39,7 +39,7 @@ class RabbitAdapter {
 
     /**
      * Send domain event (event raises by an action)
-     * Domain events are shared by all services belonging to any domains
+     * Domain events are shared by all services of any domains
      *
      * @param {string} domain
      * @param {EventData} event
@@ -104,8 +104,10 @@ class RabbitAdapter {
     listenForTask(domain: string, serviceId: string, handler: Function) {
         let self = this;
         domain = domain.toLowerCase();
+
         this.channel.assertExchange(domain, 'direct', { durable: false });
-        this.channel.assertQueue(domain, {durable:true }).then(queue => {
+        this.channel.assertQueue(domain, { durable: true }).then(queue => {
+            // Channel name = serviceId
             self.channel.bindQueue(queue.queue, domain, serviceId);
             self.channel.prefetch(1);
 

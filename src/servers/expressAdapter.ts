@@ -1,7 +1,7 @@
 import { Application } from '../application';
 import * as express from 'express';
 import {AbstractAdapter} from './abstractAdapter';
-import {RequestContext, Pipeline} from './requestContext';
+import { RequestContext, Pipeline } from './requestContext';
 import {IContainer} from '../di/resolvers';
 import {DefaultServiceNames} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
@@ -37,7 +37,7 @@ export class ExpressAdapter extends AbstractAdapter {
         });
 
         this.express.get(Conventions.instance.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
-            let domain: any = this.container.get("Domain");
+            let domain: any = this.container.get(DefaultServiceNames.Domain);
             let name = req.params.name;
             if (name) {
                 let schema = domain.getSchema(name, true);
@@ -150,6 +150,25 @@ export class ExpressAdapter extends AbstractAdapter {
         return command;
     }
 
+    private initializeTenant(ctx: RequestContext, req: express.Request) {
+        ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT");
+        if (ctx.tenant)
+            return;
+
+        ctx.tenant = process.env[Conventions.instance.ENV_VULCAIN_TENANT] || (System.isTestEnvironnment && req.query.$tenant);
+        if (ctx.tenant)
+            return;
+
+        if (ctx.hostName) {
+            // Get the first sub-domain
+            let pos = ctx.hostName.indexOf('.');
+            ctx.tenant = pos > 0 ? ctx.hostName.substr(0, pos) : ctx.hostName;
+        }
+        else {
+            ctx.tenant = RequestContext.TestTenant;
+        }
+    }
+
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
         const begin = super.startRequest(command);
 
@@ -160,9 +179,9 @@ export class ExpressAdapter extends AbstractAdapter {
 
             ctx.correlationId = req.header("X-VULCAIN-CORRELATION-ID") || guid.v4();
             ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
-            ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT") || process.env[Conventions.instance.ENV_VULCAIN_TENANT] || RequestContext.TestTenant;
             ctx.headers = req.headers;
             ctx.hostName = req.get('Host');
+            this.initializeTenant(ctx, req);
 
             let result = await handler.apply(this, [command, ctx]);
             if (result instanceof HttpResponse) {
