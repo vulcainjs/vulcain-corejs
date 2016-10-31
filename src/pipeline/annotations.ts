@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {Preloader} from '../preloader';
 import {CommandManager, ActionMetadata, ActionHandlerMetadata, EventMetadata, ConsumeEventMetadata} from './actions';
-import {QueryManager, QueryMetadata, QueryActionMetadata} from './query';
+import { QueryMetadata, QueryActionMetadata} from './query';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { DefaultServiceNames } from './../di/annotations';
 import { IContainer } from './../di/resolvers';

@@ -5,11 +5,13 @@ import { ICommandContext } from './abstractCommand';
 import { ActionResponse } from './../../pipeline/actions';
 import * as types from './types';
 import * as os from 'os';
-import {CommonRequestResponse } from '../../pipeline/common';
+import 'reflect-metadata';
+import { CommonRequestResponse } from '../../pipeline/common';
 import { System } from './../../configurations/globals/system';
 import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
-import { Metrics } from '../../utils/metrics';
+import { IMetrics } from '../../metrics/metrics';
+import { ServiceDependencyInfo } from '../../configurations/dependencies/annotations';
 const rest = require('unirest');
 
 /**
@@ -37,13 +39,19 @@ export abstract class AbstractServiceCommand {
      * @param {any} providerFactory
      */
     constructor(
-        @Inject(DefaultServiceNames.Metrics) protected metrics: Metrics,
+        @Inject(DefaultServiceNames.Metrics) protected metrics: IMetrics,
         @Inject(DefaultServiceNames.Container) protected container: IContainer,
         @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
         this.initializeMetricsInfo();
     }
 
-    protected abstract initializeMetricsInfo();
+    protected initializeMetricsInfo() {
+        let dep = this.constructor["$dependency:service"];
+        if (!dep) {
+            throw new Error("ServiceDependency annotation is required.")
+        }
+        this.metrics.setTags("targetServiceName=" + dep.service, "targetServiceVersion=" + dep.version)
+    }
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractServiceCommand.METRICS_NAME + "Duration", duration);
@@ -101,9 +109,9 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getRequestAsync<T>(serviceName: string, version: string, id:string, schema?:string): Promise<QueryResponse<T>> {
+    protected getRequestAsync<T>(serviceName: string, version: string, id: string, schema?: string): Promise<QueryResponse<T>> {
         let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
-                         : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
+            : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -123,12 +131,12 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getQueryAsync<T>(serviceName: string, version: string, verb:string, query?:any, page?:number, maxByPage?:number, schema?:string): Promise<QueryResponse<T>> {
-        let args:any = {};
+    protected getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, page?: number, maxByPage?: number, schema?: string): Promise<QueryResponse<T>> {
+        let args: any = {};
         args.$maxByPage = maxByPage;
         args.$page = page;
         args.$query = query && JSON.stringify(query);
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args );
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args);
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -175,7 +183,7 @@ export abstract class AbstractServiceCommand {
      * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected sendRequestAsync(verb:string, url:string, prepareRequest?:(req:types.IHttpRequest) => void) {
+    protected sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
         let request: types.IHttpRequest = rest[verb](url);
         request.header("X-VULCAIN-CORRELATION-ID", this.requestContext.correlationId);
         request.header("X-VULCAIN-CORRELATION-PATH", this.calculateRequestPath() + "-");
@@ -190,7 +198,7 @@ export abstract class AbstractServiceCommand {
         this.requestContext.logInfo("Calling vulcain service on " + url);
         return new Promise<CommonRequestResponse<any>>((resolve, reject) => {
             try {
-                request.end((response:types.IHttpResponse) => {
+                request.end((response: types.IHttpResponse) => {
                     if (response.error || response.status !== 200) {
                         let err = new Error(response.error ? response.error.message : response.body);
                         System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);
@@ -198,7 +206,7 @@ export abstract class AbstractServiceCommand {
                         return;
                     }
                     let vulcainResponse = response.body;
-                    if(vulcainResponse.error) {
+                    if (vulcainResponse.error) {
                         System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(new ApplicationRequestError(vulcainResponse.error, response.status));
                     }
@@ -237,5 +245,5 @@ export abstract class AbstractServiceCommand {
     }
 
     // Must be defined in command
-   // protected fallbackAsync(err, ...args)
+    // protected fallbackAsync(err, ...args)
 }

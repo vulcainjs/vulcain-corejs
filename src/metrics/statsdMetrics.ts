@@ -1,10 +1,8 @@
-import { Conventions } from './conventions';
+import { Conventions } from '../utils/conventions';
 import * as Statsd from "statsd-client";
-import {Injectable, LifeTime} from '../di/annotations';
 import { System } from './../configurations/globals/system';
 
-@Injectable(LifeTime.Singleton)
-export class Metrics {
+export class StatsdMetrics {
 
     private statsd: Statsd;
     private tags: string;

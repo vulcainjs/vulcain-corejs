@@ -1,16 +1,22 @@
 import { Action, Query} from '../pipeline/annotations';
 import {AbstractActionHandler, AbstractQueryHandler} from '../pipeline/abstractHandlers';
-import {AbstractCommand, ICommand} from '../commands/command/abstractCommand'
+import {ICommand} from '../commands/command/abstractCommand'
 import {IContainer} from '../di/resolvers';
 import {Inject} from '../di/annotations';
 import {Command} from '../commands/command/commandFactory';
+import { AbstractProviderCommand } from '../commands/command/abstractProviderCommand';
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
-export class DefaultRepositoryCommand extends AbstractCommand<any> {
+export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
+
+    initializeMetricsInfo() {
+        // do nothing
+        // since this command is generic, settings are made on every request
+    }
 
     // Execute command
     runAsync(action: string, data) {
-        this.metrics.setTags("TargetSchema=" + this.schema.name, "TargetTenant=" + this.requestContext.tenant);
+        this.metrics.setTags("Address="+this.provider.address, "TargetSchema=" + this.schema.name, "TargetTenant=" + this.requestContext.tenant);
         return this[action + "Internal"](data);
     }
 
@@ -53,7 +59,6 @@ export class DefaultRepositoryCommand extends AbstractCommand<any> {
         let keyProperty = this.schema.getIdProperty();
         return this.provider.deleteAsync(this.schema, entity[keyProperty]);
     }
-
 
     async get(id: any) {
         let keyProperty = this.schema.getIdProperty();

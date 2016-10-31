@@ -2,14 +2,11 @@ import { Domain } from './../schemas/schema';
 import * as http from 'http';
 import {IContainer} from '../di/resolvers';
 import {CommandManager, ActionMetadata} from '../pipeline/actions';
-import {CommonRequestResponse} from '../pipeline/common';
 import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
-import * as util from 'util';
-import {Conventions} from '../utils/conventions';
-import {Metrics} from '../utils/metrics';
+import {IMetrics} from '../metrics/metrics';
 import { HttpResponse } from './../pipeline/common';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { System } from './../configurations/globals/system';
@@ -20,7 +17,7 @@ export abstract class AbstractAdapter {
     private queryManager;
     private testUser: UserContext;
     private domain: Domain;
-    private metrics: Metrics;
+    private metrics: IMetrics;
 
     private calcDelayInMs(begin: number[]): number {
         // ts = [seconds, nanoseconds]
@@ -34,7 +31,7 @@ export abstract class AbstractAdapter {
         this.queryManager = new QueryManager(container);
         this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
-        this.metrics = container.get<Metrics>(DefaultServiceNames.Metrics);
+        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let hasAsyncTasks = descriptors.getDescriptions().hasAsyncTasks;

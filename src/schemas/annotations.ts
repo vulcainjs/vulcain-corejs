@@ -1,6 +1,6 @@
 import {Preloader} from '../preloader';
 import {IContainer} from '../di/resolvers';
-import { DefaultServiceNames } from './../di/annotations';
+import 'reflect-metadata'
 
 export interface ModelOptions {
     name?: string;

@@ -1,4 +1,3 @@
-import {Application} from '../application';
 import {IContainer} from '../di/resolvers';
 import {LifeTime} from '../di/annotations';
 import {Domain} from '../schemas/schema';

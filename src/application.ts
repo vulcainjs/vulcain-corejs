@@ -1,6 +1,6 @@
 import { Authentication } from './servers/expressAuthentication';
 import { ApiKeyService } from './auth/apiKeyService';
-import { Metrics } from './utils/metrics';
+import { IMetrics } from './metrics/metrics';
 import {Preloader} from './preloader';
 import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
 import {IActionBusAdapter, IEventBusAdapter} from './bus/busAdapter';
@@ -24,6 +24,8 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
+import { StatsdMetrics } from './metrics/statsdMetrics';
+import { ConsoleMetrics } from './metrics/consoleMetrics';
 
 /**
  * Application base class
@@ -109,7 +111,9 @@ export class Application {
         this._container = container || new Container();
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
-        this._container.injectSingleton(Metrics, DefaultServiceNames.Metrics);
+
+        this._container.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
+
         this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
 
         domainName = domainName;

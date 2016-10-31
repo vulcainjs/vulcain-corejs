@@ -2,12 +2,11 @@ import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {DefaultServiceNames} from '../di/annotations';
-import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, CommonHandlerMetadata, ServiceHandlerMetadata, HttpResponse } from './common';
+import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata, HttpResponse } from './common';
 import * as os from 'os';
-import {RequestContext, Pipeline, UserContext} from '../servers/requestContext';
+import {RequestContext, Pipeline} from '../servers/requestContext';
 import * as RX from 'rx';
 import {EventHandlerFactory} from './eventHandlerFactory';
-import {LifeTime} from '../di/annotations';
 import {Conventions} from '../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
@@ -253,7 +252,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always) {
                 this.messageBus.sendEvent(res);
             }
-            System.log.error(ctx, e, `Error when processing async action ${info.handler.name} command : ${command}`);
+            System.log.error(ctx, e, `Error when processing async action : ${JSON.stringify(command)}`);
         }
         finally {
             ctx.dispose();

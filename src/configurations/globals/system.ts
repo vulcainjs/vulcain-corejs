@@ -274,7 +274,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, defaultValue: T, schema?:string) {
-        System.manifest.configurations[name] = schema || "";
+        System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
             System.domainName + "." + name,
@@ -288,7 +288,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, defaultValue:T, schema?: string) {
-        System.manifest.configurations[name] = schema || "";
+        System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
             System.serviceName + "." + System.serviceVersion + "." + name,

@@ -1,8 +1,5 @@
-
 import { Domain, SchemaDescription, ErrorMessage } from './schema';
 import {IContainer} from '../di/resolvers';
-import { ReferenceOptions, PropertyOptions } from './annotations';
-import { Property } from './annotations';
 
 export class Validator
 {

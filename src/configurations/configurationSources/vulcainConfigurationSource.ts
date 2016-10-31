@@ -29,7 +29,7 @@ export class VulcainConfigurationSource implements ConfigurationSource
             request.end(function (response) {
                 if (response.status == 200 && response.body) {
                     if (response.body.error) {
-                        System.log.info(null, "HTTP CONFIG : error when polling properties " + response.body.error.message);
+                        System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
                     }
                     else {
                         let data = response.body;
@@ -38,7 +38,7 @@ export class VulcainConfigurationSource implements ConfigurationSource
                     }
                 }
                 else {
-                    System.log.info(null, "HTTP CONFIG : error when polling properties " + ((response.error && response.error.message) || response.status));
+                    System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
                 }
                 resolve(new PollResult(self, values));
             } );

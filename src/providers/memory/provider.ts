@@ -19,6 +19,10 @@ export class MemoryProvider implements IProvider<any>
         saveToFile?: string;
     };
 
+    get address() {
+        return "memory";
+    }
+
     /**
      * Create a memory provider instance.
      * @param dataFolder : (optional) if provided, data will be persisted on disk on EVERY create, update or delete

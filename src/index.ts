@@ -2,7 +2,7 @@ import './preloader';
 
 // Configurations
 
-export {VulcainManifest, ServiceProxy, ConfigurationProperty} from './configurations/dependencies/annotations';
+export {VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty} from './configurations/dependencies/annotations';
 export {DynamicConfiguration } from './configurations/dynamicConfiguration';
 export {IDynamicProperty} from './configurations/dynamicProperty';
 export { MemoryConfigurationSource } from './configurations/configurationSources/memoryConfigurationSource';
@@ -25,7 +25,7 @@ export { VerifyTokenParameter } from './defaults/services';
 // Core
 export * from './application'
 export {Conventions} from './utils/conventions';
-export {Metrics} from './utils/metrics';
+export {IMetrics} from './metrics/metrics';
 
 // Pipeline
 export * from './pipeline/annotations'

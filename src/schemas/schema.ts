@@ -4,8 +4,6 @@ import {Validator} from './validator'
 import {IContainer} from '../di/resolvers';
 import {SchemaVisitor} from './visitor';
 import { PropertyOptions } from './annotations';
-import { CommandProperties } from './../commands/command/commandProperties';
-import { DefaultServiceNames } from './../di/annotations';
 import { ReferenceOptions } from './annotations';
 import { System } from './../configurations/globals/system';
 

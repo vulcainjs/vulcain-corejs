@@ -1,8 +1,6 @@
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
-import {ErrorResponse} from './common';
 const guid = require('node-uuid');
 import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
-import {LocalAdapter} from '../bus/localAdapter';
 import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';
 
@@ -27,7 +25,7 @@ export class MessageBus {
         {
             this.commandBus.listenForTask(manager.domain.name, manager.serviceId, manager.consumeTaskAsync.bind(manager));
         }
-        
+
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
     }
 

@@ -44,8 +44,8 @@ export class HystrixCommand {
     }
 
     setSchemaOnCommand(schema: string) {
-        if (schema && this.command.setSchema)
-            this.command.setSchema(schema);
+        if (schema && (<any>this.command).setSchema)
+            (<any>this.command).setSchema(schema);
     }
 
     async executeAsync<T>(...args): Promise<T> {

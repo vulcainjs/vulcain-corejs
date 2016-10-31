@@ -1,5 +1,4 @@
 import { Domain, SchemaDescription } from './schema';
-
 import 'reflect-metadata'
 import { PropertyOptions, ReferenceOptions } from './annotations';
 import { ModelOptions } from './annotations';
@@ -94,7 +93,7 @@ export class SchemaBuilder {
             for (let fn of ["bind", "dependsOn", "validate"]) {
                 clonedType[fn] = attributeInfo[fn];
             }
-            
+
             // Type inheritence (in reverse order)
             let stypeName = type.type;
             while (stypeName) {

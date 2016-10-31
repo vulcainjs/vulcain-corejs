@@ -13,7 +13,7 @@ import {ActionResponse} from '../../pipeline/actions';
 import {QueryResponse} from '../../pipeline/query';
 import {ValidationError, ErrorResponse} from '../../pipeline/common';
 import { ProviderFactory } from './../../providers/providerFactory';
-import { Metrics } from '../../utils/metrics';
+import { IMetrics } from '../../metrics/metrics';
 
 /**
  * command
@@ -134,49 +134,14 @@ export abstract class AbstractCommand<T> {
      */
     public requestContext:ICommandContext;
     /**
-     *
-     *
-     * @type {IProvider<T>}
-     */
-    provider: IProvider<T>;
-    /**
-     *
-     *
-     * @type {Schema}
-     */
-    schema: Schema;
-
-    private static METRICS_NAME = "Database_Call_";
-
-    /**
      * Creates an instance of AbstractCommand.
      *
      * @param {IContainer} container
      * @param {any} providerFactory
      */
     constructor(
-        @Inject(DefaultServiceNames.Metrics) protected metrics: Metrics,
-        @Inject(DefaultServiceNames.Container) protected container: IContainer,
-        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
-    }
-
-    /**
-     *
-     *
-     * @param {string} schema
-     */
-    setSchema(schema: string) {
-        if (schema && !this.provider) {
-            this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = this.providerFactory.getProvider(this.container, this.requestContext.tenant, this.schema);
-        }
-    }
-
-    onCommandCompleted(duration: number, success: boolean) {
-        this.metrics.timing(AbstractCommand.METRICS_NAME + "Duration", duration);
-        this.metrics.increment(AbstractCommand.METRICS_NAME + "Total");
-        if (!success)
-            this.metrics.increment(AbstractCommand.METRICS_NAME + "Failed");
+        @Inject(DefaultServiceNames.Metrics) protected metrics: IMetrics,
+        @Inject(DefaultServiceNames.Container) protected container: IContainer) {
     }
 
     /**

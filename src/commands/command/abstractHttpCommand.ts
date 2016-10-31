@@ -4,7 +4,8 @@ import { ICommandContext } from './abstractCommand';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
 import { System } from './../../configurations/globals/system';
-import { Metrics } from '../../utils/metrics';
+import { IMetrics } from '../../metrics/metrics';
+import { ExternalDependencyInfo } from '../../configurations/dependencies/annotations';
 
 export abstract class AbstractHttpCommand {
 
@@ -12,13 +13,19 @@ export abstract class AbstractHttpCommand {
     private static METRICS_NAME = "External_Call_";
 
     constructor(
-        @Inject(DefaultServiceNames.Metrics) protected metrics: Metrics,
+        @Inject(DefaultServiceNames.Metrics) protected metrics: IMetrics,
         @Inject(DefaultServiceNames.Container) protected container: IContainer,
         @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
         this.initializeMetricsInfo();
     }
 
-    protected abstract initializeMetricsInfo();
+    protected initializeMetricsInfo() {
+        let dep = this.constructor["$dependency:external"];
+        if (!dep) {
+            throw new Error("HttpDependency annotation is required.")
+        }
+        this.metrics.setTags("uri=" + dep.uri);
+    }
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + "Duration", duration);

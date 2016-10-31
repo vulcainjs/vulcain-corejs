@@ -18,6 +18,10 @@ export class MongoProvider implements IProvider<any>
         dispose?: () => void;
     }
 
+    get address() {
+        return this.state.uri;
+    }
+
     constructor(
         @Inject(DefaultServiceNames.Logger) private _logger: Logger,
         @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,

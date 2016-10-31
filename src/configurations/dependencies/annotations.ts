@@ -1,6 +1,6 @@
 import { System } from './../globals/system';
 
-export interface ServiceDependency {
+export interface ServiceDependencyInfo {
     service: string;
     version: string;
     discoveryAddress: string;
@@ -11,24 +11,50 @@ export interface ConfigurationInfo {
     schema: string;
 }
 
+export interface DatabaseDependencyInfo {
+    address: string;
+    schema: string;
+}
+
+export interface ExternalDependencyInfo {
+    uri: string;
+}
+
 export class VulcainManifest {
-    dependencies: { [name: string]: Array<ServiceDependency> };
+    dependencies: {
+        services: Array<ServiceDependencyInfo>,
+        externals: Array<ExternalDependencyInfo>,
+        databases: Array<DatabaseDependencyInfo>
+    };
     configurations: { [name: string]: string };
 
     constructor() {
-        this.dependencies = {};
-        this.dependencies["services"] = [];
+        this.dependencies = {
+            services: [],
+            externals: [],
+            databases: []
+        };
         this.configurations = {};
     }
 }
 
 /**
- * ServiceProxy attribute
+ * ServiceDependency attribute on Servicecommand
  *
  */
-export function ServiceProxy(service: string, version: string, discoveryAddress: string) {
+export function ServiceDependency(service: string, version: string, discoveryAddress: string) {
     return (target: Function) => {
-        System.manifest.dependencies["services"].push({service, version, discoveryAddress});
+        target["$dependency:service"] = { targetServiceName: service, targetServiceVersion: version };
+
+        System.manifest.dependencies.services.push({service, version, discoveryAddress});
+    };
+}
+
+export function HttpDependency(uri: string) {
+    return (target: Function) => {
+        target["$dependency:external"] = { uri };
+
+        System.manifest.dependencies.externals.push({ uri });
     };
 }
 
@@ -36,7 +62,7 @@ export function ConfigurationProperty(key: string, schema: string) {
     return (target: Function) => {
         if (!key)
             throw new Error("Invalid property key");
-        
+
         let existingSchema = System.manifest.configurations[key];
         if(existingSchema) {
             if (existingSchema !== schema)
