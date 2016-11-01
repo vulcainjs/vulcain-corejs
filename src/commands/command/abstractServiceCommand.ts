@@ -23,6 +23,7 @@ const rest = require('unirest');
  * @template T
  */
 export abstract class AbstractServiceCommand {
+    protected metrics: IMetrics;
     /**
      *
      *
@@ -38,10 +39,8 @@ export abstract class AbstractServiceCommand {
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor(
-        @Inject(DefaultServiceNames.Metrics) protected metrics: IMetrics,
-        @Inject(DefaultServiceNames.Container) protected container: IContainer,
-        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
+    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer) {
+        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 

@@ -22,7 +22,7 @@ export class ExpressAdapter extends AbstractAdapter {
 
         this.express = express();
         this.express.use(cookieParser());
-        this.express.use(cors());
+        //this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
 

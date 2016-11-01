@@ -8,14 +8,12 @@ import { IMetrics } from '../../metrics/metrics';
 import { ExternalDependencyInfo } from '../../configurations/dependencies/annotations';
 
 export abstract class AbstractHttpCommand {
-
+    protected metrics: IMetrics;
     public requestContext: ICommandContext;
     private static METRICS_NAME = "External_Call_";
 
-    constructor(
-        @Inject(DefaultServiceNames.Metrics) protected metrics: IMetrics,
-        @Inject(DefaultServiceNames.Container) protected container: IContainer,
-        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
+    constructor(@Inject(DefaultServiceNames.Container) protected container: IContainer) {
+        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 
