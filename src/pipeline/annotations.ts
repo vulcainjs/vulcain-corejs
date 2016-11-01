@@ -5,6 +5,7 @@ import { QueryMetadata, QueryActionMetadata} from './query';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { DefaultServiceNames } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
+import { System } from '../configurations/globals/system';
 
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -43,6 +44,8 @@ function getMetadata(key, target) {
  */
 export function ActionHandler(metadata: ActionHandlerMetadata) {
     return function (target: Function) {
+        if (metadata.enableOnTestOnly && !System.isTestEnvironnment)
+            return;
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
@@ -100,6 +103,8 @@ export function Action(actionMetadata: ActionMetadata) {
  */
 export function QueryHandler(metadata: QueryMetadata) {
     return function (target: Function) {
+        if (metadata.enableOnTestOnly && !System.isTestEnvironnment)
+            return;
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
@@ -150,7 +155,6 @@ export function Query(actionMetadata: QueryActionMetadata) {
  */
 export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
-
         let actions = getMetadata(symActions, target);
 
         Preloader.registerHandler( target, (container, domain) => {

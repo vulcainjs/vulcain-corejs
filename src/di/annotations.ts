@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {Preloader} from '../preloader';
+import { System } from '../configurations/globals/system';
 
 /**
  * List of default service names
@@ -68,12 +69,15 @@ export function Inject(name: string, optional?: boolean) {
  *
  * @export
  * @param {LifeTime} lifeTime of the component
+ * @param {enableOnTestOnly} Active this component only in an test environment
  * @param {string} [name] - By default this is the class name
  */
-export function Injectable(lifeTime: LifeTime, name?:string)
+export function Injectable(lifeTime: LifeTime, enableOnTestOnly?:boolean, name?:string)
 {
     return function(target)
     {
+        if (enableOnTestOnly && !System.isTestEnvironnment)
+            return;
         name = name || target.name;
         Preloader.registerService( target, ( container, domain ) =>
             {

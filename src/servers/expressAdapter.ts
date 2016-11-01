@@ -60,16 +60,16 @@ export class ExpressAdapter extends AbstractAdapter {
 
                     let requestArgs = this.populateFromQuery(req);
                     if (requestArgs.count === 0)
-                        query.data = req.params.id;
+                        query.params = req.params.id;
                     else {
-                        query.data = requestArgs.data;
-                        query.data.id = req.params.id;
+                        query.params = requestArgs.params;
+                        query.params.id = req.params.id;
                     }
                 }
                 else {
                     query.maxByPage = (req.query.$maxByPage && parseInt(req.query.$maxByPage)) || 100;
                     query.page = (req.query.$page && parseInt(req.query.$page)) || 0;
-                    query.data = this.populateFromQuery(req).data;
+                    query.params = this.populateFromQuery(req).params;
                 }
                 this.executeRequest(this.executeQueryRequest, query, req, res);
             }
@@ -96,7 +96,7 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private populateFromQuery(req) {
-        let data = {};
+        let params = {};
         let count = 0;;
         Object.keys(req.query).forEach(name => {
             switch (name) {
@@ -106,14 +106,14 @@ export class ExpressAdapter extends AbstractAdapter {
                 case "$maxByPage":
                     break;
                 case "$query":
-                    data = JSON.parse(req.query[name]);
+                    params = JSON.parse(req.query[name]);
                     break;
                 default:
                     count++;
-                    data[name] = req.query[name];
+                    params[name] = req.query[name];
             }
         });
-        return { data, count };
+        return { params, count };
     }
 
     private getActionSchema(query, req: express.Request, defaultAction?) {
@@ -141,12 +141,12 @@ export class ExpressAdapter extends AbstractAdapter {
         let command = req.body;
 
         // Body contains only data -> create a new command object
-        if (!command.action && !command.data && !command.schema) {
-            command = { data: command };
+        if (!command.action && !command.params && !command.schema) {
+            command = { params: command };
         }
         command.domain = this.domainName;
         this.getActionSchema(command, req);
-        command.data = command.data || {};
+        command.params = command.params || {};
         return command;
     }
 

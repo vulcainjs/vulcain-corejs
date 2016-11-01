@@ -80,9 +80,9 @@ export class QueryManager implements IManager {
                 query.inputSchema = schema.name;
 
                 // Custom binding if any
-                 query.data = schema.bind(query.data);
+                 query.params = schema.bind(query.params);
 
-                errors = schema.validate(query.data);
+                errors = schema.validate(query.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -91,9 +91,9 @@ export class QueryManager implements IManager {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && info.handler[methodName](query.data, query.action);
+                errors = info.handler[methodName] && info.handler[methodName](query.params, query.action);
                 if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](query.data, query.action);
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](query.params, query.action);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -119,7 +119,7 @@ export class QueryManager implements IManager {
             query.correlationPath = ctx.correlationPath;
             info.handler.requestContext = ctx;
             info.handler.query = query;
-            let result = await info.handler[info.method](query.data);
+            let result = await info.handler[info.method](query.params);
             if (result instanceof HttpResponse) {
                 return result; // skip normal process
             }

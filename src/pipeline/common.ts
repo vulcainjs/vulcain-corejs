@@ -84,7 +84,7 @@ export interface CommonRequestData {
     schema: string;
     inputSchema?: string;
     userContext?: UserContext
-    data: any;
+    params: any;
 }
 
 export interface CommonRequestResponse<T> {
@@ -119,6 +119,7 @@ export interface CommonHandlerMetadata extends CommonMetadata {
 export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
     serviceName?: string;
     serviceLifeTime?: LifeTime;
+    enableOnTestOnly?: boolean;
 }
 
 export interface IManager {

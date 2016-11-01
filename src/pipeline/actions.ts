@@ -138,9 +138,9 @@ export class CommandManager implements IManager {
                 command.inputSchema = schema.name;
 
                 // Custom binding if any
-                command.data = schema && schema.bind(command.data);
+                command.params = schema && schema.bind(command.params);
 
-                errors = schema.validate(command.data);
+                errors = schema.validate(command.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -149,9 +149,9 @@ export class CommandManager implements IManager {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && info.handler[methodName](command.data, command.action);
+                errors = info.handler[methodName] && info.handler[methodName](command.params, command.action);
                 if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](command.data, command.action);
+                    errors = info.handler[altMethodName] && await info.handler[altMethodName](command.params, command.action);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -192,7 +192,7 @@ export class CommandManager implements IManager {
 
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
-                let result = await info.handler[info.method](command.data);
+                let result = await info.handler[info.method](command.params);
                 if (result instanceof HttpResponse) {
                     return result; // skip normal process
                 }
@@ -231,7 +231,7 @@ export class CommandManager implements IManager {
             ctx.tenant = command.userContext.tenant;
             info.handler.requestContext = ctx;
             info.handler.command = command;
-            let result = await info.handler[info.method](command.data);
+            let result = await info.handler[info.method](command.params);
             if (result instanceof HttpResponse) {
                 throw new Error("Custom Http Response is not valid in an async action");
             }
