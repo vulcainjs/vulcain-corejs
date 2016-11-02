@@ -10,6 +10,8 @@ import { System } from '../configurations/globals/system';
  */
 export class DefaultServiceNames
 {
+    static ScopesPolicy = "ScopesPolicy";
+
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static "Authentication" = "Authentication";
@@ -69,10 +71,10 @@ export function Inject(name: string, optional?: boolean) {
  *
  * @export
  * @param {LifeTime} lifeTime of the component
- * @param {enableOnTestOnly} Active this component only in an test environment
  * @param {string} [name] - By default this is the class name
+ * @param {enableOnTestOnly} Active this component only in an test environment
  */
-export function Injectable(lifeTime: LifeTime, enableOnTestOnly?:boolean, name?:string)
+export function Injectable(lifeTime: LifeTime, name?:string, enableOnTestOnly?:boolean)
 {
     return function(target)
     {

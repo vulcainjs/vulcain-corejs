@@ -58,7 +58,7 @@ export class Conventions {
     secretKeyPropertyName = "VulcainSecretKey";
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
     defaultTokenExpiration = "20m";
-    
+
     /**
      * Environment variable for rabbit server address
      *

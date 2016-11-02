@@ -4,6 +4,7 @@ import {CommandFactory} from '../commands/command/commandFactory';
 import {ICommand} from '../commands/command/abstractCommand'
 import {DefaultServiceNames} from '../di/annotations';
 import { System } from '../configurations/globals/system';
+import { IPolicy } from './policy/defaultPolicy';
 
 export enum Pipeline {
     EventNotification,
@@ -82,6 +83,7 @@ export class RequestContext {
      */
     correlationPath: string;
 
+    public _scopePolicy: IPolicy;
     /**
      * Current user or null
      *
@@ -135,6 +137,7 @@ export class RequestContext {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
         this.container.injectInstance(this, DefaultServiceNames.RequestContext);
+        this._scopePolicy = container.get<IPolicy>(DefaultServiceNames.ScopesPolicy);
     }
 
     dispose() {
@@ -163,52 +166,12 @@ export class RequestContext {
      * @type {Array<string>}
      */
     get scopes(): Array<string> {
-        return (this.user && this.user.scopes) || [];
+        return this._scopePolicy.scopes(this);
     }
 
-    /**
-     * Check if the current user has a specific scope
-     *
-     * Rules:
-     *   scope      userScope   Result
-     *   null/?/*                 true
-     *                  null      false
-     *                   *        true
-     *     x             x        true
-     *     x-yz         x-*       true
-     *
-     * @param {string} scope
-     * @returns {number}
-     */
     hasScope(handlerScope: string): boolean {
         this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`)
-        if (this.user && this.user.tenant && this.user.tenant !== this.tenant) return false;
-
-        if (!handlerScope || handlerScope === "?") return true;
-        if (!this.user) return false;
-        if (handlerScope === "*") return true;
-
-        const handlerScopes = handlerScope.split(',').map(s => s.trim());
-        const userScopes = this.scopes;
-
-        if (!userScopes || userScopes.length == 0) return false;
-        if (userScopes[0] === "*") return true;
-
-        for (let userScope of userScopes) {
-            let parts = userScope.split(':');
-            if (parts.length < 2) return false; // malformed
-
-            if (parts[0] !== System.domainName) continue;
-
-            for (let sc of handlerScopes) {
-                if (userScope === sc) return true;
-                // admin:* means all scope beginning by admin:
-                if (userScope.endsWith("*") && sc.startsWith(userScope.substr(0, userScope.length - 1)))
-                    return true;
-            }
-        }
-
-        return false;
+        return this._scopePolicy.hasScope(this, handlerScope);
     }
 
     /**
@@ -217,7 +180,7 @@ export class RequestContext {
      * @returns {boolean}
      */
     isAdmin(): boolean {
-        return this.scopes && this.scopes.length > 0 && this.scopes[0] === "*";
+        return this._scopePolicy.isAdmin(this);
     }
 
     /**
