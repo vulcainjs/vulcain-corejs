@@ -39,6 +39,14 @@ export class HttpResponse {
      */
     public content: any;
 
+    /**
+     * Content encoding (like binary, hex,...)
+     *
+     * @type {string}
+     * @memberOf HttpResponse
+     */
+    public encoding: string;
+
     constructor() {
         this.headers = new Map<string, string>();
         this.statusCode = 200;

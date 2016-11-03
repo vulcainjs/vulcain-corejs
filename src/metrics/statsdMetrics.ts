@@ -11,7 +11,7 @@ export class StatsdMetrics {
     constructor(address?: string) {
         if (!System.isDevelopment) {
             let host = System.resolveAlias(address || Conventions.instance.defaultStatsdAddress);
-            host = host || address || Conventions.instance.defaultMongoAddress;
+            host = host || address || Conventions.instance.defaultStatsdAddress;
             this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
         }

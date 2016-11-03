@@ -195,9 +195,9 @@ export class ExpressAdapter extends AbstractAdapter {
                 if (customResponse.contentType)
                     res.contentType(customResponse.contentType);
                 if (customResponse.content)
-                    res.send(customResponse.content);
+                    res.end(customResponse.content, customResponse.encoding);
                 else
-                    res.send();
+                    res.end();
             }
             else {
                 res.statusCode = result.code || 200;

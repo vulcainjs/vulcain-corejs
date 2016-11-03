@@ -6,6 +6,7 @@ export /**
  * RabbitAdapter
  */
 class RabbitAdapter {
+    private domainHandlers = new Map<string, Function>();
     private channel: amqp.Channel;
     private initialized = false;
 
@@ -28,11 +29,15 @@ class RabbitAdapter {
 
             // TODO connection error
             self.initialized = true;
+            System.log.info(null, "Open rabbitmq connexion on " + this.address);
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;
                     resolve(self);
                 });
+            })
+            .catch(err => {
+                System.log.error(null, err, "Unable to open rabbit connexion");
             });
         });
     }
@@ -64,12 +69,26 @@ class RabbitAdapter {
      */
     listenForEvent(domain: string, handler: Function) {
         let self = this;
+
+        // Since this method can be called many times for a same domain
+        // all handlers are aggragated on only one binding
         domain = domain.toLowerCase() + "_events";
+        let handlers = this.domainHandlers.get[domain];
+        if (handlers) {
+            handlers.push(handler);
+            return;
+        }
+
+        // First time for this domain, create the binding
+        handlers = [handler];
+        this.domainHandlers.set(domain, handlers);
+
         this.channel.assertExchange(domain, 'fanout', { durable: false });
         this.channel.assertQueue('', { exclusive: true }).then(queue => {
             self.channel.bindQueue(queue.queue, domain, '');
             self.channel.consume(queue.queue, async (msg) => {
-                await handler(JSON.parse(msg.content.toString()));
+                let obj = JSON.parse(msg.content.toString());
+                handlers.forEach(h=>h(obj));
             }, { noAck: true });
         });
     }
