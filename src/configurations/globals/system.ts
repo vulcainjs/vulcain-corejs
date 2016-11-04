@@ -110,7 +110,7 @@ export class System {
      *
      * @memberOf System
      */
-    static isTestEnvironnment() {
+    static get isTestEnvironnment() {
         if (System.isTest === undefined) {
             System.isTest = System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true";
         }
