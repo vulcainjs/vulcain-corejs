@@ -1,10 +1,9 @@
 import {Container} from '../di/containers';
 import {IContainer} from '../di/resolvers';
 import {CommandFactory} from '../commands/command/commandFactory';
-import {ICommand} from '../commands/command/abstractCommand'
 import {DefaultServiceNames} from '../di/annotations';
-import { System } from '../configurations/globals/system';
 import { IPolicy } from './policy/defaultPolicy';
+import { ICommand } from '../commands/command/abstractCommand';
 
 export enum Pipeline {
     EventNotification,
@@ -170,7 +169,7 @@ export class RequestContext {
     }
 
     hasScope(handlerScope: string): boolean {
-        this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`)
+        this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`);
         return this._scopePolicy.hasScope(this, handlerScope);
     }
 
@@ -191,7 +190,7 @@ export class RequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommand(name: string, schema?: string) {
+    getCommand(name: string, schema?: string): ICommand {
         return CommandFactory.get(name, this, schema);
     }
 

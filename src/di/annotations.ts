@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {Preloader} from '../preloader';
+import { Preloader } from '../preloader';
 import { System } from '../configurations/globals/system';
 
 /**
@@ -8,8 +8,7 @@ import { System } from '../configurations/globals/system';
  * @export
  * @class DefaultServiceNames
  */
-export class DefaultServiceNames
-{
+export class DefaultServiceNames {
     static ScopesPolicy = "ScopesPolicy";
 
     static ScopesDescriptor = "ScopesDescriptor";
@@ -48,7 +47,7 @@ export enum LifeTime {
     /**
      * Create one instance per request
      */
-    Scoped=4
+    Scoped = 4
 }
 
 /**
@@ -59,11 +58,11 @@ export enum LifeTime {
  * @param {boolean} [optional] True to not raise an exception if component doesn't exist
  */
 export function Inject(name: string, optional?: boolean) {
-    return function(target, key, i) {
-        let injects = Reflect.getOwnMetadata(Symbol.for("di:injects"), target) || [];
-        injects[i] = {name:name, optional:!!optional};
+    return function (target, key, i) {
+        let injects = Reflect.getOwnMetadata(Symbol.for("di:injects"), target) ||  [];
+        injects[i] = { name: name, optional: !!optional };
         Reflect.defineMetadata(Symbol.for("di:injects"), injects, target);
-    }
+    };
 }
 
 /**
@@ -74,17 +73,14 @@ export function Inject(name: string, optional?: boolean) {
  * @param {string} [name] - By default this is the class name
  * @param {enableOnTestOnly} Active this component only in an test environment
  */
-export function Injectable(lifeTime: LifeTime, name?:string, enableOnTestOnly?:boolean)
-{
-    return function(target)
-    {
+export function Injectable(lifeTime: LifeTime, name?: string, enableOnTestOnly?: boolean) {
+    return function (target) {
         if (enableOnTestOnly && !System.isTestEnvironnment)
             return;
         name = name || target.name;
-        Preloader.registerService( target, ( container, domain ) =>
-            {
+        Preloader.registerService(target, (container, domain) => {
             container.inject(name, target, lifeTime);
-            }
+        }
         );
-    }
+    };
 }

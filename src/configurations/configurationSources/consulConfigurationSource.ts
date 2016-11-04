@@ -1,9 +1,6 @@
 import { System } from './../globals/system';
 import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 const Consul = require('consul');
-import {DynamicConfiguration} from '../dynamicConfiguration'
-import {ConfigurationManager} from './configurationManager'
-import * as util from 'util';
 
 export class ConsulConfigurationSource implements ConfigurationSource
 {
@@ -79,7 +76,7 @@ export class ConsulConfigurationSource implements ConfigurationSource
         {
             System.log.error(null, e, "CONFIG: Consul configuration source." );
             this._initialized = true;
-            return new PollResult( this )
+            return new PollResult(this);
         }
     }
 
@@ -172,6 +169,6 @@ export class ConsulConfigurationSource implements ConfigurationSource
                 self._initialized = false;
             }
         );
-        return watch
+        return watch;
     }
 }

@@ -1,15 +1,18 @@
 import { CryptoHelper } from './crypto';
-import {IDynamicProperty} from './../dynamicProperty'
 import { DynamicConfiguration } from './../dynamicConfiguration';
 import { VulcainLogger } from './../log/vulcainLogger';
 import * as moment from 'moment';
-import * as util from 'util';
 import * as fs from 'fs';
 import { VulcainManifest } from './../dependencies/annotations';
 import { Conventions } from './../../utils/conventions';
+import { IDynamicProperty } from '../dynamicProperty';
 
-const LOCAL = "local";
-
+/**
+ * Static class providing service helper methods
+ *
+ * @export
+ * @class System
+ */
 export class System {
     private static _config;
     private static logger: VulcainLogger;
@@ -24,6 +27,14 @@ export class System {
 
     static defaultDomainName: string;
 
+    /**
+     * Get the application manifest when the application runs in developement mode
+     *
+     * @readonly
+     * @static
+     *
+     * @memberOf System
+     */
     public static get manifest() {
         if (!System._manifest)
             System._manifest = new VulcainManifest();
@@ -69,7 +80,8 @@ export class System {
     }
 
     /**
-     * Check if the service is running in local mode (developper context)
+     * Check if the service is running in local mode (on developper desktop)
+     * by checking if a '.vulcain' file exists in the working directory
      *
      * @readonly
      * @static
@@ -85,19 +97,26 @@ export class System {
                     this.loadVulcainLocalConfig();
                 }
             }
-            catch(e) {/*ignore*/}
+            catch (e) {/*ignore*/ }
         }
         return System.isLocal;
     }
 
+    /**
+     * Check if the current service is running in a test environnement (VULCAIN_TEST=true)
+     *
+     * @static
+     * @returns
+     *
+     * @memberOf System
+     */
     static isTestEnvironnment() {
         if (System.isTest === undefined) {
-            if (System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true") {
-                System.isTest = true;
-            }
+            System.isTest = System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true";
         }
         return System.isTest;
     }
+
     private static loadVulcainLocalConfig() {
         try {
             let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");
@@ -111,17 +130,17 @@ export class System {
     }
 
     /**
-     * Resolve un alias (configuration key shared/$alternates/serviceName-version)
+     * Resolve un alias (configuration key shared/$alternates/name-version)
      *
      * @param {string} name
      * @param {string} [version]
-     * @returns
+     * @returns null if no alias exists
      *
      * @memberOf System
      */
     static resolveAlias(name: string, version?: string) {
         // Try to find an alternate uri
-        let alias:string = System._config
+        let alias: string = System._config
             && System._config.alias
             && System._config.alias[name]
             && System._config.alias[name][version];
@@ -157,7 +176,7 @@ export class System {
     }
 
     /**
-     * Get environment storage address
+     * Get vulcain server used for getting configurations
      *
      * @readonly
      * @static
@@ -172,6 +191,14 @@ export class System {
         return Conventions.instance.defaultVulcainServerName; // for dev
     }
 
+    /**
+     * Get token for getting properties (must have configurations:read scope)
+     *
+     * @readonly
+     * @static
+     *
+     * @memberOf System
+     */
     static get vulcainToken() {
         let token = process.env[Conventions.instance.ENV_VULCAIN_TOKEN];
         return token;
@@ -205,7 +232,7 @@ export class System {
      * @memberOf System
      */
     static get serviceVersion() {
-       if (!System._serviceVersion) {
+        if (!System._serviceVersion) {
             let env = process.env[Conventions.instance.ENV_SERVICE_VERSION];
             if (env)
                 System._serviceVersion = env;
@@ -216,7 +243,7 @@ export class System {
     }
 
     /**
-     * Get current team namespace
+     * Get current domain name
      *
      * @readonly
      * @static
@@ -224,7 +251,7 @@ export class System {
      * @memberOf System
      */
     static get domainName() {
-       if (!System._domainName) {
+        if (!System._domainName) {
             let env = process.env[Conventions.instance.ENV_VULCAIN_DOMAIN];
             if (env)
                 System._domainName = env;
@@ -263,7 +290,7 @@ export class System {
      *
      * @memberOf System
      */
-    static decrypt(value:string) {
+    static decrypt(value: string) {
         return System.crypto.decrypt(value);
     }
 
@@ -273,7 +300,7 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createSharedConfigurationProperty<T>(name: string, defaultValue: T, schema?:string) {
+    public static createSharedConfigurationProperty<T>(name: string, defaultValue: T, schema?: string): IDynamicProperty<T> {
         System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -287,7 +314,7 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createServiceConfigurationProperty<T>(name: string, defaultValue:T, schema?: string) {
+    public static createServiceConfigurationProperty<T>(name: string, defaultValue: T, schema?: string) {
         System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -308,10 +335,10 @@ export class System {
      * @param {(...Array<string|any>)} urlSegments
      * @returns an url
      */
-    static createUrl(baseurl: string, ...urlSegments: Array<string|any>) {
+    static createUrl(baseurl: string, ...urlSegments: Array<string | any>) {
 
         if (urlSegments) {
-            if( baseurl[baseurl.length-1] !== "/")
+            if (baseurl[baseurl.length - 1] !== "/")
                 baseurl += "/";
 
             baseurl += urlSegments.filter((s: any) => typeof s === 'string').map((s: string) => encodeURIComponent(s)).join('/');
@@ -320,8 +347,8 @@ export class System {
             if (query.length) {
                 var sep = '?';
                 query.forEach((obj: any) => {
-                    for (var p in obj ) {
-                        if ( !obj.hasOwnProperty(p) ) {
+                    for (var p in obj) {
+                        if (!obj.hasOwnProperty(p)) {
                             continue;
                         }
                         if (obj[p]) {

@@ -1,6 +1,6 @@
 import { Action, Query} from '../pipeline/annotations';
 import {AbstractActionHandler, AbstractQueryHandler} from '../pipeline/abstractHandlers';
-import {ICommand} from '../commands/command/abstractCommand'
+import {ICommand} from '../commands/command/abstractCommand';
 import {IContainer} from '../di/resolvers';
 import {Inject} from '../di/annotations';
 import {Command} from '../commands/command/commandFactory';
@@ -26,7 +26,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     protected async createInternal(entity: any) {
         if (entity && this.schema.description.hasSensibleData)
-            entity = this.schema.encrypt(entity) || entity
+            entity = this.schema.encrypt(entity) || entity;
         entity = await this.create(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
@@ -44,7 +44,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     protected async updateInternal(entity: any) {
         // TODO move to provider
         if (entity && this.schema.description.hasSensibleData)
-            entity = this.schema.encrypt(entity) || entity
+            entity = this.schema.encrypt(entity) || entity;
         entity = await this.update(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;

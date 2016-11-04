@@ -1,4 +1,3 @@
-import RollingNumberEvent from "./rollingNumberEvent";
 
 export default class PercentileBucket {
     private bucketValues: Array<number>;
@@ -19,7 +18,7 @@ export default class PercentileBucket {
 
     get values() {
         if (this.length === 0)
-            return null;    
+            return null;
         return this.length < this.dataLength ? this.bucketValues.slice(0, this.length) : this.bucketValues;
     }
 

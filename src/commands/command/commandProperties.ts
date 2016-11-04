@@ -1,7 +1,6 @@
-import {CommandConfiguration} from './commandFactory'
+import { CommandConfiguration } from './commandFactory';
 import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from './../../configurations/dynamicProperty';
-import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { System } from '../../configurations/globals/system';
 
 let HystrixPropertiesNames = {
@@ -136,8 +135,7 @@ export class CommandProperties {
     /// </summary>
     public executionTimeoutInMilliseconds: IDynamicProperty<number>;
 
-    constructor(public commandName: string, public commandGroup:string, config: CommandConfiguration)
-    {
+    constructor(public commandName: string, public commandGroup: string, config: CommandConfiguration) {
         if (!commandName) {
             throw new Error("Please provide a unique command key for the metrics.");
         }
@@ -154,11 +152,11 @@ export class CommandProperties {
         this.metricsRollingPercentileWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_PERCENTILE_WINDOW_IN_MS, config.metricsRollingPercentileWindowInMilliseconds);
         this.executionIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_REQUEST_VOLUME_REJECTION_THRESHOLD);
         this.fallbackIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD);
-      //  this.metricsHealthSnapshotIntervalInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD);
+        //  this.metricsHealthSnapshotIntervalInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD);
         this.circuitBreakerEnabled = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_ENABLED, config.circuitEnabled);
     }
 
-    private get<TValue>(name: string, defaultValue?:TValue) {
+    private get<TValue>(name: string, defaultValue?: TValue) {
         return System.createServiceConfigurationProperty<TValue>(
             this.commandName + "." + name,
             defaultValue || Conventions.instance.hystrix[name]);

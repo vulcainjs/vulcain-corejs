@@ -1,20 +1,10 @@
-var rest = require('unirest');
-import * as types from './types';
-import * as os from 'os';
-import {ExecutionResult} from './executionResult'
 import {Schema} from '../../schemas/schema';
 import {IProvider} from '../../providers/provider';
 import {DefaultServiceNames} from '../../di/annotations';
 import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
-import {Pipeline} from '../../servers/requestContext';
-import {ActionResponse} from '../../pipeline/actions';
-import {QueryResponse} from '../../pipeline/query';
-import {ValidationError, ErrorResponse} from '../../pipeline/common';
-import { ProviderFactory } from './../../providers/providerFactory';
 import { IMetrics } from '../../metrics/metrics';
-import { DatabaseDependencyInfo } from '../../configurations/dependencies/annotations';
 import { ICommandContext } from './abstractCommand';
 
 /**

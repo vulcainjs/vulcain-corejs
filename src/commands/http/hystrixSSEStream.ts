@@ -1,4 +1,4 @@
-import {CommandMetricsFactory, ICommandMetrics} from "../metrics/commandMetricsFactory";
+import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
 import {CircuitBreakerFactory} from "../command/circuitBreaker";
 import * as rx from "rx";
 import ActualTime from "../../utils/actualTime";
@@ -14,7 +14,7 @@ export class HystrixSSEStream {
                 return rx.Observable.from(CommandMetricsFactory.getAllMetrics());
             })
             .map((metrics: any) => {
-                return HystrixSSEStream.toCommandJson(metrics)
+                return HystrixSSEStream.toCommandJson(metrics);
             });
 
         return observableMetrics;

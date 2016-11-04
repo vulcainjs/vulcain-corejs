@@ -1,13 +1,13 @@
-import {Preloader} from '../preloader';
-import {IContainer} from '../di/resolvers';
-import 'reflect-metadata'
+import { Preloader } from '../preloader';
+import { IContainer } from '../di/resolvers';
+import 'reflect-metadata';
 
 export interface ModelOptions {
     name?: string;
     extends?: string;
     description?: string;
-    bind?: ((data) => any)|boolean;
-    validate?: (entity, container?:IContainer) => string;
+    bind?: ((data) => any) | boolean;
+    validate?: (entity, container?: IContainer) => string;
     storageName?: string;
     hasSensibleData?: boolean;
 }
@@ -19,7 +19,7 @@ export function Model(options?: ModelOptions) {
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
         Preloader.registerModel(target, (container, domain) => domain.addSchemaDescription(target, options.name));
-   }
+    };
 }
 
 /**
@@ -123,22 +123,22 @@ export interface PropertyOptions {
     defaultValue?;
 }
 
-export function Property(info:PropertyOptions) {
-	return (target, key) => {
+export function Property(info: PropertyOptions) {
+    return (target, key) => {
         const symProperties = Symbol.for("design:properties");
         var properties = Reflect.getOwnMetadata(symProperties, target) || {};
         properties[key] = info;
-        Reflect.defineMetadata(symProperties, properties, target)
-	}
+        Reflect.defineMetadata(symProperties, properties, target);
+    };
 }
 
 export function Validator(name: string, info?) {
-	return (target, key) => {
+    return (target, key) => {
         const symValidators = Symbol.for("design:validators");
         var validators = Reflect.getOwnMetadata(symValidators, target, key) || [];
-        validators.push( { name, info } );
-        Reflect.defineMetadata(symValidators, validators, target, key)
-	}
+        validators.push({ name, info });
+        Reflect.defineMetadata(symValidators, validators, target, key);
+    };
 }
 
 export interface ReferenceOptions {
@@ -146,7 +146,7 @@ export interface ReferenceOptions {
     cardinality: 'one' | 'many';
     required?: boolean;
     description?: string;
-    bind?: ((val) => any)|boolean;
+    bind?: ((val) => any) | boolean;
     dependsOn?: (entity) => boolean;
     validate?: (val) => string;
     validators?: Array<any>;
@@ -154,10 +154,10 @@ export interface ReferenceOptions {
 }
 
 export function Reference(info: ReferenceOptions) {
-	return (target, key) => {
+    return (target, key) => {
         const symReferences = Symbol.for("design:references");
         var properties = Reflect.getOwnMetadata(symReferences, target) || {};
         properties[key] = info;
-        Reflect.defineMetadata(symReferences, properties, target)
-	}
+        Reflect.defineMetadata(symReferences, properties, target);
+    };
 }

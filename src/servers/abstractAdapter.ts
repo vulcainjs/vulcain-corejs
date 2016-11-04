@@ -48,12 +48,14 @@ export abstract class AbstractAdapter {
     }
 
     protected endRequest(begin: number[], response, ctx: RequestContext, e?: Error) {
-        if (!response.value)
+        if (!response.value) {
             return;
+        }
         const ms = this.calcDelayInMs(begin);
         let prefix = "";
-        if (response.value.schema)
+        if (response.value.schema) {
             prefix = response.value.schema + '.';
+        }
 
         prefix += response.value.action + ".";
 
@@ -132,11 +134,12 @@ export abstract class AbstractAdapter {
                         resolve(result);
                     }
                     else {
-                        if (command.correlationId)
+                        if (command.correlationId) {
                             headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
-                        if (result)
+                        }
+                        if (result) {
                             delete result.userContext;
-
+                        }
                         // TODO https://github.com/phretaddin/schemapack
                         resolve({ value: result, headers: headers });
                     }
@@ -146,7 +149,7 @@ export abstract class AbstractAdapter {
                     // Normalize error
                     if (result instanceof BadRequestError) {
                         resolve({ code: 400, value: { status: "Error", error: { message: result.message } }, headers: headers });
-                        return
+                        return;
                     }
                     else if (result instanceof Error) {
                         result = { status: "Error", error: { message: result.message } };

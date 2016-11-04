@@ -63,7 +63,7 @@ export class EventHandlerFactory {
                 methodName: action,
                 metadata: Object.assign({}, handlerMetadata, actionMetadata),
                 handler: target
-            }
+            };
 
             bySchemas.push(item);
             System.log.info(null, "Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema);

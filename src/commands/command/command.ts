@@ -1,17 +1,14 @@
-import {CommandMetricsFactory, ICommandMetrics} from "../metrics/commandMetricsFactory";
-import {CommandProperties} from './commandProperties'
-import {CircuitBreakerFactory} from "./circuitBreaker";
-import ActualTime from "../../utils/actualTime"
-import {AbstractCommand} from './abstractCommand'
-import {SemaphoreFactory, Semaphore} from './semaphore'
-import {EventType, FailureType, ExecutionResult} from './executionResult'
-import * as util from 'util';
+import { CommandMetricsFactory, ICommandMetrics } from "../metrics/commandMetricsFactory";
+import { CommandProperties } from './commandProperties';
+import { CircuitBreakerFactory } from "./circuitBreaker";
+import ActualTime from "../../utils/actualTime";
+import { AbstractCommand } from './abstractCommand';
+import { SemaphoreFactory, Semaphore } from './semaphore';
+import { EventType, FailureType, ExecutionResult } from './executionResult';
 import { TimeoutError } from './../../errors/timeoutError';
 import { CommandRuntimeError } from './../../errors/commandRuntimeError';
 import { BadRequestError } from './../../errors/badRequestError';
 import { System } from './../../configurations/globals/system';
-const moment = require("moment");
-
 
 export interface CommandInfo {
     commandKey: string;
@@ -32,7 +29,7 @@ export class HystrixCommand {
 
     constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context) {
         command.requestContext = context;
-        this.metrics =  CommandMetricsFactory.getOrCreate(properties);
+        this.metrics = CommandMetricsFactory.getOrCreate(properties);
     }
 
     get circuitBreaker() {
@@ -93,7 +90,7 @@ export class HystrixCommand {
                             }
                             else // application error
                             {
-                                return await this.onExecutionError(end - start, e)
+                                return await this.onExecutionError(end - start, e);
                             }
                         }
 

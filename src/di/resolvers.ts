@@ -1,6 +1,5 @@
-import {Scope} from './scope';
-import {Container} from './containers';
-import {LifeTime} from './annotations';
+import { Container } from './containers';
+import { LifeTime } from './annotations';
 
 export enum BusUsage {
     all,
@@ -55,11 +54,10 @@ export interface IResolver {
     resolve(container: Container, name?: string, parentContainer?: Container);
 }
 
-export class InstanceResolver implements IResolver
-{
+export class InstanceResolver implements IResolver {
     public lifeTime: LifeTime = LifeTime.Singleton;
 
-    constructor(private instance) {}
+    constructor(private instance) { }
 
     resolve(container: Container, name?: string) {
         return this.instance;
@@ -67,29 +65,29 @@ export class InstanceResolver implements IResolver
 }
 
 export class Resolver implements IResolver {
-    static nb:number = 0;
+    static nb: number = 0;
 
-    constructor(private fn, public lifeTime:LifeTime, private args?:Array<any>) {}
+    constructor(private fn, public lifeTime: LifeTime, private args?: Array<any>) { }
 
     resolve(container: Container, name?: string) {
         let injects;
-        try {injects = Reflect.getMetadata(Symbol.for("di:injects"), this.fn);} catch(e) {}
+        try { injects = Reflect.getMetadata(Symbol.for("di:injects"), this.fn); } catch (e) { }
         let params = [];
 
         if (injects) {
             try {
                 for (var inject in injects) {
                     let info = injects[inject];
-                    params.push(container.get<any>(info.name, info.optional))
+                    params.push(container.get<any>(info.name, info.optional));
                 }
             }
             catch (e) {
-                throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`)
+                throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`);
             }
         }
 
-        if(this.args) {
-            this.args.forEach(a=> {
+        if (this.args) {
+            this.args.forEach(a => {
                 params.push(a);
             });
         }
@@ -105,7 +103,7 @@ export class SingletonResolver extends Resolver {
         super(fn, LifeTime.Singleton, args);
     }
 
-    resolve(container: Container, name?: string, parentContainer?:Container) {
+    resolve(container: Container, name?: string, parentContainer?: Container) {
         let instance = name && container.scope.getInstance(name);
         if (!instance) {
             instance = super.resolve(container, name);
@@ -117,9 +115,8 @@ export class SingletonResolver extends Resolver {
     }
 }
 
-export class ScopedResolver extends Resolver
-{
-    constructor(fn, args?:Array<any>) {
+export class ScopedResolver extends Resolver {
+    constructor(fn, args?: Array<any>) {
         super(fn, LifeTime.Scoped, args);
     }
 
@@ -128,7 +125,7 @@ export class ScopedResolver extends Resolver
         if (!instance) {
             instance = super.resolve(container, name);
             // Add instance in the current scope
-            if(name && instance)
+            if (name && instance)
                 container.scope.set(name, instance);
         }
         instance.requestContext = container.scope.requestContext;
@@ -137,16 +134,16 @@ export class ScopedResolver extends Resolver
 }
 
 function invoke(fn, args) {
-    switch(args.length) {
+    switch (args.length) {
         case 0: return new fn();
         case 1: return new fn(args[0]);
-        case 2: return new fn(args[0],args[1]);
-        case 3: return new fn(args[0],args[1],args[2]);
-        case 4: return new fn(args[0],args[1],args[2],args[3]);
-        case 5: return new fn(args[0],args[1],args[2],args[3],args[4]);
-        case 6: return new fn(args[0],args[1],args[2],args[3],args[4], args[5]);
-        case 7: return new fn(args[0],args[1],args[2],args[3],args[4], args[5], args[6]);
+        case 2: return new fn(args[0], args[1]);
+        case 3: return new fn(args[0], args[1], args[2]);
+        case 4: return new fn(args[0], args[1], args[2], args[3]);
+        case 5: return new fn(args[0], args[1], args[2], args[3], args[4]);
+        case 6: return new fn(args[0], args[1], args[2], args[3], args[4], args[5]);
+        case 7: return new fn(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
         default:
-          return Reflect.construct(fn, args);
+            return Reflect.construct(fn, args);
     }
 }

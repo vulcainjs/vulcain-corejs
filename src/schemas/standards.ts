@@ -1,5 +1,4 @@
-import { EventType } from './../commands/command/executionResult';
-const uuid = require('node-uuid')
+const uuid = require('node-uuid');
 
 export let standards = {
     "$ref": {
@@ -13,12 +12,12 @@ export let standards = {
         validate: function (val) {
             if (this.$cardinality !== "one" && this.$cardinality !== "many")
                 throw new Error("Incorrect cardinality. Allowed values are 'one' or 'many'");
-            if (this.$cardinality == "one") {
+            if (this.$cardinality === "one") {
                 if ( Array.isArray(val)) return this.messages[0];
                 if ( this.$item && val.__schema && val.__schema !== this.$item) return this.messages[2];
                 return;
             }
-            if (this.$cardinality == "many") {
+            if (this.$cardinality === "many") {
                 if ( !Array.isArray(val)) return this.messages[1];
                 if (this.$item && val) {
                     let ok = true;

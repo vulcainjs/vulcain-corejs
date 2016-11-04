@@ -1,5 +1,5 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, PollResult, ConfigurationDataType, ConfigurationItem } from './configurationSource';
+import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 var rest = require('unirest');
 var moment = require('moment');
 
@@ -24,10 +24,10 @@ export class VulcainConfigurationSource implements ConfigurationSource
                 .timeout(timeoutInMs);
 
             if (this.token) {
-                request = request.headers({ 'Authentication': 'Bearer ' + this.token })
+                request = request.headers({ 'Authentication': 'Bearer ' + this.token });
             }
             request.end(function (response) {
-                if (response.status == 200 && response.body) {
+                if (response.status === 200 && response.body) {
                     if (response.body.error) {
                         System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
                     }

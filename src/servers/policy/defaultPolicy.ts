@@ -55,29 +55,46 @@ export class DefaultPolicy {
      * @returns {number}
      */
     hasScope(requestContext: RequestContext, handlerScope: string): boolean {
-        if (requestContext.user && requestContext.user.tenant && requestContext.user.tenant !== requestContext.tenant) return false;
-
-        if (!handlerScope || handlerScope === "?") return true;
-        if (!requestContext.user) return false;
-        if (handlerScope === "*") return true;
+        if (requestContext.user && requestContext.user.tenant && requestContext.user.tenant !== requestContext.tenant) {
+            return false;
+        }
+        if (!handlerScope || handlerScope === "?") {
+            return true;
+        }
+        if (!requestContext.user) {
+            return false;
+        }
+        if (handlerScope === "*") {
+            return true;
+        }
 
         const handlerScopes = handlerScope.split(',').map(s => s.trim());
         const userScopes = this.scopes(requestContext);
 
-        if (!userScopes || userScopes.length == 0) return false;
-        if (userScopes[0] === "*") return true;
+        if (!userScopes || userScopes.length === 0) {
+            return false;
+        }
+        if (userScopes[0] === "*") {
+            return true;
+        }
 
         for (let userScope of userScopes) {
             let parts = userScope.split(':');
-            if (parts.length < 2) return false; // malformed
+            if (parts.length < 2) {
+                return false; // malformed
+            }
 
-            if (parts[0] !== System.domainName) continue;
-
+            if (parts[0] !== System.domainName) {
+                continue;
+            }
             for (let sc of handlerScopes) {
-                if (userScope === sc) return true;
-                // admin:* means all scope beginning by admin:
-                if (userScope.endsWith("*") && sc.startsWith(userScope.substr(0, userScope.length - 1)))
+                if (userScope === sc) {
                     return true;
+                }
+                // admin:* means all scope beginning by admin:
+                if (userScope.endsWith("*") && sc.startsWith(userScope.substr(0, userScope.length - 1))) {
+                    return true;
+                }
             }
         }
 

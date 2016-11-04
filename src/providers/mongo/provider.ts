@@ -16,7 +16,7 @@ export class MongoProvider implements IProvider<any>
         keyPropertyName?: string;
         uri: string;
         dispose?: () => void;
-    }
+    };
 
     get address() {
         return this.state.uri;
@@ -28,7 +28,7 @@ export class MongoProvider implements IProvider<any>
         uri: string,
         private options?) {
         this.state = { uri: uri };
-        this._logger.verbose(ctx, "MONGODB: Create provider with address" + uri);
+        this._logger.verbose(ctx, "MONGODB: Create provider with address " + uri);
     }
 
     initializeWithSchema(tenant: string, schema: Schema): any {
@@ -127,11 +127,10 @@ export class MongoProvider implements IProvider<any>
     }
 
     findOneAsync(schema: Schema, query) {
-        var self = this;
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).findOne(query,
+                db.collection(schema.description.storageName).findOne(query,
                     (err, res) => {
                         if (err)
                             reject(err);
@@ -151,13 +150,12 @@ export class MongoProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAsync(schema: Schema, name: string) {
-        var self = this;
         return new Promise(async (resolve, reject) => {
             try {
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = name;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).findOne(filter, (err, res) => {
+                db.collection(schema.description.storageName).findOne(filter, (err, res) => {
                     if (err)
                         reject(err);
                     else
@@ -179,7 +177,6 @@ export class MongoProvider implements IProvider<any>
         if (!old)
             throw new Error("Argument is required");
 
-        let self = this;
         return new Promise(async (resolve, reject) => {
             try {
                 let id;
@@ -193,7 +190,7 @@ export class MongoProvider implements IProvider<any>
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = id;
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).remove(filter, (err, res) => {
+                db.collection(schema.description.storageName).remove(filter, (err, res) => {
                     if (err)
                         reject(this.normalizeErrors(id, err));
                     else
@@ -208,7 +205,7 @@ export class MongoProvider implements IProvider<any>
 
     private normalizeErrors(id: string, err) {
         if (!err || !err.errors) return err;
-        let errors = { message: "Validations errors", errors: [] }
+        let errors = { message: "Validations errors", errors: [] };
         for (let e in err.errors) {
             if (!err.errors.hasOwnProperty(e)) continue;
             let error = err.errors[e];
@@ -230,7 +227,7 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = await this.ensuresDbOpen();
-                let cursor = db.collection(schema.description.storageName).insertOne(entity, (err) => {
+                db.collection(schema.description.storageName).insertOne(entity, (err) => {
                     if (err)
                         reject(this.normalizeErrors(entity[this.state.keyPropertyName], err));
                     else
@@ -260,7 +257,7 @@ export class MongoProvider implements IProvider<any>
                 filter[this.state.keyPropertyName || "_id"] = id;
                 let db = await this.ensuresDbOpen();
                 let collection = db.collection(schema.description.storageName);
-                let cursor = collection.findOne(filter, (err, initial) => {
+                collection.findOne(filter, (err, initial) => {
                     if (err || !initial) {
                         reject(err);
                         return;

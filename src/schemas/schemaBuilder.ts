@@ -8,13 +8,13 @@ export class SchemaBuilder {
     constructor(private domain: Domain) { }
 
     build(model) {
-        if(!model) return null;
-        let schema:SchemaDescription = {name: model.name,properties:{}, references:{}};
+        if (!model) return null;
+        let schema: SchemaDescription = { name: model.name, properties: {}, references: {} };
 
         const symModel = Symbol.for("design:model");
-        let modelAttr:ModelOptions = Reflect.getMetadata(symModel, model);
+        let modelAttr: ModelOptions = Reflect.getMetadata(symModel, model);
         if (modelAttr) {
-            for(let n of Object.keys( modelAttr)) {
+            for (let n of Object.keys(modelAttr)) {
                 let p = modelAttr[n];
                 if (typeof p === "function")
                     schema[n] = p.bind(schema);
@@ -29,7 +29,7 @@ export class SchemaBuilder {
         const symProperties = Symbol.for("design:properties");
 
         let properties = Reflect.getOwnMetadata(symProperties, model.prototype);
-        for(let propertyName in properties) {
+        for (let propertyName in properties) {
             let propAttr: PropertyOptions = properties[propertyName];
             if (propAttr) {
                 if (propAttr.type !== "any" && !this.domain._findType(propAttr.type))
@@ -55,12 +55,12 @@ export class SchemaBuilder {
             if (schema.properties["id"])
                 schema.idProperty = "id";
             else if (schema.properties["name"])
-                schema.idProperty = "name"
+                schema.idProperty = "name";
         }
 
         const symReferences = Symbol.for("design:references");
         let references = Reflect.getOwnMetadata(symReferences, model.prototype);
-        for(let referenceName in references) {
+        for (let referenceName in references) {
             let refAttr: ReferenceOptions = references[referenceName];
             if (refAttr) {
                 let itemSchema;
@@ -74,7 +74,7 @@ export class SchemaBuilder {
                 refAttr.validators = this.createValidatorsChain(refAttr.type || "$ref", refAttr, referenceName, model);
 
                 if (schema.hasSensibleData === undefined && itemSchema) {
-                    if ( itemSchema.hasSensibleData)
+                    if (itemSchema.hasSensibleData)
                         schema.hasSensibleData = true;
                 }
             }
@@ -83,7 +83,7 @@ export class SchemaBuilder {
         return schema;
     }
 
-    private createValidatorsChain(typeName: string, attributeInfo, propertyName:string, obj) {
+    private createValidatorsChain(typeName: string, attributeInfo, propertyName: string, obj) {
         let chain = [];
         const symValidators = Symbol.for("design:validators");
 

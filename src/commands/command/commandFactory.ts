@@ -1,8 +1,8 @@
-import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
-import {CircuitBreakerFactory} from "./circuitBreaker";
-import {HystrixCommand} from "./command";
-import {ICommand} from './abstractCommand'
-import {CommandProperties} from './commandProperties'
+import { CommandMetricsFactory } from "../metrics/commandMetricsFactory";
+import { CircuitBreakerFactory } from "./circuitBreaker";
+import { HystrixCommand } from "./command";
+import { ICommand } from './abstractCommand';
+import { CommandProperties } from './commandProperties';
 
 export interface CommandConfiguration {
     circuitEnabled?: boolean;
@@ -27,17 +27,17 @@ const hystrixCommandsCache = new Map<string, CommandCache>();
 /**
  * Command attribute
  */
-export function Command(config: CommandConfiguration={}, commandKey?: string, commandGroup?: string) {
+export function Command(config: CommandConfiguration = {}, commandKey?: string, commandGroup?: string) {
 
     return function (command: Function) {
         commandGroup = commandGroup || "hystrix";
         commandKey = commandKey || command.name;
 
         let properties = new CommandProperties(commandKey, commandGroup, config);
-        let metrics = CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
-        let circuitBreaker = CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
+        CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
+        CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
         hystrixCommandsCache.set(commandKey, { properties, command });
-    }
+    };
 }
 
 interface CommandCache {
@@ -47,10 +47,10 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static get(commandKey: string, context?, schema?:string): ICommand {
+    static get(commandKey: string, context?, schema?: string): ICommand {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
-            let resolvedCommand = context ? context.container.resolve(cache.command): new (<any>cache.command)();
+            let resolvedCommand = context ? context.container.resolve(cache.command) : new (<any>cache.command)();
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context);
             schema && cmd.setSchemaOnCommand(schema);
             return cmd;

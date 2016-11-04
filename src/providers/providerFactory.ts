@@ -1,4 +1,4 @@
-import { Injectable, LifeTime, Inject } from '../di/annotations';
+import { Injectable, LifeTime } from '../di/annotations';
 import { DefaultServiceNames } from '../di/annotations';
 import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';

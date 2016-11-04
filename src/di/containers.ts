@@ -1,19 +1,17 @@
 import 'reflect-metadata';
-import {Preloader} from '../preloader';
-import {Scope} from './scope';
-import {IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver} from './resolvers';
-import {IContainer, BusUsage} from '../di/resolvers';
-import {DefaultServiceNames} from '../di/annotations';
-import {RabbitAdapter} from '../bus/rabbitAdapter'
-import {LocalAdapter} from '../bus/localAdapter'
-import {MemoryProvider} from "../providers/memory/provider";
-import {MongoProvider} from "../providers/mongo/provider";
-import {ProviderFactory} from '../providers/providerFactory';
-import {Domain} from '../schemas/schema';
-import {Application} from '../application';
-import {LifeTime} from './annotations';
-import {Files} from '../utils/files';
-import {Conventions} from '../utils/conventions';
+import { Preloader } from '../preloader';
+import { Scope } from './scope';
+import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver } from './resolvers';
+import { IContainer, BusUsage } from '../di/resolvers';
+import { DefaultServiceNames } from '../di/annotations';
+import { RabbitAdapter } from '../bus/rabbitAdapter';
+import { MemoryProvider } from "../providers/memory/provider";
+import { MongoProvider } from "../providers/mongo/provider";
+import { ProviderFactory } from '../providers/providerFactory';
+import { Domain } from '../schemas/schema';
+import { LifeTime } from './annotations';
+import { Files } from '../utils/files';
+import { Conventions } from '../utils/conventions';
 import { RequestContext } from './../servers/requestContext';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { VulcainLogger } from './../configurations/log/vulcainLogger';
@@ -28,7 +26,7 @@ import { System } from './../configurations/globals/system';
  */
 export class Container implements IContainer {
 
-    private resolvers: Map<string,IResolver> = new Map<string,IResolver>();
+    private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
 
     constructor(private parent?: IContainer, private requestContext?: RequestContext) {
@@ -68,9 +66,9 @@ export class Container implements IContainer {
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
         let uri = System.resolveAlias(address || Conventions.instance.defaultRabbitAddress);
         let bus = new RabbitAdapter("amqp://" + (uri || address || Conventions.instance.defaultRabbitAddress));
-        if( usage === BusUsage.all || usage === BusUsage.eventOnly)
+        if (usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
-        if( usage === BusUsage.all || usage === BusUsage.commandOnly)
+        if (usage === BusUsage.all || usage === BusUsage.commandOnly)
             this.injectInstance(bus, DefaultServiceNames.ActionBusAdapter);
     }
 
@@ -91,7 +89,7 @@ export class Container implements IContainer {
      *
      * @param {string} [folder]
      */
-    useMemoryProvider(folder?:string) {
+    useMemoryProvider(folder?: string) {
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
     }
 
@@ -101,11 +99,11 @@ export class Container implements IContainer {
      * @param fn
      * @returns {Container}
      */
-    injectInstance(fn, name:string) {
-        if(!name) throw new Error("Name is required.");
+    injectInstance(fn, name: string) {
+        if (!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
-        if(name !== "Container" && fn.name)
-            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name );
+        if (name !== "Container" && fn.name)
+            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -115,10 +113,10 @@ export class Container implements IContainer {
      * @param args
      */
     injectSingleton(fn, ...args);
-    injectSingleton(fn, name?:string, ...args);
-    injectSingleton(fn, nameOrArray:string|Array<any>, ...args) {
-        let name:string;
-        if(Array.isArray(nameOrArray)) {
+    injectSingleton(fn, name?: string, ...args);
+    injectSingleton(fn, nameOrArray: string | Array<any>, ...args) {
+        let name: string;
+        if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
             name = null;
         } else {
@@ -128,7 +126,7 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
-        if( fn.name)
+        if (fn.name)
             System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
@@ -139,10 +137,10 @@ export class Container implements IContainer {
      * @param args
      */
     injectTransient(fn, ...args);
-    injectTransient(fn, name?:string, ...args);
-    injectTransient(fn, nameOrArray:string|Array<any>, ...args) {
-        let name:string;
-        if(Array.isArray(nameOrArray)) {
+    injectTransient(fn, name?: string, ...args);
+    injectTransient(fn, nameOrArray: string | Array<any>, ...args) {
+        let name: string;
+        if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
             name = null;
         }
@@ -152,10 +150,10 @@ export class Container implements IContainer {
 
         let attr = Reflect.getOwnMetadata(Symbol.for("di:export"), fn);
         name = name || attr && attr.name || fn.name;
-        if(!name)
+        if (!name)
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
-        if( fn.name)
+        if (fn.name)
             System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
@@ -166,10 +164,10 @@ export class Container implements IContainer {
      * @param args
      */
     injectScoped(fn, ...args);
-    injectScoped(fn, name?:string, ...args);
-    injectScoped(fn, nameOrArray:string|Array<any>, ...args) {
-        let name:string;
-        if(Array.isArray(nameOrArray)) {
+    injectScoped(fn, name?: string, ...args);
+    injectScoped(fn, nameOrArray: string | Array<any>, ...args) {
+        let name: string;
+        if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
             name = null;
         }
@@ -181,7 +179,7 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
-        if( fn.name)
+        if (fn.name)
             System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
@@ -211,27 +209,27 @@ export class Container implements IContainer {
      * @returns {null}
      */
     resolve(fn, ...args) {
-        if(typeof fn !== "function") throw new Error("fn must be a ctor");
+        if (typeof fn !== "function") throw new Error("fn must be a ctor");
         let resolver = new Resolver(fn, LifeTime.Transient, Array.from(args));
         return this._resolve(this, resolver);
     }
 
-    private _resolve(parentContainer: Container, resolver:IResolver, name?:string, optional?:boolean) {
+    private _resolve(parentContainer: Container, resolver: IResolver, name?: string, optional?: boolean) {
 
         let instance = resolver && resolver.resolve(this, name, parentContainer);
 
-        if(!instance && !optional)
+        if (!instance && !optional)
             throw new Error("Unable to resolve component " + name);
 
         return instance;
     }
 
     private findResolver(name: string) {
-        let self:Container = this;
+        let self: Container = this;
         while (self) {
             let resolver = self.resolvers.get(name);
             if (resolver)
-                return { resolver, container:self };
+                return { resolver, container: self };
             self = <Container>self.parent;
         }
         return null;
@@ -246,7 +244,7 @@ export class Container implements IContainer {
      * @param {LifeTime} [assertLifeTime] If provide check if the registered component has the expected {LifeTime}
      * @returns A component
      */
-    get<T>(name:string, optional?:boolean, assertLifeTime?:LifeTime) {
+    get<T>(name: string, optional?: boolean, assertLifeTime?: LifeTime) {
         let res = this.findResolver(name);
         let resolver = res && res.resolver;
         if (assertLifeTime && resolver) {

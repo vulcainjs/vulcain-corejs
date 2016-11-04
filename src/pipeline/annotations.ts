@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import {Preloader} from '../preloader';
-import {CommandManager, ActionMetadata, ActionHandlerMetadata, EventMetadata, ConsumeEventMetadata} from './actions';
-import { QueryMetadata, QueryActionMetadata} from './query';
+import { Preloader } from '../preloader';
+import { CommandManager, ActionMetadata, ActionHandlerMetadata, EventMetadata, ConsumeEventMetadata } from './actions';
+import { QueryMetadata, QueryActionMetadata } from './query';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { DefaultServiceNames } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
@@ -26,7 +26,7 @@ function getMetadata(key, target) {
                 let pv = tmp[p];
                 // Do not override action
                 if (Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
-                    metadata[p] = Object.assign({},pv); // clone
+                    metadata[p] = Object.assign({}, pv); // clone
                 }
             });
         }
@@ -49,12 +49,12 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler( target, (container: IContainer, domain) => {
+        Preloader.registerHandler(target, (container: IContainer, domain) => {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.register(container, domain, target, actions, metadata, "action");
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
-    }
+    };
 }
 
 /**
@@ -71,7 +71,7 @@ export function Action(actionMetadata: ActionMetadata) {
         if (actions[key].inputSchema === undefined) { // null means take schema name
             let params = Reflect.getMetadata("design:paramtypes", target, key);
             if (params && params.length > 0) {
-                actions[key].inputSchema = params[0].name !== "Object" ? resolveType( params[0] ) : null; // Force null to take the schema as default value
+                actions[key].inputSchema = params[0].name !== "Object" ? resolveType(params[0]) : null; // Force null to take the schema as default value
             }
             else {
                 actions[key].inputSchema = "none"; // set to to none to ignore this schema
@@ -82,7 +82,7 @@ export function Action(actionMetadata: ActionMetadata) {
         if (actions[key].outputSchema === undefined) {
             actions[key].outputSchema = "none";
             if (output && ["Promise", "Object"].indexOf(output.name) < 0) {
-                actions[key].outputSchema = resolveType( output.name);
+                actions[key].outputSchema = resolveType(output.name);
             }
         }
         if (!actions[key].action) {
@@ -91,7 +91,7 @@ export function Action(actionMetadata: ActionMetadata) {
             actions[key].action = tmp;
         }
         Reflect.defineMetadata(symActions, actions, target.constructor);
-    }
+    };
 }
 
 /**
@@ -108,12 +108,12 @@ export function QueryHandler(metadata: QueryMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler(target, (container:IContainer, domain) => {
+        Preloader.registerHandler(target, (container: IContainer, domain) => {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.register(container, domain, target, actions, metadata, "query");
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
-    }
+    };
 }
 
 /**
@@ -143,7 +143,7 @@ export function Query(actionMetadata: QueryActionMetadata) {
             actions[key].action = tmp;
         }
         Reflect.defineMetadata(symActions, actions, target.constructor);
-    }
+    };
 }
 
 /**
@@ -157,11 +157,11 @@ export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler( target, (container, domain) => {
+        Preloader.registerHandler(target, (container, domain) => {
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
-    }
+    };
 }
 
 /**
@@ -172,9 +172,9 @@ export function EventHandler(metadata?: EventMetadata) {
  * @returns
  */
 export function Consume(consumeMetadata?: ConsumeEventMetadata) {
-	return (target, key) => {
+    return (target, key) => {
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = consumeMetadata || {};
         Reflect.defineMetadata(symActions, actions, target.constructor);
-	}
+    };
 }

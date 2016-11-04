@@ -19,23 +19,26 @@ export class ConsoleMetrics {
         this.customTags = "," + tags.join(',');
     }
 
+    private log(msg: string) {
+    }
+
     increment(metric: string, delta?: number) {
-        console.log(`METRICS: incr    ${metric + this.tags + this.customTags} : ${delta||1}`);
+        this.log(`METRICS: incr    ${metric + this.tags + this.customTags} : ${delta||1}`);
     }
 
     decrement(metric:string, delta?:number) {
-        console.log(`METRICS: decr    ${metric + this.tags + this.customTags} : ${delta||-1}`);
+        this.log(`METRICS: decr    ${metric + this.tags + this.customTags} : ${delta||-1}`);
     }
 
     counter(metric:string, delta:number) {
-        console.log(`METRICS: counter ${metric + this.tags + this.customTags} : ${delta}`);
+        this.log(`METRICS: counter ${metric + this.tags + this.customTags} : ${delta}`);
     }
 
     gauge(metric:string, value:number) {
-        console.log(`METRICS: gauge   ${metric + this.tags + this.customTags} : ${value}`);
+        this.log(`METRICS: gauge   ${metric + this.tags + this.customTags} : ${value}`);
     }
 
     timing(metric:string, duration:number) {
-        console.log(`METRICS: timing  ${metric + this.tags + this.customTags} : ${duration}ms`);
+        this.log(`METRICS: timing  ${metric + this.tags + this.customTags} : ${duration}ms`);
     }
 }

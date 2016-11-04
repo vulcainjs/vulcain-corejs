@@ -11,7 +11,6 @@ import { System } from './../../configurations/globals/system';
 import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
 import { IMetrics } from '../../metrics/metrics';
-import { ServiceDependencyInfo } from '../../configurations/dependencies/annotations';
 const rest = require('unirest');
 
 /**
@@ -47,9 +46,9 @@ export abstract class AbstractServiceCommand {
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:service"];
         if (!dep) {
-            throw new Error("ServiceDependency annotation is required.")
+            throw new Error("ServiceDependency annotation is required.");
         }
-        this.metrics.setTags("targetServiceName=" + dep.service, "targetServiceVersion=" + dep.version)
+        this.metrics.setTags("targetServiceName=" + dep.service, "targetServiceVersion=" + dep.version);
     }
 
     onCommandCompleted(duration: number, success: boolean) {

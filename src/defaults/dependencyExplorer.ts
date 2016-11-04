@@ -1,15 +1,15 @@
-import { DefaultServiceNames, Inject, LifeTime } from '../di/annotations';
-import {Query, QueryHandler} from '../pipeline/annotations';
+import { LifeTime } from '../di/annotations';
+import { Query, QueryHandler } from '../pipeline/annotations';
 import { System } from './../configurations/globals/system';
 import { VulcainManifest } from './../configurations/dependencies/annotations';
 
-@QueryHandler({scope:"?", serviceLifeTime: LifeTime.Singleton})
+@QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class DependencyExplorer {
 
-    constructor( ) {
-     }
+    constructor() {
+    }
 
-    @Query({outputSchema: VulcainManifest, description: "Get service dependencies", action: "_serviceDependencies"})
+    @Query({ outputSchema: VulcainManifest, description: "Get service dependencies", action: "_serviceDependencies" })
     getDependencies() {
         return System.manifest;
     }

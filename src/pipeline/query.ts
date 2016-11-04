@@ -1,4 +1,4 @@
-import { HandlerFactory, CommonRequestData, CommonActionMetadata, CommonMetadata, ValidationError, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, CommonHandlerMetadata, IManager, HttpResponse } from './common';
+import { HandlerFactory, CommonRequestData, CommonActionMetadata, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, IManager, HttpResponse } from './common';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import * as os from 'os';
@@ -57,7 +57,7 @@ export class QueryManager implements IManager {
             action: query.action,
             maxByPage: query.maxByPage,
             page: query.page
-        }
+        };
         if (error)
             res.error = { message: error.message, errors: error.errors };
         return res;

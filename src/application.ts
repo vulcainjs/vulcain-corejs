@@ -1,23 +1,21 @@
 import { Authentication } from './servers/expressAuthentication';
 import { ApiKeyService } from './auth/apiKeyService';
-import { IMetrics } from './metrics/metrics';
-import {Preloader} from './preloader';
-import {HystrixSSEStream as hystrixStream} from './commands/http/hystrixSSEStream';
-import {IActionBusAdapter, IEventBusAdapter} from './bus/busAdapter';
-import {LocalAdapter} from './bus/localAdapter';
-import * as Path from 'path'
-import { Domain } from './schemas/schema'
-import { Container } from './di/containers'
-import { Files } from './utils/files'
-import { ExpressAdapter } from './servers/expressAdapter'
-import 'reflect-metadata'
-import {DefaultServiceNames} from './di/annotations';
-import {IContainer} from "./di/resolvers";
-import {AbstractAdapter} from './servers/abstractAdapter';
-import {Conventions} from './utils/conventions';
-import {MemoryProvider} from "./providers/memory/provider";
+import { Preloader } from './preloader';
+import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
+import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
+import { LocalAdapter } from './bus/localAdapter';
+import * as Path from 'path';
+import { Domain } from './schemas/schema';
+import { Container } from './di/containers';
+import { Files } from './utils/files';
+import { ExpressAdapter } from './servers/expressAdapter';
+import 'reflect-metadata';
+import { DefaultServiceNames } from './di/annotations';
+import { IContainer } from "./di/resolvers";
+import { AbstractAdapter } from './servers/abstractAdapter';
+import { Conventions } from './utils/conventions';
+import { MemoryProvider } from "./providers/memory/provider";
 import { UserContext, RequestContext } from './servers/requestContext';
-import * as util from 'util';
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import './pipeline/scopeDescriptors';  // Don't remove (auto register)
@@ -63,8 +61,9 @@ export class Application {
      */
     setTestUser(user?: UserContext) {
         user = user || RequestContext.TestUser;
-        if (!user.id || !user.name || !user.scopes)
+        if (!user.id || !user.name || !user.scopes) {
             throw new Error("Invalid test user - Properties must be set.");
+        }
         if (!System.isTestEnvironnment) {
             System.log.info(null, "Warning : TestUser ignored");
             return;
@@ -95,8 +94,9 @@ export class Application {
 
     private findBasePath() {
         let parent = module.parent;
-        while (parent.parent)
+        while (parent.parent) {
             parent = parent.parent;
+        }
         return Path.dirname(parent.filename);
     }
 
@@ -118,8 +118,9 @@ export class Application {
         this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
 
         domainName = domainName;
-        if (!domainName)
+        if (!domainName) {
             throw new Error("Domain name is required.");
+        }
 
         System.defaultDomainName = domainName;
 
@@ -129,8 +130,9 @@ export class Application {
     }
 
     private startHystrixStream() {
-        if (!this.enableHystrixStream)
+        if (!this.enableHystrixStream) {
             return;
+        }
 
         this.adapter.useMiddleware("get", Conventions.instance.defaultHystrixPath, (request, response) => {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
@@ -153,7 +155,7 @@ export class Application {
             request.on("close", () => {
                 System.log.info(null, "close hystrix.stream");
                 subscription.dispose();
-            })
+            });
 
             return subscription;
         });
@@ -213,7 +215,7 @@ export class Application {
         eventBus.startAsync().then(() => {
             commandBus.startAsync().then(() => {
                 try {
-                    this.registerModelsInternal()
+                    this.registerModelsInternal();
                     this.registerServicesInternal();
                     this.registerHandlersInternal();
 
@@ -234,7 +236,7 @@ export class Application {
                         this.initializeServerAdapter(this.adapter);
                         (<ExpressAdapter>this.adapter).initialize();
                     }
-                    this.startHystrixStream()
+                    this.startHystrixStream();
                     this.adapter.start(port);
                 }
                 catch (err) {
@@ -259,8 +261,9 @@ export class Application {
      * @returns The current container
      */
     protected injectFrom(path: string) {
-        if(!Path.isAbsolute(path))
+        if (!Path.isAbsolute(path)) {
             path = Path.join(this._basePath, path);
+        }
         this._container.injectFrom(path);
         return this._container;
     }
@@ -271,8 +274,9 @@ export class Application {
      * @returns {Container}
      */
     private registerModels(path: string) {
-        if(!Path.isAbsolute(path))
+        if (!Path.isAbsolute(path)) {
             path = Path.join(this._basePath, path);
+        }
         Files.traverse(path);
 
         return this._container;
@@ -291,8 +295,9 @@ export class Application {
      * @returns {Container}
      */
     private registerHandlers(path: string) {
-        if(!Path.isAbsolute(path))
+        if (!Path.isAbsolute(path)) {
             path = Path.join(this._basePath, path);
+        }
         Files.traverse(path);
         return this._container;
     }
@@ -310,8 +315,9 @@ export class Application {
      * @returns {Container}
      */
     private registerServices(path: string) {
-        if(!Path.isAbsolute(path))
+        if (!Path.isAbsolute(path)) {
             path = Path.join(this._basePath, path);
+        }
 
         Files.traverse(path);
 

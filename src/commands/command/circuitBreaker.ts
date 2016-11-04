@@ -1,6 +1,6 @@
 import ActualTime from "../../utils/actualTime";
-import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
-import {CommandProperties} from "./commandProperties";
+import { CommandMetricsFactory } from "../metrics/commandMetricsFactory";
+import { CommandProperties } from "./commandProperties";
 import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
 
 export interface CircuitBreaker {
@@ -15,16 +15,14 @@ class NoOpCircuitBreaker implements CircuitBreaker {
 
     allowRequest() { return true; }
     markSuccess() { }
-    isOpen() { return false;}
+    isOpen() { return false; }
 }
 
 class DefaultCircuitBreaker implements CircuitBreaker {
     private circuitOpen: boolean;
     private circuitOpenedOrLastTestedTime;
-    private circuitBreakerRequestVolumeThresholdValue: number;
 
-    constructor(private commandKey:string, public properties: CommandProperties)
-    {
+    constructor(private commandKey: string, public properties: CommandProperties) {
         this.circuitOpen = false;
         this.circuitOpenedOrLastTestedTime = ActualTime.getCurrentTime();
     }
@@ -59,7 +57,7 @@ class DefaultCircuitBreaker implements CircuitBreaker {
             return true;
         }
 
-        let {totalCount = 0, errorCount , errorPercentage} = (<HystrixCommandMetrics>this.metrics).getHealthCounts();
+        let {totalCount = 0, errorCount, errorPercentage} = (<HystrixCommandMetrics>this.metrics).getHealthCounts();
         if (totalCount < this.properties.circuitBreakerRequestVolumeThreshold.value) {
             return false;
         }
@@ -85,11 +83,11 @@ const circuitBreakersByCommand = new Map();
 
 export class CircuitBreakerFactory {
 
-    static getOrCreate(properties:CommandProperties) {
+    static getOrCreate(properties: CommandProperties) {
 
         let previouslyCached = circuitBreakersByCommand.get(properties.commandName);
         if (previouslyCached) {
-            return previouslyCached
+            return previouslyCached;
         }
 
         let circuitBreaker = properties.circuitBreakerEnabled ?

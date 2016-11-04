@@ -110,7 +110,7 @@ export class MongoQueryParser {
             case "$exists":
                 return (left !== undefined) === right;
             case "$regex":
-                return left.match(RegExp(right)) != null;
+                return left.match(RegExp(right)) !== null;
             case "$in":
                 if (!Array.isArray(right))
                     throw new Error("Syntax error for $in");

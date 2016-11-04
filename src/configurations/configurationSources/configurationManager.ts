@@ -1,18 +1,17 @@
 import { System } from './../globals/system';
-import {ConfigurationSource, PollResult} from './configurationSource'
-import {DynamicPropertiesUpdater} from '../dynamicPropertiesUpdater'
-import {DynamicProperty} from '../properties/dynamicProperty'
+import {ConfigurationSource, PollResult} from './configurationSource';
+import {DynamicProperty} from '../properties/dynamicProperty';
 import {DynamicProperties} from "../properties/dynamicProperties";
 
 export class ConfigurationManager
-{    
+{
     private _sources:Array<ConfigurationSource> = [];
     private disposed:boolean;
     private _polling:boolean;
-    
+
     constructor(
-        private properties:DynamicProperties, 
-        public pollingIntervalInSeconds:number, 
+        private properties:DynamicProperties,
+        public pollingIntervalInSeconds:number,
         public sourceTimeoutInMs:number )
     {
     }
@@ -26,11 +25,11 @@ export class ConfigurationManager
         }
     }
 
-    
+
     async polling()
     {
         let list = this._sources;
-        let results:Array<PollResult> = []
+        let results:Array<PollResult> = [];
         if( this.disposed ) return;
 
         if(list)
@@ -44,12 +43,12 @@ export class ConfigurationManager
                 catch( e )
                 {
                     System.log.error(null, e, "CONFIG: Error when polling configuration source ");
-                }    
+                }
             }
-            
+
             this.loadPropertiesFromSources( results );
         }
-        
+
         setTimeout( this.polling.bind(this), this.pollingIntervalInSeconds * 1000 );
     }
 
@@ -81,7 +80,7 @@ export class ConfigurationManager
             this.properties.clear();
             return;
         }
-        
+
         props.values.forEach((item, key) => {
             if (!item || item.deleted) {
                 System.log.info(null, "CONFIG: Removing property value for key " + key);
@@ -95,7 +94,7 @@ export class ConfigurationManager
                 });
 
                 prop.set(item.encrypted ? JSON.parse(System.decrypt(item.value)) : item.value);
-                System.log.info(null, `CONFIG: Setting property value ${item.value} for key ${key}`);                
+                System.log.info(null, `CONFIG: Setting property value ${item.value} for key ${key}`);
             }
             catch (e) {
                 System.log.error(null, e, `CONFIG: Error on loadProperties for key ${key}`);
@@ -138,7 +137,7 @@ export class ConfigurationManager
             // Run initialization
             this.ensuresPolling();
             if (latch === 0)
-                resolve();    
+                resolve();
         });
     }
 }

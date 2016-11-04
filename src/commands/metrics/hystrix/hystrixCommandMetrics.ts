@@ -2,7 +2,7 @@ import {RollingNumber} from "./rollingNumber";
 import {RollingPercentile} from "./rollingPercentile";
 import RollingNumberEvent from "./rollingNumberEvent";
 import ActualTime from "../../../utils/actualTime";
-import {CommandProperties} from '../../command/commandProperties'
+import { CommandProperties } from '../../command/commandProperties';
 import { ICommandMetrics } from '../../../commands/metrics/commandMetricsFactory';
 
 export class HystrixCommandMetrics implements ICommandMetrics {
@@ -116,7 +116,7 @@ export class HystrixCommandMetrics implements ICommandMetrics {
             totalCount: totalCount,
             errorCount: errorCount,
             errorPercentage: errorPercentage
-        }
+        };
     }
 
     reset() {

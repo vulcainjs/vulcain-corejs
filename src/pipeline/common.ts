@@ -91,13 +91,13 @@ export interface CommonRequestData {
     domain: string;
     schema: string;
     inputSchema?: string;
-    userContext?: UserContext
+    userContext?: UserContext;
     params: any;
 }
 
 export interface CommonRequestResponse<T> {
     tenant: string;
-    userContext: UserContext,
+    userContext: UserContext;
     source: string;
     domain: string;
     action: string;
@@ -132,7 +132,7 @@ export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
 
 export interface IManager {
     container: IContainer;
-    getInfoHandler<T>(command: CommonRequestData, container?: IContainer): { handler: Function, metadata: T, method: string, kind: "query" | "action" | "event" }
+    getInfoHandler<T>(command: CommonRequestData, container?: IContainer): { handler: Function, metadata: T, method: string, kind: "query" | "action" | "event" };
     runAsync(command: CommonRequestData, ctx): Promise<CommonRequestResponse<any>>;
 }
 

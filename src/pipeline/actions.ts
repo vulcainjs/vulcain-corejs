@@ -123,7 +123,7 @@ export class CommandManager implements IManager {
             status: error ? "Error" : command.status,
             correlationId: command.correlationId,
             taskId: command.taskId
-        }
+        };
         if (error)
             res.error = { message: error.message, errors: error.errors };
         return res;
@@ -297,7 +297,7 @@ export class CommandManager implements IManager {
                 }
                 catch (e) {
                     let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                    System.log.error(ctx, e, `Error with event handler ${info.handler.name} event : ${evt}`);
+                    System.log.error(ctx, error, `Error with event handler ${info.handler.name} event : ${evt}`);
                 }
             }
         });

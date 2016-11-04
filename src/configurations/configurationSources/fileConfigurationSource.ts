@@ -17,7 +17,7 @@ export class FileConfigurationSource implements ConfigurationSource
             }
         }
         catch (e) {
-            System.log.error(null, e, "Invalid path when reading file configuration source at " + path + ". Are you using an unmounted docker volume ?")
+            System.log.error(null, e, "Invalid path when reading file configuration source at " + path + ". Are you using an unmounted docker volume ?");
         }
     }
 

@@ -83,7 +83,7 @@ export class ServiceDescriptors {
             item = this.routes.get(s + "." + a);
         }
 
-        if (item == null) {
+        if (!item) {
             if (optional)
                 return null;
             else
@@ -120,8 +120,6 @@ export class ServiceDescriptors {
             }
         });
 
-        let uniques = new Set<string>();
-
         this.descriptions = {
             services: [],
             schemas: new Array<SchemaDescription>(),
@@ -130,7 +128,7 @@ export class ServiceDescriptors {
             serviceVersion: System.serviceVersion,
             alternateAddress: null,
             hasAsyncTasks: false,
-            scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description } })
+            scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description }; })
         };
 
         for (let item of this.handlers.filter(h => h.kind === "action")) {

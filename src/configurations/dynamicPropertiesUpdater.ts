@@ -1,4 +1,4 @@
-import {IDynamicProperty} from './dynamicProperty'   
+import { IDynamicProperty } from './dynamicProperty';
 
 /// <summary>
 /// Interface used by <see cref="ConfigurationManager"/> to update properties

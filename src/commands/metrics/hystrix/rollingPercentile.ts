@@ -30,7 +30,7 @@ export class RollingPercentile {
     }
 
     addValue(value) {
-        this.getCurrentBucket().addValue(value)
+        this.getCurrentBucket().addValue(value);
     }
 
     getPercentile(percentile) {
@@ -83,8 +83,8 @@ class PercentileSnapshot {
         this.stats = new Stats();
         for (let bucket of allBuckets) {
             let values = bucket.values;
-            if(values)
-                this.stats.push(values)
+            if (values)
+                this.stats.push(values);
         }
 
         this.mean = this.stats.amean() || 0;

@@ -1,18 +1,8 @@
-var rest = require('unirest');
-import * as types from './types';
-import * as os from 'os';
-import {ExecutionResult} from './executionResult'
-import {Schema} from '../../schemas/schema';
-import {IProvider} from '../../providers/provider';
-import {DefaultServiceNames} from '../../di/annotations';
-import {IContainer} from '../../di/resolvers';
-import {Domain} from '../../schemas/schema';
-import {Inject} from '../../di/annotations';
-import {Pipeline} from '../../servers/requestContext';
-import {ActionResponse} from '../../pipeline/actions';
-import {QueryResponse} from '../../pipeline/query';
-import {ValidationError, ErrorResponse} from '../../pipeline/common';
-import { ProviderFactory } from './../../providers/providerFactory';
+import { ExecutionResult } from './executionResult';
+import { DefaultServiceNames } from '../../di/annotations';
+import { IContainer } from '../../di/resolvers';
+import { Inject } from '../../di/annotations';
+import { Pipeline } from '../../servers/requestContext';
 import { IMetrics } from '../../metrics/metrics';
 
 /**
@@ -133,14 +123,14 @@ export abstract class AbstractCommand<T> {
      *
      * @type {ICommandContext}
      */
-    public requestContext:ICommandContext;
+    public requestContext: ICommandContext;
     /**
      * Creates an instance of AbstractCommand.
      *
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor(@Inject(DefaultServiceNames.Container) protected container: IContainer) {
+    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer) {
         this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
@@ -154,5 +144,5 @@ export abstract class AbstractCommand<T> {
     abstract runAsync(...args): Promise<T>;
 
     // Must be defined in command
-   // protected fallbackAsync(err, ...args)
+    // protected fallbackAsync(err, ...args)
 }

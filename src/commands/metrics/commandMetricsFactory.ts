@@ -23,7 +23,7 @@ export class CommandMetricsFactory {
     static getOrCreate(options:CommandProperties): ICommandMetrics {
         let previouslyCached = CommandMetricsFactory.metricsByCommand.get(options.commandName);
         if (previouslyCached) {
-            return previouslyCached
+            return previouslyCached;
         }
 
         let metrics = new HystrixCommandMetrics(options);

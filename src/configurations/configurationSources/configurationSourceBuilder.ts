@@ -1,24 +1,20 @@
 import { System } from './../globals/system';
-import {ConfigurationSource, ConfigurationDataType} from './configurationSource'
-import {ConfigurationManager} from './configurationManager'
+import { ConfigurationSource, ConfigurationDataType } from './configurationSource';
+import { ConfigurationManager } from './configurationManager';
 import { VulcainConfigurationSource } from './vulcainConfigurationSource';
-import {FileConfigurationSource} from './fileConfigurationSource';
-import { ServiceDependency } from './../dependencies/annotations';
+import { FileConfigurationSource } from './fileConfigurationSource';
 
 /**
  * Helper for adding configuration source providing by DynamicConfiguration.init
  */
-export class ConfigurationSourceBuilder
-{
-    private  _sources: Array<ConfigurationSource>;
+export class ConfigurationSourceBuilder {
+    private _sources: Array<ConfigurationSource>;
 
-    constructor(private  _configurationManager:ConfigurationManager)
-    {
+    constructor(private _configurationManager: ConfigurationManager) {
         this._sources = [];
     }
 
-    public addSource(source:ConfigurationSource)
-    {
+    public addSource(source: ConfigurationSource) {
         this._sources.push(source);
         return this;
     }
@@ -30,7 +26,7 @@ export class ConfigurationSourceBuilder
             service: System.serviceName,
             version: System.serviceVersion,
             namespace: System.domainName
-        }
+        };
         this.addSource(new VulcainConfigurationSource(uri, options));
         return this;
     }
@@ -41,14 +37,12 @@ export class ConfigurationSourceBuilder
         return this;
     }*/
 
-    public addFileSource(path:string, mode:ConfigurationDataType = ConfigurationDataType.Json)
-    {
+    public addFileSource(path: string, mode: ConfigurationDataType = ConfigurationDataType.Json) {
         this.addSource(new FileConfigurationSource(path, mode));
         return this;
     }
 
-    public startPollingAsync()
-    {
+    public startPollingAsync() {
         return this._configurationManager.registerSourcesAsync(this._sources);
     }
 }

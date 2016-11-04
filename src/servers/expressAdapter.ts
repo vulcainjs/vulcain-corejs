@@ -1,16 +1,15 @@
 import { Application } from '../application';
 import * as express from 'express';
-import {AbstractAdapter} from './abstractAdapter';
+import { AbstractAdapter } from './abstractAdapter';
 import { RequestContext, Pipeline } from './requestContext';
-import {IContainer} from '../di/resolvers';
-import {DefaultServiceNames} from '../di/annotations';
-import {Conventions} from '../utils/conventions';
-import {QueryData} from '../pipeline/query';
+import { IContainer } from '../di/resolvers';
+import { DefaultServiceNames } from '../di/annotations';
+import { Conventions } from '../utils/conventions';
+import { QueryData } from '../pipeline/query';
 import { HttpResponse } from './../pipeline/common';
 import { System } from './../configurations/globals/system';
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 const guid = require('node-uuid');
 
 export class ExpressAdapter extends AbstractAdapter {
@@ -30,7 +29,6 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     initialize() {
-        let self = this;
 
         this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
@@ -43,8 +41,9 @@ export class ExpressAdapter extends AbstractAdapter {
                 let schema = domain.getSchema(name, true);
                 res.send(schema);
             }
-            else
-                res.send(domain.schemas)
+            else {
+                res.send(domain.schemas);
+            }
         });
 
         this.express.get(Conventions.instance.defaultUrlprefix + '/:schemaAction?/:id?', this.auth, async (req: express.Request, res: express.Response) => {
@@ -59,8 +58,9 @@ export class ExpressAdapter extends AbstractAdapter {
                     }
 
                     let requestArgs = this.populateFromQuery(req);
-                    if (requestArgs.count === 0)
+                    if (requestArgs.count === 0) {
                         query.params = req.params.id;
+                    }
                     else {
                         query.params = requestArgs.params;
                         query.params.id = req.params.id;
@@ -85,11 +85,12 @@ export class ExpressAdapter extends AbstractAdapter {
         });
     }
 
-    addActionCustomRoute(verb:string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
+    addActionCustomRoute(verb: string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
         this.express[verb](path, this.auth, async (req: express.Request, res: express.Response) => {
-            let command:any = callback(req);
-            if (!command || !command.action)
+            let command: any = callback(req);
+            if (!command || !command.action) {
                 throw new Error("Invalid custom command configuration");
+            }
             command.domain = this.domainName;
             this.executeRequest(this.executeCommandRequest, command, req, res);
         });
@@ -126,8 +127,9 @@ export class ExpressAdapter extends AbstractAdapter {
                 s = parts[0];
                 a = parts[1];
             }
-            else
+            else {
                 a = req.params.schemaAction;
+            }
         }
         else {
             a = req.query.$action;
@@ -146,18 +148,20 @@ export class ExpressAdapter extends AbstractAdapter {
         }
         command.domain = this.domainName;
         this.getActionSchema(command, req);
-        command.params = command.params || {};
+        command.params = command.params || command.data || {}; // TODO remove command.data
         return command;
     }
 
     private initializeTenant(ctx: RequestContext, req: express.Request) {
         ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT");
-        if (ctx.tenant)
+        if (ctx.tenant) {
             return;
+        }
 
         ctx.tenant = process.env[Conventions.instance.ENV_VULCAIN_TENANT] || (System.isTestEnvironnment && req.query.$tenant);
-        if (ctx.tenant)
+        if (ctx.tenant) {
             return;
+        }
 
         if (ctx.hostName) {
             // Get the first sub-domain
@@ -174,8 +178,9 @@ export class ExpressAdapter extends AbstractAdapter {
 
         let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         try {
-            if (req.user )
+            if (req.user) {
                 ctx.user = req.user;
+            }
 
             ctx.correlationId = req.header("X-VULCAIN-CORRELATION-ID") || guid.v4();
             ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
@@ -192,12 +197,15 @@ export class ExpressAdapter extends AbstractAdapter {
                     }
                 }
                 res.statusCode = customResponse.statusCode || 200;
-                if (customResponse.contentType)
+                if (customResponse.contentType) {
                     res.contentType(customResponse.contentType);
-                if (customResponse.content)
+                }
+                if (customResponse.content) {
                     res.end(customResponse.content, customResponse.encoding);
-                else
+                }
+                else {
                     res.end();
+                }
             }
             else {
                 res.statusCode = result.code || 200;
@@ -220,7 +228,9 @@ export class ExpressAdapter extends AbstractAdapter {
 
     setStaticRoot(basePath: string) {
         System.log.info(null, "Set wwwroot to " + basePath);
-        if (!basePath) throw new Error("BasePath is required.");
+        if (!basePath) {
+            throw new Error("BasePath is required.");
+        }
         this.express.use(express.static(basePath));
     }
 
