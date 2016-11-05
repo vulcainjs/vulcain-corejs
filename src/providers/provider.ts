@@ -15,7 +15,7 @@ export interface ListOptions {
 export interface IProvider<T>
 {
     address: string;
-    initializeWithSchema(tenant: string, schema: Schema);
+    initializeWithSchemaAsync(tenant: string, schema: Schema): Promise<any>;
     findOneAsync(schema: Schema,query): Promise<T>;
     getAllAsync(schema: Schema, options:ListOptions ) : Promise<Array<T>>;
     getAsync(schema: Schema, id:string ) : Promise<T>;

@@ -102,27 +102,27 @@ export class DefaultActionHandler extends AbstractActionHandler {
     }
 
     @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
-    createAsync(entity: any) {
+    async createAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");
-        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
+        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.executeAsync( "create", entity);
     }
 
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
-    updateAsync(entity: any) {
+    async updateAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");
-        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
+        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.executeAsync( "update", entity);
     }
 
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
-    deleteAsync(entity: any) {
+    async deleteAsync(entity: any) {
         if (!entity)
             throw new Error("Entity is required");
 
-        let cmd = this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
+        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.executeAsync( "delete", entity);
     }
 }
@@ -133,20 +133,20 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         super(container);
     }
 
-    private getDefaultCommand(): ICommand {
-        return this.requestContext.getCommand("DefaultRepositoryCommand", this.metadata.schema);
+    private getDefaultCommandAsync(): Promise<ICommand> {
+        return this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
     }
 
     @Query({ action: "get", description: "Get an entity by id" })
-    getAsync(id: any) {
-        let cmd = this.getDefaultCommand();
+    async getAsync(id: any) {
+        let cmd = await this.getDefaultCommandAsync();
         return <Promise<T>>cmd.executeAsync("get", id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
-    getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
+    async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
         let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || 0, page: page || this.query && this.query.page || 0, query:query || {} };
-        let cmd = this.getDefaultCommand();
+        let cmd = await this.getDefaultCommandAsync();
         return <Promise<Array<T>>>cmd.executeAsync( "all", options);
     }
 }

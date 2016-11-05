@@ -6,6 +6,7 @@ import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
 import { IMetrics } from '../../metrics/metrics';
 import { ICommandContext } from './abstractCommand';
+import { ProviderFactory } from '../../providers/providerFactory';
 
 /**
  *
@@ -47,7 +48,7 @@ export abstract class AbstractProviderCommand<T> {
      */
     constructor(
         @Inject(DefaultServiceNames.Container) protected container: IContainer,
-        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory) {
+        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory: ProviderFactory) {
         this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
@@ -56,10 +57,10 @@ export abstract class AbstractProviderCommand<T> {
      *
      * @param {string} schema
      */
-    setSchema(schema: string) {
+    async setSchemaAsync(schema: string): Promise<any> {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = this.providerFactory.getProvider(this.container, this.requestContext.tenant, this.schema);
+            this.provider = await this.providerFactory.getProviderAsync(this.container, this.requestContext.tenant, this.schema);
             this.initializeMetricsInfo();
         }
     }

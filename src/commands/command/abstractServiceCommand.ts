@@ -206,7 +206,7 @@ export abstract class AbstractServiceCommand {
                     let vulcainResponse = response.body;
                     if (vulcainResponse.error) {
                         System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`);
-                        reject(new ApplicationRequestError(vulcainResponse.error, response.status));
+                        reject(new ApplicationRequestError(vulcainResponse.error.message, vulcainResponse.error.errors, response.status));
                     }
                     else {
                         System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`);

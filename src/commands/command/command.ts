@@ -40,9 +40,9 @@ export class HystrixCommand {
         return SemaphoreFactory.getOrCreate(this.properties);
     }
 
-    setSchemaOnCommand(schema: string) {
-        if (schema && (<any>this.command).setSchema)
-            (<any>this.command).setSchema(schema);
+    async setSchemaOnCommandAsync(schema: string) {
+        if (schema && (<any>this.command).setSchemaAsync)
+            await (<any>this.command).setSchemaAsync(schema);
     }
 
     async executeAsync<T>(...args): Promise<T> {

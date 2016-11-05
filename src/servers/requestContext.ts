@@ -190,8 +190,8 @@ export class RequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommand(name: string, schema?: string): ICommand {
-        return CommandFactory.get(name, this, schema);
+    getCommandAsync(name: string, schema?: string): Promise<ICommand> {
+        return CommandFactory.getAsync(name, this, schema);
     }
 
     /**

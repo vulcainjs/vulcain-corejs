@@ -30,7 +30,7 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    initializeWithSchema(tenant: string, schema: Schema) {
+    initializeWithSchemaAsync(tenant: string, schema: Schema) {
 
         if (!schema)
             throw new Error("Schema can not be null");
@@ -52,7 +52,7 @@ export class MemoryProvider implements IProvider<any>
                 this.state.data = JSON.parse(fs.readFileSync(this.state.saveToFile, "UTF-8"));
             }
         }
-        return this.state;
+        return Promise.resolve(this.state);
     }
 
     private save(schema: Schema) {

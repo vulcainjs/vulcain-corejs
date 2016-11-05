@@ -1,21 +1,21 @@
 import { DefaultServiceNames } from './../../di/annotations';
 import { Logger, RequestContext } from './../../servers/requestContext';
-import {IProvider, ListOptions} from "../provider";
-import {Schema} from "../../schemas/schema";
-import {MongoClient, Db} from 'mongodb';
-import {Inject} from '../../di/annotations';
+import { IProvider, ListOptions } from "../provider";
+import { Schema } from "../../schemas/schema";
+import { MongoClient } from 'mongodb';
+import { Inject } from '../../di/annotations';
+import { ApplicationRequestError } from '../../errors/applicationRequestError';
 
 /**
  * Default mongo provider
  */
 export class MongoProvider implements IProvider<any>
 {
-    private _mongo;
-
     public state: {
         keyPropertyName?: string;
         uri: string;
         dispose?: () => void;
+        _mongo?;
     };
 
     get address() {
@@ -28,17 +28,18 @@ export class MongoProvider implements IProvider<any>
         uri: string,
         private options?) {
         this.state = { uri: uri };
-        this._logger.verbose(ctx, "MONGODB: Create provider with address " + uri);
     }
 
-    initializeWithSchema(tenant: string, schema: Schema): any {
+    initializeWithSchemaAsync(tenant: string, schema: Schema): any {
         if (!schema)
-            throw new Error("Schema is not set for the current provider.");
+            throw new Error("schema is not set for provider.");
         if (!tenant)
             throw new Error("tenant is required");
 
         this.state.uri = this.state.uri + "/" + tenant;
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
+
+        this.ctx.logVerbose(`MONGODB: Creating provider ${this.state.uri} for schema ${schema.name}`);
 
         let keys;
         for (let p in schema.description.properties) {
@@ -50,50 +51,39 @@ export class MongoProvider implements IProvider<any>
                 keys[p] = prop.unique === true ? 1 : prop.unique;
             }
         }
-        if (keys) {
-            this.ensuresDbOpen()
-                .then(db => {
-                    this._mongo = db;
-                    this.state.dispose = () => {
-                        db.close();
-                    };
+
+        const self = this;
+        return new Promise((resolve, reject) => {
+            MongoClient.connect(self.state.uri, self.options, (err, db) => {
+                if (err) {
+                    reject(err);
+                    this._logger.error(self.ctx, err, `MONGODB: Error when opening database ${this.state.uri} for schema ${schema.name}`);
+                    return;
+                }
+
+                this.state._mongo = db;
+
+                this.state.dispose = () => {
+                    db.close();
+                };
+
+                if (keys) {
                     let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true })
-                        .then(() => {
-                            this._logger.info(this.ctx, "MONGODB: Unique index created for " + this.state.uri);
+                        .then((err) => {
+                            if (err) {
+                                self.ctx.logError(err, `MONGODB: Error when creating index for ${this.state.uri} for schema ${schema.name}`);
+                            }
+                            else {
+                                self._logger.info(self.ctx, `MONGODB: Unique index created for ${this.state.uri} for schema ${schema.name}`);
+                            }
                         })
                         .catch(err => {
-                            this._logger.error(null, err);
+                            self.ctx.logError(err, `MONGODB: Error when creating index for ${this.state.uri} for schema ${schema.name}`);
                         });
-                })
-                .catch(err => {
-                    this._logger.error(null, err);
-                });
-        }
-        return this.state;
-    }
-
-    private ensuresDbOpen(): Promise<Db> {
-
-        let self = this;
-        return new Promise((resolve, reject) => {
-            if (!self._mongo) {
-                MongoClient.connect(self.state.uri, self.options, (err, db) => {
-                    if (err) {
-                        reject(err);
-                        this._logger.error(self.ctx, err, "MONGODB: Error when opening database ");
-                    }
-                    else {
-                        self._mongo = db;
-                        this.state.dispose = () => {
-                            db.close();
-                        };
-                        resolve(db);
-                    }
-                });
-            }
-            else
-                resolve(self._mongo);
+                }
+                resolve(self.state);
+            });
         });
     }
 
@@ -106,9 +96,12 @@ export class MongoProvider implements IProvider<any>
         let page = options.page || 0;
         let maxByPage = options.maxByPage || 100;
         let query = options.query ? options.query.filter || options.query : {};
+
+        this.ctx.logVerbose(`MONGODB: Get all on ${this.state.uri} for schema ${schema.name} with query: ${JSON.stringify(query)}`);
+
         return new Promise(async (resolve, reject) => {
             try {
-                let db = await this.ensuresDbOpen();
+                let db = this.state._mongo;
                 let cursor = db.collection(schema.description.storageName).find(query)
                     .skip(page * maxByPage)
                     .limit(maxByPage);
@@ -129,7 +122,7 @@ export class MongoProvider implements IProvider<any>
     findOneAsync(schema: Schema, query) {
         return new Promise(async (resolve, reject) => {
             try {
-                let db = await this.ensuresDbOpen();
+                let db = this.state._mongo;
                 db.collection(schema.description.storageName).findOne(query,
                     (err, res) => {
                         if (err)
@@ -150,11 +143,13 @@ export class MongoProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAsync(schema: Schema, name: string) {
+        this.ctx.logVerbose(`MONGODB: Get on ${this.state.uri} for schema ${schema.name} with id: ${name}`);
+
         return new Promise(async (resolve, reject) => {
             try {
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = name;
-                let db = await this.ensuresDbOpen();
+                let db = this.state._mongo;
                 db.collection(schema.description.storageName).findOne(filter, (err, res) => {
                     if (err)
                         reject(err);
@@ -189,7 +184,9 @@ export class MongoProvider implements IProvider<any>
 
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = id;
-                let db = await this.ensuresDbOpen();
+        this.ctx.logVerbose(`MONGODB: Delete on ${this.state.uri} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
+
+                let db = this.state._mongo;
                 db.collection(schema.description.storageName).remove(filter, (err, res) => {
                     if (err)
                         reject(this.normalizeErrors(id, err));
@@ -205,13 +202,15 @@ export class MongoProvider implements IProvider<any>
 
     private normalizeErrors(id: string, err) {
         if (!err || !err.errors) return err;
-        let errors = { message: "Validations errors", errors: [] };
-        for (let e in err.errors) {
-            if (!err.errors.hasOwnProperty(e)) continue;
-            let error = err.errors[e];
-            errors.errors.push({ message: error.message, property: error.path, id: id });
+        let error = new ApplicationRequestError("Mongo error", []);
+        if (err.errors) {
+            for (let e in err.errors) {
+                if (!err.errors.hasOwnProperty(e)) continue;
+                let error = err.errors[e];
+                error.errors.push({ message: error.message, property: error.path, id: id });
+            }
         }
-        return { code: 400, body: errors };
+        return error;
     }
 
     /**
@@ -224,9 +223,12 @@ export class MongoProvider implements IProvider<any>
             throw new Error("Entity is required");
 
         entity._created = new Date().toUTCString();
+
+        this.ctx.logVerbose(`MONGODB: Create entity on ${this.state.uri} for schema ${schema.name} with entity: ${JSON.stringify(entity)}`);
+
         return new Promise(async (resolve, reject) => {
             try {
-                let db = await this.ensuresDbOpen();
+                let db = this.state._mongo;
                 db.collection(schema.description.storageName).insertOne(entity, (err) => {
                     if (err)
                         reject(this.normalizeErrors(entity[this.state.keyPropertyName], err));
@@ -250,12 +252,14 @@ export class MongoProvider implements IProvider<any>
         if (!entity)
             throw new Error("Entity is required");
 
+        this.ctx.logVerbose(`MONGODB: Update entity on ${this.state.uri} for schema ${schema.name} with entity: ${JSON.stringify(entity)}`);
+
         return new Promise(async (resolve, reject) => {
             try {
                 let id = (old || entity)[this.state.keyPropertyName];
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = id;
-                let db = await this.ensuresDbOpen();
+                let db = this.state._mongo;
                 let collection = db.collection(schema.description.storageName);
                 collection.findOne(filter, (err, initial) => {
                     if (err || !initial) {
