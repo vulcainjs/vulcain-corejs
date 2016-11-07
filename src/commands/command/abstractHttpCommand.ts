@@ -21,7 +21,21 @@ export abstract class AbstractHttpCommand {
         if (!dep) {
             throw new Error("HttpDependency annotation is required.");
         }
-        this.metrics.setTags("uri=" + dep.uri);
+        this.setMetricsTags(dep);
+    }
+
+    /**
+     * Set metric tags for this command
+     *
+     * @protected
+     * @param {any} tags
+     *
+     * @memberOf AbstractHttpCommand
+     */
+    protected setMetricsTags(tags) {
+        if (!tags || !tags.uri)
+            throw new Error("Metrics tags must have an uri property.");
+        this.metrics.setTags("uri=" + tags.uri);
     }
 
     onCommandCompleted(duration: number, success: boolean) {

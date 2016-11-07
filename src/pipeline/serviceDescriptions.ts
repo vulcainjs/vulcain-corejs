@@ -340,7 +340,7 @@ export class ServiceDescriptors {
                 methodName: action,
                 metadata: Object.assign({}, handlerMetadata, actionMetadata),
                 handler: target
-            }
+            };
 
             this.handlers.push(item);
         }

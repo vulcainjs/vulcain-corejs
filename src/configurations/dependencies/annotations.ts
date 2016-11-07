@@ -20,6 +20,12 @@ export interface ExternalDependencyInfo {
     uri: string;
 }
 
+/**
+ * Contains all service dependencies
+ *
+ * @export
+ * @class VulcainManifest
+ */
 export class VulcainManifest {
     dependencies: {
         services: Array<ServiceDependencyInfo>,
@@ -39,8 +45,13 @@ export class VulcainManifest {
 }
 
 /**
- * ServiceDependency attribute on Servicecommand
+ * Declare a vulcain service dependencie for the current service
  *
+ * @export
+ * @param {string} service Name of the called service
+ * @param {string} version Version of the called service
+ * @param {string} discoveryAddress Discovery address of the called service (ex:http://..:30000/api/_servicedesctipyion)
+ * @returns
  */
 export function ServiceDependency(service: string, version: string, discoveryAddress: string) {
     return (target: Function) => {
@@ -50,6 +61,13 @@ export function ServiceDependency(service: string, version: string, discoveryAdd
     };
 }
 
+/**
+ * Declare an external http call dependencie for the current service
+ *
+ * @export
+ * @param {string} uri External uri
+ * @returns
+ */
 export function HttpDependency(uri: string) {
     return (target: Function) => {
         target["$dependency:external"] = { uri };
@@ -58,17 +76,25 @@ export function HttpDependency(uri: string) {
     };
 }
 
-export function ConfigurationProperty(key: string, schema: string) {
+/**
+ * Declare a dynamic property configuration for the current service.
+ *
+ * @export
+ * @param {string} propertyName Property name
+ * @param {string} schema Property schema (can be a model or a native js type)
+ * @returns
+ */
+export function ConfigurationProperty(propertyName: string, schema: string) {
     return (target: Function) => {
-        if (!key)
-            throw new Error("Invalid property key");
+        if (!propertyName)
+            throw new Error("Invalid property propertyName");
 
-        let existingSchema = System.manifest.configurations[key];
+        let existingSchema = System.manifest.configurations[propertyName];
         if(existingSchema) {
             if (existingSchema !== schema)
-                throw new Error("Inconsistant schema for configuration property " + key);
+                throw new Error("Inconsistant schema for configuration property " + propertyName);
             return;
         }
-        System.manifest.configurations[key] = schema;
+        System.manifest.configurations[propertyName] = schema;
     };
 }
