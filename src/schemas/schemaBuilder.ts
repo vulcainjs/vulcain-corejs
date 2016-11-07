@@ -1,5 +1,5 @@
 import { Domain, SchemaDescription } from './schema';
-import 'reflect-metadata'
+import 'reflect-metadata';
 import { PropertyOptions, ReferenceOptions } from './annotations';
 import { ModelOptions } from './annotations';
 

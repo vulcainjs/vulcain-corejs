@@ -122,16 +122,28 @@ export class Schema {
         return entity;
     }
 
-    static deepAssign(target, source) {
+    deepAssign( target, source, schema?: SchemaDescription) {
         if (!source) {
             return target;
         }
+        schema = schema || this.description;
         for (let key of Object.keys(source)) {
             let val = source[key];
-            if (typeof val === "object") {
-                target[key] = Schema.deepAssign(target[key] || {}, val);
+            if (typeof val === "object" && !Array.isArray(val)) {
+                let ref = schema.references[key];
+                if (ref) {
+                    let item = ref.item;
+                    if (item === "any" && val && val.__schema) {
+                        item = val.__schema;
+                    }
+                    let elemSchema = this.domain.findSchemaDescription(item);
+                    if (elemSchema) {
+                        target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
+                        continue;
+                    }
+                }
             }
-            else if (val !== undefined) {
+            if (val !== undefined) {
                 target[key] = val;
             }
         }

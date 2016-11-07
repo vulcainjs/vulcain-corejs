@@ -1,8 +1,8 @@
-import { Conventions } from './../utils/conventions';
-import { RequestContext } from './../servers/requestContext';
 import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService } from '../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
+import { IContainer } from '../di/resolvers';
+import { RequestContext } from '../servers/requestContext';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');
 
@@ -12,13 +12,14 @@ export class AuthenticationStrategies {
         passport.use(new AnonymousStrategy());
     }
 
-    static initBearer( tokens:ITokenService )
+    static initBearer()
     {
-        let strategy = new BearerStrategy( async ( accessToken, callback ) =>
+        let strategy = new BearerStrategy( async ( accessToken, callback, ctx: RequestContext ) =>
         {
             try
             {
-                let token = await (<any>tokens).verifyTokenAsync( accessToken );
+                let tokens = ctx.container.get<ITokenService>("TokenService");
+                let token = await tokens.verifyTokenAsync( accessToken );
 
                 // No token found
                 if( !token )
@@ -40,13 +41,14 @@ export class AuthenticationStrategies {
         passport.use( strategy );
     }
 
-    static initApiKey( apiKeys:ITokenService )
+    static initApiKey( )
     {
-        let strategy = new ApiKeyStrategy( async ( params, callback ) =>
+        let strategy = new ApiKeyStrategy( async ( params, callback, ctx: RequestContext ) =>
         {
             try
             {
-                let token = await (<any>apiKeys).verifyTokenAsync( params );
+                let apiKeys = ctx.container.get<ITokenService>("ApiKeyService");
+                let token = await apiKeys.verifyTokenAsync( params );
 
                 // No token found
                 if( !token )

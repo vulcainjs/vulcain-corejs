@@ -1,5 +1,3 @@
-import { RequestContext } from './../servers/requestContext';
-import { Conventions } from './../utils/conventions';
 import * as passportStrategy from 'passport-strategy';
 
 export class BearerStrategy extends passportStrategy.Strategy {
@@ -34,7 +32,7 @@ export class BearerStrategy extends passportStrategy.Strategy {
 
         if (!authorization) { return this.success(false, null); }
 
-        let parts = authorization.split(' ')
+        let parts = authorization.split(' ');
         if (parts.length < 2) { return this.fail(400); }
 
         let scheme = parts[0]
@@ -51,6 +49,6 @@ export class BearerStrategy extends passportStrategy.Strategy {
             self.success(user, info);
         }
 
-        this._verify(jwtToken, verified);
+        this._verify(jwtToken, verified, req.requestContext);
     }
 }

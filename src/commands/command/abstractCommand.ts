@@ -2,7 +2,7 @@ import { ExecutionResult } from './executionResult';
 import { DefaultServiceNames } from '../../di/annotations';
 import { IContainer } from '../../di/resolvers';
 import { Inject } from '../../di/annotations';
-import { Pipeline } from '../../servers/requestContext';
+import { RequestContext } from '../../servers/requestContext';
 import { IMetrics } from '../../metrics/metrics';
 
 /**
@@ -24,91 +24,6 @@ export interface ICommand {
 }
 
 /**
- * command context initialized for every command
- *
- * @export
- * @interface ICommandContext
- */
-export interface ICommandContext {
-    /**
-     * current user
-     */
-    user;
-    /**
-     * is user scope belongs to provided scope
-     *
-     * @param {string} scope
-     * @returns {boolean}
-     */
-    hasScope(scope: string): boolean;
-    /**
-     * Is user administrator
-     *
-     * @returns {boolean} true if user is administrator
-     */
-    isAdmin(): boolean;
-    /**
-     * Create and return a new command
-     *
-     * @param {string} name
-     * @returns {ICommand}
-     */
-    getCommand(name: string): ICommand;
-    /**
-     * Request correlation id
-     *
-     * @type {string}
-     */
-    correlationId: string;
-
-    /**
-     * Request correlation path
-     *
-     * @type {string}
-     * @memberOf ICommandContext
-     */
-    correlationPath: string;
-    /**
-     * Request cache (Only valid for this request)
-     *
-     * @type {Map<string, any>}
-     */
-    cache: Map<string, any>;
-    /**
-     *
-     *
-     * @type {Pipeline}
-     */
-    pipeline: Pipeline;
-    /**
-     *
-     *
-     * @type {string}
-     */
-    tenant: string;
-    logError(error: Error, msg?: string);
-
-    /**
-     * Log a message info
-     *
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
-     *
-     */
-    logInfo(msg: string, ...params: Array<any>);
-
-    /**
-     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
-     *
-     * @param {any} requestContext Current requestContext
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
-     *
-     */
-    logVerbose(msg: string, ...params: Array<any>);
-}
-
-/**
  *
  *
  * @export
@@ -121,17 +36,29 @@ export abstract class AbstractCommand<T> {
     /**
      *
      *
-     * @type {ICommandContext}
+     * @type {RequestContext}
      */
-    public requestContext: ICommandContext;
+    public requestContext: RequestContext;
+
+    /**
+     * Components container
+     *
+     * @readonly
+     *
+     * @memberOf AbstractCommand
+     */
+    get container() {
+        return this.requestContext.container;
+    }
+
     /**
      * Creates an instance of AbstractCommand.
      *
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer) {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
+    constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
+        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
     /**

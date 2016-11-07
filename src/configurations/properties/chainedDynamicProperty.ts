@@ -4,7 +4,7 @@
 /// and then the default value.
 /// </summary>
 /// <typeparam name="T">Property type</typeparam>
-import {IDynamicProperty} from '../dynamicProperty'
+import { IDynamicProperty } from '../dynamicProperty';
 import {DynamicProperties} from "./dynamicProperties";
 import * as rx from 'rx';
 
@@ -20,7 +20,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
         return this._propertyChanged;
-    }    
+    }
 
     get name()
     {
@@ -36,13 +36,13 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
 
         this._fallbackProperties = properties;
 
-        // subscribe to changes 
+        // subscribe to changes
         this._reset = this.reset.bind(this);
         manager.propertyChanged.subscribe(this._reset);
         this.reset();
     }
 
-    // One chained property has changed    
+    // One chained property has changed
     reset()
     {
         let old = this._activeProperty;
@@ -50,12 +50,12 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
         for( var propertyName of this._fallbackProperties )
         {
             tmp = this._propertiesManager.getProperty( propertyName );
-            if( tmp != null )
+            if( !tmp )
             {
                 break;
             }
         }
-        
+
         this._activeProperty = tmp;
         if( old !== this._activeProperty)
         {
@@ -68,7 +68,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
         this._propertyChanged.onNext( this );
         this._propertiesManager.onPropertyChanged(this, "changed");
     }
-    
+
     /// <summary>
     /// Current value
     /// </summary>
@@ -99,7 +99,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     public dispose()
     {
         this.disposed = true;
-        this.onPropertyChanged();        
+        this.onPropertyChanged();
         this._propertyChanged.dispose();
         this._propertyChanged = new rx.Subject<IDynamicProperty<T>>();
     }

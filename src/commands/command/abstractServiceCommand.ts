@@ -1,7 +1,6 @@
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
 import { QueryResponse } from './../../pipeline/query';
-import { ICommandContext } from './abstractCommand';
 import { ActionResponse } from './../../pipeline/actions';
 import * as types from './types';
 import * as os from 'os';
@@ -11,6 +10,7 @@ import { System } from './../../configurations/globals/system';
 import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
 import { IMetrics } from '../../metrics/metrics';
+import { RequestContext } from '../../servers/requestContext';
 const rest = require('unirest');
 
 /**
@@ -26,9 +26,13 @@ export abstract class AbstractServiceCommand {
     /**
      *
      *
-     * @type {ICommandrequestContext}
+     * @type {RequestContext}
      */
-    public requestContext: ICommandContext;
+    public requestContext: RequestContext;
+
+    get container() {
+        return this.requestContext.container;
+    }
 
     private static METRICS_NAME = "Service_Call_";
 
@@ -38,8 +42,8 @@ export abstract class AbstractServiceCommand {
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer) {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
+    constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
+        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 

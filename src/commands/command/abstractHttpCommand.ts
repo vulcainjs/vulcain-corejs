@@ -1,18 +1,22 @@
 const rest = require('unirest');
 import * as types from './types';
-import { ICommandContext } from './abstractCommand';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
 import { System } from './../../configurations/globals/system';
 import { IMetrics } from '../../metrics/metrics';
+import { RequestContext } from '../../servers/requestContext';
 
 export abstract class AbstractHttpCommand {
     protected metrics: IMetrics;
-    public requestContext: ICommandContext;
+    public requestContext: RequestContext;
     private static METRICS_NAME = "External_Call_";
 
-    constructor( @Inject(DefaultServiceNames.Container) protected container: IContainer) {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
+    get container() {
+        return this.requestContext.container;
+    }
+
+    constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
+        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 

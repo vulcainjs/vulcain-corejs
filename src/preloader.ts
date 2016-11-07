@@ -1,6 +1,4 @@
-import { DefaultServiceNames } from './di/annotations';
 import { IContainer } from './di/resolvers';
-import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 
 interface Item {
     name: string;

@@ -5,8 +5,8 @@ import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
 import { IMetrics } from '../../metrics/metrics';
-import { ICommandContext } from './abstractCommand';
 import { ProviderFactory } from '../../providers/providerFactory';
+import { RequestContext } from '../../servers/requestContext';
 
 /**
  *
@@ -22,9 +22,13 @@ export abstract class AbstractProviderCommand<T> {
     /**
      *
      *
-     * @type {ICommandContext}
+     * @type {RequestContext}
      */
-    public requestContext: ICommandContext;
+    public requestContext: RequestContext;
+
+    get container() {
+        return this.requestContext.container;
+    }
     /**
      *
      *
@@ -47,9 +51,9 @@ export abstract class AbstractProviderCommand<T> {
      * @param {any} providerFactory
      */
     constructor(
-        @Inject(DefaultServiceNames.Container) protected container: IContainer,
+        @Inject(DefaultServiceNames.Container) container: IContainer,
         @Inject(DefaultServiceNames.ProviderFactory) private providerFactory: ProviderFactory) {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
+        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
     /**
@@ -60,7 +64,7 @@ export abstract class AbstractProviderCommand<T> {
     async setSchemaAsync(schema: string): Promise<any> {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = await this.providerFactory.getProviderAsync(this.container, this.requestContext.tenant, this.schema);
+            this.provider = await this.providerFactory.getProviderAsync(this.requestContext.container, this.requestContext.tenant, this.schema);
             this.initializeMetricsInfo();
         }
     }

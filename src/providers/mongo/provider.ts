@@ -107,13 +107,16 @@ export class MongoProvider implements IProvider<any>
                     .skip(page * maxByPage)
                     .limit(maxByPage);
                 cursor.toArray((err, res) => {
-                    if (err)
+                    if (err) {
+                        this.ctx.logError(err, `Error when getting all entities for schema: ${schema.name}`);
                         reject(err);
+                    }
                     else
                         resolve(res);
                 });
             }
             catch (err) {
+                this.ctx.logError(err, `Error when getting all entities for schema: ${schema.name}`);
                 reject(err);
             }
         });
@@ -125,13 +128,16 @@ export class MongoProvider implements IProvider<any>
                 let db = this.state._mongo;
                 db.collection(schema.description.storageName).findOne(query,
                     (err, res) => {
-                        if (err)
+                        if (err) {
+                            this.ctx.logError(err, `Error when find one entity for schema: ${schema.name}`);
                             reject(err);
+                        }
                         else
                             resolve(res);
                     });
             }
             catch (err) {
+                this.ctx.logError(err, `Error when find one entity for schema: ${schema.name}`);
                 reject(err);
             }
         });
@@ -151,13 +157,16 @@ export class MongoProvider implements IProvider<any>
                 filter[this.state.keyPropertyName || "_id"] = name;
                 let db = this.state._mongo;
                 db.collection(schema.description.storageName).findOne(filter, (err, res) => {
-                    if (err)
-                        reject(err);
+                    if (err) {
+                        this.ctx.logError(err, `Error when getting entity ${name}, schema: ${schema.name}`);
+                        reject(this.normalizeErrors(name, err));
+                    }
                     else
                         resolve(res);
                 });
             }
             catch (err) {
+                this.ctx.logError(err, `Error when getting entity ${name}, schema: ${schema.name}`);
                 reject(err);
             }
         });
@@ -173,28 +182,31 @@ export class MongoProvider implements IProvider<any>
             throw new Error("Argument is required");
 
         return new Promise(async (resolve, reject) => {
-            try {
-                let id;
-                if (typeof old === "string")
-                    id = old;
-                else
-                    id = old[this.state.keyPropertyName];
-                if (!id)
-                    throw new Error("Mongo : Error on delete. Id must not be null");
+            let id;
+            if (typeof old === "string")
+                id = old;
+            else
+                id = old[this.state.keyPropertyName];
+            if (!id)
+                throw new Error("Mongo : Error on delete. Id must not be null");
 
+            try {
                 let filter = {};
                 filter[this.state.keyPropertyName || "_id"] = id;
-        this.ctx.logVerbose(`MONGODB: Delete on ${this.state.uri} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
+                this.ctx.logVerbose(`MONGODB: Deleting on ${this.state.uri} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
 
                 let db = this.state._mongo;
                 db.collection(schema.description.storageName).remove(filter, (err, res) => {
-                    if (err)
+                    if (err) {
+                        this.ctx.logError(err, `Error when deleting entity ${id}, schema: ${schema.name}`);
                         reject(this.normalizeErrors(id, err));
+                    }
                     else
                         resolve();
                 });
             }
             catch (err) {
+                this.ctx.logError(err, `Error when deleting entity ${id}, schema: ${schema.name}`);
                 reject(err);
             }
         });
@@ -230,10 +242,14 @@ export class MongoProvider implements IProvider<any>
             try {
                 let db = this.state._mongo;
                 db.collection(schema.description.storageName).insertOne(entity, (err) => {
-                    if (err)
+                    if (err) {
+                        let id = entity[this.state.keyPropertyName];
+                        this.ctx.logError(err, `Error when creating entity ${id}, schema: ${schema.name}`);
                         reject(this.normalizeErrors(entity[this.state.keyPropertyName], err));
-                    else
+                    }
+                    else {
                         resolve(entity);
+                    }
                 });
             }
             catch (err) {
@@ -261,20 +277,30 @@ export class MongoProvider implements IProvider<any>
                 filter[this.state.keyPropertyName || "_id"] = id;
                 let db = this.state._mongo;
                 let collection = db.collection(schema.description.storageName);
+
                 collection.findOne(filter, (err, initial) => {
-                    if (err || !initial) {
-                        reject(err);
+                    if (err) {
+                        this.ctx.logError(err, `Error when updating entity ${id}, schema: ${schema.name}`);
+                        reject(new Error(`Error when updating entity ${id}, schema: ${schema.name}, error: ${err.message}`));
+                        return;
+                    }
+                    if (!initial) {
+                        err = new Error(`Can not update unknow entity ${id}, schema: ${schema.name}`);
+                        this.ctx.logError(err, `Error when updating entity ${id}, schema: ${schema.name}`);
+                        reject();
                         return;
                     }
 
                     let _id = initial._id;
-                    initial = Schema.deepAssign(initial, entity);
+                    initial = schema.deepAssign(initial, entity);
                     initial._updated = new Date().toUTCString();
                     initial._id = _id;
 
                     collection.updateOne(filter, initial, err => {
-                        if (err)
+                        if (err) {
+                            this.ctx.logError(err, `Error when updating entity ${id}, schema: ${schema.name}`);
                             reject(this.normalizeErrors(id, err));
+                        }
                         else
                             resolve(initial);
                     });

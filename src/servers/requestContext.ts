@@ -78,7 +78,6 @@ export class RequestContext {
      * Request correlation path
      *
      * @type {string}
-     * @memberOf ICommandContext
      */
     correlationPath: string;
 
@@ -135,7 +134,6 @@ export class RequestContext {
     constructor(container: IContainer, public pipeline: Pipeline) {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
-        this.container.injectInstance(this, DefaultServiceNames.RequestContext);
         this._scopePolicy = container.get<IPolicy>(DefaultServiceNames.ScopesPolicy);
     }
 

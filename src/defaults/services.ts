@@ -9,6 +9,6 @@ export class VerifyTokenParameter {
 }
 
 export interface ITokenService {
-    verifyTokenAsync(data: VerifyTokenParameter): Promise<boolean>;
+    verifyTokenAsync(data: VerifyTokenParameter): Promise<any>;
 }
 

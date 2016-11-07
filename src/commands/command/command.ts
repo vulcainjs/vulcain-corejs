@@ -188,12 +188,14 @@ export class HystrixCommand {
     }
 
     private onExecutionError(ms: number, e: Error): Promise<any> {
+        e = e || new Error("Unknow error");
+        
         if (e instanceof BadRequestError) {
             this.metrics.markBadRequest(ms);
             throw e;
         }
 
-        this.logInfo(`Error executing command ${e && e.stack} Proceeding to fallback logic...`);
+        this.logInfo(`Error executing command ${e.stack} Proceeding to fallback logic...`);
         this.metrics.markFailure();
         this.status.failedExecutionException = e;
         return this.getFallbackOrThrowException(EventType.FAILURE, FailureType.COMMAND_EXCEPTION, "failed", e);

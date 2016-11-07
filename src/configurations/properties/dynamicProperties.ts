@@ -1,9 +1,9 @@
 import { System } from './../globals/system';
-import {DynamicPropertiesUpdater} from '../dynamicPropertiesUpdater'
-import {ConfigurationManager} from '../configurationSources/configurationManager'
-import {PropertiesFactory} from './propertiesFactory'
-import {DynamicProperty} from './dynamicProperty'
-import {IDynamicProperty} from '../dynamicProperty'
+import {DynamicPropertiesUpdater} from '../dynamicPropertiesUpdater';
+import {ConfigurationManager} from '../configurationSources/configurationManager';
+import {PropertiesFactory} from './propertiesFactory';
+import {DynamicProperty} from './dynamicProperty';
+import {IDynamicProperty} from '../dynamicProperty';
 import {ConfigurationSourceBuilder} from "../configurationSources/configurationSourceBuilder";
 import {ConfigurationSource} from "../configurationSources/configurationSource";
 import * as rx from 'rx';
@@ -131,7 +131,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater
 
     get pollingIntervalInSeconds()
     {
-        return this._configurationManager != null ? this._configurationManager.pollingIntervalInSeconds : 0;
+        return this._configurationManager ? this._configurationManager.pollingIntervalInSeconds : 0;
     }
 
     onPropertyChanged( property, action:string )

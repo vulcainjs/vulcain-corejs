@@ -29,9 +29,15 @@ export class Container implements IContainer {
     private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
 
-    constructor(private parent?: IContainer, private requestContext?: RequestContext) {
+    constructor(private parent?: IContainer, requestContext?: RequestContext) {
+        if (parent && !requestContext)
+            throw new Error("RequestContext must not be null.");
+
         this.scope = new Scope(parent && (<any>parent).scope, requestContext);
         this.injectInstance(this, DefaultServiceNames.Container);
+        if (requestContext) {
+            this.injectInstance(requestContext, DefaultServiceNames.RequestContext);
+        }
 
         if (!parent) {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
@@ -43,6 +49,7 @@ export class Container implements IContainer {
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
+        this.parent = null;
     }
 
     /**

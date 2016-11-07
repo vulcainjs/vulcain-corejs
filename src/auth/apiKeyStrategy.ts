@@ -29,7 +29,7 @@ export class ApiKeyStrategy extends passportStrategy.Strategy {
         var authorization = req.headers['authorization'];
         if (!authorization) { return this.success(false, null); }
 
-        var parts = authorization.split(' ')
+        var parts = authorization.split(' ');
         if (parts.length < 2) { return this.fail(400); }
 
         var scheme = parts[0]
@@ -46,7 +46,7 @@ export class ApiKeyStrategy extends passportStrategy.Strategy {
             self.success(user, info);
         }
 
-        let params = { apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.instance.ENV_VULCAIN_TENANT] || RequestContext.TestTenant }
-        this._verify(params, verified);
+        let params = { apiKey, tenant: req.headers["X_VULCAIN_TENANT"] || process.env[Conventions.instance.ENV_VULCAIN_TENANT] || RequestContext.TestTenant };
+        this._verify(params, verified, req.requestContext);
     }
 }

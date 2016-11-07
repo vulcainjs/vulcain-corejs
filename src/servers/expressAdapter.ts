@@ -19,12 +19,17 @@ export class ExpressAdapter extends AbstractAdapter {
     constructor(domainName: string, container: IContainer, private app: Application) {
         super(domainName, container);
 
+        var self = this;
         this.express = express();
+
+        this.express.use(function (req, res, next) {
+            self.initializeRequestContext(req);
+            return next();
+        });
         this.express.use(cookieParser());
         //this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
-
         this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
     }
 
@@ -180,20 +185,25 @@ export class ExpressAdapter extends AbstractAdapter {
         }
     }
 
+    private initializeRequestContext(req: express.Request) {
+        let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
+
+        ctx.correlationId = req.header("X-VULCAIN-CORRELATION-ID") || guid.v4();
+        ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
+        ctx.headers = req.headers;
+        ctx.hostName = req.get('Host');
+        this.initializeTenant(ctx, req);
+        (<any>req).requestContext = ctx;
+    }
+
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
         const begin = super.startRequest(command);
+        let ctx = (<any>req).requestContext;
 
-        let ctx: RequestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         try {
             if (req.user) {
                 ctx.user = req.user;
             }
-
-            ctx.correlationId = req.header("X-VULCAIN-CORRELATION-ID") || guid.v4();
-            ctx.correlationPath = req.header("X-VULCAIN-CORRELATION-PATH") || "-";
-            ctx.headers = req.headers;
-            ctx.hostName = req.get('Host');
-            this.initializeTenant(ctx, req);
 
             let result = await handler.apply(this, [command, ctx]);
             if (result instanceof HttpResponse) {

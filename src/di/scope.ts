@@ -2,7 +2,7 @@ import { RequestContext } from './../servers/requestContext';
 export class Scope {
     private cache = new Map<string, any>();
 
-    constructor(private parent?: Scope, public requestContext?: RequestContext) { }
+    constructor(private parent: Scope, public requestContext: RequestContext) { }
 
     getInstance(name: string) {
         if (!name)
@@ -21,5 +21,6 @@ export class Scope {
         this.cache.forEach(v => v.dispose && v.dispose());
         this.cache.clear();
         this.parent = null;
+        this.requestContext = null;
     }
 }
