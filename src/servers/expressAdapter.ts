@@ -208,7 +208,12 @@ export class ExpressAdapter extends AbstractAdapter {
                     res.contentType(customResponse.contentType);
                 }
                 if (customResponse.content) {
-                    res.end(customResponse.content, customResponse.encoding);
+                    if (customResponse.encoding) {
+                        res.end(customResponse.content, customResponse.encoding);
+                    }
+                    else {
+                        res.send(customResponse.content);
+                    }
                 }
                 else {
                     res.end();
