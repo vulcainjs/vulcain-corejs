@@ -54,6 +54,7 @@ export class MongoProvider implements IProvider<any>
 
         const self = this;
         return new Promise((resolve, reject) => {
+            // Open connexion
             MongoClient.connect(self.state.uri, self.options, (err, db) => {
                 if (err) {
                     reject(err);
@@ -115,8 +116,7 @@ export class MongoProvider implements IProvider<any>
             catch (err) {
                 reject(err);
             }
-        }
-        );
+        });
     }
 
     findOneAsync(schema: Schema, query) {

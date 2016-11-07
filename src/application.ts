@@ -107,6 +107,14 @@ export class Application {
      * @param app  (optional)Server adapter
      */
     constructor(domainName?: string, container?: IContainer) {
+        domainName = domainName;
+        if (!domainName) {
+            throw new Error("Domain name is required.");
+        }
+        System.defaultDomainName = domainName;
+
+        System.log.info(null, "Starting application");
+
         this._executablePath = Path.dirname(module.filename);
         this._basePath = this.findBasePath();
         this._container = container || new Container();
@@ -117,16 +125,8 @@ export class Application {
         this.container.injectSingleton(DefaultPolicy, DefaultServiceNames.ScopesPolicy);
         this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
 
-        domainName = domainName;
-        if (!domainName) {
-            throw new Error("Domain name is required.");
-        }
-
-        System.defaultDomainName = domainName;
-
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
-        System.log.info(null, "Starting application");
     }
 
     private startHystrixStream() {
