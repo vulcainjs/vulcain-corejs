@@ -85,7 +85,7 @@ export class ExpressAdapter extends AbstractAdapter {
         });
     }
 
-    addActionCustomRoute(verb: string, path: string, callback: (req) => { action: string, schema: string, data: any }) {
+    addActionCustomRoute(verb: string, path: string, callback: (req) => { action: string, schema: string, params: any }) {
         this.express[verb](path, this.auth, async (req: express.Request, res: express.Response) => {
             let command: any = callback(req);
             if (!command || !command.action) {
@@ -148,7 +148,7 @@ export class ExpressAdapter extends AbstractAdapter {
             command.params = command.data;
             delete command.data;
         }
-        
+
         // Body contains only data -> create a new command object
         if (!command.action && !command.params && !command.schema) {
             command = { params: command };
