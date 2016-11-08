@@ -122,6 +122,16 @@ export class Schema {
         return entity;
     }
 
+    /**
+     * Copy an entity to another taking into account references defined in schema
+     *
+     * @param {any} target
+     * @param {any} source
+     * @param {SchemaDescription} [schema]
+     * @returns
+     *
+     * @memberOf Schema
+     */
     deepAssign( target, source, schema?: SchemaDescription) {
         if (!source) {
             return target;
@@ -129,7 +139,7 @@ export class Schema {
         schema = schema || this.description;
         for (let key of Object.keys(source)) {
             let val = source[key];
-            if (typeof val === "object" && !Array.isArray(val)) {
+            if (typeof val === "object") {
                 let ref = schema.references[key];
                 if (ref) {
                     let item = ref.item;
@@ -138,7 +148,13 @@ export class Schema {
                     }
                     let elemSchema = this.domain.findSchemaDescription(item);
                     if (elemSchema) {
-                        target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
+                        if (Array.isArray(val)) {
+                            target[key] = [];
+                            val.forEach(v => target[key].push(this.deepAssign( {}, v, elemSchema)));
+                        }
+                        else {
+                            target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
+                        }
                         continue;
                     }
                 }

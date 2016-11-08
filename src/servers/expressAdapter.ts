@@ -11,6 +11,7 @@ import { System } from './../configurations/globals/system';
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const guid = require('node-uuid');
+const cors = require("cors");
 
 export class ExpressAdapter extends AbstractAdapter {
     public express: express.Express;
@@ -27,7 +28,8 @@ export class ExpressAdapter extends AbstractAdapter {
             return next();
         });
         this.express.use(cookieParser());
-        //this.express.use(cors());
+        if(System.isTestEnvironnment)
+            this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
         this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
