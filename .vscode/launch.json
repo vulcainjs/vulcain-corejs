@@ -16,11 +16,10 @@
 				"--harmony"
 			],
 			"env": {
-				"VULCAIN_STORAGE": "master1",
-				"VULCAIN_CLUSTER": "vulcain",
-				"VULCAIN_SERVICE_NAME": "customer",
+				"VULCAIN_ENV": "vulcain",
+				"VULCAIN_SERVICE_NAME": "core",
 				"VULCAIN_SERVICE_VERSION": "1.0",
-				"VULCAIN_DOMAIN": "Customer",
+				"VULCAIN_DOMAIN": "test",
 				"NODE_ENV": "development"
 			},
 			"console": "internalConsole",
@@ -41,7 +40,11 @@
             "runtimeArgs": [
             ],
             "env": {
-                "NODE_ENV": "development"
+				"VULCAIN_ENV": "vulcain",
+				"VULCAIN_SERVICE_NAME": "core",
+				"VULCAIN_SERVICE_VERSION": "1.0",
+				"VULCAIN_DOMAIN": "test",
+				"NODE_ENV": "development"
             },
 			"console": "internalConsole",
             "sourceMaps": true,

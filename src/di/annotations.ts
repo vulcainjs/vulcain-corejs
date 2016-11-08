@@ -78,7 +78,7 @@ export function Injectable(lifeTime: LifeTime, name?: string, enableOnTestOnly?:
         if (enableOnTestOnly && !System.isTestEnvironnment)
             return;
         name = name || target.name;
-        Preloader.registerService(target, (container, domain) => {
+        Preloader.instance.registerService(target, (container, domain) => {
             container.inject(name, target, lifeTime);
         }
         );

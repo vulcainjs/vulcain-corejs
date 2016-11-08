@@ -1,4 +1,4 @@
-import {DynamicProperties} from '../../dist/configurations/properties/dynamicProperties';
+import { DynamicProperties } from '../../dist/configurations/properties/dynamicProperties';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
@@ -6,7 +6,7 @@ import { MemoryConfigurationSource } from '../../dist/configurations/configurati
 
 describe('DynamicConfiguration', function () {
 
-    beforeEach(function() {
+    beforeEach(function () {
         DynamicConfiguration.instance.reset(1);
     });
 
@@ -32,7 +32,7 @@ describe('DynamicConfiguration', function () {
     it('should thrown on duplicate property', function () {
 
         var prop = DynamicConfiguration.asProperty(10, "test");
-        expect( () => {
+        expect(() => {
             var prop2 = DynamicConfiguration.asProperty(10, "test");
         }
         ).to.throw();
@@ -104,7 +104,7 @@ describe('DynamicConfiguration', function () {
             expect(10).to.equal(prop.value);
             done();
         }
-        catch(err) {
+        catch (err) {
             done(err);
         }
     });
@@ -131,7 +131,7 @@ describe('DynamicConfiguration', function () {
             expect(11).to.equal(chained.value);
             done();
         }
-        catch(err) {
+        catch (err) {
             done(err);
         }
     });
@@ -157,7 +157,7 @@ describe('DynamicConfiguration', function () {
             expect(20).to.equal(prop.value);
             done();
         }
-        catch(err) {
+        catch (err) {
             done(err);
         }
     });

@@ -17,6 +17,9 @@ import { RequestContext } from '../../servers/requestContext';
  * @template T
  */
 export abstract class AbstractProviderCommand<T> {
+
+    private providerFactory: ProviderFactory;
+
     protected metrics: IMetrics;
 
     /**
@@ -51,8 +54,8 @@ export abstract class AbstractProviderCommand<T> {
      * @param {any} providerFactory
      */
     constructor(
-        @Inject(DefaultServiceNames.Container) container: IContainer,
-        @Inject(DefaultServiceNames.ProviderFactory) private providerFactory: ProviderFactory) {
+        @Inject(DefaultServiceNames.Container) container: IContainer) {
+        this.providerFactory = container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 

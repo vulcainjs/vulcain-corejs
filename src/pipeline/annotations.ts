@@ -49,7 +49,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler(target, (container: IContainer, domain) => {
+        Preloader.instance.registerHandler(target, (container: IContainer, domain) => {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.register(container, domain, target, actions, metadata, "action");
             Reflect.defineMetadata(symMetadata, metadata, target);
@@ -108,7 +108,7 @@ export function QueryHandler(metadata: QueryMetadata) {
         metadata.scope = metadata.scope || "?";
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler(target, (container: IContainer, domain) => {
+        Preloader.instance.registerHandler(target, (container: IContainer, domain) => {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.register(container, domain, target, actions, metadata, "query");
             Reflect.defineMetadata(symMetadata, metadata, target);
@@ -157,7 +157,7 @@ export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
         let actions = getMetadata(symActions, target);
 
-        Preloader.registerHandler(target, (container, domain) => {
+        Preloader.instance.registerHandler(target, (container, domain) => {
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });

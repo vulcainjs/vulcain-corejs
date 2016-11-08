@@ -21,7 +21,7 @@ import { StatsdMetrics } from '../metrics/statsdMetrics';
 import { DefaultPolicy } from '../servers/policy/defaultPolicy';
 
 /**
- *
+ * Component container for dependency injection
  *
  * @export
  * @class Container
@@ -32,15 +32,22 @@ export class Container implements IContainer {
     private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
 
+    /**
+     * Creates an instance of Container.
+     *
+     * @param {IContainer} [parent]
+     * @param {RequestContext} [requestContext]
+     *
+     * @memberOf Container
+     */
     constructor(private parent?: IContainer, requestContext?: RequestContext) {
         if (parent && !requestContext)
             throw new Error("RequestContext must not be null.");
 
         this.scope = new Scope(parent && (<any>parent).scope, requestContext);
         this.injectInstance(this, DefaultServiceNames.Container);
-        if (requestContext) {
-            this.injectInstance(requestContext, DefaultServiceNames.RequestContext);
-        }
+
+        this.setRequestContext(requestContext);
 
         if (!parent) {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
@@ -51,6 +58,21 @@ export class Container implements IContainer {
         }
     }
 
+    /**
+     * used by test
+     *
+     * @protected
+     * @param {RequestContext} requestContext
+     *
+     * @memberOf Container
+     */
+    protected setRequestContext(requestContext: RequestContext) {
+        if (requestContext) {
+            this.injectInstance(requestContext, DefaultServiceNames.RequestContext);
+            this.scope.requestContext = requestContext;
+        }
+    }
+
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
@@ -58,7 +80,7 @@ export class Container implements IContainer {
     }
 
     /**
-     * Inject all components from files containing in the specified folder.
+     * Inject all components from files of the specified folder.
      * Files are loaded recursively
      *
      * @param {string} folder path relative to the current directory
@@ -72,7 +94,7 @@ export class Container implements IContainer {
     /**
      *
      *
-     * @param {string} address
+     * @param {string} address rabbitmq server address (only host name and optional port)
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
@@ -85,10 +107,10 @@ export class Container implements IContainer {
     }
 
     /**
+     * Use mongo provider
      *
-     *
-     * @param {string} mongo server address
-     * @param {any} [mongoOptions]
+     * @param {string} mongo server address (only host name or list of host names)
+     * @param {any} [mongoOptions] Mongodb options
      */
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address || Conventions.instance.defaultMongoAddress);
@@ -97,15 +119,16 @@ export class Container implements IContainer {
     }
 
     /**
+     * Use a memory provider by default
      *
-     *
-     * @param {string} [folder]
+     * @param {string} [folder] Data can be persisted on disk (on every change)
      */
     useMemoryProvider(folder?: string) {
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
     }
 
     /**
+     * Register a instance of a component
      *
      * @param name
      * @param fn
@@ -120,6 +143,7 @@ export class Container implements IContainer {
     }
 
     /**
+     * Register a component as a singleton. It will be created on first use.
      *
      * @param fn
      * @param args
@@ -144,8 +168,9 @@ export class Container implements IContainer {
     }
 
     /**
+     * A new component are always created
      *
-     * @param fn
+     * @param fn Component constructor
      * @param args
      */
     injectTransient(fn, ...args);
@@ -171,6 +196,7 @@ export class Container implements IContainer {
     }
 
     /**
+     * Scoped by request. Component are initialized with the current requestContext
      *
      * @param fn
      * @param args
@@ -196,6 +222,15 @@ export class Container implements IContainer {
         return this;
     }
 
+    /**
+     * Helper for injecting component
+     *
+     * @param {string} name Component name
+     * @param {any} fn Component constructor
+     * @param {LifeTime} lifeTime Component lifetime
+     *
+     * @memberOf Container
+     */
     inject(name: string, fn, lifeTime: LifeTime) {
         if (lifeTime) {
             switch (lifeTime) {
@@ -216,8 +251,9 @@ export class Container implements IContainer {
 
     /**
      *
-     * @param fn
-     * @param args
+     * Instanciate a component and resolve all of its dependencies
+     * @param fn Component constructor
+     * @param args List of optional arguments
      * @returns {null}
      */
     resolve(fn, ...args) {
@@ -279,16 +315,19 @@ export class TestContainer extends Container {
     /**
      * Creates an instance of TestContainer.
      *
-     * @param {string} domainName
-     * @param {(Container: IContainer) => void} [addServices] Additional services to register
+     * @param {string} domainName Domain name
+     * @param {(container: IContainer) => void} [addDefaultServices] Additional default services to register
      */
-    constructor(public domainName: string, addServices?: (Container: IContainer) => void) {
+    constructor(public domainName: string, addDefaultServices?: (container: IContainer) => void) {
         super();
+        this.setRequestContext(RequestContext.createMock(this));
+
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         let domain = new Domain(domainName, this);
         this.injectInstance(domain, DefaultServiceNames.Domain);
 
-        addServices && addServices(this);
-        Preloader.runPreloads(this, domain, false);
+        addDefaultServices && addDefaultServices(this);
+
+        Preloader.instance.runPreloads(this, domain);
     }
 }

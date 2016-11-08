@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import {MongoQueryParser} from '../../dist/providers/memory/mongoQueryParser';
+import { MongoQueryParser } from '../../dist/providers/memory/mongoQueryParser';
 
 let entity = { name: "entity", num: 10, address: { street: "street1", city: "Paris" }, tags: ["a", "b"] };
 let products = [{ _id: 1, results: [{ product: "abc", score: 10 }, { product: "xyz", score: 5 }] },
@@ -10,11 +10,11 @@ let products = [{ _id: 1, results: [{ product: "abc", score: 10 }, { product: "x
 describe("MemoryProvider", function () {
 
     it("should filter correctly", () => {
-        let p = new MongoQueryParser({name:"entity"});
+        let p = new MongoQueryParser({ name: "entity" });
         expect(p.execute(entity)).to.be.true;
         p = new MongoQueryParser({ $or: [{ num: 11 }, { name: "entity" }] });
-        expect(p.execute(entity )).to.be.true;
-        p = new MongoQueryParser( { name: "entity", num: 12 });
+        expect(p.execute(entity)).to.be.true;
+        p = new MongoQueryParser({ name: "entity", num: 12 });
         expect(p.execute(entity)).to.be.false;
         p = new MongoQueryParser({ "address.city": { $startsWith: "P" } });
         expect(p.execute(entity)).to.be.true;
@@ -29,11 +29,11 @@ describe("MemoryProvider", function () {
     });
 
     it("should filter by query operator", () => {
-        let p = new MongoQueryParser({results: {$size: 2}});
+        let p = new MongoQueryParser({ results: { $size: 2 } });
         expect(p.execute(products[0])).to.be.true;
         p = new MongoQueryParser({ tags: { $in: ["a"] } });
         expect(p.execute(entity)).to.be.true;
-        p = new MongoQueryParser({num:{$in: [10, 20]}});
+        p = new MongoQueryParser({ num: { $in: [10, 20] } });
         expect(p.execute(entity)).to.be.true;
     });
 });

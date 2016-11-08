@@ -3,6 +3,7 @@ import { CircuitBreakerFactory } from "./circuitBreaker";
 import { HystrixCommand } from "./command";
 import { ICommand } from './abstractCommand';
 import { CommandProperties } from './commandProperties';
+import { RequestContext } from '../../servers/requestContext';
 
 export interface CommandConfiguration {
     circuitEnabled?: boolean;
@@ -47,10 +48,10 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static async getAsync(commandKey: string, context?, schema?: string): Promise<ICommand> {
+    static async getAsync(commandKey: string, context: RequestContext, schema?: string): Promise<ICommand> {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
-            let resolvedCommand = context ? context.container.resolve(cache.command) : new (<any>cache.command)();
+            let resolvedCommand = context.container.resolve(cache.command);
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context);
             await cmd.setSchemaOnCommandAsync(schema);
             return cmd;

@@ -47,7 +47,7 @@ export class Application {
      * @memberOf Application
      */
     enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.container.injectInstance(new ApiKeyService(apiKeyServiceName, version), DefaultServiceNames.ApiKeyService);
+        this.container.injectInstance(new ApiKeyService(this.container, apiKeyServiceName, version), DefaultServiceNames.ApiKeyService);
     }
 
     /**
@@ -216,7 +216,7 @@ export class Application {
 
                     this.initializeServices(this.container);
 
-                    Preloader.runPreloads(this.container, this._domain);
+                    Preloader.instance.runPreloads(this.container, this._domain);
 
                     let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
                     this.defineScopes(scopes);

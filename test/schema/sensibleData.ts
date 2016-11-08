@@ -1,19 +1,19 @@
 import { TestContainer } from './../../dist/di/containers';
 import { expect } from 'chai';
-import {Model, Property, Reference} from '../../dist/schemas/annotations';
-import {Domain} from '../../dist/schemas/schema';
+import { Model, Property, Reference } from '../../dist/schemas/annotations';
+import { Domain } from '../../dist/schemas/schema';
 
 @Model()
 class SimpleModel {
-    @Property({type:"string"})
+    @Property({ type: "string" })
     normal: string;
-    @Property({type:"string", sensible:true})
+    @Property({ type: "string", sensible: true })
     password: string;
 }
 
 @Model()
 class AggregateModel {
-    @Reference({item:"SimpleModel", cardinality:"one"})
+    @Reference({ item: "SimpleModel", cardinality: "one" })
     simple: SimpleModel;
 }
 
@@ -28,7 +28,7 @@ describe("Sensible data", function () {
         schema.encrypt(model);
         expect(model.normal).equals("normal");
         expect(model.password).not.eq("password");
-     });
+    });
 
     it("should encrypt embedded sensible properties", () => {
         let model = { simple: { normal: "normal", password: "password" } };
@@ -56,5 +56,5 @@ describe("Sensible data", function () {
         domain.obfuscate(model, schema);
         expect(model.normal).equals("normal");
         expect(model.password).to.be.undefined;
-     });
-})
+    });
+});

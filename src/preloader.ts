@@ -11,47 +11,54 @@ const Handlers = "handlers";
 
 
 export class Preloader {
-    private static _preloads: { [name: string]: Array<Item> } = {};
+    private static _instance: Preloader;
 
-    static registerModel(fn: Function, callback: (container, domain) => void) {
-        let key = fn.name;
-        Preloader.register(Models, key, callback);
+    static get instance() {
+        if (!Preloader._instance) {
+            Preloader._instance = new Preloader();
+        }
+        return Preloader._instance;
     }
 
-    static registerService(fn: Function, callback: (container, domain) => void) {
+    private _preloads: { [name: string]: Array<Item> } = {};
+
+    registerModel(fn: Function, callback: (container, domain) => void) {
         let key = fn.name;
-        Preloader.register(Services, key, callback);
+        this.register(Models, key, callback);
     }
 
-    static registerHandler(fn: Function, callback: (container, domain) => void) {
+    registerService(fn: Function, callback: (container, domain) => void) {
         let key = fn.name;
-        Preloader.register(Handlers, key, callback);
+        this.register(Services, key, callback);
     }
 
-    private static register(key: string, name: string, fn) {
-        let list = Preloader._preloads[key];
+    registerHandler(fn: Function, callback: (container, domain) => void) {
+        let key = fn.name;
+        this.register(Handlers, key, callback);
+    }
+
+    private register(key: string, name: string, fn) {
+        let list = this._preloads[key];
         if (!list) {
-            Preloader._preloads[key] = list = [];
+            this._preloads[key] = list = [];
         }
         list.push({ name, callback: fn });
     }
 
-    private static run(key: string, container, domain) {
-        let items = Preloader._preloads[key];
+    private run(key: string, container, domain) {
+        let items = this._preloads[key];
         if (!items) return;
         for (const item of items) {
             item.callback(container, domain);
         }
     }
 
-    static runPreloads(container: IContainer, domain, reset=true) {
-        if (Preloader._preloads) {
-            Preloader.run(Models, container, domain);
-            Preloader.run(Services, container, domain);
-            Preloader.run(Handlers, container, domain);
-            if (reset) {
-                Preloader._preloads = {};
-            }
+    runPreloads(container: IContainer, domain) {
+        if (this._preloads) {
+            this.run(Models, container, domain);
+            this.run(Services, container, domain);
+            this.run(Handlers, container, domain);
+            this._preloads = {};
         }
     }
 }

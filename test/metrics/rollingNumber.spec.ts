@@ -1,5 +1,5 @@
-import RollingNumberEvent from "../../dist/commands/metrics/rollingNumberEvent";
-import {RollingNumber} from "../../dist/commands/metrics/rollingNumber";
+import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumberEvent";
+import { RollingNumber } from "../../dist/commands/metrics/hystrix/rollingNumber";
 import { expect } from 'chai';
 import ActualTime from '../../dist/utils/actualTime';
 
@@ -12,7 +12,7 @@ describe("RollingNumber", function () {
     it("should be initialised with option values", function () {
         var underTest = new RollingNumber(5000, 5);
         expect((<any>underTest).windowLength).to.equal(5000);
-        expect((<any>underTest).numberOfBuckets).to.equal(5)
+        expect((<any>underTest).numberOfBuckets).to.equal(5);
     });
 
     it("should increment a value in the latest bucket", function () {

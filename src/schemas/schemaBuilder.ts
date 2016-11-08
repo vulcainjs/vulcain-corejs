@@ -91,7 +91,9 @@ export class SchemaBuilder {
         if (type) {
             let clonedType = SchemaBuilder.clone(type, attributeInfo);
             for (let fn of ["bind", "dependsOn", "validate"]) {
-                clonedType[fn] = attributeInfo[fn];
+                if (attributeInfo[fn]) {
+                    clonedType[fn] = attributeInfo[fn];
+                }
             }
 
             // Type inheritence (in reverse order)
@@ -131,7 +133,7 @@ export class SchemaBuilder {
                 clone[key] = (from && from[pname]) || schema[key];
             }
             else if (key !== "validators") {
-                clone[key] = schema[key];
+                clone[key] =  schema[key];
             }
         }
         return clone;

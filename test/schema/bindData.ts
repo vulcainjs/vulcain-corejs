@@ -24,6 +24,7 @@ let container = new TestContainer("Test");
 describe("Bind data", function () {
 
     it("should create uid", () => {
+
         let domain = container.get<Domain>("Domain");
         let schema = domain.getSchema("AggregateModel");
 
@@ -32,5 +33,4 @@ describe("Bind data", function () {
         expect(model.simple.uuid).to.be.not.null;
     });
 
-
-})
+});

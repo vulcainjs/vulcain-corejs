@@ -70,17 +70,14 @@ export class MongoProvider implements IProvider<any>
 
                 if (keys) {
                     let indexName = schema.description.storageName + "_uniqueIndex";
-                    db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true })
-                        .then((err) => {
+                    db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
+                        (err) => {
                             if (err) {
                                 self.ctx.logError(err, `MONGODB: Error when creating index for ${this.state.uri} for schema ${schema.name}`);
                             }
                             else {
                                 self._logger.info(self.ctx, `MONGODB: Unique index created for ${this.state.uri} for schema ${schema.name}`);
                             }
-                        })
-                        .catch(err => {
-                            self.ctx.logError(err, `MONGODB: Error when creating index for ${this.state.uri} for schema ${schema.name}`);
                         });
                 }
                 resolve(self.state);

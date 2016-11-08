@@ -16,12 +16,15 @@ var gulp = require("gulp"),
 var rootDir = "file://" + __dirname;
 process.on('uncaughtException', console.error.bind(console));
 
-gulp.task('default', ['compile-ts']);
+gulp.task('default', [ 'compile-test' ]);
 
 gulp.task('tslint', function () {
     return gulp.src('./src/**/*.ts')
-        .pipe(tslint())
-        .pipe(tslint.report());
+        .pipe(tslint({formatter: "prose"}))
+        .pipe(tslint.report())
+        .on("error", function () {
+            process.exit(1);
+        });;
 });
 
 // -----------------------------------
@@ -38,22 +41,20 @@ gulp.task("compile-test", ['compile-ts'], function () {
     var tsResult = gulp.src([
         "./test/**/*.ts",
         "./typings/index.d.ts"
-    ])
+    ], { base: 'test/' })
         .pipe(sourcemaps.init())
-        .pipe(ts(tsProject));
+        .pipe(ts(tsProject))
+        .once("error", function () {
+            this.once("finish", () => process.exit(1));
+        });
 
-    return merge([
-        tsResult.dts
-            .pipe(gulp.dest('dist-test')),
-        tsResult.js
-            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: rootDir + "/test" }))
-            .pipe(gulp.dest('dist-test'))
-    ]
-    );
+    return tsResult.js
+        .pipe(sourcemaps.write('.', {includeContent:false, sourceRoot: rootDir + "/test"}))
+        .pipe(gulp.dest("dist-test/"));
 });
 
-gulp.task("istanbul:hook", function () {
-    return gulp.src(['dist-test/**/*.js'])
+gulp.task("istanbul:hook", function() {
+    return gulp.src(['dist/**/*.js'])
         // Covering files
         .pipe(istanbul())
         // Force `require` to return covered files
@@ -63,20 +64,9 @@ gulp.task("istanbul:hook", function () {
 // -----------------------------------
 // Compilation
 // -----------------------------------
-function incrementVersion() {
-    var dockerfile = Path.join(__dirname, "Dockerfile");
-    var content = fs.readFileSync(dockerfile, 'UTF-8');
-    var version = /^(LABEL vulcain\.version=[0-9]+\.[0-9]+\.)([0-9]+)/m;
-    var matches = version.exec(content);
-    var build = parseInt(matches[2]);
-    build += 1;
-    content = content.replace(version, '$1' + build.toString());
-    fs.writeFileSync(dockerfile, content, 'UTF-8');
-}
 
 // https://www.npmjs.com/package/gulp-typescript
 gulp.task("compile-ts", ['tslint', 'clean'], function () {
-    //incrementVersion();
     var tsProject = ts.createProject(
         './tsconfig.json',
         {
@@ -88,8 +78,11 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
         "./src/**/*.ts",
         "./typings/index.d.ts"
     ])
-        .pipe(sourcemaps.init())
-        .pipe(ts(tsProject));
+    .pipe(sourcemaps.init())
+    .pipe(ts(tsProject))
+    .once("error", function () {
+        this.once("finish", () => process.exit(1));
+    });
 
     return merge([
         tsResult.dts
@@ -101,4 +94,4 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
     );
 });
 
-gulp.task('clean', function (done) { fse.remove('dist', fse.remove('dist-test', done)); });
+gulp.task('clean', function(done) { fse.remove('dist', done);});

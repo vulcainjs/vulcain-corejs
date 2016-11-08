@@ -3,13 +3,16 @@ import { ITokenService } from '../defaults/services';
 import { CommandFactory } from '../commands/command/commandFactory';
 import { Command } from '../commands/command/commandFactory';
 import { AbstractServiceCommand } from './../commands/command/abstractServiceCommand';
+import { AbstractHandler } from '../pipeline/abstractHandlers';
+import { IContainer } from '../di/resolvers';
 
-export class ApiKeyService implements ITokenService {
-    constructor(private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
+export class ApiKeyService extends AbstractHandler implements ITokenService {
+    constructor(container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
+        super(container);
     }
 
     async verifyTokenAsync(data: VerifyTokenParameter): Promise<boolean> {
-        const cmd = await CommandFactory.getAsync(ApiKeyVerifyCommand.commandName);
+        const cmd = await CommandFactory.getAsync(ApiKeyVerifyCommand.commandName, this.requestContext);
         return await cmd.executeAsync<boolean>(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
     }
 }

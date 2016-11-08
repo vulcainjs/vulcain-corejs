@@ -18,7 +18,7 @@ export function Model(options?: ModelOptions) {
         options.name = options.name || target.name;
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
-        Preloader.registerModel(target, (container, domain) => domain.addSchemaDescription(target, options.name));
+        Preloader.instance.registerModel(target, (container, domain) => domain.addSchemaDescription(target, options.name));
     };
 }
 
