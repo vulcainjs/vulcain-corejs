@@ -44,13 +44,14 @@ export class Preloader {
         }
     }
 
-    static runPreloads(container: IContainer, domain) {
+    static runPreloads(container: IContainer, domain, reset=true) {
         if (Preloader._preloads) {
             Preloader.run(Models, container, domain);
             Preloader.run(Services, container, domain);
             Preloader.run(Handlers, container, domain);
-
-            Preloader._preloads = {};
+            if (reset) {
+                Preloader._preloads = {};
+            }
         }
     }
 }

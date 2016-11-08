@@ -289,6 +289,6 @@ export class TestContainer extends Container {
         this.injectInstance(domain, DefaultServiceNames.Domain);
 
         addServices && addServices(this);
-        Preloader.runPreloads(this, domain);
+        Preloader.runPreloads(this, domain, false);
     }
 }
