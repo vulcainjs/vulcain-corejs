@@ -60,10 +60,11 @@ export { CommandRuntimeError } from './errors/commandRuntimeError';
 export { RuntimeError } from './errors/runtimeError';
 
 // Commands
-export { Command, CommandFactory as __commandFactory } from './commands/command/commandFactory'
-export { EventType, FailureType, ExecutionResult } from './commands/command/executionResult'
-export { AbstractCommand, ICommand } from './commands/command/abstractCommand'
-export { HystrixSSEStream } from './commands/http/hystrixSSEStream'
-export { IHttpRequest, IHttpResponse } from './commands/command/types'
-export { AbstractServiceCommand } from './commands/command/abstractServiceCommand'
-export { AbstractHttpCommand } from './commands/command/abstractHttpCommand'
+export { Command, CommandFactory as __commandFactory } from './commands/command/commandFactory';
+export { EventType, FailureType, ExecutionResult } from './commands/command/executionResult';
+export { AbstractCommand, ICommand } from './commands/command/abstractCommand';
+export { HystrixSSEStream } from './commands/http/hystrixSSEStream';
+export { IHttpRequest, IHttpResponse } from './commands/command/types';
+export { AbstractServiceCommand } from './commands/command/abstractServiceCommand';
+export { AbstractHttpCommand } from './commands/command/abstractHttpCommand';
+export { AbstractProviderCommand } from './commands/command/abstractProviderCommand';

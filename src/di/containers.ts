@@ -16,6 +16,9 @@ import { RequestContext } from './../servers/requestContext';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { VulcainLogger } from './../configurations/log/vulcainLogger';
 import { System } from './../configurations/globals/system';
+import { ConsoleMetrics } from '../metrics/consoleMetrics';
+import { StatsdMetrics } from '../metrics/statsdMetrics';
+import { DefaultPolicy } from '../servers/policy/defaultPolicy';
 
 /**
  *
@@ -43,6 +46,8 @@ export class Container implements IContainer {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
+            this.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
+            this.injectSingleton(DefaultPolicy, DefaultServiceNames.ScopesPolicy);
         }
     }
 

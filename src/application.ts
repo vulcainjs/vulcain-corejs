@@ -22,9 +22,6 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
-import { StatsdMetrics } from './metrics/statsdMetrics';
-import { ConsoleMetrics } from './metrics/consoleMetrics';
-import { DefaultPolicy } from './servers/policy/defaultPolicy';
 
 /**
  * Application base class
@@ -121,8 +118,6 @@ export class Application {
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
 
-        this._container.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
-        this.container.injectSingleton(DefaultPolicy, DefaultServiceNames.ScopesPolicy);
         this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
 
         this._domain = new Domain(domainName, this._container);
