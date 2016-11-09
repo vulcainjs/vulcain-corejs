@@ -5,6 +5,7 @@ import { Schema } from "../../schemas/schema";
 import { MongoClient } from 'mongodb';
 import { Inject } from '../../di/annotations';
 import { ApplicationRequestError } from '../../errors/applicationRequestError';
+import { System } from '../../configurations/globals/system';
 
 /**
  * Default mongo provider
@@ -52,19 +53,22 @@ export class MongoProvider implements IProvider<any>
             }
         }
 
-        const self = this;
+        const state = this.state;
+        const options = this.options;
+
         return new Promise((resolve, reject) => {
+            // Don't use this here to avoid memory leaks
             // Open connexion
-            MongoClient.connect(self.state.uri, self.options, (err, db) => {
+            MongoClient.connect(state.uri, options, (err, db) => {
                 if (err) {
                     reject(err);
-                    this._logger.error(self.ctx, err, `MONGODB: Error when opening database ${this.state.uri} for schema ${schema.name}`);
+                    System.log.error( null, err, `MONGODB: Error when opening database ${state.uri} for schema ${schema.name}`);
                     return;
                 }
 
-                this.state._mongo = db;
+                state._mongo = db;
 
-                this.state.dispose = () => {
+                state.dispose = () => {
                     db.close();
                 };
 
@@ -73,14 +77,14 @@ export class MongoProvider implements IProvider<any>
                     db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
                         (err) => {
                             if (err) {
-                                self.ctx.logError(err, `MONGODB: Error when creating index for ${this.state.uri} for schema ${schema.name}`);
+                                System.log.error(null, err, `MONGODB: Error when creating index for ${state.uri} for schema ${schema.name}`);
                             }
                             else {
-                                self._logger.info(self.ctx, `MONGODB: Unique index created for ${this.state.uri} for schema ${schema.name}`);
+                                System.log.info(null,  `MONGODB: Unique index created for ${state.uri} for schema ${schema.name}`);
                             }
                         });
                 }
-                resolve(self.state);
+                resolve(state);
             });
         });
     }

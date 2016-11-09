@@ -195,12 +195,14 @@ export class ExpressAdapter extends AbstractAdapter {
         ctx.headers = req.headers;
         ctx.hostName = req.get('Host');
         this.initializeTenant(ctx, req);
+        // Set requestcontext for authentication middlewares
         (<any>req).requestContext = ctx;
     }
 
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
         const begin = super.startRequest(command);
         let ctx = (<any>req).requestContext;
+        (<any>req).requestContext = null; // release for gc
 
         try {
             if (req.user) {
