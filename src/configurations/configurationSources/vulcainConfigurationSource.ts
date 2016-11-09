@@ -26,7 +26,7 @@ export class VulcainConfigurationSource implements ConfigurationSource
                 .headers({ 'Accept': 'application/json' })
                 .timeout(timeoutInMs);
 
-            request = request.headers({ 'Authentication': 'Bearer ' + System.vulcainToken });
+            request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
 
             request.end(function (response) {
                 if (response.status === 200 && response.body) {
