@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.1.29",
+  "version": "1.1.31",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "files": [
@@ -8,7 +8,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Zenasoft/vulcain-corejs.git"
+    "url": "https://github.com/vulcainjs/vulcain-corejs.git"
   },
   "maintainers": [
     "Alain Metge"

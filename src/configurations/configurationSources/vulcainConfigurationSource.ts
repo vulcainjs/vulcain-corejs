@@ -19,7 +19,7 @@ export class VulcainConfigurationSource implements ConfigurationSource
         let self = this;
         return new Promise( ( resolve, reject ) =>
         {
-            let uri = this.uri + "?" +  encodeURIComponent("$query=" + JSON.stringify(this.options));
+            let uri = this.uri + "?$query=" + JSON.stringify(this.options);
             let values = new Map<string,ConfigurationItem>();
 
             let request = rest.get(uri)

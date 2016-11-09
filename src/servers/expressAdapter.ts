@@ -257,7 +257,12 @@ export class ExpressAdapter extends AbstractAdapter {
         if (!basePath) {
             throw new Error("BasePath is required.");
         }
-        this.express.use(express.static(basePath));
+        //this.express.use(express.static(basePath));
+        this.express.use('/assets', express.static(basePath + '/assets'));
+        this.express.all('/*', function (req, res, next) {
+            // Just send the index.html for other files to support HTML5Mode
+            res.sendFile('index.html', { root: basePath });
+        });
     }
 
     start(port: number) {
@@ -265,9 +270,7 @@ export class ExpressAdapter extends AbstractAdapter {
             System.log.info(null, 'Listening on port ' + port);
         });
 
-
         this.app.onServerStarted(listener);
-
     }
 
     useMiddleware(verb: string, path: string, handler: Function) {
