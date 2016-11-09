@@ -57,6 +57,9 @@ export class ConfigurationManager
         for( let result of results )
         {
             try {
+                if (!result) {
+                    continue;
+                }
                 if( result.values && result.values.size > 0)
                     this.loadProperties( result );
 

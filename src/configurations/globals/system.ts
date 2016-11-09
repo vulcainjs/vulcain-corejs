@@ -14,6 +14,8 @@ import { IDynamicProperty } from '../dynamicProperty';
  * @class System
  */
 export class System {
+    static _vulcainServer: string;
+    static _vulcainToken: string;
     private static _config;
     private static logger: VulcainLogger;
     private static _environment: string;
@@ -184,11 +186,11 @@ export class System {
      * @memberOf System
      */
     static get vulcainServer() {
-        let env = process.env[Conventions.instance.ENV_VULCAIN_SERVER];
-        if (env)
-            return env;
-
-        return Conventions.instance.defaultVulcainServerName; // for dev
+        if (!System._vulcainServer) {
+            let env = process.env[Conventions.instance.ENV_VULCAIN_SERVER];
+            System._vulcainServer = env || Conventions.instance.defaultVulcainServerName; // for dev
+        }
+        return System._vulcainServer;
     }
 
     /**
@@ -200,8 +202,10 @@ export class System {
      * @memberOf System
      */
     static get vulcainToken() {
-        let token = process.env[Conventions.instance.ENV_VULCAIN_TOKEN];
-        return token;
+        if (System._vulcainToken === undefined) {
+            System._vulcainToken = process.env[Conventions.instance.ENV_VULCAIN_TOKEN];
+        }
+        return System._vulcainToken;
     }
 
     /**

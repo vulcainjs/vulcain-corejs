@@ -5,27 +5,29 @@ var moment = require('moment');
 
 export class VulcainConfigurationSource implements ConfigurationSource
 {
-    private token: string;
-
     constructor(private uri: string, private options) {
-        this.token = System.vulcainToken;
+        if (!System.vulcainToken) {
+            System.log.info(null, "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
+        }
     }
 
     async pollPropertiesAsync(timeoutInMs:number)
     {
-        let self =this;
+        if (!System.vulcainToken)
+            return Promise.resolve(null);
+
+        let self = this;
         return new Promise( ( resolve, reject ) =>
         {
-            let uri = this.uri + "?$query=" + JSON.stringify(this.options);
+            let uri = this.uri + "?" +  encodeURIComponent("$query=" + JSON.stringify(this.options));
             let values = new Map<string,ConfigurationItem>();
 
             let request = rest.get(uri)
                 .headers({ 'Accept': 'application/json' })
                 .timeout(timeoutInMs);
 
-            if (this.token) {
-                request = request.headers({ 'Authentication': 'Bearer ' + this.token });
-            }
+            request = request.headers({ 'Authentication': 'Bearer ' + System.vulcainToken });
+
             request.end(function (response) {
                 if (response.status === 200 && response.body) {
                     if (response.body.error) {
