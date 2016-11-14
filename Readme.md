@@ -1,14 +1,21 @@
 # Micro service framework 
 
 ## Generate Documentation
+Generate documentation Typescript 
+Launch :  
+```bash 
+$ gulp doc
+```
 
-Launch for create the html template :  `gulp doc`
-
-After launch web-server for visualize documentation on `docs` folder
+After launch web-server for visualize documentation on **docs** folder
 
 If you haven't **live-server** installed, launch 
+```bash 
+$ npm install -g live-server
+```
 
-`npm install -g live-server`
 
 Visualize :
-`live-server docs`
+```bash 
+$ live-server docs
+```
