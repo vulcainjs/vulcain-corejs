@@ -23,7 +23,7 @@ export abstract class AbstractHttpCommand {
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
         if (!dep) {
-            throw new Error("HttpDependency annotation is required.");
+            throw new Error("HttpDependency annotation is required on command " + Object.getPrototypeOf(this).name);
         }
         this.setMetricsTags(dep);
     }

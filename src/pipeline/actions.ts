@@ -39,11 +39,37 @@ export enum EventNotificationMode {
     never
 }
 
+/**
+ * Declare default action handler definition
+ *
+ * @export
+ * @interface ActionHandlerMetadata
+ * @extends {ServiceHandlerMetadata}
+ */
 export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
+    /**
+     *
+     *
+     * @type {boolean}
+     * @memberOf ActionHandlerMetadata
+     */
     async?: boolean;
+    /**
+     *
+     *
+     * @type {EventNotificationMode}
+     * @memberOf ActionHandlerMetadata
+     */
     eventMode?: EventNotificationMode;
 }
 
+/**
+ * 
+ *
+ * @export
+ * @interface ActionMetadata
+ * @extends {CommonActionMetadata}
+ */
 export interface ActionMetadata extends CommonActionMetadata {
     async?: boolean;
     eventMode?: EventNotificationMode;

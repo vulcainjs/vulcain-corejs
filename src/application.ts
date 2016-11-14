@@ -73,7 +73,7 @@ export class Application {
      *
      * @param {*} server
      */
-    onServerStarted(server: any) { }
+    onServerStarted(server: any, adapter: any) { }
 
     /**
      * Current component container
@@ -114,6 +114,10 @@ export class Application {
 
         this._executablePath = Path.dirname(module.filename);
         this._basePath = this.findBasePath();
+
+        // Ensure initializing this first
+        const test = System.isDevelopment;
+
         this._container = container || new Container();
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);

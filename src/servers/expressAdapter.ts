@@ -270,7 +270,7 @@ export class ExpressAdapter extends AbstractAdapter {
             System.log.info(null, 'Listening on port ' + port);
         });
 
-        this.app.onServerStarted(listener);
+        this.app.onServerStarted(listener, this);
     }
 
     useMiddleware(verb: string, path: string, handler: Function) {

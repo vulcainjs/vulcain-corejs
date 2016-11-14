@@ -1,5 +1,12 @@
 import { System } from '../configurations/globals/system';
 
+/**
+ * Metrics adapter for testing
+ * Emit metrics on console
+ *
+ * @export
+ * @class ConsoleMetrics
+ */
 export class ConsoleMetrics {
     private tags: string;
     private customTags: string = "";

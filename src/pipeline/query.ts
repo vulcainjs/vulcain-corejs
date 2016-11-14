@@ -20,9 +20,23 @@ export interface QueryResponse<T> extends CommonRequestResponse<T> {
     total?: number;
 }
 
+/**
+ *
+ *
+ * @export
+ * @interface QueryMetadata
+ * @extends {ServiceHandlerMetadata}
+ */
 export interface QueryMetadata extends ServiceHandlerMetadata {
 }
 
+/**
+ * 
+ *
+ * @export
+ * @interface QueryActionMetadata
+ * @extends {CommonActionMetadata}
+ */
 export interface QueryActionMetadata extends CommonActionMetadata {
     outputSchema?: string | Function;
 }

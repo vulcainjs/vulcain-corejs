@@ -97,6 +97,9 @@ export class System {
                 if (fs.existsSync(Conventions.instance.vulcainFileName)) {
                     System.isLocal = true;
                     this.loadVulcainLocalConfig();
+                    if (System.isLocal) {
+                        System.log.info(null, "Running in development mode");
+                    }
                 }
             }
             catch (e) {/*ignore*/ }
@@ -115,6 +118,9 @@ export class System {
     static get isTestEnvironnment() {
         if (System.isTest === undefined) {
             System.isTest = System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true";
+            if (System.isTest) {
+                System.log.info(null, "Running in test mode");
+            }
         }
         return System.isTest;
     }
@@ -124,6 +130,10 @@ export class System {
             let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");
             if (data) {
                 System._config = JSON.parse(data);
+                if (System._config.isDevelopment === false) {// forced value
+                    System.isLocal = false;
+                    System.isTest = true; 
+                }
             }
         }
         catch (e) {
@@ -142,12 +152,15 @@ export class System {
      */
     static resolveAlias(name: string, version?: string) {
         // Try to find an alternate uri
-        let alias: string = System._config
-            && System._config.alias
-            && System._config.alias[name]
-            && System._config.alias[name][version];
-        if (alias)
-            return alias;
+        if (System._config && System._config.alias) {
+            let alias = System._config.alias[name];
+            if (alias) {
+                if (typeof alias === "string") {
+                    return alias;
+                }
+                return alias[version];
+            }
+        }
 
         // Consul = shared/$alternates/serviceName-version
         let propertyName = '$alternates.' + name;

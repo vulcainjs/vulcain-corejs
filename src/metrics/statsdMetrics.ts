@@ -2,6 +2,13 @@ import { Conventions } from '../utils/conventions';
 import * as Statsd from "statsd-client";
 import { System } from './../configurations/globals/system';
 
+/**
+ * Default metrics adapter
+ * Emit metrics on statsd
+ *
+ * @export
+ * @class StatsdMetrics
+ */
 export class StatsdMetrics {
 
     private statsd: Statsd;
@@ -14,6 +21,7 @@ export class StatsdMetrics {
             host = host || address || Conventions.instance.defaultStatsdAddress;
             this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+            System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
         }
     }
 

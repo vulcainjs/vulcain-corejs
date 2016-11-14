@@ -50,7 +50,7 @@ export abstract class AbstractServiceCommand {
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:service"];
         if (!dep) {
-            throw new Error("ServiceDependency annotation is required.");
+            throw new Error("ServiceDependency annotation is required on command "  + Object.getPrototypeOf(this).name);
         }
         this.metrics.setTags("targetServiceName=" + dep.service, "targetServiceVersion=" + dep.version);
     }
