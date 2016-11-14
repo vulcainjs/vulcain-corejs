@@ -13,9 +13,6 @@ export class VulcainConfigurationSource implements ConfigurationSource
 
     async pollPropertiesAsync(timeoutInMs:number)
     {
-        if (!System.vulcainToken)
-            return Promise.resolve(null);
-
         let self = this;
         return new Promise( ( resolve, reject ) =>
         {
@@ -26,7 +23,8 @@ export class VulcainConfigurationSource implements ConfigurationSource
                 .headers({ 'Accept': 'application/json' })
                 .timeout(timeoutInMs);
 
-            request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
+            if (System.vulcainToken)
+                request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
 
             request.end(function (response) {
                 if (response.status === 200 && response.body) {

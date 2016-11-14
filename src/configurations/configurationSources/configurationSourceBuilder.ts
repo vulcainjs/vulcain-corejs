@@ -20,18 +20,15 @@ export class ConfigurationSourceBuilder {
     }
 
     public addVulcainSource() {
-        if (!System.isDevelopment) {
-            let uri = `http://${System.vulcainServer}/api/config.forservice`;
-            let options = {
-                cluster: System.environment,
-                service: System.serviceName,
-                version: System.serviceVersion,
-                namespace: System.domainName
-            };
-            this.addSource(new VulcainConfigurationSource(uri, options));
-        } else {
-            // TODO init with .vulcain ?
-        }
+        let uri = `http://${System.vulcainServer}/api/config.forservice`;
+        let options = {
+            cluster: System.environment,
+            service: System.serviceName,
+            version: System.serviceVersion,
+            namespace: System.domainName
+        };
+        this.addSource(new VulcainConfigurationSource(uri, options));
+
         return this;
     }
 

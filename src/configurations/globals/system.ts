@@ -118,7 +118,7 @@ export class System {
     static get isTestEnvironnment() {
         if (System.isTest === undefined) {
             System.isTest = System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true";
-            if (System.isTest) {
+            if (!System.isDevelopment && System.isTest) {
                 System.log.info(null, "Running in test mode");
             }
         }
@@ -132,7 +132,7 @@ export class System {
                 System._config = JSON.parse(data);
                 if (System._config.isDevelopment === false) {// forced value
                     System.isLocal = false;
-                    System.isTest = true; 
+                    System.isTest = true;
                 }
             }
         }
