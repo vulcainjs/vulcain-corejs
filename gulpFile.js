@@ -16,7 +16,7 @@ var gulp = require("gulp"),
 var rootDir = "file://" + __dirname;
 process.on('uncaughtException', console.error.bind(console));
 
-gulp.task('default', [ 'compile-test' ]);
+gulp.task('default', ['compile-test']);
 
 gulp.task('tslint', function () {
     return gulp.src('./src/**/*.ts')
@@ -24,7 +24,8 @@ gulp.task('tslint', function () {
         .pipe(tslint.report())
         .on("error", function () {
             process.exit(1);
-        });;
+        });
+    ;
 });
 
 // -----------------------------------
@@ -41,21 +42,24 @@ gulp.task("compile-test", ['compile-ts'], function () {
     var tsResult = gulp.src([
         "./test/**/*.ts",
         "./typings/index.d.ts"
-    ], { base: 'test/' })
+    ], {base: 'test/'})
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject))
         .once("error", function () {
-            this.once("finish", () => process.exit(1));
+            this.once("finish", function () {
+                process.exit(1)
+
+            });
         });
 
     return tsResult.js
-        .pipe(sourcemaps.write('.', {includeContent:false, sourceRoot: rootDir + "/test"}))
+        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: rootDir + "/test"}))
         .pipe(gulp.dest("dist-test/"));
 });
 
-gulp.task("istanbul:hook", function() {
+gulp.task("istanbul:hook", function () {
     return gulp.src(['dist/**/*.js'])
-        // Covering files
+    // Covering files
         .pipe(istanbul())
         // Force `require` to return covered files
         .pipe(istanbul.hookRequire());
@@ -78,20 +82,48 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
         "./src/**/*.ts",
         "./typings/index.d.ts"
     ])
-    .pipe(sourcemaps.init())
-    .pipe(ts(tsProject))
-    .once("error", function () {
-        this.once("finish", () => process.exit(1));
-    });
+        .pipe(sourcemaps.init())
+        .pipe(ts(tsProject))
+        .once("error", function () {
+            this.once("finish", function () {
+                process.exit(1)
+            });
+        });
 
     return merge([
-        tsResult.dts
-            .pipe(gulp.dest('dist')),
-        tsResult.js
-            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: rootDir + "/src" }))
-            .pipe(gulp.dest('dist'))
-    ]
+            tsResult.dts
+                .pipe(gulp.dest('dist')),
+            tsResult.js
+                .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: rootDir + "/src"}))
+                .pipe(gulp.dest('dist'))
+        ]
     );
 });
 
-gulp.task('clean', function(done) { fse.remove('dist', done);});
+
+// -----------------------------------
+// Generate documentation
+// -----------------------------------
+
+var typedoc = require("gulp-typedoc");
+gulp.task("doc", function () {
+    return gulp
+        .src(["src/**/*.ts",
+            "./typings/index.d.ts"])
+        .pipe(typedoc({
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
+            "module": "commonjs",
+            "moduleResolution": "node",
+            "target": "es6",
+            // "--excludePrivate": true,
+            out: "docs/",
+            name: "Vulcain corejs"
+        }))
+        ;
+});
+
+
+gulp.task('clean', function (done) {
+    fse.remove('dist', done);
+});
