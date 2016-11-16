@@ -1,5 +1,5 @@
 import { ApiKeyStrategy } from './apiKeyStrategy';
-import { ITokenService } from '../defaults/services';
+import { ITokenService, VerifyTokenParameter } from '../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
 import { IContainer } from '../di/resolvers';
 import { RequestContext } from '../servers/requestContext';
@@ -19,7 +19,7 @@ export class AuthenticationStrategies {
             try
             {
                 let tokens = ctx.container.get<ITokenService>("TokenService");
-                let token = await tokens.verifyTokenAsync( accessToken );
+                let token = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant } );
 
                 // No token found
                 if( !token )
@@ -30,6 +30,8 @@ export class AuthenticationStrategies {
                 token.user.tenant = token.user.tenant || token.tenantId;
                 token.user.scopes = token.scopes;
                 token.user.data = token.user.data || token.data;
+                token.user.bearer = accessToken;
+
                 callback(null, token.user);
             }
             catch( err )
@@ -43,7 +45,7 @@ export class AuthenticationStrategies {
 
     static initApiKey( )
     {
-        let strategy = new ApiKeyStrategy( async ( params, callback, ctx: RequestContext ) =>
+        let strategy = new ApiKeyStrategy( async ( params: VerifyTokenParameter, callback, ctx: RequestContext ) =>
         {
             try
             {

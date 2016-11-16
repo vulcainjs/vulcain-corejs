@@ -125,6 +125,14 @@ export class RequestContext {
     }
 
     /**
+     * Propagated bearer token
+     *
+     * @type {string}
+     * @memberOf RequestContext
+     */
+    bearer: string;
+
+    /**
      * Do not use directly
      * Creates an instance of RequestContext.
      *

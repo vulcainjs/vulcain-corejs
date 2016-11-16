@@ -11,8 +11,6 @@ export { ConfigurationDataType } from './configurations/configurationSources/con
 export { VulcainLogger } from './configurations/log/vulcainLogger';
 export { System } from './configurations/globals/system';
 
-import { HttpRedirectResponse } from './pipeline/common';
-
 // Schemas
 export * from './schemas/schema'
 export * from './schemas/annotations'
@@ -34,6 +32,7 @@ export { QueryData, QueryActionMetadata, QueryMetadata, QueryResponse } from './
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/abstractHandlers';
 export { ValidationError, HttpResponse, HttpRedirectResponse } from './pipeline/common';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
+import { HttpRedirectResponse } from './pipeline/common';
 
 export { AbstractAdapter } from './servers/abstractAdapter';
 export { RequestContext, Pipeline, UserContext } from './servers/requestContext'

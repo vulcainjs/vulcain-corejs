@@ -9,6 +9,7 @@ import { System } from '../configurations/globals/system';
  * @class DefaultServiceNames
  */
 export class DefaultServiceNames {
+    static TokenService = "TokenService";
     static ScopesPolicy = "ScopesPolicy";
 
     static ScopesDescriptor = "ScopesDescriptor";

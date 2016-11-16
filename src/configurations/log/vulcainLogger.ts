@@ -7,9 +7,9 @@ export class VulcainLogger {
     private static _enableInfo: IDynamicProperty<boolean>;
 
     private static get enableInfo() {
-        if (!VulcainLogger._enableInfo)
+        if (VulcainLogger._enableInfo)
             VulcainLogger._enableInfo = System && System.createServiceConfigurationProperty("enableVerboseLog", false);
-        return VulcainLogger._enableInfo;
+        return VulcainLogger._enableInfo.value;
     }
 
     constructor() {
@@ -26,7 +26,7 @@ export class VulcainLogger {
      */
     error(requestContext, error: Error, msg?: string) {
         if (!error) return;
-        if (VulcainLogger.enableInfo.value || System.isTestEnvironnment)
+        if (VulcainLogger.enableInfo || System.isTestEnvironnment)
             this.write(requestContext, msg ? msg + ":" + error.stack : error.stack);
         else
             this.write(requestContext, msg ? msg + ":" + error.message : error.message);
@@ -55,7 +55,7 @@ export class VulcainLogger {
      * @memberOf VulcainLogger
      */
     verbose(requestContext, msg: string, ...params: Array<any>) {
-        if (VulcainLogger.enableInfo.value || System.isTestEnvironnment)
+        if (VulcainLogger.enableInfo || System.isDevelopment)
             this.write(requestContext, util.format(msg, ...params));
     }
 

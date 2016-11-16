@@ -11,6 +11,7 @@ import { DynamicConfiguration } from './../../configurations/dynamicConfiguratio
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
+import { ITokenService } from '../../defaults/services';
 const rest = require('unirest');
 
 /**
@@ -180,6 +181,18 @@ export abstract class AbstractServiceCommand {
         return this.requestContext.correlationPath;
     }
 
+    private async getBearerToken() {
+        let token = this.requestContext.bearer;
+        if (token) {
+            return token;
+        }
+
+        let tokens = this.requestContext.container.get<ITokenService>("TokenService");
+        // Ensures jwtToken exists for user context propagation
+        let result:any = this.requestContext.bearer = await tokens.createTokenAsync(this.requestContext.user);
+        return result.token;
+    }
+
     /**
      * Send a http request
      *
@@ -189,8 +202,10 @@ export abstract class AbstractServiceCommand {
      * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
         let request: types.IHttpRequest = rest[verb](url);
+
+        // Propagate context
         request.header("X-VULCAIN-CORRELATION-ID", this.requestContext.correlationId);
         request.header("X-VULCAIN-CORRELATION-PATH", this.calculateRequestPath() + "-");
         request.header("X-VULCAIN-SERVICE-NAME", System.serviceName);
@@ -198,6 +213,7 @@ export abstract class AbstractServiceCommand {
         request.header("X-VULCAIN-ENV", System.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
         request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
+        request.header("Authorization", "Bearer " + await this.getBearerToken());
 
         prepareRequest && prepareRequest(request);
 
