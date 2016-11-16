@@ -23,12 +23,12 @@ export class ExpressAdapter extends AbstractAdapter {
         var self = this;
         this.express = express();
 
-        this.express.use(function (req, res, next) {
+        this.express.use(function(req, res, next) {
             self.initializeRequestContext(req);
             return next();
         });
         this.express.use(cookieParser());
-        if(System.isTestEnvironnment)
+        if (System.isTestEnvironnment)
             this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
@@ -160,7 +160,7 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private initializeTenant(ctx: RequestContext, req: express.Request) {
-        ctx.tenant = (ctx.user && ctx.user.tenant) || req.header("X-VULCAIN-TENANT");
+        ctx.tenant = req.header("X-VULCAIN-TENANT");
         if (ctx.tenant) {
             return;
         }
@@ -170,10 +170,15 @@ export class ExpressAdapter extends AbstractAdapter {
             return;
         }
 
-        if (ctx.hostName) {
+        if (ctx.hostName && !System.isDevelopment) {
             // Get the first sub-domain
             let pos = ctx.hostName.indexOf('.');
             ctx.tenant = pos > 0 ? ctx.hostName.substr(0, pos) : ctx.hostName;
+            // Remove port
+            pos = ctx.tenant.indexOf(':');
+            if (pos > 0) {
+                ctx.tenant = ctx.tenant.substr(0, pos);
+            }
         }
         else {
             ctx.tenant = RequestContext.TestTenant;
@@ -200,6 +205,9 @@ export class ExpressAdapter extends AbstractAdapter {
         try {
             if (req.user) {
                 ctx.user = req.user;
+                if (ctx.user.tenant) {
+                    ctx.tenant = ctx.user.tenant;
+                }
             }
 
             let result = await handler.apply(this, [command, ctx]);
@@ -252,7 +260,7 @@ export class ExpressAdapter extends AbstractAdapter {
         }
         //this.express.use(express.static(basePath));
         this.express.use('/assets', express.static(basePath + '/assets'));
-        this.express.all('/*', function (req, res, next) {
+        this.express.all('/*', function(req, res, next) {
             // Just send the index.html for other files to support HTML5Mode
             res.sendFile('index.html', { root: basePath });
         });

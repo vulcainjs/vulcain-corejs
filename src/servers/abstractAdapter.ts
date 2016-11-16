@@ -116,7 +116,7 @@ export abstract class AbstractAdapter {
                 let info = manager.getInfoHandler<ActionMetadata>(command);
                 if (!ctx.user && this.testUser) {
                     ctx.user = this.testUser;
-                    ctx.user.tenant = ctx.tenant;
+                    ctx.tenant = ctx.user.tenant;
                 }
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {
