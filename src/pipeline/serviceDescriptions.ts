@@ -334,6 +334,12 @@ export class ServiceDescriptors {
             actionMetadata = actionMetadata || <CommonActionMetadata>{};
             actionMetadata.action = actionMetadata.action || action;
 
+            if (actionMetadata.schema) {
+                // test if exists
+                let tmp = domain.getSchema(actionMetadata.schema);
+                actionMetadata.schema = tmp.name;
+            }
+
             // Merge metadata
             let item: HandlerItem = {
                 kind: kind,

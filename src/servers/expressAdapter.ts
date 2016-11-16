@@ -208,7 +208,11 @@ export class ExpressAdapter extends AbstractAdapter {
                 if (ctx.user.tenant) {
                     ctx.tenant = ctx.user.tenant;
                 }
+                else {
+                    ctx.user.tenant = ctx.tenant;
+                }
                 ctx.bearer = ctx.bearer || ctx.user.bearer;
+                ctx.user.bearer = null;
             }
 
             let result = await handler.apply(this, [command, ctx]);

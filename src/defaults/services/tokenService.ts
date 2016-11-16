@@ -84,7 +84,7 @@ export class TokenService implements ITokenService {
                     }
                     else {
                         const token = payload.value;
-                        if (token.user.tenant !== p.tenant) {
+                        if ( token.user.tenant && token.user.tenant !== p.tenant) {
                             reject({ message: "Invalid tenant" });
                         }
                         else {
