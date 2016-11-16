@@ -51,7 +51,7 @@ export class Conventions {
     defaultUrlprefix = "/api";
     defaultRabbitAddress = "rabbit";
     defaultMongoAddress = "mongo";
-    defaultStatsdAddress = "telegraf";
+    defaultStatsdAddress = "statsd-agent";
     defaultStatsdDelayInMs = 10000;
     defaultVulcainServerName = "vulcain-server";
     vulcainFileName = ".vulcain";

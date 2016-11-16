@@ -9,7 +9,7 @@ import { CommonRequestResponse } from '../../pipeline/common';
 import { System } from './../../configurations/globals/system';
 import { DynamicConfiguration } from './../../configurations/dynamicConfiguration';
 import { ApplicationRequestError } from './../../errors/applicationRequestError';
-import { IMetrics } from '../../metrics/metrics';
+import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 const rest = require('unirest');
 
@@ -34,7 +34,7 @@ export abstract class AbstractServiceCommand {
         return this.requestContext.container;
     }
 
-    private static METRICS_NAME = "Service_Call_";
+    private static METRICS_NAME = "service_call_";
 
     /**
      * Creates an instance of AbstractCommand.
@@ -52,14 +52,18 @@ export abstract class AbstractServiceCommand {
         if (!dep) {
             throw new Error("ServiceDependency annotation is required on command "  + Object.getPrototypeOf(this).name);
         }
-        this.metrics.setTags("targetServiceName=" + dep.service, "targetServiceVersion=" + dep.version);
+        this.setMetricsTags(dep.service, dep.version);
+    }
+
+    protected setMetricsTags(targetServiceName: string, targetServiceVersion: string) {
+        this.metrics.setTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
-        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + "Duration", duration);
-        this.metrics.increment(AbstractServiceCommand.METRICS_NAME + "Total");
+        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration);
+        this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.total);
         if (!success)
-            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + "Failed");
+            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure);
     }
 
     /**

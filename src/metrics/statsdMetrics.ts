@@ -20,7 +20,7 @@ export class StatsdMetrics {
             let host = System.resolveAlias(address || Conventions.instance.defaultStatsdAddress);
             host = host || address || Conventions.instance.defaultStatsdAddress;
             this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
-            this.tags = ",environment=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+            this.tags = ",service=" + System.serviceName + ',version=' + System.serviceVersion;
             System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
         }
     }
@@ -52,7 +52,7 @@ export class StatsdMetrics {
         this.statsd && this.statsd.gauge(metric + this.tags + this.customTags, value);
     }
 
-    timing(metric:string, duration:number) {
+    timing(metric: string, duration: number) {
         this.statsd && this.statsd.timing(metric + this.tags + this.customTags, duration);
     }
 }

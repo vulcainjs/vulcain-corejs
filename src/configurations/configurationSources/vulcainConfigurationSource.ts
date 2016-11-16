@@ -6,13 +6,17 @@ var moment = require('moment');
 export class VulcainConfigurationSource implements ConfigurationSource
 {
     constructor(private uri: string, private options) {
-        if (!System.vulcainToken) {
+        if (!System.vulcainToken && !System.isTestEnvironnment) {
             System.log.info(null, "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
         }
     }
 
     async pollPropertiesAsync(timeoutInMs:number)
     {
+        if (!System.vulcainToken && !System.isTestEnvironnment) {
+            return Promise.resolve(null);
+        }
+
         let self = this;
         return new Promise( ( resolve, reject ) =>
         {
@@ -35,6 +39,7 @@ export class VulcainConfigurationSource implements ConfigurationSource
                         let data = response.body;
                         data.value && data.value.forEach(cfg => values.set(cfg.key, cfg));
                         self.options.lastUpdate = moment.utc().format();
+                        System.log.verbose(null, `HTTP CONFIG : polling properties on ${uri}`);
                     }
                 }
                 else {

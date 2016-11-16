@@ -4,7 +4,7 @@ import {DefaultServiceNames} from '../../di/annotations';
 import {IContainer} from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
 import {Inject} from '../../di/annotations';
-import { IMetrics } from '../../metrics/metrics';
+import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { ProviderFactory } from '../../providers/providerFactory';
 import { RequestContext } from '../../servers/requestContext';
 
@@ -45,7 +45,7 @@ export abstract class AbstractProviderCommand<T> {
      */
     schema: Schema;
 
-    private static METRICS_NAME = "Database_Call_";
+    private static METRICS_NAME = "database_io_";
 
     /**
      * Creates an instance of AbstractCommand.
@@ -73,15 +73,19 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected initializeMetricsInfo() {
-        this.metrics.setTags("uri=" + this.provider.address, "schema="+this.schema.name);
+        this.setMetricsTags(this.provider.address, this.schema.name);
+    }
+
+    protected setMetricsTags(address: string, schema: string) {
+        this.metrics.setTags("host=" + address, "schema=" + schema);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
         if (this.schema && this.provider) {
-            this.metrics.timing(AbstractProviderCommand.METRICS_NAME + "Duration", duration);
-            this.metrics.increment(AbstractProviderCommand.METRICS_NAME + "Total");
+            this.metrics.timing(AbstractProviderCommand.METRICS_NAME + MetricsConstant.duration, duration);
+            this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.total);
             if (!success)
-                this.metrics.increment(AbstractProviderCommand.METRICS_NAME + "Failed");
+                this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure);
         }
     }
 

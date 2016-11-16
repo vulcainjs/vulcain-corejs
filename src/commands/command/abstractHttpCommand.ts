@@ -3,13 +3,13 @@ import * as types from './types';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
 import { System } from './../../configurations/globals/system';
-import { IMetrics } from '../../metrics/metrics';
+import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 
 export abstract class AbstractHttpCommand {
     protected metrics: IMetrics;
     public requestContext: RequestContext;
-    private static METRICS_NAME = "External_Call_";
+    private static METRICS_NAME = "external_call";
 
     get container() {
         return this.requestContext.container;
@@ -25,7 +25,7 @@ export abstract class AbstractHttpCommand {
         if (!dep) {
             throw new Error("HttpDependency annotation is required on command " + Object.getPrototypeOf(this).name);
         }
-        this.setMetricsTags(dep);
+        this.setMetricsTags(dep.uri);
     }
 
     /**
@@ -36,17 +36,17 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-    protected setMetricsTags(tags) {
-        if (!tags || !tags.uri)
+    protected setMetricsTags(uri: string) {
+        if (uri)
             throw new Error("Metrics tags must have an uri property.");
-        this.metrics.setTags("uri=" + tags.uri);
+        this.metrics.setTags("uri=" + uri);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
-        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + "Duration", duration);
-        this.metrics.increment(AbstractHttpCommand.METRICS_NAME + "Total");
+        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration);
+        this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.total);
         if (!success)
-            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + "Failed");
+            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure);
     }
 
     runAsync(...args): Promise<any> {

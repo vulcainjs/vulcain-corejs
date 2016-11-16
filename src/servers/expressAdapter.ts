@@ -149,13 +149,6 @@ export class ExpressAdapter extends AbstractAdapter {
     private normalizeCommand(req: express.Request) {
         let command = req.body;
 
-        // TODO remove this
-        // Fix (rename data to params)
-        if (command.data) {
-            command.params = command.data;
-            delete command.data;
-        }
-
         // Body contains only data -> create a new command object
         if (!command.action && !command.params && !command.schema) {
             command = { params: command };

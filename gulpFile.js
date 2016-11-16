@@ -10,7 +10,8 @@ var gulp = require("gulp"),
     istanbul = require('gulp-istanbul'),
     sourcemaps = require('gulp-sourcemaps'),
     concat = require("gulp-concat"),
-    tslint = require("gulp-tslint");
+    tslint = require("gulp-tslint"),
+    typedoc = require("gulp-typedoc");
 
 // Base root directory for source map
 var rootDir = "file://" + __dirname;
@@ -104,11 +105,9 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
 // -----------------------------------
 // Generate documentation
 // -----------------------------------
-
-var typedoc = require("gulp-typedoc");
 gulp.task("doc", function () {
     return gulp
-        .src(["src/**/*.ts",
+        .src(["src/index.ts",
             "./typings/index.d.ts"])
         .pipe(typedoc({
             "emitDecoratorMetadata": true,
@@ -116,7 +115,7 @@ gulp.task("doc", function () {
             "module": "commonjs",
             "moduleResolution": "node",
             "target": "es6",
-            // "--excludePrivate": true,
+            "excludePrivate": true,
             out: "docs/",
             name: "Vulcain corejs"
         }))

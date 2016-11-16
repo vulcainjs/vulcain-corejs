@@ -1,4 +1,14 @@
 
+export class MetricsConstant {
+    static duration = "_duration";
+    static total = "_total";
+    static failure = "_failure";
+
+    static allRequestsFailure = "requests_failure";
+    static allRequestsTotal = "requests_total";
+    static allRequestsDuration = "requests_duration";
+}
+
 /**
  * Metrics adapter interface
  *

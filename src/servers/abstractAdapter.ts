@@ -6,7 +6,7 @@ import {QueryManager} from '../pipeline/query';
 import {IManager} from '../pipeline/common';
 import {RequestContext, UserContext} from './requestContext';
 import {DefaultServiceNames} from '../di/annotations';
-import {IMetrics} from '../metrics/metrics';
+import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { HttpResponse } from './../pipeline/common';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { System } from './../configurations/globals/system';
@@ -52,26 +52,28 @@ export abstract class AbstractAdapter {
             return;
         }
         const ms = this.calcDelayInMs(begin);
-        let prefix = "";
+        let prefix: string;
         if (response.value.schema) {
-            prefix = response.value.schema + '.';
-        }
-
-        prefix += response.value.action + ".";
-
-        this.metrics.timing(prefix + "responseTime", ms);
-        this.metrics.increment(prefix + "total");
-
-        this.metrics.timing("allRequests.responseTime", ms);
-        this.metrics.increment("allRequests.total");
-
-        if (!response.error) {
-            this.metrics.increment(prefix + "success");
-            this.metrics.increment("allRequests.success");
+            prefix = response.value.schema.toLowerCase();
         }
         else {
-            this.metrics.increment(prefix + "failure");
-            this.metrics.increment("allRequests.failure");
+            prefix = "";
+        }
+
+        prefix += "_" + response.value.action.toLowerCase();
+
+        // Duration
+        this.metrics.timing(prefix + MetricsConstant.duration, ms);
+        this.metrics.timing(MetricsConstant.allRequestsDuration, ms);
+
+        // Total
+        this.metrics.increment(prefix + MetricsConstant.total);
+        this.metrics.increment(MetricsConstant.allRequestsTotal);
+
+        // Failure
+        if (response.error) {
+            this.metrics.increment(prefix + MetricsConstant.failure);
+            this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
 
         let trace: any = {
