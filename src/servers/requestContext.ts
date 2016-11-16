@@ -64,7 +64,7 @@ export interface Logger {
  * @class RequestContext
  */
 export class RequestContext {
-    static TestTenant = "_test_";
+    static TestTenant = "TesT";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
 
     /**

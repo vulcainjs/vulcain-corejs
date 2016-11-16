@@ -159,7 +159,7 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<ActionResponse<T>>}
      */
     protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any): Promise<ActionResponse<T>> {
-        let command = { data: data, correlationId: this.requestContext.correlationId };
+        let command = { params: data, correlationId: this.requestContext.correlationId };
         let url = `http://${this.createServiceName(serviceName, version)}/api/${verb}`;
 
         let res = this.sendRequestAsync("post", url, (req) => req.json(command));
