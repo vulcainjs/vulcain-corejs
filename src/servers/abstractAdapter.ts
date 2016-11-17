@@ -54,13 +54,11 @@ export abstract class AbstractAdapter {
         const ms = this.calcDelayInMs(begin);
         let prefix: string;
         if (response.value.schema) {
-            prefix = response.value.schema.toLowerCase();
+            prefix = response.value.schema.toLowerCase() + "_" + response.value.action.toLowerCase();
         }
         else {
-            prefix = "";
+            prefix = response.value.action.toLowerCase();
         }
-
-        prefix += "_" + response.value.action.toLowerCase();
 
         // Duration
         this.metrics.timing(prefix + MetricsConstant.duration, ms);

@@ -97,7 +97,8 @@ export class ConfigurationManager
                 });
 
                 prop.set(item.encrypted ? JSON.parse(System.decrypt(item.value)) : item.value);
-                System.log.info(null, `CONFIG: Setting property value ${item.value} for key ${key}`);
+                let v = item.encrypted ? "********" : item.value;
+                System.log.info(null, `CONFIG: Setting property value '${v}' for key ${key}`);
             }
             catch (e) {
                 System.log.error(null, e, `CONFIG: Error on loadProperties for key ${key}`);

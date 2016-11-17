@@ -26,3 +26,16 @@ export class ApplicationRequestError extends Error {
         this.errors = errors;
     }
 }
+
+/**
+ * Fordidden error
+ *
+ * @export
+ * @class ForbiddenRequestError
+ * @extends {ApplicationRequestError}
+ */
+export class ForbiddenRequestError extends ApplicationRequestError {
+    constructor(msg = "Forbidden") {
+        super(msg, null, 403);
+    }
+}

@@ -33,6 +33,7 @@ export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } fro
 export { ValidationError, HttpResponse, HttpRedirectResponse } from './pipeline/common';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
 import { HttpRedirectResponse } from './pipeline/common';
+import { ForbiddenRequestError } from './errors/applicationRequestError';
 
 export { AbstractAdapter } from './servers/abstractAdapter';
 export { RequestContext, Pipeline, UserContext } from './servers/requestContext'
@@ -54,7 +55,7 @@ export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames } from './di/annotations';
 
 // Errors
-export { ApplicationRequestError } from './errors/applicationRequestError';
+export { ApplicationRequestError, ForbiddenRequestError } from './errors/applicationRequestError';
 export { BadRequestError } from './errors/badRequestError';
 export { CommandRuntimeError } from './errors/commandRuntimeError';
 export { RuntimeError } from './errors/runtimeError';

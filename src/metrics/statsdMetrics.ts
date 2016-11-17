@@ -37,22 +37,22 @@ export class StatsdMetrics {
     }
 
     increment(metric: string, delta?: number) {
-        this.statsd && this.statsd.increment(metric + this.tags + this.customTags , delta);
+        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + this.customTags , delta);
     }
 
     decrement(metric:string, delta?:number) {
-        this.statsd && this.statsd.decrement(metric + this.tags + this.customTags, delta);
+        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + this.customTags, delta);
     }
 
     counter(metric:string, delta:number) {
-        this.statsd && this.statsd.counter(metric + this.tags + this.customTags, delta);
+        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + this.customTags, delta);
     }
 
     gauge(metric:string, value:number) {
-        this.statsd && this.statsd.gauge(metric + this.tags + this.customTags, value);
+        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + this.customTags, value);
     }
 
     timing(metric: string, duration: number) {
-        this.statsd && this.statsd.timing(metric + this.tags + this.customTags, duration);
+        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + this.customTags, duration);
     }
 }
