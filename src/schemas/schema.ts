@@ -6,6 +6,7 @@ import { SchemaVisitor } from './visitor';
 import { PropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
 import { System } from './../configurations/globals/system';
+import { RequestContext } from '../servers/requestContext';
 
 export interface ErrorMessage {
     message: string;
@@ -20,7 +21,7 @@ export interface SchemaDescription {
     extends?: SchemaDescription | string;
     hasSensibleData?: boolean;
     bind?: (obj) => any;
-    validate?: (val, Container: IContainer) => string;
+    validate?: (val, ctx: RequestContext) => string;
     storageName?: string;
     idProperty?: string;
 }
@@ -75,8 +76,8 @@ export class Schema {
         return this.domain.bind(origin, this.description, old);
     }
 
-    validate(obj) {
-        return this.domain.validate(obj, this.description);
+    validate(ctx: RequestContext, obj) {
+        return this.domain.validate(ctx, obj, this.description);
     }
 
     getIdProperty() {
@@ -410,11 +411,11 @@ export class Domain {
      * @param schemaName : schema to use (default=current schema)
      * @returns Array<string> : A list of errors
      */
-    validate(val, schemaName?: string | SchemaDescription) {
+    validate(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
         if (!val) { return []; }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
         var validator = new Validator(this, this.container);
-        return validator.validate(schema, val);
+        return validator.validate(ctx, schema, val);
     }
 
     resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {

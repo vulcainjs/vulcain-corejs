@@ -31,7 +31,7 @@ export interface QueryMetadata extends ServiceHandlerMetadata {
 }
 
 /**
- * 
+ *
  *
  * @export
  * @interface QueryActionMetadata
@@ -85,7 +85,7 @@ export class QueryManager implements IManager {
         return info;
     }
 
-    private async validateRequestData(info, query) {
+    private async validateRequestData(ctx: RequestContext, info, query) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -96,7 +96,7 @@ export class QueryManager implements IManager {
                 // Custom binding if any
                  query.params = schema.bind(query.params);
 
-                errors = schema.validate(query.params);
+                errors = schema.validate(ctx, query.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -123,7 +123,7 @@ export class QueryManager implements IManager {
         System.log.write(ctx, { runQuery: query });
 
         try {
-            let errors = await this.validateRequestData(info, query);
+            let errors = await this.validateRequestData(ctx, info, query);
             if (errors && errors.length > 0)
                 return this.createResponse(ctx, query, { message: "Validation errors", errors: errors });
             if (ctx.user)

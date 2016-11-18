@@ -105,6 +105,14 @@ export class RequestContext {
     public tenant: string;
 
     /**
+     * Current locale
+     *
+     * @type {string}
+     * @memberOf RequestContext
+     */
+    public locale: string;
+
+    /**
      * Request host name
      *
      * @type {string}

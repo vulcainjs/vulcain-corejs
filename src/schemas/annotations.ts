@@ -1,13 +1,14 @@
 import { Preloader } from '../preloader';
 import { IContainer } from '../di/resolvers';
 import 'reflect-metadata';
+import { RequestContext } from '../servers/requestContext';
 
 export interface ModelOptions {
     name?: string;
     extends?: string;
     description?: string;
     bind?: ((data) => any) | boolean;
-    validate?: (entity, container?: IContainer) => string;
+    validate?: (entity, ctx?: RequestContext) => string;
     storageName?: string;
     hasSensibleData?: boolean;
 }
@@ -105,7 +106,7 @@ export interface PropertyOptions {
      *
      * @memberOf PropertyOptions
      */
-    validate?: (val) => string;
+    validate?: (val, ctx?: RequestContext) => string;
     /**
      * Define if the property contains sensible data.
      * Sensible datas are obfuscated and are removed from get request.
@@ -148,7 +149,7 @@ export interface ReferenceOptions {
     description?: string;
     bind?: ((val) => any) | boolean;
     dependsOn?: (entity) => boolean;
-    validate?: (val) => string;
+    validate?: (val, ctx?: RequestContext) => string;
     validators?: Array<any>;
     type?: string;
 }

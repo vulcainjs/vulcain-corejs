@@ -1,102 +1,85 @@
 import { Domain, SchemaDescription, ErrorMessage } from './schema';
-import {IContainer} from '../di/resolvers';
+import { IContainer } from '../di/resolvers';
+import { RequestContext } from '../servers/requestContext';
 
-export class Validator
-{
+export class Validator {
 
-    constructor( private domain:Domain, private container:IContainer)
-    {
+    constructor(private domain: Domain, private container: IContainer) {
     }
 
-    validate( schemaDesc: SchemaDescription, val )
-    {
+    validate(ctx: RequestContext, schemaDesc: SchemaDescription, val) {
         let errors: Array<ErrorMessage> = [];
-        if( !schemaDesc || !val ) return errors;
+        if (!schemaDesc || !val) return errors;
 
-        if( schemaDesc.extends)
-        {
+        if (schemaDesc.extends) {
             let base = this.domain.resolveSchemaDescription(schemaDesc.extends);
-            if(base)
-            {
-                this.validate( base, val ).forEach(e=> {errors.push( e );});
+            if (base) {
+                this.validate(ctx, base, val).forEach(e => { errors.push(e); });
             }
         }
 
-        let id =  val && val[this.domain.getIdProperty(schemaDesc)];
-        let ctx:FormatContext = { element: val, schemaElement: schemaDesc, id: id };
+        let id = val && val[this.domain.getIdProperty(schemaDesc)];
+        let formatContext: FormatContext = { element: val, schemaElement: schemaDesc, id: id };
 
         // Properties checks
-        for( const ps in schemaDesc.properties )
-        {
-            if( !schemaDesc.properties.hasOwnProperty( ps ) ) continue;
-            ctx.propertyName   = ps;
-            ctx.propertySchema = schemaDesc.properties[ps];
-            ctx.propertyValue  = val[ps];
+        for (const ps in schemaDesc.properties) {
+            if (!schemaDesc.properties.hasOwnProperty(ps)) continue;
+            formatContext.propertyName = ps;
+            formatContext.propertySchema = schemaDesc.properties[ps];
+            formatContext.propertyValue = val[ps];
 
-            try
-            {
-                let err = this.validateProperty(ctx, schemaDesc.properties[ps], val[ps], val);
-                if( err )
-                {
-                    errors.push( {message: err, property:ps, id:ctx.id} );
+            try {
+                let err = this.validateProperty(ctx, formatContext, schemaDesc.properties[ps], val[ps], val);
+                if (err) {
+                    errors.push({ message: err, property: ps, id: formatContext.id });
                 }
             }
-            catch( e )
-            {
-                errors.push( {message:this.__formatMessage( "Validation error for property {$propertyName} : " + e, ctx ), id:ctx.id, property:ps} );
+            catch (e) {
+                errors.push({ message: this.__formatMessage("Validation error for property {$propertyName} : " + e, formatContext), id: formatContext.id, property: ps });
             }
         }
 
         // References checks
-        for( const rs in schemaDesc.references )
-        {
-            if( !schemaDesc.references.hasOwnProperty( rs ) ) continue;
-            ctx.propertyName   = rs;
-            ctx.propertySchema = schemaDesc.references[rs];
-            ctx.propertyValue  = val[rs];
+        for (const rs in schemaDesc.references) {
+            if (!schemaDesc.references.hasOwnProperty(rs)) continue;
+            formatContext.propertyName = rs;
+            formatContext.propertySchema = schemaDesc.references[rs];
+            formatContext.propertyValue = val[rs];
 
-            try
-            {
+            try {
                 let ref = schemaDesc.references[rs];
-                if( ref.item === "any" && ctx.propertyValue && ctx.propertyValue.__schema)
-                {
-                    if( ref && ref.dependsOn && !ref.dependsOn(val)) continue;
-                    let schema = this.domain.getSchema( ctx.propertyValue.__schema );
-                    if( !schema ) continue;
-                    errors = errors.concat(this.validate( schema.description, ctx.propertyValue ));
+                if (ref.item === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
+                    if (ref && ref.dependsOn && !ref.dependsOn(val)) continue;
+                    let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
+                    if (!schema) continue;
+                    errors = errors.concat(this.validate(ctx, schema.description, formatContext.propertyValue));
                 }
-                else
-                {
-                    let errors2 = this.validateReference( ref, val[rs], val );
-                    errors2 && errors2.forEach( err=>errors.push( {message:this.__formatMessage( err, ctx, schemaDesc ), id:ctx.id, property:rs} ));
+                else {
+                    let errors2 = this.validateReference(ctx, ref, val[rs], val);
+                    errors2 && errors2.forEach(err => errors.push({ message: this.__formatMessage(err, formatContext, schemaDesc), id: formatContext.id, property: rs }));
                 }
             }
-            catch( e )
-            {
-                errors.push( {message:this.__formatMessage( "Validation error for reference {$propertyName} : " + e, ctx ), id:ctx.id, property:rs} );
+            catch (e) {
+                errors.push({ message: this.__formatMessage("Validation error for reference {$propertyName} : " + e, formatContext), id: formatContext.id, property: rs });
             }
         }
 
         // Entity check
-        if( schemaDesc.validate )
-        {
-            ctx.propertyName = ctx.propertySchema = ctx.propertyValue = null;
-            try
-            {
-                let err = schemaDesc.validate( val, this.container );
-                if( err )
-                    errors.push( {message:this.__formatMessage( err, ctx, schemaDesc ), id:ctx.id} );
+        if (schemaDesc.validate) {
+            formatContext.propertyName = formatContext.propertySchema = formatContext.propertyValue = null;
+            try {
+                let err = schemaDesc.validate(val, ctx);
+                if (err)
+                    errors.push({ message: this.__formatMessage(err, formatContext, schemaDesc), id: formatContext.id });
             }
-            catch( e )
-            {
-                errors.push( {message:this.__formatMessage( "Validation error for element {__schema} : " + e, ctx ), id:ctx.id} );
+            catch (e) {
+                errors.push({ message: this.__formatMessage("Validation error for element {__schema} : " + e, formatContext), id: formatContext.id });
             }
         }
         return errors;
     }
 
-    private validateReference( schema, val, entity ): Array<string>
-    {
+    private validateReference(ctx: RequestContext, schema, val, entity): Array<string> {
         if (!schema)
             return;
 
@@ -112,12 +95,12 @@ export class Validator
 
         if (schema.validators) {
             for (let validator of schema.validators) {
-                let err = validator.validate && validator.validate(val);
+                let err = validator.validate && validator.validate(ctx, val);
                 if (err) return [err];
             }
         }
 
-        let err = schema.validate && schema.validate(val);
+        let err = schema.validate && schema.validate(ctx, val);
         if (err) return [err];
 
         let values = schema.cardinality === "one" ? [val] : <Array<any>>val;
@@ -128,13 +111,13 @@ export class Validator
                 let t = itemType;
                 if (val.__schema && val.__schema !== schema.item)
                     t = this.domain._findType(val.__schema);
-                errors = errors.concat(this.validate(t, val));
+                errors = errors.concat(this.validate(ctx, t, val));
             }
         }
         return errors;
     }
 
-    private validateProperty(ctx: FormatContext, schema: string | any, val, entity): string {
+    private validateProperty(ctx: RequestContext, formatContext: FormatContext, schema: string | any, val, entity): string {
         if (typeof schema === "string") {
             let type = this.domain._findType(<string>schema);
             if (!type) {
@@ -147,21 +130,20 @@ export class Validator
 
         if (val === undefined || val === null) {
             if (schema.required) {
-                return this.__formatMessage("Property '{$propertyName}' is required.", ctx, schema);
+                return this.__formatMessage("Property '{$propertyName}' is required.", formatContext, schema);
             }
             return null;
         }
         if (schema.validators) {
             for (let validator of schema.validators) {
-                let err = validator.validate && validator.validate(val);
-                if (err) return this.__formatMessage( err, ctx, validator );
+                let err = validator.validate && validator.validate(ctx, val);
+                if (err) return this.__formatMessage(err, formatContext, validator);
             }
         }
 
-        if( schema.validate )
-        {
-            let err = schema.validate(val);
-            if (err) return this.__formatMessage( err, ctx, schema );
+        if (schema.validate) {
+            let err = schema.validate(ctx, val);
+            if (err) return this.__formatMessage(err, formatContext, schema);
         }
     }
 
@@ -172,46 +154,41 @@ export class Validator
      * @returns {string}
      * @private
      */
-    private __formatMessage( message:string, ctx:FormatContext, validator? ):string
-    {
+    private __formatMessage(message: string, ctx: FormatContext, validator?): string {
         var regex = /{\s*([^}\s]*)\s*}/g;
-        return message.replace( regex, function( match, name )
-        {
-            switch( name )
-            {
-                case "$value" :
+        return message.replace(regex, function (match, name) {
+            switch (name) {
+                case "$value":
                     return ctx.propertyValue;
                 case "$schema":
                     return ctx.propertyName ? ctx.propertySchema : ctx.schemaElement;
-                case "$id" :
+                case "$id":
                     return ctx.id;
-                case "$propertyName" :
+                case "$propertyName":
                     return ctx.propertyName;
-                default :
-                    if( !name ) return null;
+                default:
+                    if (!name) return null;
                     // Name beginning with $ belongs to schema
-                    if( name[0] === "$" && validator )
-                    {
-                        let p = validator[name] || validator[name.substring( 1 )];
-                        return (typeof p === "function" && p( validator )) || p;
+                    if (name[0] === "$" && validator) {
+                        let p = validator[name] || validator[name.substring(1)];
+                        return (typeof p === "function" && p(validator)) || p;
                     }
                     // Else it's an element's property
-                    if( ctx.element )
-                    {
+                    if (ctx.element) {
                         let p = ctx.element[name];
-                        return (typeof p === "function" && p( ctx.element )) || p;
+                        return (typeof p === "function" && p(ctx.element)) || p;
                     }
                     return null;
             }
-        } );
+        });
     }
 }
 
 interface FormatContext {
-    id:string;
+    id: string;
     element;
     schemaElement;
-    propertyName?:string;
+    propertyName?: string;
     propertySchema?;
     propertyValue?;
 }

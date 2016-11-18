@@ -64,7 +64,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
 }
 
 /**
- * 
+ *
  *
  * @export
  * @interface ActionMetadata
@@ -155,7 +155,7 @@ export class CommandManager implements IManager {
         return res;
     }
 
-    private async validateRequestData(info, command) {
+    private async validateRequestData(ctx: RequestContext, info, command) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -166,7 +166,7 @@ export class CommandManager implements IManager {
                 // Custom binding if any
                 command.params = schema && schema.bind(command.params);
 
-                errors = schema.validate(command.params);
+                errors = schema.validate(ctx, command.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -202,7 +202,7 @@ export class CommandManager implements IManager {
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         System.log.write(ctx, { RunAction: command });
         try {
-            let errors = await this.validateRequestData(info, command);
+            let errors = await this.validateRequestData(ctx, info, command);
             if (errors && errors.length > 0)
                 return this.createResponse(ctx, command, { message: "Validation errors", errors: errors });
 
