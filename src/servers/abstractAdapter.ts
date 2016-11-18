@@ -51,6 +51,13 @@ export abstract class AbstractAdapter {
         if (!response.value) {
             return;
         }
+
+        if (!response.value.action) {
+            // 40x error
+            this.metrics.increment(MetricsConstant.allRequestsFailure);
+            return;
+        }
+
         const ms = this.calcDelayInMs(begin);
         let prefix: string;
         if (response.value.schema) {
@@ -69,7 +76,7 @@ export abstract class AbstractAdapter {
         this.metrics.increment(MetricsConstant.allRequestsTotal);
 
         // Failure
-        if (response.error) {
+        if (response.value.error) {
             this.metrics.increment(prefix + MetricsConstant.failure);
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
@@ -114,7 +121,7 @@ export abstract class AbstractAdapter {
                 let info = manager.getInfoHandler<ActionMetadata>(command);
                 if (!ctx.user && this.testUser) {
                     ctx.user = this.testUser;
-                    ctx.tenant = ctx.user.tenant;
+                    ctx.tenant = ctx.tenant || ctx.user.tenant;
                 }
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {

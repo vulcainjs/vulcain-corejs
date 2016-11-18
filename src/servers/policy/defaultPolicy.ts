@@ -55,9 +55,6 @@ export class DefaultPolicy {
      * @returns {number}
      */
     hasScope(requestContext: RequestContext, handlerScope: string): boolean {
-        if (requestContext.user && requestContext.user.tenant && requestContext.user.tenant !== requestContext.tenant) {
-            return false;
-        }
         if (!handlerScope || handlerScope === "?") {
             return true;
         }

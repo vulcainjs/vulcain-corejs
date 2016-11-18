@@ -160,28 +160,42 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private initializeTenant(ctx: RequestContext, req: express.Request) {
+        // 1 - tenant in url (test only)
+        ctx.tenant = (System.isTestEnvironnment && req.query.$tenant);
+        if (ctx.tenant) {
+            return;
+        }
+
+        // 2 - Environnement variable
+        ctx.tenant = process.env[Conventions.instance.ENV_VULCAIN_TENANT];
+        if (ctx.tenant) {
+            return;
+        }
+
+        // 3 - Header
         ctx.tenant = req.header("X-VULCAIN-TENANT");
         if (ctx.tenant) {
-            return;
-        }
-
-        ctx.tenant = process.env[Conventions.instance.ENV_VULCAIN_TENANT] || (System.isTestEnvironnment && req.query.$tenant);
-        if (ctx.tenant) {
-            return;
-        }
-
-        if (ctx.hostName && !System.isDevelopment) {
-            // Get the first sub-domain
-            let pos = ctx.hostName.indexOf('.');
-            ctx.tenant = pos > 0 ? ctx.hostName.substr(0, pos) : ctx.hostName;
-            // Remove port
-            pos = ctx.tenant.indexOf(':');
-            if (pos > 0) {
-                ctx.tenant = ctx.tenant.substr(0, pos);
+            if (ctx.tenant === "?") {
+                // from load-balancer so resolve from hostname
+                // Get the first sub-domain
+                let pos = ctx.hostName.indexOf('.');
+                ctx.tenant = pos > 0 ? ctx.hostName.substr(0, pos) : ctx.hostName;
+                // Remove port
+                pos = ctx.tenant.indexOf(':');
+                if (pos > 0) {
+                    ctx.tenant = ctx.tenant.substr(0, pos);
+                }
             }
+            return;
+        }
+
+        // 4 - test mode
+        if (System.isTestEnvironnment) {
+            ctx.tenant = RequestContext.TestTenant;
         }
         else {
-            ctx.tenant = RequestContext.TestTenant;
+            // 5 - default
+            ctx.tenant = "default";
         }
     }
 
@@ -213,6 +227,9 @@ export class ExpressAdapter extends AbstractAdapter {
                 }
                 ctx.bearer = ctx.bearer || ctx.user.bearer;
                 ctx.user.bearer = null;
+            }
+            else {
+
             }
 
             let result = await handler.apply(this, [command, ctx]);
