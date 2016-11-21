@@ -55,7 +55,6 @@ export class Conventions {
     defaultStatsdDelayInMs = 10000;
     defaultVulcainServerName = "vulcain-server";
     vulcainFileName = ".vulcain";
-    secretKeyPropertyName = "VulcainSecretKey";
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
     defaultTokenExpiration = "20m";
 

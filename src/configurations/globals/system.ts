@@ -317,7 +317,13 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createSharedConfigurationProperty<T>(name: string, defaultValue: T, schema?: string): IDynamicProperty<T> {
+    public static createSharedConfigurationProperty<T>(name: string, schema: string, defaultValue?: T): IDynamicProperty<T> {
+        if (defaultValue === undefined)
+            defaultValue = process.env[name.toUpperCase().replace('.', '_')];
+
+        if (!defaultValue && !schema)
+            throw new Error("Schema is required if defaultValue is null");
+
         System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -331,7 +337,13 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createServiceConfigurationProperty<T>(name: string, defaultValue: T, schema?: string) {
+    public static createServiceConfigurationProperty<T>(name: string, schema: string, defaultValue?: T) {
+        if (defaultValue === undefined)
+            defaultValue = process.env[name.toUpperCase().replace('.', '_')];
+
+        if (!defaultValue && !schema)
+            throw new Error("Schema is required if defaultValue is null");
+
         System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,

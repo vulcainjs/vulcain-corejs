@@ -140,25 +140,26 @@ export class CommandProperties {
             throw new Error("Please provide a unique command key for the metrics.");
         }
         this.commandGroup = this.commandGroup || "hystrix";
-        this.metricsRollingPercentileWindowBuckets = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_PERCENTILE_WINDOW_BUCKETS);
-        this.circuitBreakerForceClosed = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_FORCE_CIRCUIT_CLOSED, config.circuitBreakerForceClosed);
-        this.circuitBreakerForceOpen = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_FORCE_CIRCUIT_OPEN, config.circuitBreakerForceOpened);
-        this.circuitBreakerSleepWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_SLEEP_WINDOW_IN_MS, config.circuitBreakerSleepWindowInMilliseconds);
-        this.circuitBreakerErrorThresholdPercentage = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_ERROR_THRESHOLD_PERCENTAGE, config.circuitBreakerErrorThresholdPercentage);
-        this.circuitBreakerRequestVolumeThreshold = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_VOLUME_THRESHOLD, config.circuitBreakerRequestVolumeThreshold);
-        this.executionTimeoutInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_EXECUTION_TIMEOUT_IN_MS, config.executionTimeoutInMilliseconds);
-        this.metricsRollingStatisticalWindowBuckets = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_STATISTICAL_WINDOW_BUCKETS, config.statisticalWindowNumberOfBuckets);
-        this.metricsRollingStatisticalWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_STATISTICAL_WINDOW_IN_MS, config.metricsRollingStatisticalWindowInMilliseconds);
-        this.metricsRollingPercentileWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_PERCENTILE_WINDOW_IN_MS, config.metricsRollingPercentileWindowInMilliseconds);
-        this.executionIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_REQUEST_VOLUME_REJECTION_THRESHOLD);
-        this.fallbackIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD);
+        this.metricsRollingPercentileWindowBuckets = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_PERCENTILE_WINDOW_BUCKETS, "number");
+        this.circuitBreakerForceClosed = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_FORCE_CIRCUIT_CLOSED, "boolean", config.circuitBreakerForceClosed);
+        this.circuitBreakerForceOpen = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_FORCE_CIRCUIT_OPEN, "boolean", config.circuitBreakerForceOpened);
+        this.circuitBreakerSleepWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_SLEEP_WINDOW_IN_MS, "number", config.circuitBreakerSleepWindowInMilliseconds);
+        this.circuitBreakerErrorThresholdPercentage = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_ERROR_THRESHOLD_PERCENTAGE, "number", config.circuitBreakerErrorThresholdPercentage);
+        this.circuitBreakerRequestVolumeThreshold = this.get<number>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_VOLUME_THRESHOLD, "number", config.circuitBreakerRequestVolumeThreshold);
+        this.executionTimeoutInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_EXECUTION_TIMEOUT_IN_MS, "number", config.executionTimeoutInMilliseconds);
+        this.metricsRollingStatisticalWindowBuckets = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_STATISTICAL_WINDOW_BUCKETS, "number", config.statisticalWindowNumberOfBuckets);
+        this.metricsRollingStatisticalWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_STATISTICAL_WINDOW_IN_MS, "number", config.metricsRollingStatisticalWindowInMilliseconds);
+        this.metricsRollingPercentileWindowInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_METRICS_PERCENTILE_WINDOW_IN_MS, "number", config.metricsRollingPercentileWindowInMilliseconds);
+        this.executionIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_REQUEST_VOLUME_REJECTION_THRESHOLD, "number");
+        this.fallbackIsolationSemaphoreMaxConcurrentRequests = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD, "number");
         //  this.metricsHealthSnapshotIntervalInMilliseconds = this.get<number>(HystrixPropertiesNames.HYSTRIX_FALLBACK_VOLUME_REJECTION_THRESHOLD);
-        this.circuitBreakerEnabled = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_ENABLED, config.circuitEnabled);
+        this.circuitBreakerEnabled = this.get<boolean>(HystrixPropertiesNames.HYSTRIX_CIRCUIT_ENABLED, "boolean", config.circuitEnabled);
     }
 
-    private get<TValue>(name: string, defaultValue?: TValue) {
+    private get<TValue>(name: string, schema: string, defaultValue?: TValue) {
         return System.createServiceConfigurationProperty<TValue>(
             this.commandName + "." + name,
+            schema,
             defaultValue || Conventions.instance.hystrix[name]);
     }
 }
