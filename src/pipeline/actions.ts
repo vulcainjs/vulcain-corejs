@@ -166,7 +166,7 @@ export class CommandManager implements IManager {
                 // Custom binding if any
                 command.params = schema && schema.bind(command.params);
 
-                errors = schema.validate(ctx, command.params);
+                errors = await schema.validateAsync(ctx, command.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }

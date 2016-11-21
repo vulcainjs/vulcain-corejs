@@ -96,7 +96,7 @@ export class QueryManager implements IManager {
                 // Custom binding if any
                  query.params = schema.bind(query.params);
 
-                errors = schema.validate(ctx, query.params);
+                errors = await schema.validateAsync(ctx, query.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }

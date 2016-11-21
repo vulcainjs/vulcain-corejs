@@ -13,7 +13,6 @@
 			"cwd": "${workspaceRoot}",
 			"runtimeExecutable": null,
 			"runtimeArgs": [
-				"--harmony"
 			],
 			"env": {
 				"VULCAIN_ENV": "vulcain",
