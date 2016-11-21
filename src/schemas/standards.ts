@@ -1,4 +1,5 @@
 const uuid = require('node-uuid');
+const validator = require('validator');
 
 export let standards = {
     "$ref": {
@@ -13,15 +14,17 @@ export let standards = {
             if (this.$cardinality !== "one" && this.$cardinality !== "many")
                 throw new Error("Incorrect cardinality. Allowed values are 'one' or 'many'");
             if (this.$cardinality === "one") {
-                if ( Array.isArray(val)) return this.messages[0];
-                if ( this.$item && val.__schema && val.__schema !== this.$item) return this.messages[2];
+                if (Array.isArray(val)) return this.messages[0];
+                if (this.$item && val.__schema && val.__schema !== this.$item) return this.messages[2];
                 return;
             }
             if (this.$cardinality === "many") {
-                if ( !Array.isArray(val)) return this.messages[1];
+                if (!Array.isArray(val)) return this.messages[1];
                 if (this.$item && val) {
                     let ok = true;
-                    val.forEach(v => { if (v.__schema) ok = ok || v.__schema === this.$item; });
+                    val.forEach(v => {
+                        if (v.__schema) ok = ok || v.__schema === this.$item;
+                    });
                     if (!ok) return this.messages[2];
                 }
                 return;
@@ -31,26 +34,26 @@ export let standards = {
     "string": {
         message: "Property '{$propertyName}' must be a string.",
         validate: function (val) {
-            if ( typeof val !== "string") return this.message;
+            if (typeof val !== "string") return this.message;
         }
     },
     "pattern": {
         $pattern: null,
         message: "Property '{$propertyName}' must match the following pattern : {$pattern}",
         validate: function (val) {
-            if ( this.$pattern && new RegExp(this.$pattern).test(val) === false) return this.message;
+            if (this.$pattern && new RegExp(this.$pattern).test(val) === false) return this.message;
         }
     },
     "number": {
         message: "Property '{$propertyName}' must be a number.",
         bind: function (val) {
             if (val === undefined) return val;
-            if ( /^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(val))
+            if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(val))
                 return Number(val);
             return NaN;
         },
         validate: function (val) {
-            if ( (typeof val !== "number") || isNaN(val)) return this.message;
+            if ((typeof val !== "number") || isNaN(val)) return this.message;
         }
     },
     "length": {
@@ -75,12 +78,12 @@ export let standards = {
         message: "Property '{$propertyName}' must be an integer.",
         bind: function (val) {
             if (val === undefined) return val;
-            if ( /^(\-|\+)?([0-9]+([0-9]+)?)$/.test(val))
+            if (/^(\-|\+)?([0-9]+([0-9]+)?)$/.test(val))
                 return Number(val);
             return NaN;
         },
         validate: function (val) {
-            if ( (typeof val !== "number") || isNaN(val)) return this.message;
+            if ((typeof val !== "number") || isNaN(val)) return this.message;
         }
     },
     "boolean": {
@@ -90,7 +93,7 @@ export let standards = {
             return (typeof val === "string") ? val === "true" : !!val;
         },
         validate: function (val) {
-            if ( typeof val !== "boolean") return this.message;
+            if (typeof val !== "boolean") return this.message;
         }
     },
     "enum": {
@@ -98,7 +101,7 @@ export let standards = {
         $values: [],
         message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
         validate: function (val) {
-            if ( this.$values.indexOf(val) === - 1) return this.message;
+            if (this.$values.indexOf(val) === -1) return this.message;
         }
     },
     uid: {
@@ -128,6 +131,45 @@ export let standards = {
         message: "Invalid value '{$value}' for '{$propertyName}', value must be between {$min} and {$max}",
         validate: function (val) {
             if (val < this.min || val > this.max) return this.message;
+        }
+    },
+    email: {
+        message: "Property '{$propertyName}' must be an email.",
+        validate: function (val) {
+            if ((typeof val !== "string")) return this.message;
+
+            if (!validator.isEmail(val))
+                return this.message;
+
+        }
+    },
+    url: {
+        type: "string",
+        message: "Property '{$propertyName}' must be an url.",
+        validate: function (val) {
+            if (!validator.isURL(val))
+                return this.message;
+
+        }
+    },
+    alphanumeric: {
+        type: "string",
+        message: "Property '{$propertyName}' must be an alphanumeric.",
+        validate: function (val, ctx = {locale: 'en-US'}) {
+
+            if (!validator.isAlphanumeric(val, ctx.locale))
+                return this.message;
+
+        }
+    },
+    'date-iso8601': {
+        type: "string",
+        message: "Property '{$propertyName}' must be an date on ISO8601 format.",
+        validate: function (val, ctx = {locale: 'en-US'}) {
+
+            if (!validator.isISO8601(val))
+                return this.message;
+
         }
     }
 };
