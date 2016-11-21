@@ -37,7 +37,7 @@ export abstract class AbstractHttpCommand {
      * @memberOf AbstractHttpCommand
      */
     protected setMetricsTags(uri: string) {
-        if (uri)
+        if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         this.metrics.setTags("uri=" + uri);
     }
