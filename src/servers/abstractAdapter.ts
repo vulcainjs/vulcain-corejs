@@ -19,7 +19,7 @@ export abstract class AbstractAdapter {
     private domain: Domain;
     private metrics: IMetrics;
 
-    private calcDelayInMs(begin: number[]): number {
+    private calcDelayInMs(begin: [number, number]): number {
         // ts = [seconds, nanoseconds]
         const ts = process.hrtime(begin);
         // convert seconds to miliseconds and nanoseconds to miliseconds as well
@@ -47,7 +47,7 @@ export abstract class AbstractAdapter {
         return process.hrtime();
     }
 
-    protected endRequest(begin: number[], response, ctx: RequestContext, e?: Error) {
+    protected endRequest(begin: [number, number], response, ctx: RequestContext, e?: Error) {
         if (!response.value) {
             return;
         }

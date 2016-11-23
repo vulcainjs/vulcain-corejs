@@ -2,11 +2,14 @@
 	"rules": {
 		"no-unused-expression": false,
 		"no-duplicate-variable": true,
-		"no-duplicate-key": true,
-		"no-unused-variable": false,
 		"curly": false,
 		"class-name": true,
-		"semicolon": ["always"],
-		"triple-equals": true
+		"semicolon": [
+			"always"
+		],
+		"triple-equals": true,
+		"no-use-before-declare": true,
+		"no-var-keyword": true,
+		"prefer-for-of": true
 	}
 }

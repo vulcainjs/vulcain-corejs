@@ -36,16 +36,14 @@ gulp.task("compile-test", ['compile-ts'], function () {
     var tsProject = ts.createProject(
         './tsconfig.json',
         {
-            sortOutput: true,
             typescript: require('typescript')    // must be a project package dependency
         });
 
     var tsResult = gulp.src([
-        "./test/**/*.ts",
-        "./typings/index.d.ts"
-    ], {base: 'test/'})
+        "./test/**/*.ts"
+    ], { base: 'test/' })
         .pipe(sourcemaps.init())
-        .pipe(ts(tsProject))
+        .pipe(tsProject())
         .once("error", function () {
             this.once("finish", function () {
                 process.exit(1)
@@ -75,16 +73,14 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
     var tsProject = ts.createProject(
         './tsconfig.json',
         {
-            sortOutput: true,
             typescript: require('typescript')    // must be a project package dependency
         });
 
     var tsResult = gulp.src([
-        "./src/**/*.ts",
-        "./typings/index.d.ts"
+        "./src/**/*.ts"
     ])
         .pipe(sourcemaps.init())
-        .pipe(ts(tsProject))
+        .pipe(tsProject())
         .once("error", function () {
             this.once("finish", function () {
                 process.exit(1)
@@ -107,8 +103,7 @@ gulp.task("compile-ts", ['tslint', 'clean'], function () {
 // -----------------------------------
 gulp.task("doc", function () {
     return gulp
-        .src(["src/index.ts",
-            "./typings/index.d.ts"])
+        .src(["src/index.ts"])
         .pipe(typedoc({
             "emitDecoratorMetadata": true,
             "experimentalDecorators": true,

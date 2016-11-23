@@ -20,7 +20,7 @@ export class ExpressAdapter extends AbstractAdapter {
     constructor(domainName: string, container: IContainer, private app: Application) {
         super(domainName, container);
 
-        var self = this;
+        const self = this;
         this.express = express();
 
         this.express.use(function(req, res, next) {

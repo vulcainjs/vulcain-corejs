@@ -17,9 +17,9 @@ export class Files
                  {
                      try
                      {
-                         var c = require( Path.join( dir, fn ) );
+                         let c = require( Path.join( dir, fn ) );
                          if( !c || !callback) return;
-                         for( var ctl in c )
+                         for( let ctl in c )
                          {
                              callback( ctl, c[ctl] );
                          }

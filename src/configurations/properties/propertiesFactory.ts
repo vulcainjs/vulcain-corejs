@@ -24,7 +24,7 @@ export class PropertiesFactory implements IPropertiesFactory
             throw new Error("Duplicate property name");
         }
 
-        var p = new DynamicProperty<T>(this._properties, name, value);
+        let p = new DynamicProperty<T>(this._properties, name, value);
         if (name)
             this.add(name, p);
         p.set(value); // To send propertychanged
@@ -35,8 +35,8 @@ export class PropertiesFactory implements IPropertiesFactory
     {
         if(fallbackPropertyNames.length === 0) throw new Error("You must provide at least one fallback property name");
 
-        var properties = [name].concat(fallbackPropertyNames);
-        var p = new ChainedDynamicProperty<T>(this._properties, properties, defaultValue);
+        let properties = [name].concat(fallbackPropertyNames);
+        let p = new ChainedDynamicProperty<T>(this._properties, properties, defaultValue);
         return p;
     }
 }

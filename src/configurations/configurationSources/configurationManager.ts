@@ -92,7 +92,7 @@ export class ConfigurationManager
             }
 
             try {
-                var prop = this.properties.Updater_getOrCreate(key, () => {
+                let prop = this.properties.Updater_getOrCreate(key, () => {
                     return new DynamicProperty<any>(this.properties, key);
                 });
 

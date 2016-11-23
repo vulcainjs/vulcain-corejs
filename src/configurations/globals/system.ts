@@ -318,8 +318,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, schema: string, defaultValue?: T): IDynamicProperty<T> {
-        if (defaultValue === undefined)
-            defaultValue = process.env[name.toUpperCase().replace('.', '_')];
+        defaultValue = process.env[name.toUpperCase().replace('.', '_')] || defaultValue;
 
         if (!defaultValue && !schema)
             throw new Error("Schema is required if defaultValue is null");
@@ -338,8 +337,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, schema: string, defaultValue?: T) {
-        if (defaultValue === undefined)
-            defaultValue = process.env[name.toUpperCase().replace('.', '_')];
+        defaultValue = process.env[name.toUpperCase().replace('.', '_')] || defaultValue;
 
         if (!defaultValue && !schema)
             throw new Error("Schema is required if defaultValue is null");
@@ -372,11 +370,11 @@ export class System {
 
             baseurl += urlSegments.filter((s: any) => typeof s === 'string').map((s: string) => encodeURIComponent(s)).join('/');
 
-            var query = urlSegments.filter((s: any) => typeof s !== 'string');
+            let query = urlSegments.filter((s: any) => typeof s !== 'string');
             if (query.length) {
-                var sep = '?';
+                let sep = '?';
                 query.forEach((obj: any) => {
-                    for (var p in obj) {
+                    for (let p in obj) {
                         if (!obj.hasOwnProperty(p)) {
                             continue;
                         }

@@ -14,6 +14,25 @@
             "isTestCommand": true,
             "isWatching": false,
             "problemMatcher": "$tsc"
+        },
+        {
+            "taskName": "tslint",
+            "args": [],
+            "problemMatcher": {
+                "owner": "tslint",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "severity": "warning",
+                "pattern": {
+                    "regexp": "^\\(\\S.*\\) (\\S.*)\\[(\\d+), (\\d+)\\]:\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4
+                }
+            }
         }
     ]
 }

@@ -1,12 +1,12 @@
 import * as fs from 'fs';
-import {IProvider, ListOptions} from "../provider";
-import {Schema} from "../../schemas/schema";
-import {MongoQueryParser} from './mongoQueryParser';
+import { IProvider, ListOptions } from "../provider";
+import { Schema } from "../../schemas/schema";
+import { MongoQueryParser } from './mongoQueryParser';
 
 interface AstNode {
     op: string;
-    left?: AstNode|any;
-    right?: AstNode|any;
+    left?: AstNode | any;
+    right?: AstNode | any;
 }
 
 /**
@@ -118,7 +118,7 @@ export class MemoryProvider implements IProvider<any>
      * @returns {Promise}
      */
     getAsync(schema: Schema, name: string) {
-        var self = this;
+        const self = this;
         return new Promise((resolve, reject) => {
             try {
                 let list = self.state.data[schema.description.storageName];
@@ -173,7 +173,7 @@ export class MemoryProvider implements IProvider<any>
         if (!entity)
             throw new Error("Entity is required");
 
-        var self = this;
+        const self = this;
         entity._created = new Date().toUTCString();
 
         return new Promise((resolve, reject) => {

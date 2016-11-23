@@ -1,7 +1,6 @@
 import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService, VerifyTokenParameter } from '../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
-import { IContainer } from '../di/resolvers';
 import { RequestContext } from '../servers/requestContext';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');

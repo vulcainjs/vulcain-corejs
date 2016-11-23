@@ -414,7 +414,7 @@ export class Domain {
     validateAsync(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
         if (!val) { return Promise.resolve([]); }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
-        var validator = new Validator(this, this.container);
+        let validator = new Validator(this, this.container);
         return validator.validateAsync(ctx, schema, val);
     }
 

@@ -155,7 +155,7 @@ export class Validator {
      * @private
      */
     private __formatMessage(message: string, ctx: FormatContext, validator?): string {
-        var regex = /{\s*([^}\s]*)\s*}/g;
+        const regex = /{\s*([^}\s]*)\s*}/g;
         return message.replace(regex, function (match, name) {
             switch (name) {
                 case "$value":

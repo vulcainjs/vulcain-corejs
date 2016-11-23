@@ -7,6 +7,11 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "target": "es6",
-        "watch": false
+        "watch": false,
+        "noUnusedParameters": false,
+        "noUnusedLocals": false,
+        "types": [
+            "rx/rx.time-lite.d"
+        ]
     }
 }

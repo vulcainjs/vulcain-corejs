@@ -109,8 +109,8 @@ export class DynamicProperties implements DynamicPropertiesUpdater
         this._propertyChanged.dispose();
         this._propertyChanged = new rx.Subject<IDynamicProperty<any>>();
 
-        var tmp  = this._properties;
-        var tmp2 = this._configurationManager;
+        let tmp  = this._properties;
+        let tmp2 = this._configurationManager;
 
         this._properties           = new Map<string, DynamicProperty<any>>();
         this._configurationManager = new ConfigurationManager( this, pollingIntervalInSeconds||60, sourceTimeoutInMs||1000 );

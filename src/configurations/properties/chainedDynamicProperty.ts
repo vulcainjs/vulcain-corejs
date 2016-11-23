@@ -47,7 +47,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     {
         let old = this._activeProperty;
         let tmp;
-        for( var propertyName of this._fallbackProperties )
+        for( let propertyName of this._fallbackProperties )
         {
             tmp = this._propertiesManager.getProperty( propertyName );
             if( tmp )

@@ -1,7 +1,7 @@
 import { System } from './../globals/system';
 import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
-var rest = require('unirest');
-var moment = require('moment');
+const rest = require('unirest');
+const moment = require('moment');
 
 export class VulcainConfigurationSource implements ConfigurationSource
 {

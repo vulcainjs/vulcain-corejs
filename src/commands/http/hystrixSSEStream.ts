@@ -1,9 +1,9 @@
 import {CommandMetricsFactory} from "../metrics/commandMetricsFactory";
 import {CircuitBreakerFactory} from "../command/circuitBreaker";
-import * as rx from "rx";
 import ActualTime from "../../utils/actualTime";
 import RollingNumberEvent from "../metrics/hystrix/rollingNumberEvent";
 import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
+import * as rx from 'rx';
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {

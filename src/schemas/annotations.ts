@@ -127,7 +127,7 @@ export interface PropertyOptions {
 export function Property(info: PropertyOptions) {
     return (target, key) => {
         const symProperties = Symbol.for("design:properties");
-        var properties = Reflect.getOwnMetadata(symProperties, target) || {};
+        let properties = Reflect.getOwnMetadata(symProperties, target) || {};
         properties[key] = info;
         Reflect.defineMetadata(symProperties, properties, target);
     };
@@ -136,7 +136,7 @@ export function Property(info: PropertyOptions) {
 export function Validator(name: string, info?) {
     return (target, key) => {
         const symValidators = Symbol.for("design:validators");
-        var validators = Reflect.getOwnMetadata(symValidators, target, key) || [];
+        let validators = Reflect.getOwnMetadata(symValidators, target, key) || [];
         validators.push({ name, info });
         Reflect.defineMetadata(symValidators, validators, target, key);
     };
@@ -157,7 +157,7 @@ export interface ReferenceOptions {
 export function Reference(info: ReferenceOptions) {
     return (target, key) => {
         const symReferences = Symbol.for("design:references");
-        var properties = Reflect.getOwnMetadata(symReferences, target) || {};
+        let properties = Reflect.getOwnMetadata(symReferences, target) || {};
         properties[key] = info;
         Reflect.defineMetadata(symReferences, properties, target);
     };
