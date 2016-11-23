@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { TestContainer, DefaultActionHandler, DefaultQueryHandler, QueryHandler, Query, ActionHandler, Model, Property, RequestContext, IContainer } from '../../dist/index';
+import { DefaultServiceNames } from '../../src/di/annotations';
 
 @Model()
 class TestModel {

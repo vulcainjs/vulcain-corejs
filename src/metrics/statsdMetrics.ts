@@ -21,6 +21,7 @@ export class StatsdMetrics {
             host = host || address || Conventions.instance.defaultStatsdAddress;
             this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
             this.tags = ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+            this.tags = this.tags.replace(':', ' ');
             System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
         }
     }
@@ -33,7 +34,7 @@ export class StatsdMetrics {
      * @memberOf Metrics
      */
     setTags(...tags: Array<string>) {
-        this.customTags = "," + tags.join(',');
+        this.customTags = "," + tags.join(',').replace(':', ' ');
     }
 
     increment(metric: string, delta?: number) {
