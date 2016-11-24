@@ -28,6 +28,13 @@ export class MongoProvider implements IProvider<any>
         @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,
         uri: string,
         private options?) {
+        this.options = this.options || {};
+        // Try to fix topology was destroy error
+        this.options.socketOptions = this.options.socketOptions || {
+            noDelay: true,
+            connectTimeoutMS: 0,
+            socketTimeoutMS: 0
+        };
         this.state = { uri: uri };
     }
 
