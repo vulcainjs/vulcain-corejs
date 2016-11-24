@@ -17,10 +17,13 @@
   "typings": "dist/index.d.ts",
   "devDependencies": {
     "@types/amqplib": "^0.5.0",
+    "@types/chai": "^3.4.34",
     "@types/fast-stats": "0.0.29",
+    "@types/mocha": "^2.2.33",
     "@types/mongodb": "^2.1.35",
     "@types/passport-strategy": "^0.2.30",
     "@types/rx": "^2.5.34",
+    "@types/sinon": "^1.16.32",
     "@types/statsd-client": "^0.1.30",
     "chai": "^3.5.0",
     "fs-extra": "^1.0.0",

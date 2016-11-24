@@ -55,8 +55,9 @@ export class Validator {
                     errors = errors.concat(await this.validateAsync(ctx, schema.description, formatContext.propertyValue));
                 }
                 else {
-                    let errors2 = await this.validateReferenceAsync(ctx, ref, val[rs], val);
-                    errors2 && errors2.forEach(err => errors.push({ message: this.__formatMessage(err, formatContext, schemaDesc), id: formatContext.id, property: rs }));
+                    let errors2 = await this.validateReferenceAsync(ctx, formatContext, ref, val[rs], val);
+                    if(errors2)
+                        errors = errors.concat(errors2);
                 }
             }
             catch (e) {
@@ -79,7 +80,7 @@ export class Validator {
         return errors;
     }
 
-    private async validateReferenceAsync(ctx: RequestContext, schema, val, entity): Promise<Array<string>> {
+    private async validateReferenceAsync(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<Array<ErrorMessage>> {
         if (!schema)
             return;
 
@@ -88,15 +89,24 @@ export class Validator {
 
         if (!val) {
             if (schema.required) {
-                return ["Reference '{$propertyName}' is required."];
+                return [{
+                    message: this.__formatMessage("Reference '{$propertyName}' is required.", formatContext, schema),
+                    id: formatContext.id,
+                    property: formatContext.propertyName
+                }];
             }
             return null;
         }
 
         if (schema.validators) {
             for (let validator of schema.validators) {
-                let err = validator.validate && await validator.validate( val, ctx );
-                if (err) return [err];
+                let msg = validator.validate && await validator.validate( val, ctx );
+                if (msg)
+                return [{
+                    message: this.__formatMessage(msg, formatContext, schema),
+                    id: formatContext.id,
+                    property: formatContext.propertyName
+                }];
             }
         }
 
@@ -104,14 +114,21 @@ export class Validator {
         if (err) return [err];
 
         let values = schema.cardinality === "one" ? [val] : <Array<any>>val;
-        let itemType = schema.item && this.domain._findType(schema.item);
+
+        let baseItemSchema = schema.item && this.domain.getSchema(schema.item, true);
         let errors = [];
+
         for (let val of values) {
             if (val) {
-                let t = itemType;
-                if (val.__schema && val.__schema !== schema.item)
-                    t = this.domain._findType(val.__schema);
-                errors = errors.concat(await this.validateAsync(ctx, t, val));
+                let currentItemSchema = baseItemSchema;
+                if (val.__schema && (!currentItemSchema || val.__schema !== currentItemSchema.name)) {
+                    currentItemSchema = this.domain.getSchema(val.__schema, true);
+                    if (!baseItemSchema)
+                        baseItemSchema = currentItemSchema;
+                }
+                if (currentItemSchema) {
+                    errors = errors.concat(await this.validateAsync(ctx, currentItemSchema.description, val));
+                }
             }
         }
         return errors;

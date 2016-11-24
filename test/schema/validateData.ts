@@ -2,6 +2,7 @@ import {TestContainer} from "../../dist/di/containers";
 import {expect} from "chai";
 import {Model, Property, Reference, Validator} from "../../dist/schemas/annotations";
 import {Domain} from "../../dist/schemas/schema";
+import 'mocha';
 
 @Model()
 class BaseModel {
@@ -19,9 +20,11 @@ class SimpleModel extends BaseModel {
 }
 
 @Model()
-class AggregateModel {
-    @Reference({item: "SimpleModel", cardinality: "one"})
+class ReferenceModel {
+    @Reference({item: "SimpleModel", cardinality: "one", required: true})
     simple: SimpleModel;
+    @Reference({item: "SimpleModel", cardinality: "many"})
+    multiples: Array<SimpleModel>;
 }
 
 
@@ -93,6 +96,48 @@ describe("Validate data", function () {
         expect(errors.length).equals(0);
     });
 
+    it("should validate values in reference", async() => {
+        let model: any = { text: "text", number: "1M", baseText: "text" };
+        let refs = { simple: model };
+
+        let domain = container.get<Domain>("Domain");
+        let schema = domain.getSchema("ReferenceModel");
+        let errors = await schema.validateAsync(null, refs);
+
+        expect(errors.length).equals(1);
+    });
+
+    it("should validate invalid multiple references", async() => {
+        let model: any = { text: "text", number: "1M", baseText: "text" };
+        let refs = { simple: model, multiples: model };
+
+        let domain = container.get<Domain>("Domain");
+        let schema = domain.getSchema("ReferenceModel");
+        let errors = await schema.validateAsync(null, refs);
+
+        expect(errors.length).equals(2);
+    });
+
+    it("should validate values in multiple references", async() => {
+        let model: any = { text: "text", number: "1M", baseText: "text" };
+        let refs = { simple: model, multiples: [model, model] };
+
+        let domain = container.get<Domain>("Domain");
+        let schema = domain.getSchema("ReferenceModel");
+        let errors = await schema.validateAsync(null, refs);
+
+        expect(errors.length).equals(3);
+    });
+
+    it("should validate required reference", async() => {
+        let refs = { };
+
+        let domain = container.get<Domain>("Domain");
+        let schema = domain.getSchema("ReferenceModel");
+        let errors = await schema.validateAsync(null, refs);
+
+        expect(errors.length).equals(1);
+    });
 
     // ---------------
     // email

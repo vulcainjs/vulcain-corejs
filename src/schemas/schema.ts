@@ -220,9 +220,15 @@ export class Domain {
      * @param {string} schema name
      * @returns a schema
      */
-    getSchema(name: string | Function) {
+    getSchema(name: string | Function, optional=false) {
         if (typeof name === "string") {
-            return new Schema(this, name);
+            try {
+                return new Schema(this, name);
+            }
+            catch (e) {
+                if (optional) return null;
+                throw e;
+            }
         }
         return new Schema(this, this.addSchemaDescription(name));
     }
