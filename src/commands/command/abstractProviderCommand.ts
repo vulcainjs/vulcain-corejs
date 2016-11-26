@@ -7,6 +7,7 @@ import {Inject} from '../../di/annotations';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { ProviderFactory } from '../../providers/providerFactory';
 import { RequestContext } from '../../servers/requestContext';
+import { System } from '../../configurations/globals/system';
 
 /**
  *
@@ -77,6 +78,10 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected setMetricsTags(address: string, schema: string) {
+        let exists = System.manifest.dependencies.databases.find(db => db.address === address && db.schema === db.schema);
+        if (!exists) {
+            System.manifest.dependencies.databases.push({ address, schema });
+        }
         this.metrics.setTags("host=" + address, "schema=" + schema);
     }
 

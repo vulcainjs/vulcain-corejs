@@ -3,7 +3,7 @@ import { System } from './../globals/system';
 export interface ServiceDependencyInfo {
     service: string;
     version: string;
-    discoveryAddress: string;
+    discoveryAddress?: string;
 }
 
 export interface ConfigurationInfo {
@@ -57,7 +57,10 @@ export function ServiceDependency(service: string, version: string, discoveryAdd
     return (target: Function) => {
         target["$dependency:service"] = { targetServiceName: service, targetServiceVersion: version };
 
-        System.manifest.dependencies.services.push({service, version, discoveryAddress});
+        let exists = System.manifest.dependencies.services.find(svc => svc.service === service && svc.version === version);
+        if (!exists) {
+            System.manifest.dependencies.services.push({ service, version, discoveryAddress });
+        }
     };
 }
 
@@ -71,8 +74,10 @@ export function ServiceDependency(service: string, version: string, discoveryAdd
 export function HttpDependency(uri: string) {
     return (target: Function) => {
         target["$dependency:external"] = { uri };
-
-        System.manifest.dependencies.externals.push({ uri });
+        let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
+        if (!exists) {
+            System.manifest.dependencies.externals.push({ uri });
+        }
     };
 }
 

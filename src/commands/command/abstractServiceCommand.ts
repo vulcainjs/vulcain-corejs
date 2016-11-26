@@ -57,6 +57,10 @@ export abstract class AbstractServiceCommand {
     }
 
     protected setMetricsTags(targetServiceName: string, targetServiceVersion: string) {
+        let exists = System.manifest.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
+        if (!exists) {
+            System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
+        }
         this.metrics.setTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
     }
 

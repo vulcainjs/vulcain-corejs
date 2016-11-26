@@ -39,6 +39,10 @@ export abstract class AbstractHttpCommand {
     protected setMetricsTags(uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
+        let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
+        if (!exists) {
+            System.manifest.dependencies.externals.push({ uri });
+        }
         this.metrics.setTags("uri=" + uri);
     }
 
