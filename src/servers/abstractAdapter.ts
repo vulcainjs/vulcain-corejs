@@ -123,8 +123,11 @@ export abstract class AbstractAdapter {
                     ctx.user = this.testUser;
                     ctx.tenant = ctx.tenant || ctx.user.tenant;
                 }
+                System.log.info(ctx, `Request context - user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {
+                    System.log.info(ctx, `user=${ctx.user.name}, scopes=${ctx.user.scopes} - Unauthorized for handler scope : ${info.metadata.scope} `);
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }

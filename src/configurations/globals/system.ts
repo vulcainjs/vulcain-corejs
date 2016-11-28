@@ -39,7 +39,7 @@ export class System {
      */
     public static get manifest() {
         if (!System._manifest)
-            System._manifest = new VulcainManifest();
+            System._manifest = new VulcainManifest(System.serviceName, System.serviceVersion);
         return System._manifest;
     }
 
@@ -351,7 +351,6 @@ export class System {
             System.domainName + "." + name,
             name);
     }
-
 
     /**
      * create an url from segments

@@ -2,6 +2,7 @@ import { ApiKeyStrategy } from './apiKeyStrategy';
 import { ITokenService, VerifyTokenParameter } from '../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
 import { RequestContext } from '../servers/requestContext';
+import { System } from '../configurations/globals/system';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');
 
@@ -23,6 +24,7 @@ export class AuthenticationStrategies {
                 // No token found
                 if( !token )
                 {
+                    System.log.info(ctx, "request: Invalid jwtToken " + accessToken);
                     return callback( null, false );
                 }
 
@@ -54,6 +56,7 @@ export class AuthenticationStrategies {
                 // No token found
                 if( !token )
                 {
+                    System.log.info(ctx, "request: Invalid apiKey " + params.token);
                     return callback( null, false );
                 }
 

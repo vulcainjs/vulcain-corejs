@@ -34,7 +34,7 @@ export class VulcainManifest {
     };
     configurations: { [name: string]: string };
 
-    constructor() {
+    constructor(public serviceName: string, serviceVersion: string) {
         this.dependencies = {
             services: [],
             externals: [],

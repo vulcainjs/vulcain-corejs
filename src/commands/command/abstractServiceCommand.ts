@@ -12,6 +12,7 @@ import { ApplicationRequestError } from './../../errors/applicationRequestError'
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 import { ITokenService } from '../../defaults/services';
+import { ApiKeyService } from '../../auth/apiKeyService';
 const rest = require('unirest');
 
 /**
@@ -23,6 +24,8 @@ const rest = require('unirest');
  * @template T
  */
 export abstract class AbstractServiceCommand {
+    private overrideAuthorization: string;
+
     protected metrics: IMetrics;
     /**
      *
@@ -35,7 +38,7 @@ export abstract class AbstractServiceCommand {
         return this.requestContext.container;
     }
 
-    private static METRICS_NAME = "service_call_";
+    private static METRICS_NAME = "service_call";
 
     /**
      * Creates an instance of AbstractCommand.
@@ -46,6 +49,21 @@ export abstract class AbstractServiceCommand {
     constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
+    }
+
+    /**
+     * Set (or reset) apikey authorization to use for calling service.
+     *
+     * @protected
+     * @param {string} apiKey - null for reset
+     *
+     * @memberOf AbstractServiceCommand
+     */
+    protected useApiKey(apiKey: string) {
+        if (!apiKey)
+            this.overrideAuthorization = null;
+        else
+            this.overrideAuthorization = "ApiKey " + apiKey;
     }
 
     protected initializeMetricsInfo() {
@@ -185,16 +203,19 @@ export abstract class AbstractServiceCommand {
         return this.requestContext.correlationPath;
     }
 
-    private async getBearerToken() {
+    private async getAuthorization() {
+        if (this.overrideAuthorization)
+            return this.overrideAuthorization;
+
         let token = this.requestContext.bearer;
         if (token) {
-            return token;
+            return "Bearer " + token;
         }
 
         let tokens = this.requestContext.container.get<ITokenService>("TokenService");
         // Ensures jwtToken exists for user context propagation
         let result:any = this.requestContext.bearer = await tokens.createTokenAsync(this.requestContext.user);
-        return result.token;
+        return "Bearer " + result.token;
     }
 
     /**
@@ -217,7 +238,7 @@ export abstract class AbstractServiceCommand {
         request.header("X-VULCAIN-ENV", System.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
         request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
-        request.header("Authorization", "Bearer " + await this.getBearerToken());
+        request.header("Authorization", await this.getAuthorization());
 
         prepareRequest && prepareRequest(request);
 
