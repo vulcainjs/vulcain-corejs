@@ -82,6 +82,18 @@ export class System {
     }
 
     /**
+     * Default tenant
+     *
+     * @readonly
+     * @static
+     *
+     * @memberOf System
+     */
+    static get defaultTenant() {
+        return process.env[Conventions.instance.ENV_VULCAIN_TENANT];
+    }
+
+    /**
      * Check if the service is running in local mode (on developper desktop)
      * by checking if a '.vulcain' file exists in the working directory
      *

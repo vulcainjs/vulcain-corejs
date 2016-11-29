@@ -25,8 +25,10 @@ const rest = require('unirest');
  */
 export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
+    private overrideTenant: string;
 
     protected metrics: IMetrics;
+
     /**
      *
      *
@@ -59,11 +61,15 @@ export abstract class AbstractServiceCommand {
      *
      * @memberOf AbstractServiceCommand
      */
-    protected useApiKey(apiKey: string) {
-        if (!apiKey)
+    protected useApiKey(apiKey: string, tenant?:string) {
+        if (!apiKey) {
+            this.overrideTenant = null;
             this.overrideAuthorization = null;
-        else
+        }
+        else {
             this.overrideAuthorization = "ApiKey " + apiKey;
+            this.overrideTenant = tenant;
+        }
     }
 
     protected initializeMetricsInfo() {
@@ -203,19 +209,23 @@ export abstract class AbstractServiceCommand {
         return this.requestContext.correlationPath;
     }
 
-    private async getAuthorization() {
-        if (this.overrideAuthorization)
-            return this.overrideAuthorization;
-
-        let token = this.requestContext.bearer;
-        if (token) {
-            return "Bearer " + token;
+    private async setUserContextAsync(request: types.IHttpRequest) {
+        if (this.overrideAuthorization) {
+            request.header("X-VULCAIN-TENANT", this.overrideTenant || this.requestContext.tenant);
+            request.header("Authorization", this.overrideAuthorization);
+            return;
         }
 
-        let tokens = this.requestContext.container.get<ITokenService>("TokenService");
-        // Ensures jwtToken exists for user context propagation
-        let result:any = this.requestContext.bearer = await tokens.createTokenAsync(this.requestContext.user);
-        return "Bearer " + result.token;
+        request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
+        let token = this.requestContext.bearer;
+        if (!token) {
+            let tokens = this.requestContext.container.get<ITokenService>("TokenService");
+            // Ensures jwtToken exists for user context propagation
+            let result: any = this.requestContext.bearer = await tokens.createTokenAsync(this.requestContext.user);
+            token = result.token;
+        }
+
+        request.header("Authorization", "Bearer " + token);
     }
 
     /**
@@ -237,8 +247,7 @@ export abstract class AbstractServiceCommand {
         request.header("X-VULCAIN-SERVICE-VERSION", System.serviceVersion);
         request.header("X-VULCAIN-ENV", System.environment);
         request.header("X-VULCAIN-CONTAINER", os.hostname());
-        request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
-        request.header("Authorization", await this.getAuthorization());
+        await this.setUserContextAsync(request);
 
         prepareRequest && prepareRequest(request);
 
@@ -270,20 +279,20 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(kind: string, serviceName: string, version: string, verb: string, apiKey, data, page, maxByPage): Promise<any> {
+    protected async exec(kind: string, serviceName: string, version: string, verb: string, userContext, data, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
-                this.useApiKey(apiKey);
+                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
                 let response = await this.sendActionAsync(serviceName, version, verb, data);
                 return response.value;
             }
             case 'query': {
-                this.useApiKey(apiKey);
+                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
                 let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
                 return { values: response.value, total: response.total, page };
             }
             case 'get': {
-                this.useApiKey(apiKey);
+                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
                 let response = await this.getRequestAsync(serviceName, version, data);
                 return response.value;
             }

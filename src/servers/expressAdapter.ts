@@ -167,7 +167,7 @@ export class ExpressAdapter extends AbstractAdapter {
         }
 
         // 2 - Environnement variable
-        ctx.tenant = process.env[Conventions.instance.ENV_VULCAIN_TENANT];
+        ctx.tenant = System.defaultTenant;
         if (ctx.tenant) {
             return;
         }
