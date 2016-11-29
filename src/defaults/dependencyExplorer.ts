@@ -19,6 +19,7 @@ export class DependencyExplorer {
             throw new ForbiddenRequestError();
 
         let res = new HttpResponse(System.manifest);
+        res.contentType = "vulcain";
         res.addHeader("Access-Control-Allow-Origin", "*");
         return res;
     }

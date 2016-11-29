@@ -1,9 +1,9 @@
 import { HandlerFactory, CommonRequestData, CommonActionMetadata, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, IManager, HttpResponse } from './common';
-import {IContainer} from '../di/resolvers';
-import {Domain} from '../schemas/schema';
+import { IContainer } from '../di/resolvers';
+import { Domain } from '../schemas/schema';
 import * as os from 'os';
-import {RequestContext, UserContext} from '../servers/requestContext';
-import {DefaultServiceNames} from '../di/annotations';
+import { RequestContext, UserContext } from '../servers/requestContext';
+import { DefaultServiceNames } from '../di/annotations';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
@@ -77,7 +77,7 @@ export class QueryManager implements IManager {
         return res;
     }
 
-    getInfoHandler(command: CommonRequestData, container?:IContainer) {
+    getInfoHandler(command: CommonRequestData, container?: IContainer) {
         if (!this._serviceDescriptors) {
             this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         }
@@ -94,7 +94,7 @@ export class QueryManager implements IManager {
                 query.inputSchema = schema.name;
 
                 // Custom binding if any
-                 query.params = schema.bind(query.params);
+                query.params = schema.bind(query.params);
 
                 errors = await schema.validateAsync(ctx, query.params);
                 if (errors && !Array.isArray(errors))
@@ -135,6 +135,16 @@ export class QueryManager implements IManager {
             info.handler.query = query;
             let result = await info.handler[info.method](query.params);
             if (result instanceof HttpResponse) {
+                if (result.contentType === "vulcain") {
+                    let res = this.createResponse(ctx, query);
+                    res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
+                    if (result.content && Array.isArray(result.content)) {
+                        res.total = result.content.length;
+                    }
+                    delete res.userContext;
+                    result.contentType = null;
+                    result.content = res;
+                }
                 return result; // skip normal process
             }
             let res = this.createResponse(ctx, query);
