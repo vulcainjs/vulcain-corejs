@@ -88,7 +88,6 @@ export abstract class AbstractProviderCommand<T> {
     onCommandCompleted(duration: number, success: boolean) {
         if (this.schema && this.provider) {
             this.metrics.timing(AbstractProviderCommand.METRICS_NAME + MetricsConstant.duration, duration);
-            this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.total);
             if (!success)
                 this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure);
         }

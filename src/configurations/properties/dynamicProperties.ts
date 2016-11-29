@@ -113,7 +113,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater
         let tmp2 = this._configurationManager;
 
         this._properties           = new Map<string, DynamicProperty<any>>();
-        this._configurationManager = new ConfigurationManager( this, pollingIntervalInSeconds||60, sourceTimeoutInMs||1000 );
+        this._configurationManager = new ConfigurationManager( this, pollingIntervalInSeconds||60, sourceTimeoutInMs||2000 );
 
         if( tmp )
         {

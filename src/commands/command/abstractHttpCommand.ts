@@ -48,7 +48,6 @@ export abstract class AbstractHttpCommand {
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration);
-        this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.total);
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure);
     }

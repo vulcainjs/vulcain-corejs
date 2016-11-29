@@ -1,13 +1,12 @@
 import { Domain } from './../schemas/schema';
 import * as http from 'http';
-import {IContainer} from '../di/resolvers';
-import {CommandManager, ActionMetadata} from '../pipeline/actions';
-import {QueryManager} from '../pipeline/query';
-import {IManager} from '../pipeline/common';
-import {RequestContext, UserContext} from './requestContext';
-import {DefaultServiceNames} from '../di/annotations';
+import { IContainer } from '../di/resolvers';
+import { CommandManager, ActionMetadata } from '../pipeline/actions';
+import { QueryManager } from '../pipeline/query';
+import { IManager, HttpResponse } from '../pipeline/common';
+import { RequestContext, UserContext } from './requestContext';
+import { DefaultServiceNames } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
-import { HttpResponse } from './../pipeline/common';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { BadRequestError } from './../errors/badRequestError';
@@ -43,47 +42,46 @@ export abstract class AbstractAdapter {
     public abstract useMiddleware(verb: string, path: string, handler: Function);
 
     protected startRequest(command) {
-       // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
+        // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
 
     protected endRequest(begin: [number, number], response, ctx: RequestContext, e?: Error) {
-        if (!response.value) {
-            return;
-        }
+        let value = response.value;
+        let hasError = false;
+        let prefix: string;
 
-        if (!response.value.action) {
-            // 40x error
-            this.metrics.increment(MetricsConstant.allRequestsFailure);
-            return;
+        if (response instanceof HttpResponse) {
+            value = response.content;
+            hasError = response.statusCode && response.statusCode >= 400;
+        }
+        if (value) {
+            hasError = hasError || value.error;
+            if (value.schema) {
+                prefix = value.schema.toLowerCase() + "_" + value.action.toLowerCase();
+            }
+            else if (value.action) {
+                prefix = value.action.toLowerCase();
+            }
+        }
+        else {
+            hasError = true;
         }
 
         const ms = this.calcDelayInMs(begin);
-        let prefix: string;
-        if (response.value.schema) {
-            prefix = response.value.schema.toLowerCase() + "_" + response.value.action.toLowerCase();
-        }
-        else {
-            prefix = response.value.action.toLowerCase();
-        }
-
         // Duration
-        this.metrics.timing(prefix + MetricsConstant.duration, ms);
+        prefix && this.metrics.timing(prefix + MetricsConstant.duration, ms);
         this.metrics.timing(MetricsConstant.allRequestsDuration, ms);
 
-        // Total
-        this.metrics.increment(prefix + MetricsConstant.total);
-        this.metrics.increment(MetricsConstant.allRequestsTotal);
-
         // Failure
-        if (response.value.error) {
-            this.metrics.increment(prefix + MetricsConstant.failure);
+        if (hasError) {
+            prefix && this.metrics.increment(prefix + MetricsConstant.failure);
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
 
         let trace: any = {
             duration: ms,
-            info: Object.assign({}, response.value)
+            info: Object.assign({}, value)
         };
 
         delete trace.info.value;
@@ -124,11 +122,11 @@ export abstract class AbstractAdapter {
                     ctx.user = this.testUser;
                     ctx.tenant = ctx.tenant || ctx.user.tenant;
                 }
-                System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
+                System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {
-                    System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope : ${info.metadata.scope} `);
+                    System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope=${info.metadata.scope} `);
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }

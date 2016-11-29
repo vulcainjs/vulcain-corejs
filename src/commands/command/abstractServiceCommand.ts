@@ -90,7 +90,6 @@ export abstract class AbstractServiceCommand {
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration);
-        this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.total);
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure);
     }
