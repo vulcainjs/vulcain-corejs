@@ -28,8 +28,8 @@ export class ExpressAdapter extends AbstractAdapter {
             return next();
         });
         this.express.use(cookieParser());
-        if (System.isTestEnvironnment)
-            this.express.use(cors());
+       // if (System.isTestEnvironnment)
+       //     this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
         this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
@@ -228,9 +228,6 @@ export class ExpressAdapter extends AbstractAdapter {
                 }
                 ctx.bearer = ctx.bearer || ctx.user.bearer;
                 ctx.user.bearer = null;
-            }
-            else {
-
             }
 
             let result = await handler.apply(this, [command, ctx]);

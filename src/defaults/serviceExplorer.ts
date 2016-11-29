@@ -3,6 +3,9 @@ import { IContainer } from "../di/resolvers";
 import { Domain } from '../schemas/schema';
 import { ServiceDescriptors, ServiceDescription } from '../pipeline/serviceDescriptions';
 import { Query, QueryHandler } from '../pipeline/annotations';
+import { ForbiddenRequestError } from '../errors/applicationRequestError';
+import { RequestContext } from '../servers/requestContext';
+import { HttpResponse } from '../pipeline/common';
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class ServiceExplorer {
@@ -12,10 +15,17 @@ export class ServiceExplorer {
     }
 
     @Query({ outputSchema: "ServiceDescription", description: "Get all service handler description", action: "_serviceDescription" })
-    async getServiceDescriptions(): Promise<ServiceDescription> {
+    async getServiceDescriptions() {
+        let ctx: RequestContext = (<any>this).requestContext;
+        if (ctx.publicPath)
+            throw new ForbiddenRequestError();
+
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let result = await descriptors.getDescriptions();
         result.alternateAddress = (<any>this).requestContext.hostName;
-        return result;
+
+        let res = new HttpResponse(result);
+        res.addHeader("Access-Control-Allow-Origin", "*");
+        return res;
     }
 }

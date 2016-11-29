@@ -47,9 +47,10 @@ export class HttpResponse {
      */
     public encoding: string;
 
-    constructor() {
+    constructor(content?) {
         this.headers = new Map<string, string>();
         this.statusCode = 200;
+        this.content = content;
     }
 
         /**

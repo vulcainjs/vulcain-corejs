@@ -241,4 +241,15 @@ export class RequestContext {
     logVerbose(msg: string, ...params: Array<any>) {
         this._logger.verbose(this, msg, ...params);
     }
+
+    /**
+     * Public path used to exposed this service - Set only for public service
+     *
+     * @readonly
+     *
+     * @memberOf RequestContext
+     */
+    get publicPath() {
+        return this.headers["X-VULCAIN-PUBLICPATH"];
+    }
 }

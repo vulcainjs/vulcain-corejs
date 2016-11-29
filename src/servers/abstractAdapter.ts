@@ -119,15 +119,16 @@ export abstract class AbstractAdapter {
             try {
                 // Check if handler exists
                 let info = manager.getInfoHandler<ActionMetadata>(command);
-                if (!ctx.user && this.testUser) {
+                // Force test user only if there is no authorization
+                if (!ctx.user && this.testUser && !ctx.headers["authorization"]) {
                     ctx.user = this.testUser;
                     ctx.tenant = ctx.tenant || ctx.user.tenant;
                 }
-                System.log.info(ctx, `Request context - user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+                System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
 
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {
-                    System.log.info(ctx, `user=${ctx.user.name}, scopes=${ctx.user.scopes} - Unauthorized for handler scope : ${info.metadata.scope} `);
+                    System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope : ${info.metadata.scope} `);
                     resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
                     return;
                 }

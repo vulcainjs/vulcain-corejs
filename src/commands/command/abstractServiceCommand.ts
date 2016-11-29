@@ -270,17 +270,20 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(kind: string, serviceName: string, version: string, verb: string, data, page, maxByPage): Promise<any> {
+    protected async exec(kind: string, serviceName: string, version: string, verb: string, apiKey, data, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
+                this.useApiKey(apiKey);
                 let response = await this.sendActionAsync(serviceName, version, verb, data);
                 return response.value;
             }
             case 'query': {
+                this.useApiKey(apiKey);
                 let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
                 return { values: response.value, total: response.total, page };
             }
             case 'get': {
+                this.useApiKey(apiKey);
                 let response = await this.getRequestAsync(serviceName, version, data);
                 return response.value;
             }

@@ -3,10 +3,13 @@ import { ITokenService, VerifyTokenParameter } from '../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
 import { RequestContext } from '../servers/requestContext';
 import { System } from '../configurations/globals/system';
+import { UserContext } from '../servers/requestContext';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');
 
 export class AuthenticationStrategies {
+
+    static readonly Anonymous: UserContext = { id: "_anonymous", name: "anonymous", scopes: [], tenant: null };
 
     static initAnonymous() {
         passport.use(new AnonymousStrategy());
