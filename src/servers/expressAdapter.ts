@@ -166,13 +166,7 @@ export class ExpressAdapter extends AbstractAdapter {
             return;
         }
 
-        // 2 - Environnement variable
-        ctx.tenant = System.defaultTenant;
-        if (ctx.tenant) {
-            return;
-        }
-
-        // 3 - Header
+        // 2 - Header
         ctx.tenant = req.header("X-VULCAIN-TENANT");
         if (ctx.tenant) {
             if (ctx.tenant === "?") {
@@ -186,6 +180,12 @@ export class ExpressAdapter extends AbstractAdapter {
                     ctx.tenant = ctx.tenant.substr(0, pos);
                 }
             }
+            return;
+        }
+
+        // 3 - Environnement variable
+        ctx.tenant = System.defaultTenant;
+        if (ctx.tenant) {
             return;
         }
 

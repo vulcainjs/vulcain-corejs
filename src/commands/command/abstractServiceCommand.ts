@@ -61,7 +61,7 @@ export abstract class AbstractServiceCommand {
      *
      * @memberOf AbstractServiceCommand
      */
-    protected useApiKey(apiKey: string, tenant?:string) {
+    protected useApiKey(apiKey: string, tenant?: string) {
         if (!apiKey) {
             this.overrideTenant = null;
             this.overrideAuthorization = null;
@@ -75,7 +75,7 @@ export abstract class AbstractServiceCommand {
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:service"];
         if (!dep) {
-            throw new Error("ServiceDependency annotation is required on command "  + Object.getPrototypeOf(this).name);
+            throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).name);
         }
         this.setMetricsTags(dep.service, dep.version);
     }
@@ -210,7 +210,8 @@ export abstract class AbstractServiceCommand {
 
     private async setUserContextAsync(request: types.IHttpRequest) {
         if (this.overrideAuthorization) {
-            request.header("X-VULCAIN-TENANT", this.overrideTenant || this.requestContext.tenant);
+            if (this.overrideTenant)
+                request.header("X-VULCAIN-TENANT", this.overrideTenant);
             request.header("Authorization", this.overrideAuthorization);
             return;
         }
