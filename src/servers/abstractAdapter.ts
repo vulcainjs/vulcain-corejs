@@ -121,8 +121,11 @@ export abstract class AbstractAdapter {
                 if (!ctx.user && this.testUser && !ctx.headers["authorization"]) {
                     ctx.user = this.testUser;
                     ctx.tenant = ctx.tenant || ctx.user.tenant;
+                    System.log.info(ctx, `Request context - force test user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.tenant}`);
                 }
-                System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+                else {
+                    System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+                }
 
                 // Verify authorization
                 if (!ctx.hasScope(info.metadata.scope)) {

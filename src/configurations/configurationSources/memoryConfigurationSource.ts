@@ -16,13 +16,16 @@ export class MemoryConfigurationSource implements ConfigurationSource
 
     pollPropertiesAsync( timeoutInMs:number )
     {
-        return new Promise( ( resolve ) =>
-            {
+        return new Promise((resolve) => {
+            try {
                 const values = this._values;
-                resolve( new PollResult( this, values ) );
-                if( this._values.size > 0 )
+                resolve(new PollResult(this, values));
+                if (this._values.size > 0)
                     this._values = new Map<string, any>();
             }
-        );
+            catch (e) {
+                resolve(null);
+            }
+        });
     }
 }

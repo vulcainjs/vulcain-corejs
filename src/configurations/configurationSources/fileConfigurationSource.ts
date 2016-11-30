@@ -107,11 +107,16 @@ export class FileConfigurationSource implements ConfigurationSource
 
     async pollPropertiesAsync( timeoutInMs:number )
     {
-        if(!this._disabled)
-            await this.readValuesFromFile();
-        const values = this._values;
-        if(this._values.size > 0)
-            this._values = new Map<string,any>();
-        return new PollResult( this, values );
+        try {
+            if (!this._disabled)
+                await this.readValuesFromFile();
+            const values = this._values;
+            if (this._values.size > 0)
+                this._values = new Map<string, any>();
+            return new PollResult(this, values);
+        }
+        catch (e) {
+            return null;
+        }
     }
 }
