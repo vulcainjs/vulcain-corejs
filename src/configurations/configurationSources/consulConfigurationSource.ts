@@ -76,7 +76,7 @@ export class ConsulConfigurationSource implements ConfigurationSource
         {
             System.log.error(null, e, "CONFIG: Consul configuration source." );
             this._initialized = true;
-            return new PollResult(this);
+            return null;
         }
     }
 

@@ -27,7 +27,7 @@ export class AuthenticationStrategies {
                 // No token found
                 if( !token )
                 {
-                    System.log.info(ctx, "request: Invalid jwtToken " + accessToken);
+                    System.log.info(ctx, "Bearer authentication: Invalid jwtToken : " + accessToken);
                     return callback( null, false );
                 }
 
@@ -40,6 +40,7 @@ export class AuthenticationStrategies {
             }
             catch( err )
             {
+                System.log.error(ctx, err, "Bearer authentication: Error with jwtToken " + accessToken);
                 return callback( null, false );
             }
         });
@@ -59,7 +60,7 @@ export class AuthenticationStrategies {
                 // No token found
                 if( !token )
                 {
-                    System.log.info(ctx, "request: Invalid apiKey " + params.token);
+                    System.log.info(ctx, `ApiKey authentication: Invalid apiKey ${params.token} for tenant ${params.tenant}`);
                     return callback( null, false );
                 }
 
@@ -69,6 +70,7 @@ export class AuthenticationStrategies {
             }
             catch( err )
             {
+                System.log.error(ctx, err, `ApiKey authentication: Error with apiKey ${params.token} for tenant ${params.tenant}`);
                 return callback( null, false );
             }
         });

@@ -1,5 +1,5 @@
 import { System } from './../globals/system';
-import {ConfigurationSource, PollResult} from './configurationSource';
+import { ConfigurationSource, PollResult } from './configurationSource';
 import {DynamicProperty} from '../properties/dynamicProperty';
 import {DynamicProperties} from "../properties/dynamicProperties";
 
@@ -16,65 +16,86 @@ export class ConfigurationManager
     {
     }
 
-    private ensuresPolling()
+    /**
+     * Initialize source(s) and return only when all sources are initialized
+     * @param sources List of sources
+     * @returns {Promise<T>}
+     */
+    async startAsync( sources?:Array<ConfigurationSource>, pollSources=true )
     {
-        if( !this.disposed && !this._polling)
-        {
-            this.polling();
-            this._polling = true;
+        if (sources) {
+            sources.forEach(source => {
+                if (this._sources.indexOf(source) < 0)
+                    this._sources.push(source);
+            });
         }
+
+        // Run initialization
+        let tries = 2;
+        while (tries > 0) {
+            if (await this.pollingAsync(3000, false)) {
+                // All sources are OK
+                if(pollSources)
+                    this.repeatPolling();
+                return;
+            }
+
+            tries--;
+            if (tries)
+                System.log.info(null, "CONFIG: Some dynamic properties sources failed. Retry polling.");
+        }
+
+        throw new Error("CONFIG: Cannot read properties for all sources.");
     }
 
+    /**
+     * Pull properties for all sources
+     *
+     * @private
+     * @param {any} [timeout]
+     * @returns
+     *
+     * @memberOf ConfigurationManager
+     */
+    async pollingAsync(timeout?: number, pollSources=true) {
+        let ok = true;
 
-    async polling()
-    {
-        let list = this._sources;
-        let results:Array<PollResult> = [];
-        if( this.disposed ) return;
+        try {
+            let list = this._sources;
+            if (this.disposed || !list) return;
 
-        if(list)
-        {
-            for( let src of list )
-            {
-                try
-                {
-                    results.push( await src.pollPropertiesAsync( this.sourceTimeoutInMs ) );
+            let promises: Promise<PollResult>[] = [];
+            list.forEach(src => {
+                promises.push(
+                    // pollPropertiesAsync cannot failed
+                    src.pollPropertiesAsync(timeout || this.sourceTimeoutInMs)
+                );
+            });
+
+            let results = await Promise.all(promises);
+            // Ignore null result
+            results.forEach(res => {
+                if (!res) {
+                    ok = false;
                 }
-                catch( e )
-                {
-                    System.log.error(null, e, "CONFIG: Error when polling configuration source ");
-                }
-            }
-
-            this.loadPropertiesFromSources( results );
+                else if (res.values && res.values.size > 0)
+                    this.loadProperties(res);
+            });
+        }
+        catch (e) {
+            ok = false;
+            System.log.error(null, e, "CONFIG: Error when polling sources");
         }
 
-        setTimeout( this.polling.bind(this), this.pollingIntervalInSeconds * 1000 );
+        // Restart
+        if (pollSources)
+            this.repeatPolling();
+
+        return ok;
     }
 
-    private loadPropertiesFromSources( results:Array<PollResult> )
-    {
-        for( let result of results )
-        {
-            try {
-                if (!result) {
-                    continue;
-                }
-                if( result.values && result.values.size > 0)
-                    this.loadProperties( result );
-
-                // First time only
-                let src = <any>result.source;
-                if( src && src.__onInitialized )
-                {
-                    src.__onInitialized();
-                    delete src.__onInitialized;
-                }
-            }
-            catch( e )
-            {
-            }
-        }
+    private repeatPolling() {
+        setTimeout(this.pollingAsync.bind(this), this.pollingIntervalInSeconds * 1000);
     }
 
     private loadProperties( props:PollResult )
@@ -109,39 +130,5 @@ export class ConfigurationManager
     dispose()
     {
         this.disposed = true;
-    }
-
-    /**
-     * Initialize source(s) and return only when all sources are initialized
-     * @param sources List of sources
-     * @returns {Promise<T>}
-     */
-    registerSourcesAsync( sources:Array<ConfigurationSource> )
-    {
-        return new Promise( ( resolve )=>
-        {
-            let latch = 0;
-            for( let source of sources )
-            {
-                if( this._sources.indexOf( source ) >= 0 )
-                    continue;
-
-                (<any>source).__onInitialized = () =>
-                {
-                    latch--;
-                    if( latch === 0 )
-                    {
-                        resolve();
-                    }
-                };
-                this._sources.push( source );
-                latch++;
-            }
-
-            // Run initialization
-            this.ensuresPolling();
-            if (latch === 0)
-                resolve();
-        });
     }
 }

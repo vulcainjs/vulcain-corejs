@@ -42,9 +42,9 @@ export class DynamicProperties implements DynamicPropertiesUpdater
     /**
      * for test only
      */
-    static __forcePollingAsync() {
-        return DynamicProperties.instance._configurationManager.polling();
-    }
+   // static __forcePollingAsync() {
+   //     return DynamicProperties.instance._configurationManager.startAsync();
+   // }
 
     /// <summary>
     /// Get the dynamic properties factory
@@ -141,9 +141,9 @@ export class DynamicProperties implements DynamicPropertiesUpdater
     }
 
     // for tests only
-    registerSourceAsync( source:ConfigurationSource )
+    startPollingAsync( source?:ConfigurationSource )
     {
-        return this._configurationManager.registerSourcesAsync( [source] );
+        return this._configurationManager.startAsync( source && [source], false );
     }
 
     /// <summary>
