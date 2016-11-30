@@ -14,7 +14,7 @@ export class MessageBus {
         if (!events) {
             events = new RX.Subject<EventData>();
             this._events.set(domain, events);
-            this.eventBus.listenForEvent(domain, this.consumeEventAsync.bind(this));
+            this.eventBus.listenEvents(domain, this.consumeEventAsync.bind(this));
         }
         return events;
     }
@@ -23,7 +23,7 @@ export class MessageBus {
         this.commandBus = manager.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter);
         if (this.commandBus && hasAsyncActions) // Register for async tasks only if necessary
         {
-            this.commandBus.listenForTask(manager.domain.name, manager.serviceId, manager.consumeTaskAsync.bind(manager));
+            this.commandBus.listenTasks(manager.domain.name, manager.serviceId, manager.consumeTaskAsync.bind(manager));
         }
 
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);

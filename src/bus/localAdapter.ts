@@ -1,7 +1,8 @@
-import {EventData, ActionData} from '../pipeline/actions';
+import { EventData, ActionData } from '../pipeline/actions';
+import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 
 export
-class LocalAdapter {
+class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
     private eventHandler: Function;
     private commandHandler: Function;
 
@@ -10,26 +11,26 @@ class LocalAdapter {
     }
 
     sendEvent(domain: string, event: EventData) {
-       // console.log("Event: %j", event);
-       let self = this;
+        // console.log("Event: %j", event);
+        let self = this;
         self.eventHandler && setTimeout(function () {
             self.eventHandler(event);
         }, (1));
     }
 
-    listenForEvent(domain: string, handler: Function) {
+    listenEvents(domain: string, handler: Function) {
         this.eventHandler = handler;
     }
 
-    publishTask(domain:string, serviceId:string, command:ActionData) {
+    publishTask(domain: string, serviceId: string, command: ActionData) {
         let self = this;
         self.commandHandler && setTimeout(function () {
-           // console.log("Running task: %j", command);
+            // console.log("Running task: %j", command);
             self.commandHandler(command);
         }, (1));
     }
 
-    listenForTask(domain: string, serviceId: string, handler: Function) {
+    listenTasks(domain: string, serviceId: string, handler: Function) {
         this.commandHandler = handler;
     }
 }

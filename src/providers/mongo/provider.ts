@@ -6,6 +6,7 @@ import { MongoClient } from 'mongodb';
 import { Inject } from '../../di/annotations';
 import { ApplicationRequestError } from '../../errors/applicationRequestError';
 import { System } from '../../configurations/globals/system';
+import * as URL from 'url';
 
 /**
  * Default mongo provider
@@ -44,7 +45,9 @@ export class MongoProvider implements IProvider<any>
         if (!tenant)
             throw new Error("tenant is required");
 
-        this.state.uri = this.state.uri + "/" + tenant;
+        let url = URL.parse(this.state.uri);
+        url.pathname += "/" + tenant;
+        this.state.uri = URL.format(url);
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
         this.ctx.logVerbose(`MONGODB: Creating provider ${this.state.uri} for schema ${schema.name}`);

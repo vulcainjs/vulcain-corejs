@@ -1,11 +1,12 @@
 import * as amqp from 'amqplib';
 import {EventData, ActionData} from '../pipeline/actions';
 import { System } from './../configurations/globals/system';
+import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 
 export /**
  * RabbitAdapter
  */
-class RabbitAdapter {
+class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     private domainHandlers = new Map<string, Function>();
     private channel: amqp.Channel;
     private initialized = false;
@@ -52,7 +53,7 @@ class RabbitAdapter {
      * @memberOf RabbitAdapter
      */
     sendEvent(domain:string, event:EventData) {
-        if (!this.channel) throw "error";
+        if (!this.channel) throw "error rabbit send event";
         domain = domain.toLowerCase() + "_events";
 
         this.channel.assertExchange(domain, 'fanout', { durable: false });
@@ -67,7 +68,7 @@ class RabbitAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    listenForEvent(domain: string, handler: Function) {
+    listenEvents(domain: string, handler: Function) {
         let self = this;
 
         // Since this method can be called many times for a same domain
@@ -104,7 +105,7 @@ class RabbitAdapter {
      * @memberOf RabbitAdapter
      */
     publishTask(domain:string, serviceId:string, command:ActionData) {
-        if (!this.channel) throw "error";
+        if (!this.channel) throw "error rabbit publish task";
         domain = domain.toLowerCase();
 
         this.channel.assertExchange(domain, 'direct', { durable: false });
@@ -120,7 +121,7 @@ class RabbitAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    listenForTask(domain: string, serviceId: string, handler: Function) {
+    listenTasks(domain: string, serviceId: string, handler: Function) {
         let self = this;
         domain = domain.toLowerCase();
 

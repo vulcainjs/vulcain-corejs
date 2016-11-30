@@ -1,9 +1,10 @@
-import {Container} from '../di/containers';
-import {IContainer} from '../di/resolvers';
-import {CommandFactory} from '../commands/command/commandFactory';
-import {DefaultServiceNames} from '../di/annotations';
+import { Container } from '../di/containers';
+import { IContainer } from '../di/resolvers';
+import { CommandFactory } from '../commands/command/commandFactory';
+import { DefaultServiceNames } from '../di/annotations';
 import { IPolicy } from './policy/defaultPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
+import { BearerStrategy } from '../auth/bearerStrategy';
 
 export enum Pipeline {
     EventNotification,
@@ -19,14 +20,58 @@ export enum Pipeline {
  * @interface UserContext
  */
 export interface UserContext {
+    /**
+     * User id
+     *
+     * @type {string}
+     * @memberOf UserContext
+     */
     id: string;
+    /**
+     * User display name
+     *
+     * @type {string}
+     * @memberOf UserContext
+     */
     displayName?: string;
+    /**
+     * User email
+     *
+     * @type {string}
+     * @memberOf UserContext
+     */
     email?: string;
+    /**
+     * User name
+     *
+     * @type {string}
+     * @memberOf UserContext
+     */
     name: string;
+    /**
+     * User scopes
+     *
+     * @type {Array<string>}
+     * @memberOf UserContext
+     */
     scopes: Array<string>;
+    /**
+     * Don't use directly - Used requestContext.tenant instead
+     *
+     * @type {string}
+     * @memberOf UserContext
+     */
     tenant: string;
+
+    bearer?: string;
 }
 
+/**
+ * Logger
+ *
+ * @export
+ * @interface Logger
+ */
 export interface Logger {
     /**
      * Log an error
@@ -44,17 +89,17 @@ export interface Logger {
      * @param {...Array<string>} params Message parameters
      *
      */
-    info(ctx: RequestContext,  msg: string, ...params: Array<any>);
+    info(ctx: RequestContext, msg: string, ...params: Array<any>);
 
     /**
-     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     * Log a verbose message. Verbose messages are enable by service configuration property : enableVerboseLog
      *
      * @param {any} requestContext Current requestContext
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *
      */
-    verbose(ctx: RequestContext,  msg: string, ...params: Array<any>);
+    verbose(ctx: RequestContext, msg: string, ...params: Array<any>);
 }
 
 /**

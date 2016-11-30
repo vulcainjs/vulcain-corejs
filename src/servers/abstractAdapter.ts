@@ -63,6 +63,9 @@ export abstract class AbstractAdapter {
             else if (value.action) {
                 prefix = value.action.toLowerCase();
             }
+            else {
+                value = null; // custom value - don't log it
+            }
         }
         else {
             hasError = true;

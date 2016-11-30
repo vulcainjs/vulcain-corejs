@@ -214,10 +214,11 @@ export class ExpressAdapter extends AbstractAdapter {
 
     private async executeRequest(handler: Function, command, req: express.Request, res: express.Response) {
         const begin = super.startRequest(command);
-        let ctx = (<any>req).requestContext;
+        let ctx: RequestContext = (<any>req).requestContext;
         (<any>req).requestContext = null; // release for gc
 
         try {
+            // Initialize user context
             if (req.user) {
                 ctx.user = req.user;
                 if (ctx.user.tenant) {
@@ -229,8 +230,12 @@ export class ExpressAdapter extends AbstractAdapter {
                 ctx.bearer = ctx.bearer || ctx.user.bearer;
                 ctx.user.bearer = null;
             }
-
+            // Process handler
             let result = await handler.apply(this, [command, ctx]);
+            // Response
+            if(!ctx.publicPath)
+                res.setHeader("Access-Control-Allow-Origin", "*"); // For internal test
+
             if (result instanceof HttpResponse) {
                 let customResponse: HttpResponse = result;
                 if (customResponse.headers) {
@@ -273,11 +278,19 @@ export class ExpressAdapter extends AbstractAdapter {
         }
     }
 
+    /**
+     * Set static root for public web site
+     *
+     * @param {string} basePath
+     *
+     * @memberOf ExpressAdapter
+     */
     setStaticRoot(basePath: string) {
         System.log.info(null, "Set wwwroot to " + basePath);
         if (!basePath) {
             throw new Error("BasePath is required.");
         }
+        // TODO
         //this.express.use(express.static(basePath));
         this.express.use('/assets', express.static(basePath + '/assets'));
         this.express.all('/*', function(req, res, next) {

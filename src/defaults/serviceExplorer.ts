@@ -24,9 +24,6 @@ export class ServiceExplorer {
         let result = await descriptors.getDescriptions();
         result.alternateAddress = (<any>this).requestContext.hostName;
 
-        let res = new HttpResponse(result);
-        res.contentType = "vulcain";
-        res.addHeader("Access-Control-Allow-Origin", "*");
-        return res;
+        return result;
     }
 }
