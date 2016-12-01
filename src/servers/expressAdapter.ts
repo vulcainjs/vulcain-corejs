@@ -29,7 +29,7 @@ export class ExpressAdapter extends AbstractAdapter {
         });
         this.express.use(cookieParser());
        // if (System.isTestEnvironnment)
-       //     this.express.use(cors());
+        this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
         this.auth = (this.container.get<any>(DefaultServiceNames.Authentication, true)).init();
@@ -179,8 +179,25 @@ export class ExpressAdapter extends AbstractAdapter {
                 if (pos > 0) {
                     ctx.tenant = ctx.tenant.substr(0, pos);
                 }
+                return;
             }
-            return;
+            if (ctx.tenant.substr(0, 8) !== "pattern:") {
+                return;
+            }
+            let patterns = ctx.tenant.substr(9).split(',');
+            for (let pattern of patterns) {
+                try {
+                const regex = new RegExp(pattern.trim());
+                const groups = regex.exec(ctx.hostName);
+                if (groups && groups.length > 0) {
+                    ctx.tenant = groups[1];
+                    return;
+                }
+                }
+                catch (e) {
+                    ctx.logError(e, "TENANT pattern cannot be resolved " + pattern);
+                }
+            }
         }
 
         // 3 - Environnement variable
@@ -233,9 +250,6 @@ export class ExpressAdapter extends AbstractAdapter {
             // Process handler
             let result = await handler.apply(this, [command, ctx]);
             // Response
-            if(!ctx.publicPath)
-                res.setHeader("Access-Control-Allow-Origin", "*"); // For internal test
-
             if (result instanceof HttpResponse) {
                 let customResponse: HttpResponse = result;
                 if (customResponse.headers) {

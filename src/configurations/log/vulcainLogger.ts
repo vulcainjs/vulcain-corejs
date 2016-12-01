@@ -26,10 +26,14 @@ export class VulcainLogger {
      */
     error(requestContext, error: Error, msg?: string) {
         if (!error) return;
-        if (VulcainLogger.enableInfo || System.isTestEnvironnment)
-            this.write(requestContext, msg ? msg + ":" + error.stack : error.stack);
-        else
-            this.write(requestContext, msg ? msg + ":" + error.message : error.message);
+        let txt = msg || "";
+        if (VulcainLogger.enableInfo || System.isTestEnvironnment) {
+            txt = txt + (error.stack || error.message);
+        }
+        else {
+            txt = txt + (error.message);
+        }
+        this.write(requestContext, txt);
     }
 
     /**

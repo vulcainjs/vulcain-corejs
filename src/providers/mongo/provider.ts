@@ -7,6 +7,7 @@ import { Inject } from '../../di/annotations';
 import { ApplicationRequestError } from '../../errors/applicationRequestError';
 import { System } from '../../configurations/globals/system';
 import * as URL from 'url';
+import * as Path from 'path';
 
 /**
  * Default mongo provider
@@ -46,7 +47,7 @@ export class MongoProvider implements IProvider<any>
             throw new Error("tenant is required");
 
         let url = URL.parse(this.state.uri);
-        url.pathname += "/" + tenant;
+        url.pathname = Path.join( url.pathname || "",  tenant );
         this.state.uri = URL.format(url);
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
