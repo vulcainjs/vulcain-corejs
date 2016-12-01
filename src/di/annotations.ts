@@ -10,8 +10,9 @@ import { System } from '../configurations/globals/system';
  */
 export class DefaultServiceNames {
     static TokenService = "TokenService";
-    static ScopesPolicy = "ScopesPolicy";
-
+    static AuthorizationPolicy = "AuthorizationPolicy";
+    static TenantPolicy = "TenantPolicy";
+    
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static "Authentication" = "Authentication";

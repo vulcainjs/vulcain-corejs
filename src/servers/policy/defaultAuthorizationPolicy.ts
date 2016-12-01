@@ -1,7 +1,7 @@
 import { System } from '../../configurations/globals/system';
 import { RequestContext } from '../requestContext';
 
-export interface IPolicy {
+export interface IAuthorizationPolicy {
     /**
      * get user scopes
      *
@@ -28,7 +28,7 @@ export interface IPolicy {
  * @export
  * @class DefaultPolicy
  */
-export class DefaultPolicy {
+export class DefaultAuthorizationPolicy {
 
     /**
      * Get user scopes

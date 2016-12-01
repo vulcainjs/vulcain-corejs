@@ -18,7 +18,8 @@ import { VulcainLogger } from './../configurations/log/vulcainLogger';
 import { System } from './../configurations/globals/system';
 import { ConsoleMetrics } from '../metrics/consoleMetrics';
 import { StatsdMetrics } from '../metrics/statsdMetrics';
-import { DefaultPolicy } from '../servers/policy/defaultPolicy';
+import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizationPolicy';
+import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 
 /**
  * Component container for dependency injection
@@ -54,7 +55,8 @@ export class Container implements IContainer {
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
             this.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
-            this.injectSingleton(DefaultPolicy, DefaultServiceNames.ScopesPolicy);
+            this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
+            this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
         }
     }
 

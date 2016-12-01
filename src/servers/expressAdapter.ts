@@ -8,6 +8,7 @@ import { Conventions } from '../utils/conventions';
 import { QueryData } from '../pipeline/query';
 import { HttpResponse } from './../pipeline/common';
 import { System } from './../configurations/globals/system';
+import { ITenantPolicy } from './policy/defaultTenantPolicy';
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const guid = require('node-uuid');
@@ -160,60 +161,8 @@ export class ExpressAdapter extends AbstractAdapter {
     }
 
     private initializeTenant(ctx: RequestContext, req: express.Request) {
-        // 1 - tenant in url (test only)
-        ctx.tenant = (System.isTestEnvironnment && req.query.$tenant);
-        if (ctx.tenant) {
-            return;
-        }
-
-        // 2 - Header
-        ctx.tenant = req.header("X-VULCAIN-TENANT");
-        if (ctx.tenant) {
-            if (ctx.tenant === "?") {
-                // from load-balancer so resolve from hostname
-                // Get the first sub-domain
-                let pos = ctx.hostName.indexOf('.');
-                ctx.tenant = pos > 0 ? ctx.hostName.substr(0, pos) : ctx.hostName;
-                // Remove port
-                pos = ctx.tenant.indexOf(':');
-                if (pos > 0) {
-                    ctx.tenant = ctx.tenant.substr(0, pos);
-                }
-                return;
-            }
-            if (ctx.tenant.substr(0, 8) !== "pattern:") {
-                return;
-            }
-            let patterns = ctx.tenant.substr(9).split(',');
-            for (let pattern of patterns) {
-                try {
-                const regex = new RegExp(pattern.trim());
-                const groups = regex.exec(ctx.hostName);
-                if (groups && groups.length > 0) {
-                    ctx.tenant = groups[1];
-                    return;
-                }
-                }
-                catch (e) {
-                    ctx.logError(e, "TENANT pattern cannot be resolved " + pattern);
-                }
-            }
-        }
-
-        // 3 - Environnement variable
-        ctx.tenant = System.defaultTenant;
-        if (ctx.tenant) {
-            return;
-        }
-
-        // 4 - test mode
-        if (System.isTestEnvironnment) {
-            ctx.tenant = RequestContext.TestTenant;
-        }
-        else {
-            // 5 - default
-            ctx.tenant = "default";
-        }
+        let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
+        ctx.tenant = tenantPolicy.resolveTenant(ctx, req);
     }
 
     private initializeRequestContext(req: express.Request) {

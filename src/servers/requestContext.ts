@@ -2,7 +2,7 @@ import { Container } from '../di/containers';
 import { IContainer } from '../di/resolvers';
 import { CommandFactory } from '../commands/command/commandFactory';
 import { DefaultServiceNames } from '../di/annotations';
-import { IPolicy } from './policy/defaultPolicy';
+import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
 import { BearerStrategy } from '../auth/bearerStrategy';
 
@@ -126,7 +126,7 @@ export class RequestContext {
      */
     correlationPath: string;
 
-    public _scopePolicy: IPolicy;
+    public _scopePolicy: IAuthorizationPolicy;
     /**
      * Current user or null
      *
@@ -195,7 +195,7 @@ export class RequestContext {
     constructor(container: IContainer, public pipeline: Pipeline) {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
-        this._scopePolicy = container.get<IPolicy>(DefaultServiceNames.ScopesPolicy);
+        this._scopePolicy = container.get<IAuthorizationPolicy>(DefaultServiceNames.AuthorizationPolicy);
     }
 
     dispose() {
