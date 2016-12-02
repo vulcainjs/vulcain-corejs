@@ -16,6 +16,9 @@ export class DefaultTenantPolicy {
 
     protected resolveFromHeader(ctx: RequestContext, req: express.Request): string {
         let tenant = req.header("X-VULCAIN-TENANT");
+        if (!tenant)
+            return;
+
         if (tenant === "?") {
             // from load-balancer so resolve from hostname
             // Get the first sub-domain
@@ -28,9 +31,11 @@ export class DefaultTenantPolicy {
             }
             return tenant;
         }
+
         if (tenant.substr(0, 8) !== "pattern:") {
             return tenant;
         }
+
         let patterns = tenant.substr(9).split(',');
         for (let pattern of patterns) {
             try {

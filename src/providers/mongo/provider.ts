@@ -37,6 +37,9 @@ export class MongoProvider implements IProvider<any>
             connectTimeoutMS: 0,
             socketTimeoutMS: 0
         };
+        if (!uri) {
+            throw new Error("Uri is required for mongodb provider.");
+        }
         this.state = { uri: uri };
     }
 
@@ -46,9 +49,16 @@ export class MongoProvider implements IProvider<any>
         if (!tenant)
             throw new Error("tenant is required");
 
-        let url = URL.parse(this.state.uri);
-        url.pathname = Path.join( url.pathname || "",  tenant );
-        this.state.uri = URL.format(url);
+        // Insert tenant in connexion string
+        let url = this.state.uri;
+        let parts = url.split('?');
+        if (parts[0][parts[0].length - 1] === "/")
+            parts[0] += tenant;
+        else
+            parts[0] += "/" + tenant;
+        url = parts.join('?');
+        this.state.uri = url;
+        
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
         this.ctx.logVerbose(`MONGODB: Creating provider ${this.state.uri} for schema ${schema.name}`);
@@ -73,7 +83,7 @@ export class MongoProvider implements IProvider<any>
             MongoClient.connect(state.uri, options, (err, db) => {
                 if (err) {
                     reject(err);
-                    System.log.error( null, err, `MONGODB: Error when opening database ${state.uri} for schema ${schema.name}`);
+                    System.log.error(null, err, `MONGODB: Error when opening database ${state.uri} for schema ${schema.name}`);
                     return;
                 }
 
@@ -91,7 +101,7 @@ export class MongoProvider implements IProvider<any>
                                 System.log.error(null, err, `MONGODB: Error when creating index for ${state.uri} for schema ${schema.name}`);
                             }
                             else {
-                                System.log.info(null,  `MONGODB: Unique index created for ${state.uri} for schema ${schema.name}`);
+                                System.log.info(null, `MONGODB: Unique index created for ${state.uri} for schema ${schema.name}`);
                             }
                         });
                 }
