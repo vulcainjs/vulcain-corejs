@@ -14,15 +14,9 @@ export class MetricsConstant {
  * @interface IMetrics
  */
 export interface IMetrics {
-    /**
-     * Add custom tags
-     * Replace existing tags
-     *
-     * @param {...Array<string>} tags array of string like <tag-name>=<tag-value>
-     *
-     * @memberOf Metrics
-     */
-    setTags(...tags: Array<string>);
+
+    encodeTags(...tags: Array<string>);
+
     /**
      * Increment a gauge
      *
@@ -31,7 +25,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    increment(metric: string, delta?: number);
+    increment(metric: string, customTags?: string, delta?: number);
 
     /**
      * Decrement a gauge
@@ -41,7 +35,7 @@ export interface IMetrics {
      *      *
      * @memberOf IMetrics
      */
-    decrement(metric: string, delta?: number);
+    decrement(metric: string, customTags?: string, delta?: number);
 
     /**
      * Add value to a counter
@@ -51,7 +45,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    counter(metric: string, delta: number);
+    counter(metric: string, delta: number, customTags?: string);
 
     /**
      *
@@ -61,7 +55,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    gauge(metric: string, value: number);
+    gauge(metric: string, value: number, customTags?: string);
 
     /**
      * Set a duration
@@ -71,6 +65,6 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    timing(metric: string, duration: number);
+    timing(metric: string, duration: number, customTags?: string);
 }
 

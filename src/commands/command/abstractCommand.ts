@@ -33,6 +33,8 @@ export interface ICommand {
  */
 export abstract class AbstractCommand<T> {
     protected metrics: IMetrics;
+    protected customTags: string;
+
     /**
      *
      *
@@ -59,6 +61,10 @@ export abstract class AbstractCommand<T> {
      */
     constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
+    }
+
+    protected setMetricsTags(...args: Array<string>) {
+        this.customTags = this.metrics.encodeTags(...args);
     }
 
     /**

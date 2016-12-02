@@ -1,6 +1,7 @@
 import { Conventions } from '../utils/conventions';
 import * as Statsd from "statsd-client";
 import { System } from './../configurations/globals/system';
+import { IMetrics } from './metrics';
 
 /**
  * Default metrics adapter
@@ -9,11 +10,10 @@ import { System } from './../configurations/globals/system';
  * @export
  * @class StatsdMetrics
  */
-export class StatsdMetrics {
+export class StatsdMetrics implements IMetrics {
 
     private statsd: Statsd;
     private tags: string;
-    private customTags: string = "";
 
     constructor(address?: string) {
         if (!System.isDevelopment) {
@@ -26,34 +26,27 @@ export class StatsdMetrics {
         }
     }
 
-    /**
-     * Add tags as an array of string like <tag-name>=<tag-value>
-     *
-     * @param {...Array<string>} tags
-     *
-     * @memberOf Metrics
-     */
-    setTags(...tags: Array<string>) {
-        this.customTags = "," + tags.map(t=> t.replace(/[:|,]/g, '-')).join(',');
+    encodeTags(...tags: Array<string>) {
+        return "," + tags.map(t=> t.replace(/[:|,]/g, '-')).join(',');
     }
 
-    increment(metric: string, delta?: number) {
-        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + this.customTags , delta);
+    increment(metric: string, customTags?: string, delta?: number) {
+        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + customTags , delta);
     }
 
-    decrement(metric:string, delta?:number) {
-        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + this.customTags, delta);
+    decrement(metric:string, customTags?: string, delta?:number) {
+        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + customTags, delta);
     }
 
-    counter(metric:string, delta:number) {
-        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + this.customTags, delta);
+    counter(metric:string, delta:number, customTags?: string) {
+        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + customTags, delta);
     }
 
-    gauge(metric:string, value:number) {
-        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + this.customTags, value);
+    gauge(metric:string, value:number, customTags?: string) {
+        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + customTags, value);
     }
 
-    timing(metric: string, duration: number) {
-        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + this.customTags, duration);
+    timing(metric: string, duration: number, customTags?: string) {
+        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + customTags, duration);
     }
 }

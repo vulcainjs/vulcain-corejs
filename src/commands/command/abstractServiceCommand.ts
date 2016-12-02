@@ -28,6 +28,7 @@ export abstract class AbstractServiceCommand {
     private overrideTenant: string;
 
     protected metrics: IMetrics;
+    private customTags: string;
 
     /**
      *
@@ -85,13 +86,13 @@ export abstract class AbstractServiceCommand {
         if (!exists) {
             System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
         }
-        this.metrics.setTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
+        this.customTags =  this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
-        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration);
+        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
-            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure);
+            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
     }
 
     /**

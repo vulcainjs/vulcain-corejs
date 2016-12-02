@@ -7,6 +7,7 @@ import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 
 export abstract class AbstractHttpCommand {
+    protected customTags: string;
     protected metrics: IMetrics;
     public requestContext: RequestContext;
     private static METRICS_NAME = "external_call";
@@ -43,13 +44,13 @@ export abstract class AbstractHttpCommand {
         if (!exists) {
             System.manifest.dependencies.externals.push({ uri });
         }
-        this.metrics.setTags("uri=" + uri);
+        this.customTags = this.metrics.encodeTags("uri=" + uri);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
-        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration);
+        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
-            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure);
+            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
     }
 
     runAsync(...args): Promise<any> {

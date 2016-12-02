@@ -22,6 +22,7 @@ export abstract class AbstractProviderCommand<T> {
     private providerFactory: ProviderFactory;
 
     protected metrics: IMetrics;
+    private customTags: string;
 
     /**
      *
@@ -77,19 +78,19 @@ export abstract class AbstractProviderCommand<T> {
         this.setMetricsTags(this.provider.address, this.schema.name);
     }
 
-    protected setMetricsTags(address: string, schema: string) {
+    protected setMetricsTags(address: string, schema: string, tenant?: string) {
         let exists = System.manifest.dependencies.databases.find(db => db.address === address && db.schema === db.schema);
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });
         }
-        this.metrics.setTags("host=" + address, "schema=" + schema);
+        this.customTags = this.metrics.encodeTags("host=" + address, "schema=" + schema, "tenant=" + (tenant||this.requestContext.tenant));
     }
 
     onCommandCompleted(duration: number, success: boolean) {
         if (this.schema && this.provider) {
-            this.metrics.timing(AbstractProviderCommand.METRICS_NAME + MetricsConstant.duration, duration);
+            this.metrics.timing(AbstractProviderCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
             if (!success)
-                this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure);
+                this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         }
     }
 
