@@ -146,6 +146,9 @@ export abstract class AbstractAdapter {
             manager.runAsync(command, ctx)
                 .then(result => {
                     if (result instanceof HttpResponse) {
+                        if (command.correlationId) {
+                            result.addHeader("X-VULCAIN-CORRELATION-ID", command.correlationId);
+                        }
                         resolve(result);
                     }
                     else {
