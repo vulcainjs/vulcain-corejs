@@ -2,7 +2,7 @@ import {MessageBus} from './messageBus';
 import {IContainer} from '../di/resolvers';
 import {Domain} from '../schemas/schema';
 import {DefaultServiceNames} from '../di/annotations';
-import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata, HttpResponse } from './common';
+import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import * as os from 'os';
 import {RequestContext, Pipeline} from '../servers/requestContext';
 import * as RX from 'rx';
@@ -11,6 +11,7 @@ import {Conventions} from '../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
+import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
 const guid = require('node-uuid');
 
 export interface ActionData extends CommonRequestData {
@@ -194,17 +195,18 @@ export class CommandManager implements IManager {
         return info;
     }
 
-    async runAsync(command: ActionData, ctx: RequestContext): Promise<any> {
+    async runAsync(command: ActionData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
         if (info.kind !== "action")
-            throw new Error("Query handler must be requested with GET.");
+            return new BadRequestResponse("Query handler must be requested with GET.");
 
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         System.log.write(ctx, { RunAction: command });
         try {
             let errors = await this.validateRequestData(ctx, info, command);
-            if (errors && errors.length > 0)
-                return this.createResponse(ctx, command, { message: "Validation errors", errors: errors });
+            if (errors && errors.length > 0) {
+                return new BadRequestResponse(this.createResponse(ctx, command, { message: "Validation errors", errors: errors }));
+            }
 
             command.schema = <string>info.metadata.schema;
             command.correlationId = ctx.correlationId;
@@ -218,27 +220,33 @@ export class CommandManager implements IManager {
 
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
-                let result = await info.handler[info.method](command.params);
-                if (result instanceof HttpResponse) {
-                    return result; // skip normal process
-                }
+                let result:HttpResponse = await info.handler[info.method](command.params);
+
                 command.status = "Success";
                 let res = this.createResponse(ctx, command);
-                res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 res.completedAt = System.nowAsString();
                 if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                     this.messageBus.sendEvent(res);
                 }
-                return res;
+
+                delete res.userContext;
+                if (!(result instanceof HttpResponse)) {
+                    res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
+                    return new VulcainResponse(res);
+                }
+                else if (result.contentType === HttpResponse.VulcainContentType) {
+                    result.content = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
+                }
+                return result;
             } else {
                 // Pending
                 this.messageBus.pushTask(command);
-                return this.createResponse(ctx, command);
+                return new VulcainResponse(this.createResponse(ctx, command));
             }
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return this.createResponse(ctx, command, error);
+            return new HttpResponse(this.createResponse(ctx, command, error), e.statusCode);
         }
     }
 

@@ -4,7 +4,6 @@ import { System } from './../configurations/globals/system';
 import { VulcainManifest } from './../configurations/dependencies/annotations';
 import { RequestContext } from '../servers/requestContext';
 import { ForbiddenRequestError } from '../errors/applicationRequestError';
-import { HttpResponse } from '../pipeline/common';
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class DependencyExplorer {

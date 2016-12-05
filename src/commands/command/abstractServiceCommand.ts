@@ -12,7 +12,6 @@ import { ApplicationRequestError } from './../../errors/applicationRequestError'
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 import { ITokenService } from '../../defaults/services';
-import { ApiKeyService } from '../../auth/apiKeyService';
 const rest = require('unirest');
 
 /**

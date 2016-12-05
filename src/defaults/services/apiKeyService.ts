@@ -1,11 +1,11 @@
-import { VerifyTokenParameter } from './../defaults/services';
-import { ITokenService } from '../defaults/services';
-import { CommandFactory } from '../commands/command/commandFactory';
-import { Command } from '../commands/command/commandFactory';
-import { AbstractServiceCommand } from './../commands/command/abstractServiceCommand';
-import { AbstractHandler } from '../pipeline/abstractHandlers';
-import { IContainer } from '../di/resolvers';
-import { UserContext } from '../servers/requestContext';
+import { VerifyTokenParameter } from './../../defaults/services';
+import { ITokenService } from '../../defaults/services';
+import { CommandFactory } from '../../commands/command/commandFactory';
+import { Command } from '../../commands/command/commandFactory';
+import { AbstractServiceCommand } from './../../commands/command/abstractServiceCommand';
+import { AbstractHandler } from '../../pipeline/abstractHandlers';
+import { IContainer } from '../../di/resolvers';
+import { UserContext } from '../../servers/requestContext';
 
 export class ApiKeyService extends AbstractHandler implements ITokenService {
     constructor(container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {

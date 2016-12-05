@@ -1,5 +1,4 @@
-import { Authentication } from './servers/expressAuthentication';
-import { ApiKeyService } from './auth/apiKeyService';
+import { ApiKeyService } from './defaults/services/apiKeyService';
 import { Preloader } from './preloader';
 import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
@@ -8,7 +7,7 @@ import * as Path from 'path';
 import { Domain } from './schemas/schema';
 import { Container } from './di/containers';
 import { Files } from './utils/files';
-import { ExpressAdapter } from './servers/expressAdapter';
+import { ExpressAdapter } from './servers/express/expressAdapter';
 import 'reflect-metadata';
 import { DefaultServiceNames } from './di/annotations';
 import { IContainer } from "./di/resolvers";
@@ -121,8 +120,6 @@ export class Application {
         this._container = container || new Container();
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
-
-        this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);

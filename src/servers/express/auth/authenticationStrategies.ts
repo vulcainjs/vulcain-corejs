@@ -1,9 +1,9 @@
 import { ApiKeyStrategy } from './apiKeyStrategy';
-import { ITokenService, VerifyTokenParameter } from '../defaults/services';
+import { ITokenService, VerifyTokenParameter } from '../../../defaults/services';
 import { BearerStrategy } from './bearerStrategy';
-import { RequestContext } from '../servers/requestContext';
-import { System } from '../configurations/globals/system';
-import { UserContext } from '../servers/requestContext';
+import { RequestContext } from '../../../servers/requestContext';
+import { System } from '../../../configurations/globals/system';
+import { UserContext } from '../../../servers/requestContext';
 const passport = require('passport');
 const AnonymousStrategy = require('passport-anonymous');
 

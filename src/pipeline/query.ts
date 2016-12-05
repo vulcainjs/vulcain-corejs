@@ -1,4 +1,4 @@
-import { HandlerFactory, CommonRequestData, CommonActionMetadata, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, IManager, HttpResponse } from './common';
+import { HandlerFactory, CommonRequestData, CommonActionMetadata, ServiceHandlerMetadata, ErrorResponse, CommonRequestResponse, IManager } from './common';
 import { IContainer } from '../di/resolvers';
 import { Domain } from '../schemas/schema';
 import * as os from 'os';
@@ -7,6 +7,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
+import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
 
 export interface QueryData extends CommonRequestData {
     maxByPage?: number;
@@ -64,8 +65,8 @@ export class QueryManager implements IManager {
     private createResponse(ctx: RequestContext, query: QueryData, error?: ErrorResponse) {
         let res: QueryResponse<any> = {
             tenant: ctx.tenant,
-            userContext: query.userContext,
             source: this._hostname,
+            userContext: undefined,
             schema: query.schema,
             domain: query.domain,
             action: query.action,
@@ -115,48 +116,44 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: QueryData, ctx: RequestContext): Promise<any> {
+    async runAsync(query: QueryData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(query, ctx.container);
         if (info.kind !== "query")
-            throw new Error("Action handler must be requested with POST.");
+            return new BadRequestResponse("Action handler must be requested with POST.");
 
         System.log.write(ctx, { runQuery: query });
 
         try {
             let errors = await this.validateRequestData(ctx, info, query);
-            if (errors && errors.length > 0)
-                return this.createResponse(ctx, query, { message: "Validation errors", errors: errors });
+            if (errors && errors.length > 0) {
+                return new BadRequestResponse(this.createResponse(ctx, query, { message: "Validation errors", errors: errors }));
+            }
             if (ctx.user)
                 query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
+
             query.schema = <string>info.metadata.schema;
             query.correlationId = ctx.correlationId;
             query.correlationPath = ctx.correlationPath;
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.params);
-            if (result instanceof HttpResponse) {
-                if (result.contentType === "vulcain") {
-                    let res = this.createResponse(ctx, query);
-                    res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
-                    if (result.content && Array.isArray(result.content)) {
-                        res.total = result.content.length;
-                    }
-                    delete res.userContext;
-                    result.contentType = null;
-                    result.content = res;
-                }
-                return result; // skip normal process
-            }
+
             let res = this.createResponse(ctx, query);
-            res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
-            if (result && Array.isArray(result)) {
-                res.total = result.length;
+            if (!(result instanceof HttpResponse)) {
+                if (result && Array.isArray(result)) {
+                    res.total = result.length;
+                }
+                res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
+                return new VulcainResponse(res);
             }
-            return res;
+            else if (result.contentType === HttpResponse.VulcainContentType) {
+                result.content = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
+            }
+            return result;
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return this.createResponse(ctx, query, error);
+            return new HttpResponse(this.createResponse(ctx, query, error), e.statusCode);
         }
     }
 }

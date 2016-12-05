@@ -4,7 +4,6 @@ import { CommandFactory } from '../commands/command/commandFactory';
 import { DefaultServiceNames } from '../di/annotations';
 import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
-import { BearerStrategy } from '../auth/bearerStrategy';
 
 export enum Pipeline {
     EventNotification,

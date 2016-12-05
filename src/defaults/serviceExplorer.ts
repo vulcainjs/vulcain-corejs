@@ -5,7 +5,6 @@ import { ServiceDescriptors, ServiceDescription } from '../pipeline/serviceDescr
 import { Query, QueryHandler } from '../pipeline/annotations';
 import { ForbiddenRequestError } from '../errors/applicationRequestError';
 import { RequestContext } from '../servers/requestContext';
-import { HttpResponse } from '../pipeline/common';
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class ServiceExplorer {
