@@ -12,15 +12,15 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     private initialized = false;
 
     constructor(private address: string) {
+        if (!this.address)
+            throw new Error("Address is required for RabbitAdapter");
+
         if (!address.startsWith("amqp://"))
             this.address = "amqp://" + address;
         this.address += "/" + System.environment;
     }
 
     startAsync() {
-        if (!this.address)
-            throw new Error("Address is required for RabbitAdapter");
-
         let self = this;
         return new Promise((resolve, reject) => {
             if (self.initialized)
@@ -39,6 +39,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             })
             .catch(err => {
                 System.log.error(null, err, "Unable to open rabbit connexion");
+                resolve(self);
             });
         });
     }
@@ -53,7 +54,8 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      * @memberOf RabbitAdapter
      */
     sendEvent(domain:string, event:EventData) {
-        if (!this.channel) throw "error rabbit send event";
+        if (!this.channel)
+            return;
         domain = domain.toLowerCase() + "_events";
 
         this.channel.assertExchange(domain, 'fanout', { durable: false });
@@ -69,6 +71,8 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      * @memberOf RabbitAdapter
      */
     listenEvents(domain: string, handler: Function) {
+        if (!this.channel)
+            return;
         let self = this;
 
         // Since this method can be called many times for a same domain
@@ -105,7 +109,8 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      * @memberOf RabbitAdapter
      */
     publishTask(domain:string, serviceId:string, command:ActionData) {
-        if (!this.channel) throw "error rabbit publish task";
+        if (!this.channel)
+            return;
         domain = domain.toLowerCase();
 
         this.channel.assertExchange(domain, 'direct', { durable: false });
@@ -122,6 +127,8 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      * @memberOf RabbitAdapter
      */
     listenTasks(domain: string, serviceId: string, handler: Function) {
+        if (!this.channel)
+            return;
         let self = this;
         domain = domain.toLowerCase();
 
