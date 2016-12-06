@@ -1,5 +1,5 @@
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
-const guid = require('node-uuid');
+const guid = require('uuid');
 import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';

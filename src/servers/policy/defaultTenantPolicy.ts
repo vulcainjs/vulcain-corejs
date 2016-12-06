@@ -32,11 +32,12 @@ export class DefaultTenantPolicy {
             return tenant;
         }
 
-        if (tenant.substr(0, 8) !== "pattern:") {
+        let parts = tenant.split(':');
+        if (parts.length !== 2 || parts[0] !== "pattern") {
             return tenant;
         }
 
-        let patterns = tenant.substr(9).split(',');
+        let patterns = parts[1].split(',');
         for (let pattern of patterns) {
             try {
                 const regex = new RegExp(pattern.trim());
@@ -76,7 +77,7 @@ export class DefaultTenantPolicy {
         }
         else {
             // 5 - default
-            return "default";
+            return "vulcain";
         }
     }
 }

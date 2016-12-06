@@ -61,8 +61,6 @@ export interface UserContext {
      * @memberOf UserContext
      */
     tenant: string;
-
-    bearer?: string;
 }
 
 /**

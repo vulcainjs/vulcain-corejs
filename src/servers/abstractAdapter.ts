@@ -16,7 +16,7 @@ import { QueryData } from '../pipeline/query';
 import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
-const guid = require('node-uuid');
+const guid = require('uuid');
 
 // internal
 export interface IHttpRequest {
@@ -31,7 +31,7 @@ export interface IHttpRequest {
 export abstract class AbstractAdapter {
     private commandManager: CommandManager;
     private queryManager;
-    private testUser: UserContext;
+    protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
 
@@ -232,28 +232,9 @@ export abstract class AbstractAdapter {
             return new BadRequestResponse("this service doesn't belong to domain " + this.domainName);
         }
         try {
-            // Initialize user context
-            if (ctx.user) {
-                if (ctx.user.tenant) {
-                    ctx.tenant = ctx.user.tenant;
-                }
-                else {
-                    ctx.user.tenant = ctx.tenant;
-                }
-                ctx.bearer = ctx.bearer || ctx.user.bearer;
-                ctx.user.bearer = null;
-            }
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
-            // Force test user only if there is no authorization
-            if (!ctx.user && this.testUser && !ctx.headers["authorization"]) {
-                ctx.user = this.testUser;
-                ctx.tenant = ctx.tenant || ctx.user.tenant;
-                System.log.info(ctx, `Request context - force test user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.tenant}`);
-            }
-            else {
-                System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
-            }
+            System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {
@@ -272,7 +253,7 @@ export abstract class AbstractAdapter {
         }
         catch (e) {
             let result = command;
-            result.error = { message: e.message || e };
+            result.error = { message: e.message || e, errors: e.errors };
             this.endRequest(begin, result, ctx, e);
             return new HttpResponse(result, e.statusCode);
         }

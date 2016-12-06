@@ -5,11 +5,9 @@ import { RequestContext, Pipeline } from './../requestContext';
 import { IContainer } from '../../di/resolvers';
 import { DefaultServiceNames } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
-import { QueryData } from '../../pipeline/query';
 import { HttpResponse } from './../../pipeline/response';
 import { System } from './../../configurations/globals/system';
 import { ITenantPolicy } from './../policy/defaultTenantPolicy';
-import { Query } from '../../pipeline/annotations';
 import { IHttpResponse } from '../../commands/command/types';
 import { ExpressAuthentication } from './expressAuthentication';
 const cookieParser = require('cookie-parser');
@@ -36,7 +34,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
         let auth = this.container.get<any>(DefaultServiceNames.Authentication, true);
-        this.auth = (auth || container.resolve(ExpressAuthentication)).init();
+        this.auth = (auth || container.resolve(ExpressAuthentication)).init(this.testUser);
     }
 
     private sendResponse(expressResponse: express.Response, response: HttpResponse) {
@@ -44,12 +42,13 @@ export class ExpressAdapter extends AbstractAdapter {
             expressResponse.end();
             return;
         }
-        
+
         if (response.headers) {
             for (const [k, v] of response.headers) {
                 expressResponse.setHeader(k, v);
             }
         }
+
         expressResponse.statusCode = response.statusCode || 200;
         if (response.contentType && response.contentType !== HttpResponse.VulcainContentType) {
             expressResponse.contentType(response.contentType);
@@ -120,21 +119,6 @@ export class ExpressAdapter extends AbstractAdapter {
         });
     }
 
-    private initializeUserContext(req: express.Request, ctx: RequestContext) {
-        // Initialize user context
-        if (req.user) {
-            ctx.user = req.user;
-            if (ctx.user.tenant) {
-                ctx.tenant = ctx.user.tenant;
-            }
-            else {
-                ctx.user.tenant = ctx.tenant;
-            }
-            ctx.bearer = ctx.bearer || ctx.user.bearer;
-            ctx.user.bearer = null;
-        }
-    }
-
     /**
      * Set static root for public web site
      *
@@ -147,13 +131,12 @@ export class ExpressAdapter extends AbstractAdapter {
         if (!basePath) {
             throw new Error("BasePath is required.");
         }
-        // TODO
-        //this.express.use(express.static(basePath));
-        this.express.use('/assets', express.static(basePath + '/assets'));
+        this.express.use(express.static(basePath));
+/*        this.express.use('/assets', express.static(basePath + '/assets'));
         this.express.all('/*', function (req, res, next) {
             // Just send the index.html for other files to support HTML5Mode
             res.sendFile('index.html', { root: basePath });
-        });
+        });*/
     }
 
     start(port: number) {

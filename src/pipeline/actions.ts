@@ -12,7 +12,7 @@ import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
 import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
-const guid = require('node-uuid');
+const guid = require('uuid');
 
 export interface ActionData extends CommonRequestData {
     service: string;
