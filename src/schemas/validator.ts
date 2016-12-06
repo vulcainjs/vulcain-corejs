@@ -115,7 +115,7 @@ export class Validator {
 
         let values = schema.cardinality === "one" ? [val] : <Array<any>>val;
 
-        let baseItemSchema = schema.item && this.domain.getSchema(schema.item, true);
+        let baseItemSchema = schema.item && schema.item !== "any" && this.domain.getSchema(schema.item, true);
         let errors = [];
 
         for (let val of values) {

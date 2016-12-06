@@ -411,4 +411,12 @@ export class System {
             return baseurl;
         }
     }
+
+    static removePasswordFromUrl(url: string) {
+        const regex = /^([^:]*:\/\/)((\w*:)(\w*)@)?(.*)/g;
+        const subst = `\$1\$3***@\$5`;
+
+        // The substituted value will be contained in the result variable
+        return url.replace(regex, subst);
+    }
 }

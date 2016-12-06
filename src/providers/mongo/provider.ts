@@ -61,7 +61,7 @@ export class MongoProvider implements IProvider<any>
 
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
-        this.ctx.logVerbose(`MONGODB: Creating provider ${this.state.uri} for schema ${schema.name}`);
+        this.ctx.logVerbose(`MONGODB: Creating provider ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
 
         let keys;
         for (let p in schema.description.properties) {
