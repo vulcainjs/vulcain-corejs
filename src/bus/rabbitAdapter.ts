@@ -12,14 +12,15 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     private initialized = false;
 
     constructor(private address: string) {
+        if (!this.address)
+            throw new Error("Address is required for RabbitAdapter");
+
         if (!address.startsWith("amqp://"))
             this.address = "amqp://" + address;
         this.address += "/" + System.environment;
     }
 
     startAsync() {
-        if (!this.address)
-            throw new Error("Address is required for RabbitAdapter");
 
         let self = this;
         return new Promise((resolve, reject) => {
@@ -30,7 +31,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
             // TODO connection error
             self.initialized = true;
-            System.log.info(null, "Open rabbitmq connexion on " + this.address);
+            System.log.info(null, "Open rabbitmq connexion on " + this.address); // TODO remove password
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;

@@ -21,6 +21,7 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
+import { ExpressAuthentication } from './servers/express/expressAuthentication';
 
 /**
  * Application base class
@@ -120,6 +121,8 @@ export class Application {
         this._container = container || new Container();
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
+
+        this._container.injectSingleton(ExpressAuthentication, DefaultServiceNames.Authentication);
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
