@@ -1,24 +1,68 @@
 import { Inject, DefaultServiceNames } from '../../di/annotations';
 import { ITokenService } from '../../defaults/services';
-import { AuthenticationStrategies } from './auth/authenticationStrategies';
 import { System } from '../../configurations/globals/system';
 import { RequestContext, UserContext } from '../requestContext';
 import * as express from 'express';
 
 export class ExpressAuthentication {
-    private strategies: Array<{ name: string, verify: (ctx: RequestContext, token: string) => Promise<UserContext> }> = [
-        { name: 'bearer', verify: AuthenticationStrategies.bearerAuthentication }
-    ];
+    static readonly Anonymous: UserContext = { id: "_anonymous", name: "anonymous", scopes: [], tenant: null };
 
-    constructor( @Inject("ApiKeyService", true) apiKeys: ITokenService) {
-        if (apiKeys) {
-            // add apiKey as authentication strategies
-            this.addStrategy('apikey', AuthenticationStrategies.apiKeyAuthentication);
+    private strategies = new Map<string, (ctx: RequestContext, token: string) => Promise<UserContext>>();
+
+    constructor( ) {
+        this.addOrReplaceStrategy('bearer', this.bearerAuthentication);
+        this.addOrReplaceStrategy('apikey', this.apiKeyAuthentication);
+    }
+
+    addOrReplaceStrategy(name: string, verify: (ctx: RequestContext, token: string) => Promise<UserContext>) {
+        this.strategies.set(name, verify);
+    }
+
+    private async bearerAuthentication(ctx: RequestContext, accessToken: string) {
+        try {
+            let tokens = ctx.container.get<ITokenService>("TokenService");
+            let token = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
+
+            // No token found
+            if (!token) {
+                System.log.info(ctx, "Bearer authentication: Invalid jwtToken : " + accessToken);
+                return null;
+            }
+
+            token.user.tenant = token.user.tenant || token.tenantId;
+            token.user.scopes = token.scopes;
+            token.user.data = token.user.data || token.data;
+            token.user.bearer = accessToken;
+
+            return token.user;
+        }
+        catch (err) {
+            System.log.error(ctx, err, "Bearer authentication: Error with jwtToken " + accessToken);
+            return null;
         }
     }
 
-    addStrategy(name: string, verify: (ctx: RequestContext, token: string) => Promise<UserContext>) {
-        this.strategies.unshift({ name, verify });
+    private async apiKeyAuthentication(ctx: RequestContext, accessToken: string) {
+        try {
+            let apiKeys = ctx.container.get<ITokenService>("ApiKeyService", true);
+            if (!apiKeys)
+                return null;
+            let token = await apiKeys.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
+
+            // No token found
+            if (!token) {
+                System.log.info(ctx, `ApiKey authentication: Invalid apiKey ${accessToken} for tenant ${ctx.tenant}`);
+                return null;
+            }
+
+            token.user.data = token.user.data || token.data;
+            token.user.scopes = Array.isArray(token.token.scopes) ? token.token.scopes : [<string>token.token.scopes];
+            return token.user;
+        }
+        catch (err) {
+            System.log.error(ctx, err, `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.tenant}`);
+            return null;
+        }
     }
 
     init(testUser: UserContext) {
@@ -47,12 +91,12 @@ export class ExpressAuthentication {
                 }
 
                 let scheme = parts[0], token = parts[1];
-                for (let strategy of this.strategies) {
-                    if (!scheme || scheme.substr(0, strategy.name.length).toLowerCase() !== strategy.name)
+                for (let [strategyName, verify] of this.strategies) {
+                    if (!scheme || scheme.substr(0, strategyName.length).toLowerCase() !== strategyName)
                         continue;
                     if (!token) { throw new Error("Invalid authorization header."); }
 
-                    let user = await strategy.verify(ctx, token);
+                    let user = await verify(ctx, token);
                     if (user) {
                         ctx.user = user;
                         if (ctx.user.tenant) {
@@ -62,7 +106,7 @@ export class ExpressAuthentication {
                             ctx.user.tenant = ctx.tenant;
                         }
                         // For context propagation
-                        if (strategy.name === "bearer")
+                        if (strategyName === "bearer")
                             ctx.bearer = token;
                         next();
                         return;

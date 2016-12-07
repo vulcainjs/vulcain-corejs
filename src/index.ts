@@ -16,7 +16,7 @@ export * from './schemas/schema'
 export * from './schemas/annotations'
 
 // Auth
-export { AuthenticationStrategies } from './servers/express/auth/authenticationStrategies';
+export { ExpressAuthentication } from './servers/express/expressAuthentication';
 export { VerifyTokenParameter } from './defaults/services';
 
 // Core

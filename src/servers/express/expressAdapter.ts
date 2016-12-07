@@ -34,7 +34,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
         let auth = this.container.get<any>(DefaultServiceNames.Authentication, true);
-        this.auth = (auth || container.resolve(ExpressAuthentication)).init(this.testUser);
+        this.auth = auth && auth.init(this.testUser);
     }
 
     private sendResponse(expressResponse: express.Response, response: HttpResponse) {
