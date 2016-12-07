@@ -9,9 +9,6 @@
         "target": "es6",
         "watch": false,
         "noUnusedParameters": false,
-        "noUnusedLocals": false,
-        "types": [
-            "rx/rx.time-lite.d"
-        ]
+        "noUnusedLocals": false
     }
 }
