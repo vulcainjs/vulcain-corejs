@@ -74,7 +74,7 @@ export class EventHandlerFactory {
     {
         let d = domain && domain.toLowerCase() + ".";
         let a = (action && action.toLowerCase()) || "*";
-        let s = (schema && schema.toLowerCase()) || "*";
+        let s = schema || "*";
 
         let items = [];
 

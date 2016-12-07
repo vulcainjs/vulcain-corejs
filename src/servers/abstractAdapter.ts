@@ -119,13 +119,21 @@ export abstract class AbstractAdapter {
             info: Object.assign({}, value)
         };
 
-        delete trace.info.value;
+        trace.info.value = undefined;
 
         if (e) {
             trace.stackTrace = e.stack;
             trace.message = e.message;
         }
         System.log.write(ctx, trace);
+
+        if (value) {
+            value.userContext = undefined;
+            value.source = undefined;
+            value.inputSchema = undefined;
+            value.startedAt = undefined;
+            value.completedAt = undefined;
+        }
     }
 
     private populateFromQuery(request: IHttpRequest) {

@@ -35,7 +35,9 @@ export class VulcainConfigurationSource implements ConfigurationSource
                 request.end(function (response) {
                     if (response.status === 200 && response.body) {
                         if (response.body.error) {
-                            System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
+                            if (!System.isDevelopment) {
+                                System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
+                            }
                         }
                         else {
                             values = new Map<string, ConfigurationItem>();

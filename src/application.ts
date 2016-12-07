@@ -304,8 +304,13 @@ export class Application {
     private registerServicesInternal() {
         this.registerServices(Path.join(this._executablePath, "defaults/services"));
 
-        let path = Conventions.instance.defaultServicesFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
-        this.registerServices(Path.join(this._basePath, path));
+        for (let folder of Conventions.instance.defaultServicesFolderPattern.split(',')) {
+            if (!folder) {
+                continue;
+            }
+            let path = folder.trim().replace("${base}", Conventions.instance.defaultApplicationFolder);
+            this.registerServices(Path.join(this._basePath, path));
+        }
     }
 
     /**

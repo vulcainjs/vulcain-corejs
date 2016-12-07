@@ -46,7 +46,7 @@ export class Conventions {
     defaultApplicationFolder = "/api";
     defaultModelsFolderPattern = "${base}/models";
     defaultHandlersFolderPattern = "${base}/handlers";
-    defaultServicesFolderPattern = "${base}/services";
+    defaultServicesFolderPattern = "${base}/services,${base}/commands";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
     defaultRabbitAddress = "rabbit";

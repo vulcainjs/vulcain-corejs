@@ -220,7 +220,7 @@ export class CommandManager implements IManager {
 
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
-                let result:HttpResponse = await info.handler[info.method](command.params);
+                let result: HttpResponse = await info.handler[info.method](command.params);
 
                 command.status = "Success";
                 let res = this.createResponse(ctx, command);
@@ -229,7 +229,6 @@ export class CommandManager implements IManager {
                     this.messageBus.sendEvent(res);
                 }
 
-                delete res.userContext;
                 if (!(result instanceof HttpResponse)) {
                     res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                     return new VulcainResponse(res);
@@ -246,7 +245,8 @@ export class CommandManager implements IManager {
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
-            return new HttpResponse(this.createResponse(ctx, command, error), e.statusCode);
+            let res = this.createResponse(ctx, command, error);
+            return new HttpResponse(res, e.statusCode);
         }
     }
 
@@ -327,7 +327,7 @@ export class CommandManager implements IManager {
                 }
 
                 try {
-                    handler[info.methodName](evt);
+                    handler[info.methodName](evt.value);
                 }
                 catch (e) {
                     let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
