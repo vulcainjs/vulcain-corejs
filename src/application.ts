@@ -1,5 +1,4 @@
-import { Authentication } from './servers/expressAuthentication';
-import { ApiKeyService } from './auth/apiKeyService';
+import { ApiKeyService } from './defaults/services/apiKeyService';
 import { Preloader } from './preloader';
 import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
@@ -8,7 +7,7 @@ import * as Path from 'path';
 import { Domain } from './schemas/schema';
 import { Container } from './di/containers';
 import { Files } from './utils/files';
-import { ExpressAdapter } from './servers/expressAdapter';
+import { ExpressAdapter } from './servers/express/expressAdapter';
 import 'reflect-metadata';
 import { DefaultServiceNames } from './di/annotations';
 import { IContainer } from "./di/resolvers";
@@ -22,6 +21,7 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
+import { ExpressAuthentication } from './servers/express/expressAuthentication';
 
 /**
  * Application base class
@@ -122,7 +122,7 @@ export class Application {
         this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
 
-        this._container.injectSingleton(Authentication, DefaultServiceNames.Authentication);
+        this._container.injectSingleton(ExpressAuthentication, DefaultServiceNames.Authentication);
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
@@ -196,53 +196,53 @@ export class Application {
      *
      * @param {number} port
      */
-    start(port: number) {
-        this.initializeDefaultServices(this.container);
+    async start(port: number) {
+        try {
+            this.initializeDefaultServices(this.container);
 
-        let local = new LocalAdapter();
-        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
-        if (!eventBus) {
-            this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
-            eventBus = local;
+            let local = new LocalAdapter();
+            let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
+            if (!eventBus) {
+                this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
+                eventBus = local;
+            }
+            let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+            if (!commandBus) {
+                this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
+                commandBus = local;
+            }
+
+            await eventBus.startAsync();
+            await commandBus.startAsync();
+
+            this.registerModelsInternal();
+            this.registerServicesInternal();
+            this.registerHandlersInternal();
+
+            this.initializeServices(this.container);
+
+            Preloader.instance.runPreloads(this.container, this._domain);
+
+            let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
+            this.defineScopes(scopes);
+
+            let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+            descriptors.createHandlersTable();
+
+            this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
+            if (!this.adapter) {
+                this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
+                this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
+                this.initializeServerAdapter(this.adapter);
+                (<ExpressAdapter>this.adapter).initialize();
+            }
+            this.startHystrixStream();
+            this.adapter.start(port);
         }
-        let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
-        if (!commandBus) {
-            this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
-            commandBus = local;
+        catch (err) {
+            System.log.error(null, err, "ERROR when starting application");
+            process.exit(2);
         }
-
-        eventBus.startAsync().then(() => {
-            commandBus.startAsync().then(() => {
-                try {
-                    this.registerModelsInternal();
-                    this.registerServicesInternal();
-                    this.registerHandlersInternal();
-
-                    this.initializeServices(this.container);
-
-                    Preloader.instance.runPreloads(this.container, this._domain);
-
-                    let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
-                    this.defineScopes(scopes);
-
-                    let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-                    descriptors.createHandlersTable();
-
-                    this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
-                    if (!this.adapter) {
-                        this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
-                        this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
-                        this.initializeServerAdapter(this.adapter);
-                        (<ExpressAdapter>this.adapter).initialize();
-                    }
-                    this.startHystrixStream();
-                    this.adapter.start(port);
-                }
-                catch (err) {
-                    System.log.error(null, err);
-                }
-            });
-        });
     }
 
     private registerModelsInternal() {

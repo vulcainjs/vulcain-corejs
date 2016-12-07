@@ -41,8 +41,8 @@ export class SchemaVisitor {
                     if (item === "any" && refValue && refValue.__schema) {
                         item = refValue.__schema;
                     }
-                    let elemSchema = this.domain.findSchemaDescription(item);
-                    if (!elemSchema && item !== "any") {
+                    let elemSchema = item && this.domain.findSchemaDescription(item);
+                    if (!elemSchema) {
                         continue;
                     }
 

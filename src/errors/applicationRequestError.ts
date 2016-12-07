@@ -21,7 +21,7 @@ export class ApplicationRequestError extends Error {
      *
      * @param {ErrorResponse} error
      */
-    constructor(message: string, errors?: Array<ValidationError>, public statusCode=500) {
+    constructor(message: string, errors?: Array<ValidationError>, public statusCode=200) {
         super(message);
         this.errors = errors;
     }

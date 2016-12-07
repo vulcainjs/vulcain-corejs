@@ -2,77 +2,8 @@ import {IContainer} from '../di/resolvers';
 import {LifeTime} from '../di/annotations';
 import {Domain} from '../schemas/schema';
 import {UserContext} from '../servers/requestContext';
+import { HttpResponse } from './response';
 
-/**
- * This class provide a way to customize the http response.
- *
- * @export
- * @class HttpResponse
- */
-export class HttpResponse {
-    /**
-     * Http code (default is 200)
-     *
-     * @type {number}
-     * @memberOf HttpResponse
-     */
-    public statusCode: number;
-    /**
-     * List of response headers
-     *
-     * @type {Map<string, string>}
-     * @memberOf HttpResponse
-     */
-    public headers: Map<string, string>;
-    /**
-     * Define a specific ContentType
-     *
-     * @type {string}
-     * @memberOf HttpResponse
-     */
-    public contentType: string;
-    /**
-     * Response content
-     *
-     * @type {*}
-     * @memberOf HttpResponse
-     */
-    public content: any;
-
-    /**
-     * Content encoding (like binary, hex,...)
-     *
-     * @type {string}
-     * @memberOf HttpResponse
-     */
-    public encoding: string;
-
-    constructor(content?) {
-        this.headers = new Map<string, string>();
-        this.statusCode = 200;
-        this.content = content;
-    }
-
-        /**
-     * Add a custom header value to the response
-     *
-     * @param {string} name
-     * @param {string} value
-     */
-    addHeader(name: string, value: string) {
-        this.headers.set(name, value);
-    }
-}
-
-export class HttpRedirectResponse extends HttpResponse {
-    constructor(url: string) {
-        super();
-        if (!url)
-            throw new Error("Url is required");
-        this.statusCode = 302;
-        this.addHeader("Location", url);
-    }
-}
 
 export interface ValidationError {
     id?: string;
@@ -104,7 +35,7 @@ export interface CommonRequestResponse<T> {
     action: string;
     schema: string;
     error?: ErrorResponse;
-    value?: T;
+    value?: HttpResponse;
     inputSchema?: string;
 }
 
@@ -134,7 +65,7 @@ export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
 export interface IManager {
     container: IContainer;
     getInfoHandler<T>(command: CommonRequestData, container?: IContainer): { handler: Function, metadata: T, method: string, kind: "query" | "action" | "event" };
-    runAsync(command: CommonRequestData, ctx): Promise<CommonRequestResponse<any>>;
+    runAsync(command: CommonRequestData, ctx): Promise<HttpResponse>;
 }
 
 export class HandlerFactory {

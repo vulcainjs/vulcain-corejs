@@ -32,11 +32,11 @@ export class MongoProvider implements IProvider<any>
         private options?) {
         this.options = this.options || {};
         // Try to fix topology was destroy error
-        this.options.socketOptions = this.options.socketOptions || {
+       /* this.options.socketOptions = this.options.socketOptions || {
             noDelay: true,
             connectTimeoutMS: 0,
             socketTimeoutMS: 0
-        };
+        };*/
         if (!uri) {
             throw new Error("Uri is required for mongodb provider.");
         }
@@ -58,10 +58,10 @@ export class MongoProvider implements IProvider<any>
             parts[0] += "/" + tenant;
         url = parts.join('?');
         this.state.uri = url;
-        
+
         this.state.keyPropertyName = schema.getIdProperty() || "_id";
 
-        this.ctx.logVerbose(`MONGODB: Creating provider ${this.state.uri} for schema ${schema.name}`);
+        this.ctx.logVerbose(`MONGODB: Creating provider ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
 
         let keys;
         for (let p in schema.description.properties) {

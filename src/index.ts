@@ -16,8 +16,7 @@ export * from './schemas/schema'
 export * from './schemas/annotations'
 
 // Auth
-export { AuthenticationStrategies } from './auth/authenticationStrategies';
-export { ApiKeyStrategy } from './auth/apiKeyStrategy';
+export { ExpressAuthentication } from './servers/express/expressAuthentication';
 export { VerifyTokenParameter } from './defaults/services';
 
 // Core
@@ -30,9 +29,9 @@ export * from './pipeline/annotations'
 export { EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/actions';
 export { QueryData, QueryActionMetadata, QueryMetadata, QueryResponse } from './pipeline/query';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/abstractHandlers';
-export { ValidationError, HttpResponse, HttpRedirectResponse } from './pipeline/common';
+export { ValidationError } from './pipeline/common';
+export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
-import { HttpRedirectResponse } from './pipeline/common';
 import { ForbiddenRequestError } from './errors/applicationRequestError';
 
 export { AbstractAdapter } from './servers/abstractAdapter';

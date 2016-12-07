@@ -12,7 +12,7 @@ export class DefaultServiceNames {
     static TokenService = "TokenService";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";
-    
+
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static "Authentication" = "Authentication";

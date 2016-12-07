@@ -30,7 +30,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
             // TODO connection error
             self.initialized = true;
-            System.log.info(null, "Open rabbitmq connexion on " + this.address);
+            System.log.info(null, "Open rabbitmq connexion on " + System.removePasswordFromUrl(this.address)); // TODO remove password
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;

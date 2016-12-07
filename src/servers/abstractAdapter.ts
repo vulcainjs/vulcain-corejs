@@ -3,18 +3,35 @@ import * as http from 'http';
 import { IContainer } from '../di/resolvers';
 import { CommandManager, ActionMetadata } from '../pipeline/actions';
 import { QueryManager } from '../pipeline/query';
-import { IManager, HttpResponse } from '../pipeline/common';
-import { RequestContext, UserContext } from './requestContext';
+import { IManager } from '../pipeline/common';
+import { RequestContext, UserContext, Pipeline } from './requestContext';
 import { DefaultServiceNames } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { BadRequestError } from './../errors/badRequestError';
+import { HttpResponse, BadRequestResponse } from '../pipeline/response';
+import { ITenantPolicy } from '../servers/policy/defaultTenantPolicy';
+import { QueryData } from '../pipeline/query';
+import { ErrorMessage } from '../schemas/schema';
+import { MessageBus } from '../pipeline/messageBus';
+import { IHttpResponse } from '../commands/command/types';
+const guid = require('uuid');
+
+// internal
+export interface IHttpRequest {
+    readonly body;
+    readonly params;
+    readonly query;
+    readonly headers: { [name: string]: string };
+    readonly hostname: string;
+    readonly user: UserContext;
+}
 
 export abstract class AbstractAdapter {
     private commandManager: CommandManager;
     private queryManager;
-    private testUser: UserContext;
+    protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
 
@@ -41,12 +58,27 @@ export abstract class AbstractAdapter {
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
 
-    protected startRequest(command) {
+    private startRequest(command) {
         // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
 
-    protected endRequest(begin: [number, number], response, ctx: RequestContext, e?: Error) {
+    protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpRequest);
+
+    protected createRequestContext(request: IHttpRequest) {
+        let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
+
+        // Initialize headers & hostname
+        this.initializeRequestContext(ctx, request);
+
+        ctx.correlationId = ctx.headers["X-VULCAIN-CORRELATION-ID"] || guid.v4();
+        ctx.correlationPath = ctx.headers["X-VULCAIN-CORRELATION-PATH"] || "-";
+
+        let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
+        ctx.tenant = tenantPolicy.resolveTenant(ctx, request);
+    }
+
+    private endRequest(begin: [number, number], response, ctx: RequestContext, e?: Error) {
         let value = response.value;
         let hasError = false;
         let prefix: string;
@@ -96,85 +128,137 @@ export abstract class AbstractAdapter {
         System.log.write(ctx, trace);
     }
 
-    protected executeQueryRequest(query, ctx) {
-        return this.executeRequestInternal(this.queryManager, query, ctx);
-    }
-
-    protected executeCommandRequest(command, ctx) {
-        return this.executeRequestInternal(this.commandManager, command, ctx);
-    }
-
-    private executeRequestInternal(manager: IManager, command, ctx: RequestContext): Promise<{ code: number, value: any, headers: Map<string, string> }> {
-        let self = this;
-        return new Promise((resolve, reject) => {
-            let headers = new Map<string, string>();
-            if (!command || !command.domain) {
-                resolve({ value: "domain is required.", code: 400, headers: headers });
-                return;
+    private populateFromQuery(request: IHttpRequest) {
+        let params = {};
+        let count = 0;;
+        Object.keys(request.query).forEach(name => {
+            switch (name) {
+                case "$action":
+                case "$schema":
+                case "$page":
+                case "$maxByPage":
+                    break;
+                case "$query":
+                    params = JSON.parse(request.query[name]);
+                    break;
+                default:
+                    count++;
+                    params[name] = request.query[name];
             }
-            if (command.domain.toLowerCase() !== self.domainName.toLowerCase()) {
-                resolve({ value: "this service doesn't belong to domain " + self.domainName, code: 400, headers: headers });
-                return;
-            }
-
-            try {
-                // Check if handler exists
-                let info = manager.getInfoHandler<ActionMetadata>(command);
-                // Force test user only if there is no authorization
-                if (!ctx.user && this.testUser && !ctx.headers["authorization"]) {
-                    ctx.user = this.testUser;
-                    ctx.tenant = ctx.tenant || ctx.user.tenant;
-                    System.log.info(ctx, `Request context - force test user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.tenant}`);
-                }
-                else {
-                    System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
-                }
-
-                // Verify authorization
-                if (!ctx.hasScope(info.metadata.scope)) {
-                    System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope=${info.metadata.scope} `);
-                    resolve({ code: 403, status: "Unauthorized", value: { error: { message: http.STATUS_CODES[403] } } });
-                    return;
-                }
-            }
-            catch (e) {
-                reject(e);
-                return;
-            }
-
-            // Execute handler
-            manager.runAsync(command, ctx)
-                .then(result => {
-                    if (result instanceof HttpResponse) {
-                        if (command.correlationId) {
-                            result.addHeader("X-VULCAIN-CORRELATION-ID", command.correlationId);
-                        }
-                        resolve(result);
-                    }
-                    else {
-                        if (command.correlationId) {
-                            headers.set("X-VULCAIN-CORRELATION-ID", command.correlationId);
-                        }
-                        if (result) {
-                            delete result.userContext;
-                        }
-                        // TODO https://github.com/phretaddin/schemapack
-                        resolve({ value: result, headers: headers });
-                    }
-                    ctx.dispose();
-                })
-                .catch(result => {
-                    // Normalize error
-                    if (result instanceof BadRequestError) {
-                        resolve({ code: 400, value: { status: "Error", error: { message: result.message } }, headers: headers });
-                        return;
-                    }
-                    else if (result instanceof Error) {
-                        result = { status: "Error", error: { message: result.message } };
-                    }
-                    resolve({ code: 500, value: result, headers: headers });
-                    ctx.dispose();
-                });
         });
+        return { params, count };
+    }
+
+    private populateWithActionSchema(action, request, defaultAction?) {
+        let a: string;
+        let s: string;
+
+        if (request.params.schemaAction) {
+            if (request.params.schemaAction.indexOf('.') >= 0) {
+                let parts = request.params.schemaAction.split('.');
+                s = parts[0];
+                a = parts[1];
+            }
+            else {
+                a = request.params.schemaAction;
+            }
+        }
+        else {
+            a = request.query.$action;
+            s = request.query.$schema;
+        }
+        action.action = action.action || a || defaultAction;
+        action.schema = action.schema || s;
+    }
+
+    private normalizeCommand(request: IHttpRequest) {
+        let action = request.body;
+
+        // Body contains only data -> create a new action object
+        if (!action.action && !action.params && !action.schema) {
+            action = { params: action };
+        }
+        action.domain = this.domainName;
+        this.populateWithActionSchema(action, request);
+        action.params = action.params || {};
+        return action;
+    }
+
+    protected async executeQueryRequest(request: IHttpRequest, ctx: RequestContext) {
+
+        if (request.user) {
+            ctx.user = request.user;
+        }
+
+        let query: QueryData = <any>{ domain: this.domainName };
+        this.populateWithActionSchema(query, request, "all");
+        if (query.action === "get") {
+            if (!request.params.id) {
+                return new BadRequestResponse("Id is required");
+            }
+
+            let requestArgs = this.populateFromQuery(request);
+            if (requestArgs.count === 0) {
+                query.params = request.params.id;
+            }
+            else {
+                query.params = requestArgs.params;
+                query.params.id = request.params.id;
+            }
+        }
+        else {
+            query.maxByPage = (request.query.$maxByPage && parseInt(request.query.$maxByPage)) || 100;
+            query.page = (request.query.$page && parseInt(request.query.$page)) || 0;
+            query.params = this.populateFromQuery(request).params;
+        }
+        return await this.executeRequest(this.queryManager, query, ctx);
+    }
+
+    protected executeActionRequest(request: IHttpRequest, ctx: RequestContext, command?) {
+        if (request.user) {
+            ctx.user = request.user;
+        }
+        command = command || this.normalizeCommand(request);
+        return this.executeRequest(this.commandManager, command, ctx);
+    }
+
+    private async executeRequest(manager: IManager, command, ctx: RequestContext): Promise<HttpResponse> {
+        const begin = this.startRequest(command);
+
+        if (!command || !command.domain) {
+            return new BadRequestResponse("domain is required.");
+        }
+        if (command.domain.toLowerCase() !== this.domainName.toLowerCase()) {
+            return new BadRequestResponse("this service doesn't belong to domain " + this.domainName);
+        }
+        try {
+            // Check if handler exists
+            let info = manager.getInfoHandler<ActionMetadata>(command);
+            System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+
+            // Verify authorization
+            if (!ctx.hasScope(info.metadata.scope)) {
+                System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope=${info.metadata.scope} `);
+                return new HttpResponse({ error: { message: http.STATUS_CODES[403] } }, 403);
+            }
+
+            // Process handler
+            let result: HttpResponse = await manager.runAsync(command, ctx);
+            if (result && command.correlationId) {
+                result.addHeader("X-VULCAIN-CORRELATION-ID", command.correlationId);
+            }
+            // Response
+            this.endRequest(begin, result, ctx);
+            return result;
+        }
+        catch (e) {
+            let result = command;
+            result.error = { message: e.message || e, errors: e.errors };
+            this.endRequest(begin, result, ctx, e);
+            return new HttpResponse(result, e.statusCode);
+        }
+        finally {
+            ctx && ctx.dispose();
+        }
     }
 }
