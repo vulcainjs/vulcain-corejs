@@ -196,53 +196,53 @@ export class Application {
      *
      * @param {number} port
      */
-    start(port: number) {
-        this.initializeDefaultServices(this.container);
+    async start(port: number) {
+        try {
+            this.initializeDefaultServices(this.container);
 
-        let local = new LocalAdapter();
-        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
-        if (!eventBus) {
-            this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
-            eventBus = local;
+            let local = new LocalAdapter();
+            let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
+            if (!eventBus) {
+                this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
+                eventBus = local;
+            }
+            let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+            if (!commandBus) {
+                this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
+                commandBus = local;
+            }
+
+            await eventBus.startAsync();
+            await commandBus.startAsync();
+
+            this.registerModelsInternal();
+            this.registerServicesInternal();
+            this.registerHandlersInternal();
+
+            this.initializeServices(this.container);
+
+            Preloader.instance.runPreloads(this.container, this._domain);
+
+            let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
+            this.defineScopes(scopes);
+
+            let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+            descriptors.createHandlersTable();
+
+            this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
+            if (!this.adapter) {
+                this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
+                this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
+                this.initializeServerAdapter(this.adapter);
+                (<ExpressAdapter>this.adapter).initialize();
+            }
+            this.startHystrixStream();
+            this.adapter.start(port);
         }
-        let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
-        if (!commandBus) {
-            this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
-            commandBus = local;
+        catch (err) {
+            System.log.error(null, err, "ERROR when starting application");
+            process.exit(2);
         }
-
-        eventBus.startAsync().then(() => {
-            commandBus.startAsync().then(() => {
-                try {
-                    this.registerModelsInternal();
-                    this.registerServicesInternal();
-                    this.registerHandlersInternal();
-
-                    this.initializeServices(this.container);
-
-                    Preloader.instance.runPreloads(this.container, this._domain);
-
-                    let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
-                    this.defineScopes(scopes);
-
-                    let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-                    descriptors.createHandlersTable();
-
-                    this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
-                    if (!this.adapter) {
-                        this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
-                        this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
-                        this.initializeServerAdapter(this.adapter);
-                        (<ExpressAdapter>this.adapter).initialize();
-                    }
-                    this.startHystrixStream();
-                    this.adapter.start(port);
-                }
-                catch (err) {
-                    System.log.error(null, err);
-                }
-            });
-        });
     }
 
     private registerModelsInternal() {
