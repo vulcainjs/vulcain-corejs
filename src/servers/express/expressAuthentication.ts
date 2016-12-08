@@ -38,7 +38,7 @@ export class ExpressAuthentication {
         }
         catch (err) {
             System.log.error(ctx, err, "Bearer authentication: Error with jwtToken " + accessToken);
-            return null;
+            throw err;
         }
     }
 
@@ -61,7 +61,7 @@ export class ExpressAuthentication {
         }
         catch (err) {
             System.log.error(ctx, err, `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.tenant}`);
-            return null;
+            throw err;
         }
     }
 
@@ -114,11 +114,11 @@ export class ExpressAuthentication {
                 }
             }
             catch (err) {
-                ctx.logInfo(err.message);
+                ctx.logError(err, "Authentication error");
             }
 
-            res.statusCode = 401;
-            res.end();
+            res.status(401);
+            res.send();
         };
     };
 }

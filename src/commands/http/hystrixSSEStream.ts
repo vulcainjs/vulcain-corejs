@@ -4,11 +4,10 @@ import ActualTime from "../../utils/actualTime";
 import RollingNumberEvent from "../metrics/hystrix/rollingNumberEvent";
 import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
 import * as rx from 'rx';
-import 'rx/rx.lite';
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {
-        let observableMetrics = rx.Observable
+        let observableMetrics = (<any>rx.Observable)
             .interval(delay)
             .flatMap(() => {
 

@@ -44,11 +44,11 @@ export interface IProvider<T>
      *
      * @param {string} tenant - The tenant to use
      * @param {Schema} schema - The schema to persist
-     * @returns {Promise<any>} If the method returns a state object, it will be store in a pool where the key is tenant,schema
+     * @returns {Promise<<()=>void>} Dispose function
      *
      * @memberOf IProvider
      */
-    initializeWithSchemaAsync(tenant: string, schema: Schema): Promise<any>;
+    initializeWithSchemaAsync(tenant: string, schema: Schema): Promise<() => Promise<any>>;
     /**
      * Find an entity
      *

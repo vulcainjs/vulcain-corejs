@@ -1,12 +1,16 @@
-import { Injectable, LifeTime } from '../di/annotations';
+import { Injectable, LifeTime, Inject } from '../di/annotations';
 import { DefaultServiceNames } from '../di/annotations';
 import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';
 import { IContainer } from '../di/resolvers';
+import { HandlerItem } from '../pipeline/serviceDescriptions';
+import { System } from '../configurations/globals/system';
+import { RequestContext } from '../servers/requestContext';
 
 interface PoolItem {
-    state: any;
-    count: number;
+    provider?: IProvider<any>;
+    count?: number;
+    dispose?: () => Promise<any>;
 }
 
 @Injectable(LifeTime.Singleton, DefaultServiceNames.ProviderFactory)
@@ -16,7 +20,8 @@ export class ProviderFactory {
     constructor(public maxPoolSize = 20) {
     }
 
-    private addToPool(key: string, state) {
+    private addToPool(key: string, item: PoolItem) {
+        System.log.info(null, "Adding a new provider pool item : " + key);
         if (this.pool.size >= this.maxPoolSize) {
             // remove the least used
             let keyToRemove;
@@ -28,33 +33,33 @@ export class ProviderFactory {
                 }
             }
             let item = this.pool.get(keyToRemove);
-            item.state.dispose && item.state.dispose();
+            item.dispose && item.dispose();
             this.pool.delete(keyToRemove);
+            System.log.info(null, "Ejecting " + keyToRemove + " from provider pool item.");
         }
-        this.pool.set(key, { count: 1, state });
+        item.count = 1;
+        this.pool.set(key, item);
     }
 
     private getFromPool(key: string) {
         let item = this.pool.get(key);
         if (item) {
             item.count++;
-            return item.state;
+            return item.provider;
         }
     }
 
-    async getProviderAsync(container: IContainer, tenant: string, schema: Schema) {
-        let key = tenant + "!" + schema.name;
-
-        let provider = container.get<IProvider<any>>(DefaultServiceNames.Provider, false, LifeTime.Transient | LifeTime.Scoped);
-        let state = this.getFromPool(key);
-        if (state) {
-            (<any>provider).state = state;
+    async getProviderAsync(context: RequestContext, tenant: string, schema: Schema, providerName: string = DefaultServiceNames.Provider) {
+        let poolKey = providerName + tenant;
+        let provider = this.getFromPool(poolKey);
+        if (provider) {
+            return provider;
         }
         else {
-            state = await provider.initializeWithSchemaAsync(tenant, schema);
-            if (state) {
-                this.addToPool(key, state);
-            }
+            provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
+            let item: PoolItem = {provider};
+            item.dispose = await provider.initializeWithSchemaAsync(tenant, schema);
+            this.addToPool(poolKey, item);
         }
 
         return provider;

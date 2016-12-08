@@ -43,7 +43,7 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri };
     }
 
-    initializeWithSchemaAsync(tenant: string, schema: Schema): any {
+    initializeWithSchemaAsync(tenant: string, schema: Schema) {
         if (!schema)
             throw new Error("schema is not set for provider.");
         if (!tenant)
@@ -83,29 +83,27 @@ export class MongoProvider implements IProvider<any>
             MongoClient.connect(state.uri, options, (err, db) => {
                 if (err) {
                     reject(err);
-                    System.log.error(null, err, `MONGODB: Error when opening database ${state.uri} for schema ${schema.name}`);
+                    System.log.error(null, err, `MONGODB: Error when opening database ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
                     return;
                 }
 
                 state._mongo = db;
-
-                state.dispose = () => {
-                    db.close();
-                };
 
                 if (keys) {
                     let indexName = schema.description.storageName + "_uniqueIndex";
                     db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
                         (err) => {
                             if (err) {
-                                System.log.error(null, err, `MONGODB: Error when creating index for ${state.uri} for schema ${schema.name}`);
+                                System.log.error(null, err, `MONGODB: Error when creating index for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
                             }
                             else {
-                                System.log.info(null, `MONGODB: Unique index created for ${state.uri} for schema ${schema.name}`);
+                                System.log.info(null, `MONGODB: Unique index created for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
                             }
                         });
                 }
-                resolve(state);
+                resolve(() => {
+                    db.close();
+                });
             });
         });
     }

@@ -52,7 +52,7 @@ export class MemoryProvider implements IProvider<any>
                 this.state.data = JSON.parse(fs.readFileSync(this.state.saveToFile, "UTF-8"));
             }
         }
-        return Promise.resolve(this.state);
+        return Promise.resolve(null);
     }
 
     private save(schema: Schema) {
