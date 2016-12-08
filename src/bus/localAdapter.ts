@@ -18,7 +18,7 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         }, (1));
     }
 
-    listenEvents(domain: string, handler: Function) {
+    consumeEvents(domain: string, handler: Function) {
         this.eventHandler = handler;
     }
 
@@ -30,7 +30,7 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         }, (1));
     }
 
-    listenTasks(domain: string, serviceId: string, handler: Function) {
+    consumeTask(domain: string, serviceId: string, handler: Function) {
         this.commandHandler = handler;
     }
 }

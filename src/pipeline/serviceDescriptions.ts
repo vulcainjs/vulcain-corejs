@@ -146,7 +146,7 @@ export class ServiceDescriptors {
             this.routes.set(verb, item);
 
             let metadata = <ActionMetadata>item.metadata;
-            metadata.scope = this.checkScopes(scopes, metadata.scope, verb);
+            metadata.scope = this.checkScopes(scopes, metadata, verb);
             metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema, schema);
             metadata.outputSchema = !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema);
 
@@ -188,7 +188,7 @@ export class ServiceDescriptors {
             let metadata = <QueryActionMetadata>item.metadata;
             metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema);
             metadata.outputSchema = this.getSchemaDescription(schemas, metadata.outputSchema, schema);
-            metadata.scope = this.checkScopes(scopes, metadata.scope, verb);
+            metadata.scope = this.checkScopes(scopes, metadata, verb);
 
             let desc: ActionDescription = {
                 schema: schema,
@@ -213,8 +213,17 @@ export class ServiceDescriptors {
         this.handlers = null;
     }
 
-    private checkScopes(scopes, scope: string, verb:string): string {
+    private checkScopes(scopes: ScopesDescriptor, metadata: CommonActionMetadata, verb: string): string {
+        let scope = metadata.scope;
         if (!scope || scope === "?" || scope === "*") return scope;
+
+        if (scope === '.') {
+            scope = System.domainName + ":" + verb.replace('.', ':');
+            if (!scopes.getScopes().find(s => s.name === scope)) {
+                scopes.defineScope(scope, metadata.description);
+            }
+            return scope;
+        }
 
         let parts = scope.split(',');
         let result = [];

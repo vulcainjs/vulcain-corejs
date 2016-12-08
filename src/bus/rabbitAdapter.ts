@@ -70,7 +70,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    listenEvents(domain: string, handler: Function) {
+    consumeEvents(domain: string, handler: Function) {
         if (!this.channel)
             return;
         let self = this;
@@ -126,7 +126,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    listenTasks(domain: string, serviceId: string, handler: Function) {
+    consumeTask(domain: string, serviceId: string, handler: Function) {
         if (!this.channel)
             return;
         let self = this;
