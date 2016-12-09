@@ -152,7 +152,7 @@ export class MongoProvider implements IProvider<any>
                         reject(err);
                     }
                     else {
-                        this.ctx.logVerbose(`MONGODB: Get all query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query: ${JSON.stringify(query)} returns ${res.length} values.`);
+                        this.ctx.logVerbose(`MONGODB: Get all query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query: ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
                         resolve(res);
                     }
                 });
@@ -178,7 +178,7 @@ export class MongoProvider implements IProvider<any>
                             reject(err);
                         }
                         else {
-                            this.ctx.logVerbose(`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${res.length} values.`);
+                            this.ctx.logVerbose(`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
 
                             resolve(res);
                         }
