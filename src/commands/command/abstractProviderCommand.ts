@@ -69,7 +69,7 @@ export abstract class AbstractProviderCommand<T> {
     async setSchemaAsync(schema: string): Promise<any> {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.tenant, this.schema);
+            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.tenant);
             this.initializeMetricsInfo();
         }
     }

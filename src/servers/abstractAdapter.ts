@@ -114,21 +114,28 @@ export abstract class AbstractAdapter {
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
 
+        // Always remove userContext
+        if (value) {
+            value.userContext = undefined;
+        }
+
         let trace: any = {
             duration: ms,
             info: Object.assign({}, value)
         };
 
+        // Remove result value for trace
         trace.info.value = undefined;
 
         if (e) {
             trace.stackTrace = e.stack;
             trace.message = e.message;
         }
+
         System.log.write(ctx, trace);
 
+        // Normalize return value
         if (value) {
-            value.userContext = undefined;
             value.source = undefined;
             value.inputSchema = undefined;
             value.startedAt = undefined;

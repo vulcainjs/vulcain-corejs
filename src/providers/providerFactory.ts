@@ -49,8 +49,9 @@ export class ProviderFactory {
         }
     }
 
-    async getProviderAsync(context: RequestContext, tenant: string, schema: Schema, providerName: string = DefaultServiceNames.Provider) {
-        let poolKey = providerName + tenant;
+    async getProviderAsync(context: RequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
+        tenant = tenant || context.tenant;
+        let poolKey = providerName + "!" + tenant;
         let provider = this.getFromPool(poolKey);
         if (provider) {
             return provider;
@@ -58,7 +59,7 @@ export class ProviderFactory {
         else {
             provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
             let item: PoolItem = {provider};
-            item.dispose = await provider.initializeWithSchemaAsync(tenant, schema);
+            item.dispose = await provider.initializeTenantAsync(tenant);
             this.addToPool(poolKey, item);
         }
 

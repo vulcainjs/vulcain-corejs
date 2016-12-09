@@ -43,12 +43,11 @@ export interface IProvider<T>
      * Initialize the provider with a tenant and a schema.
      *
      * @param {string} tenant - The tenant to use
-     * @param {Schema} schema - The schema to persist
-     * @returns {Promise<<()=>void>} Dispose function
+     * @returns {Promise<() => Promise<any>>} Dispose function
      *
      * @memberOf IProvider
      */
-    initializeWithSchemaAsync(tenant: string, schema: Schema): Promise<() => Promise<any>>;
+    initializeTenantAsync(tenant: string): Promise<() => Promise<any>>;
     /**
      * Find an entity
      *
