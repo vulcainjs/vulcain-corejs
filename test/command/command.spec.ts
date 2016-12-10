@@ -12,64 +12,56 @@ import { TestContainer } from '../../dist/di/containers';
 let container = new TestContainer("Test");
 
 describe("Command", function () {
-    it("should resolve with expected results", async (done) => {
-        var command = await CommandFactory.getAsync("TestCommand", container.scope.requestContext);
+    it("should resolve with expected results", async () => {
+        let command = await CommandFactory.getAsync("TestCommand", container.scope.requestContext);
         expect(command).not.to.be.undefined;
 
-        command.executeAsync<string>("success").then(function (result) {
-            expect(result).to.be.equal("success");
-            var metrics = CommandMetricsFactory.get("TestCommand");
-            expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
-            expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(0);
-            done();
-        });
+        let result = await command.executeAsync<string>("success");
+        expect(result).to.be.equal("success");
+        let metrics = CommandMetricsFactory.get("TestCommand");
+        expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
+        expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(0);
     });
 
-    it("should timeout if the function does not resolve within the configured timeout", async (done) => {
-        var command = await CommandFactory.getAsync("TestCommandTimeout", container.scope.requestContext);
+    it("should timeout if the function does not resolve within the configured timeout", async () => {
+        let command = await CommandFactory.getAsync("TestCommandTimeout", container.scope.requestContext);
 
         expect(command).not.to.be.undefined;
-        command.executeAsync("success")
-            .then(function () {
-                done(new Error("Must fail"));
-            })
-            .catch(function (err) {
-                expect(err).to.be.instanceOf(CommandRuntimeError); // no fallback
+        try {
+            await command.executeAsync("success");
+            expect.fail();
+        }
+        catch (err) {
+            expect(err).to.be.instanceOf(CommandRuntimeError); // no fallback
 
-                var metrics = CommandMetricsFactory.get("TestCommandTimeout");
-                expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
-                expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(1);
-                done();
-            }
-            );
-    });
-
-    it("should resolve with fallback if the run function fails", async (done) => {
-        var command = await CommandFactory.getAsync("TestCommandFallback", container.scope.requestContext);
-
-        command.executeAsync("success").then(function (result) {
-            expect(result).to.be.equal("fallback");
-            var metrics = CommandMetricsFactory.get("TestCommandFallback");
+            let metrics = CommandMetricsFactory.get("TestCommandTimeout");
             expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
             expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(1);
-            done();
-        });
+        }
     });
 
-    it("should not execute the run command, if the circuit is open", async (done) => {
-        var command = await CommandFactory.getAsync("TestCommandCircuitOpen", container.scope.requestContext);
-        var spy = sinon.spy((<any>command).command, "runAsync");
+    it("should resolve with fallback if the run function fails", async () => {
+        let command = await CommandFactory.getAsync("TestCommandFallback", container.scope.requestContext);
 
-        var metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
-        command.executeAsync("success").then(function (result) {
-            expect(result).to.be.equal("fallback");
-            expect(spy.notCalled);
-            done();
-        });
+        let result = await command.executeAsync("success");
+        expect(result).to.be.equal("fallback");
+        let metrics = CommandMetricsFactory.get("TestCommandFallback");
+        expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
+        expect((<HystrixCommandMetrics>metrics).getHealthCounts().errorCount).to.be.equal(1);
+    });
+
+    it("should not execute the run command, if the circuit is open", async () => {
+        let command = await CommandFactory.getAsync("TestCommandCircuitOpen", container.scope.requestContext);
+        let spy = sinon.spy((<any>command).command, "runAsync");
+
+        let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
+        let result = await command.executeAsync("success");
+        expect(result).to.be.equal("fallback");
+        expect(spy.notCalled);
     });
 
     /*   it("should execute the run command, if the circuit volume threshold is not reached", function(done) {
-           var object = {
+           let object = {
                run:function() {
                     return new Promise((resolve, reject) => {
                        reject(new Error("error"));
@@ -78,7 +70,7 @@ describe("Command", function () {
            };
 
            spyOn(object, "run").and.callThrough();
-           var command = CommandFactory.get("TestCommandThresholdNotReached")
+           let command = CommandFactory.get("TestCommandThresholdNotReached")
                .run(object.run)
                .fallbackTo(function(err) {
                    return q.resolve("fallback");
@@ -87,7 +79,7 @@ describe("Command", function () {
                .circuitBreakerRequestVolumeThreshold(3)
                .build();
 
-               var metrics = CommandMetricsFactory.get("TestCommandThresholdNotReached");
+               let metrics = CommandMetricsFactory.get("TestCommandThresholdNotReached");
            metrics.incrementExecutionCount();
            metrics.markFailure();
            metrics.markFailure();
@@ -100,7 +92,7 @@ describe("Command", function () {
 
        it("should return fallback and not mark failure, if the command failed but with expected error", function() {
 
-           var command = CommandFactory.get("TestCommandErrorHandler")
+           let command = CommandFactory.get("TestCommandErrorHandler")
                .run(function() {
                     return new Promise((resolve, reject) => {
                        reject(new Error("custom-error"));
@@ -119,28 +111,28 @@ describe("Command", function () {
                .circuitBreakerRequestVolumeThreshold(0)
                .build();
 
-               var metrics = CommandMetricsFactory.get("TestCommandErrorHandler");
+               let metrics = CommandMetricsFactory.get("TestCommandErrorHandler");
            command.executeAsync().then(function(result) {
                expect(result).to.be.equal("fallback");
-               var errorCount = metrics.getHealthCounts().errorCount;
+               let errorCount = metrics.getHealthCounts().errorCount;
                expect(errorCount).to.be.equal(0);
                done();
            });
        });
 
        it("should reject request immediately, if the request volume threshold is reached", function(done) {
-           var run = function(arg) {
+           let run = function(arg) {
                return q.Promise(function(resolve, reject, notify) {
                    resolve(arg);
                });
            };
 
-           var command = CommandFactory.get("VolumeThresholdCommand")
+           let command = CommandFactory.get("VolumeThresholdCommand")
                .run(run)
                .requestVolumeRejectionThreshold(2)
                .build();
 
-               var metrics = CommandMetricsFactory.get("VolumeThresholdCommand");
+               let metrics = CommandMetricsFactory.get("VolumeThresholdCommand");
            metrics.incrementExecutionCount();
            metrics.incrementExecutionCount();
            command.executeAsync("success").then(failTest(done)).fail(function(error) {
@@ -151,7 +143,7 @@ describe("Command", function () {
        });
 
        it("should execute fallback, if the request volume threshold is reached", function(done) {
-           var object = {
+           let object = {
                run:function() {
                     return new Promise((resolve, reject) => {
                        reject(new Error("error"));
@@ -160,7 +152,7 @@ describe("Command", function () {
            };
 
            spyOn(object, "run").and.callThrough();
-           var command = CommandFactory.get("VolumeThresholdCommandFallback")
+           let command = CommandFactory.get("VolumeThresholdCommandFallback")
                .run(object.run)
                .fallbackTo(function(err) {
                    return q.resolve("fallback");
@@ -168,7 +160,7 @@ describe("Command", function () {
                .requestVolumeRejectionThreshold(2)
                .build();
 
-               var metrics = CommandMetricsFactory.get("VolumeThresholdCommandFallback");
+               let metrics = CommandMetricsFactory.get("VolumeThresholdCommandFallback");
            metrics.incrementExecutionCount();
            metrics.incrementExecutionCount();
            command.executeAsync("success").then(function(result) {

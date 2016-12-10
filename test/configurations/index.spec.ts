@@ -13,8 +13,8 @@ describe('DynamicConfiguration', function () {
     it('should have default values', function () {
 
         expect(DynamicConfiguration.getProperty("test")).to.be.undefined;
-        let p = DynamicConfiguration.getOrCreateProperty("test", 0);
-        expect(p.value).to.equal(0);
+        let p = DynamicConfiguration.getOrCreateProperty("test", 10);
+        expect(p.value).to.equal(10);
     });
 
     it('should create property', function () {
@@ -41,10 +41,11 @@ describe('DynamicConfiguration', function () {
     it('should raise changed event', function () {
 
         let cx = 0;
-        DynamicProperties.instance.propertyChanged.subscribe((property) => {
-            if (property.name === "test") cx += property.value;
-        }
-        );
+        DynamicProperties.instance.propertyChanged
+            .where( p => p.name === "test")
+            .subscribe((property) => {
+                cx += property.value;
+            });
 
         let prop = DynamicConfiguration.asProperty(10, "test");
         prop.set(15);
@@ -55,8 +56,6 @@ describe('DynamicConfiguration', function () {
     });
 
     it('should support different types', function () {
-
-
         expect(10).to.equal(DynamicConfiguration.asProperty(10, "test").value);
         expect(2.0).to.equal(DynamicConfiguration.asProperty(2.0, "test2").value);
         expect("xxx").to.equal(DynamicConfiguration.asProperty("xxx", "test3").value);

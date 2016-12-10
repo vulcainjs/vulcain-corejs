@@ -19,7 +19,7 @@ describe('SystemHelper', function () {
 
     it('should expected an error with querystring and path', function () {
         expect(function () {
-            System.createUrl("http://localhost:8080/api/alert?type=RED", "id")
+            System.createUrl("http://localhost:8080/api/alert?type=RED", "id");
         }).to.throw(Error);
     });
 

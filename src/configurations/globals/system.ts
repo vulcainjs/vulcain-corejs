@@ -56,7 +56,7 @@ export class System {
     }
 
     /**
-     * Calculate a diff with a date from now in seconds
+     * Calculate a diff with a date from now in seconds using moment
      *
      * @static
      * @param {string} date in utc string format

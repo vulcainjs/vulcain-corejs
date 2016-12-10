@@ -215,9 +215,7 @@ export class Application {
             await eventBus.startAsync();
             await commandBus.startAsync();
 
-            this.registerModelsInternal();
-            this.registerServicesInternal();
-            this.registerHandlersInternal();
+            this.registerComponents();
 
             this.initializeServices(this.container);
 
@@ -245,11 +243,27 @@ export class Application {
         }
     }
 
-    private registerModelsInternal() {
-        this.registerModels(Path.join(this._executablePath, "defaults/models"));
+    private registerComponents() {
+        this.registerRecursive(Path.join(this._executablePath, "defaults/models"));
+        this.registerRecursive(Path.join(this._executablePath, "defaults/handlers"));
+        this.registerRecursive(Path.join(this._executablePath, "defaults/services"));
 
-        let path = Conventions.instance.defaultModelsFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
-        this.registerModels(Path.join(this._basePath, path));
+        let path = Conventions.instance.defaultApplicationFolder;
+        this.registerRecursive(Path.join(this._basePath, path));
+    }
+
+    /**
+     * Discover models components
+     * @param path Where to find models component relative to base path (default=/api/models)
+     * @returns {Container}
+     */
+    private registerRecursive(path: string) {
+        if (!Path.isAbsolute(path)) {
+            path = Path.join(this._basePath, path);
+        }
+        Files.traverse(path);
+
+        return this._container;
     }
 
     /**
@@ -264,67 +278,6 @@ export class Application {
             path = Path.join(this._basePath, path);
         }
         this._container.injectFrom(path);
-        return this._container;
-    }
-
-    /**
-     * Discover models components
-     * @param path Where to find models component relative to base path (default=/api/models)
-     * @returns {Container}
-     */
-    private registerModels(path: string) {
-        if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
-        }
-        Files.traverse(path);
-
-        return this._container;
-    }
-
-    private registerHandlersInternal() {
-        this.registerHandlers(Path.join(this._executablePath, "defaults/handlers"));
-
-        let path = Conventions.instance.defaultHandlersFolderPattern.replace("${base}", Conventions.instance.defaultApplicationFolder);
-        this.registerHandlers(Path.join(this._basePath, path));
-    }
-
-    /**
-     * Discover models components
-     * @param path Where to find models component relative to base path (default=/api/models)
-     * @returns {Container}
-     */
-    private registerHandlers(path: string) {
-        if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
-        }
-        Files.traverse(path);
-        return this._container;
-    }
-
-    private registerServicesInternal() {
-        this.registerServices(Path.join(this._executablePath, "defaults/services"));
-
-        for (let folder of Conventions.instance.defaultServicesFolderPattern.split(',')) {
-            if (!folder) {
-                continue;
-            }
-            let path = folder.trim().replace("${base}", Conventions.instance.defaultApplicationFolder);
-            this.registerServices(Path.join(this._basePath, path));
-        }
-    }
-
-    /**
-     * Discover service components
-     * @param path Where to find services component relative to base path (default=/core/services)
-     * @returns {Container}
-     */
-    private registerServices(path: string) {
-        if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
-        }
-
-        Files.traverse(path);
-
         return this._container;
     }
 }

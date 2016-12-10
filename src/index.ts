@@ -10,6 +10,7 @@ export { FileConfigurationSource } from './configurations/configurationSources/f
 export { ConfigurationDataType } from './configurations/configurationSources/configurationSource';
 export { VulcainLogger } from './configurations/log/vulcainLogger';
 export { System } from './configurations/globals/system';
+export { HttpConfigurationSource } from './configurations/configurationSources/httpConfigurationSource';
 
 // Schemas
 export * from './schemas/schema'
@@ -33,6 +34,7 @@ export { ValidationError } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
 import { ForbiddenRequestError } from './errors/applicationRequestError';
+import { HttpConfigurationSource } from './configurations/configurationSources/httpConfigurationSource';
 
 export { AbstractAdapter } from './servers/abstractAdapter';
 export { RequestContext, Pipeline, UserContext } from './servers/requestContext'

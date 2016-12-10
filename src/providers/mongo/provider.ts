@@ -179,7 +179,6 @@ export class MongoProvider implements IProvider<any>
                         }
                         else {
                             this.ctx.logVerbose(`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
-
                             resolve(res);
                         }
                     });

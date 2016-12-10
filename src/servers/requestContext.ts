@@ -132,6 +132,11 @@ export class RequestContext {
     public user: UserContext;
     private _cache: Map<string, any>;
     private _logger: Logger;
+    /**
+     * Scoped container
+     *
+     * @type {IContainer}
+     */
     public container: IContainer;
     /**
      * Headers for the current request
