@@ -16,6 +16,7 @@ import { QueryData } from '../pipeline/query';
 import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
+import { CommonRequestData } from '../pipeline/common';
 const guid = require('uuid');
 
 // internal

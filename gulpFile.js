@@ -69,7 +69,7 @@ gulp.task("istanbul:hook", function () {
 // -----------------------------------
 
 // https://www.npmjs.com/package/gulp-typescript
-gulp.task("compile-ts", ['tslint', 'clean'], function () {
+gulp.task("compile-ts", [ 'clean'], function () {
     var tsProject = ts.createProject(
         './tsconfig.json',
         {

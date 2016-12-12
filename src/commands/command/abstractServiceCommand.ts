@@ -144,6 +144,12 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<QueryResponse<T>>}
      */
     protected getRequestAsync<T>(serviceName: string, version: string, id: string, schema?: string): Promise<QueryResponse<T>> {
+        if (System.hasMocks) {
+            let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", {id});
+            if (result !== undefined) {
+                return result;
+            }
+        }
         let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
             : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
@@ -170,6 +176,12 @@ export abstract class AbstractServiceCommand {
         args.$maxByPage = maxByPage;
         args.$page = page;
         args.$query = query && JSON.stringify(query);
+        if (System.hasMocks) {
+            let result = System.mocks.applyMockService(serviceName, version, verb, args);
+            if (result !== undefined) {
+                return result;
+            }
+        }
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args);
 
         let res = this.sendRequestAsync("get", url);
@@ -188,6 +200,12 @@ export abstract class AbstractServiceCommand {
      */
     protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any): Promise<ActionResponse<T>> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
+        if (System.hasMocks) {
+            let result = System.mocks.applyMockService(serviceName, version, verb, command);
+            if (result !== undefined) {
+                return result;
+            }
+        }
         let url = `http://${this.createServiceName(serviceName, version)}/api/${verb}`;
 
         let res = this.sendRequestAsync("post", url, (req) => req.json(command));

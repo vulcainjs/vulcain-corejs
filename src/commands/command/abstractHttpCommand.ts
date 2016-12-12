@@ -58,6 +58,12 @@ export abstract class AbstractHttpCommand {
     }
 
     protected async execAsync(verb: string, url: string, data?): Promise<any> {
+        if (System.hasMocks) {
+            let result = System.mocks.applyMockHttp(url, verb);
+            if (result !== undefined) {
+                return result;
+            }
+        }
         let method = this[verb + "Async"];
         if (!method)
             throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);

@@ -1,11 +1,12 @@
-import {CryptoHelper} from './crypto';
-import {DynamicConfiguration} from './../dynamicConfiguration';
-import {VulcainLogger} from './../log/vulcainLogger';
+import { CryptoHelper } from './crypto';
+import { DynamicConfiguration } from './../dynamicConfiguration';
+import { VulcainLogger } from './../log/vulcainLogger';
 import * as moment from 'moment';
 import * as fs from 'fs';
-import {VulcainManifest} from './../dependencies/annotations';
-import {Conventions} from './../../utils/conventions';
-import {IDynamicProperty} from '../dynamicProperty';
+import { VulcainManifest } from './../dependencies/annotations';
+import { Conventions } from './../../utils/conventions';
+import { IDynamicProperty } from '../dynamicProperty';
+import { MockManager } from '../../commands/mocks/mockManager';
 
 /**
  * Static class providing service helper methods
@@ -14,17 +15,17 @@ import {IDynamicProperty} from '../dynamicProperty';
  * @class System
  */
 export class System {
-    static _vulcainServer: string;
-    static _vulcainToken: string;
-    private static _config;
+
+    private static _vulcainServer: string;
+    private static _vulcainToken: string;
+    private static _vulcainConfig;
     private static logger: VulcainLogger;
     private static _environment: string;
     private static _serviceName: string;
     private static _serviceVersion: string;
     private static _domainName: string;
     private static crypter: CryptoHelper;
-    private static isLocal: boolean;
-    private static isTest: boolean;
+    private static _environmentMode: "local" | "test" | "production";
     private static _manifest: VulcainManifest;
 
     static defaultDomainName: string;
@@ -93,6 +94,51 @@ export class System {
         return process.env[Conventions.instance.ENV_VULCAIN_TENANT];
     }
 
+    static get hasMocks() {
+        return this.isTestEnvironnment && this._vulcainConfig && this._vulcainConfig.mocks;
+    }
+
+    static get mocks() {
+        return <MockManager>this._vulcainConfig.mocks;
+    }
+
+    /**
+     * Read configurations from .vulcain file
+     * Set env type from environment variable then .vulcain config
+     *
+     * @private
+     */
+    private static readEnvironmentContext() {
+        if (System._environmentMode) {
+            return;
+        }
+        try {
+            if (fs.existsSync(Conventions.instance.vulcainFileName)) {
+                let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");
+                if (data) {
+                    System._vulcainConfig = JSON.parse(data);
+                }
+            }
+            System._environmentMode = (process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE]
+                || (System._vulcainConfig && System._vulcainConfig.mode)
+                || "production").toLowerCase(); // default
+
+            if (System._environmentMode !== "production" && System._environmentMode !==  "test" && System._environmentMode !== "local") {
+                throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
+            }
+
+            // TODO remove
+            if (process.env["VULCAIN_TEST"] === "true") {
+                System._environmentMode = "test";
+            }
+        }
+        catch (e) {
+            System.log.error(null, e, "VULCAIN MANIFEST : Loading error");
+            System._environmentMode = "production";
+        }
+        System.log.info(null, `Running in ${System._environmentMode} mode`);
+    }
+
     /**
      * Check if the service is running in local mode (on developper desktop)
      * by checking if a '.vulcain' file exists in the working directory
@@ -103,21 +149,8 @@ export class System {
      * @memberOf System
      */
     static get isDevelopment() {
-        if (System.isLocal === undefined) {
-            System.isLocal = false;
-            try {
-                if (fs.existsSync(Conventions.instance.vulcainFileName)) {
-                    System.isLocal = true;
-                    this.loadVulcainLocalConfig();
-                    if (System.isLocal) {
-                        System.log.info(null, "Running in development mode");
-                    }
-                }
-            }
-            catch (e) {/*ignore*/
-            }
-        }
-        return System.isLocal;
+        System.readEnvironmentContext();
+        return System._environmentMode === "local";
     }
 
     /**
@@ -129,29 +162,7 @@ export class System {
      * @memberOf System
      */
     static get isTestEnvironnment() {
-        if (System.isTest === undefined) {
-            System.isTest = System.isDevelopment || process.env[Conventions.instance.ENV_VULCAIN_TEST] === "true";
-            if (!System.isDevelopment && System.isTest) {
-                System.log.info(null, "Running in test mode");
-            }
-        }
-        return System.isTest;
-    }
-
-    private static loadVulcainLocalConfig() {
-        try {
-            let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");
-            if (data) {
-                System._config = JSON.parse(data);
-                if (System._config.isDevelopment === false) {// forced value
-                    System.isLocal = false;
-                    System.isTest = true;
-                }
-            }
-        }
-        catch (e) {
-            System.log.error(null, e, "Error when reading local configuration from .vulcain file.");
-        }
+        return System.isDevelopment || System._environmentMode === "test";
     }
 
     /**
@@ -165,8 +176,8 @@ export class System {
      */
     static resolveAlias(name: string, version?: string) {
         // Try to find an alternate uri
-        if (System._config && System._config.alias) {
-            let alias = System._config.alias[name];
+        if (System._vulcainConfig && System._vulcainConfig.alias) {
+            let alias = System._vulcainConfig.alias[name];
             if (alias) {
                 if (typeof alias === "string") {
                     return alias;
@@ -175,7 +186,6 @@ export class System {
             }
         }
 
-        // Consul = shared/$alternates/serviceName-version
         let propertyName = '$alternates.' + name;
         if (version)
             propertyName = propertyName + "-" + version;
