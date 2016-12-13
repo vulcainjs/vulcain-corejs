@@ -14,6 +14,7 @@ export class StatsdMetrics implements IMetrics {
 
     private statsd: Statsd;
     private tags: string;
+    private static EmptyString = "";
 
     constructor(address?: string) {
         if (!System.isDevelopment) {
@@ -27,26 +28,28 @@ export class StatsdMetrics implements IMetrics {
     }
 
     encodeTags(...tags: Array<string>) {
+        if (!tags || tags.length === 0)
+            return StatsdMetrics.EmptyString;
         return "," + tags.map(t=> t.replace(/[:|,]/g, '-')).join(',');
     }
 
     increment(metric: string, customTags?: string, delta?: number) {
-        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + customTags , delta);
+        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString) , delta);
     }
 
     decrement(metric:string, customTags?: string, delta?:number) {
-        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + customTags, delta);
+        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString), delta);
     }
 
     counter(metric:string, delta:number, customTags?: string) {
-        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + customTags, delta);
+        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString), delta);
     }
 
     gauge(metric:string, value:number, customTags?: string) {
-        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + customTags, value);
+        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString), value);
     }
 
     timing(metric: string, duration: number, customTags?: string) {
-        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + customTags, duration);
+        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString), duration);
     }
 }

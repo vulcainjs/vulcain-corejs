@@ -56,15 +56,15 @@ export abstract class AbstractAdapter {
     }
 
     public abstract start(port: number);
+    public abstract initialize();
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
+    protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpRequest);
 
     private startRequest(command) {
         // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
-
-    protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpRequest);
 
     protected createRequestContext(request: IHttpRequest) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);

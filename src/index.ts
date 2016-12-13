@@ -33,12 +33,10 @@ export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } fro
 export { ValidationError } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
-import { ForbiddenRequestError } from './errors/applicationRequestError';
-import { HttpConfigurationSource } from './configurations/configurationSources/httpConfigurationSource';
 
 export { AbstractAdapter } from './servers/abstractAdapter';
 export { RequestContext, Pipeline, UserContext } from './servers/requestContext'
-
+export { ExpressAdapter } from './servers/express/expressAdapter';
 export { DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand } from './defaults/crudHandlers';
 
 // Bus adapter

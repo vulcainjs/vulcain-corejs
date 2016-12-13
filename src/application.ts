@@ -232,7 +232,7 @@ export class Application {
                 this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
                 this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
                 this.initializeServerAdapter(this.adapter);
-                (<ExpressAdapter>this.adapter).initialize();
+                this.adapter.initialize();
             }
             this.startHystrixStream();
             this.adapter.start(port);
