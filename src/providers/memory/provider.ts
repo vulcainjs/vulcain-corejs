@@ -58,15 +58,12 @@ export class MemoryProvider implements IProvider<any>
     private ensureSchema(schema: Schema) {
         let schemaInfo = this.state.schemas.get(schema.name);
         if (!schemaInfo) {
-            schemaInfo = {};
+            schemaInfo = { data: {}};
             if (this.state.folder) {
                 schemaInfo.saveToFile = this.state.folder + "/" + schema.description.storageName + ".json";
                 if (fs.existsSync(schemaInfo.saveToFile)) {
                     schemaInfo.data = JSON.parse(fs.readFileSync(schemaInfo.saveToFile, "UTF-8"));
                 }
-            }
-            else {
-                schemaInfo.data = {};
             }
 
             this.state.schemas.set(schema.name, schemaInfo);
@@ -212,10 +209,10 @@ export class MemoryProvider implements IProvider<any>
                 }
                 let name = schema.getId(entity);
                 if (!name)
-                    throw new Error(`Can not create an ${schema.name} entity with undefined id ${schema.getIdProperty()} `);
+                    throw new Error(`Can not create a ${schema.name} entity with undefined id ${schema.getIdProperty()} `);
 
                 if (list[name]) {
-                    reject(new Error("Can not add existing entity " + name));
+                    reject(new Error("Can not add existing ${schema.name} " + name));
                     return;
                 }
 

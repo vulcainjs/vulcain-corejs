@@ -131,6 +131,9 @@ export class System {
             if (process.env["VULCAIN_TEST"] === "true") {
                 System._environmentMode = "test";
             }
+            if (System._environmentMode !== "local") {
+                System._vulcainConfig = null; // reset all local config
+            }
         }
         catch (e) {
             System.log.error(null, e, "VULCAIN MANIFEST : Loading error");

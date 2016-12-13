@@ -2,7 +2,7 @@ import {ActionData, EventData, EventNotificationMode} from './actions';
 import {RequestContext, Pipeline} from '../servers/requestContext';
 import {QueryData} from './query';
 import {IContainer} from '../di/resolvers';
-import {Inject, DefaultServiceNames} from '../di/annotations';
+import { Inject, DefaultServiceNames, IScopedComponent } from '../di/annotations';
 import 'reflect-metadata';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -15,7 +15,7 @@ export interface IActionMetadata {
     inputSchema?: string;
 }
 
-export abstract class AbstractHandler {
+export abstract class AbstractHandler implements IScopedComponent {
    private _requestContext: RequestContext;
 
     constructor( @Inject("Container") protected container: IContainer) {

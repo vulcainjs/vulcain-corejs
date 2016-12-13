@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
 import { System } from '../configurations/globals/system';
+import { RequestContext } from '../servers/requestContext';
 
 /**
  * List of default service names
@@ -50,6 +51,21 @@ export enum LifeTime {
      * Create one instance per request
      */
     Scoped = 4
+}
+
+/**
+ * Interface implemented by every scoped component
+ *
+ * @export
+ * @interface IScopedComponent
+ */
+export interface IScopedComponent {
+    /**
+     * Current request context (scope)
+     *
+     * @type {RequestContext}
+     */
+    requestContext: RequestContext;
 }
 
 /**
