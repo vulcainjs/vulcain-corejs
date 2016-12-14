@@ -3,6 +3,7 @@ const guid = require('uuid');
 import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';
+import { System } from '../configurations/globals/system';
 
 export class MessageBus {
     private commandBus: IActionBusAdapter;
@@ -30,7 +31,16 @@ export class MessageBus {
     }
 
     private consumeEventAsync(event: EventData) {
-        (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).onNext(event);
+        try {
+            (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).onNext(event);
+        }
+        catch (e) {
+            System.log.error(
+                { correlationId: event.correlationId, correlationPath: null },
+                e,
+                `Consume event action: ${event.action} ${event.schema ? "schema: " + event.schema : ""} tenant: ${event.tenant}`
+            );
+        }
     }
 
     pushTask(command: ActionData) {

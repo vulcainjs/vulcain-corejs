@@ -100,6 +100,18 @@ export interface Logger {
 }
 
 /**
+ * Internal use
+ *
+ * @export
+ * @interface ICustomEvent
+ */
+export interface ICustomEvent {
+    action: string;
+    schema?: string;
+    params?: any;
+}
+
+/**
  * Request context
  *
  * @export
@@ -108,6 +120,8 @@ export interface Logger {
 export class RequestContext {
     static TestTenant = "TesT";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
+
+    private _customEvents: Array<ICustomEvent>;
 
     /**
      * Request correlation id
@@ -166,6 +180,23 @@ export class RequestContext {
      * @memberOf RequestContext
      */
     public hostName: string;
+
+    /**
+     * Send custom event from current service
+     *
+     * @param {string} action action event
+     * @param {*} [params] action parameters
+     * @param {string} [schema] optional schema
+     */
+    public sendCustomEvent(action: string, params?: any, schema?: string) {
+        if (!action) {
+            throw new Error("Action is required for custom event.");
+        }
+        if (!this._customEvents) {
+            this._customEvents = [];
+        }
+        this._customEvents.push({ action, schema, params });
+    }
 
     /**
      * Get request cache (Cache is only valid during the request lifetime)

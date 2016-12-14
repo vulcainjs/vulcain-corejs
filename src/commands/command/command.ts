@@ -189,7 +189,7 @@ export class HystrixCommand {
 
     private onExecutionError(ms: number, e: Error): Promise<any> {
         e = e || new Error("Unknow error");
-        
+
         if (e instanceof BadRequestError) {
             this.metrics.markBadRequest(ms);
             throw e;

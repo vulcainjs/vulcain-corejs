@@ -1,6 +1,6 @@
 import { Application } from '../../application';
 import * as express from 'express';
-import { AbstractAdapter, IHttpRequest } from './../abstractAdapter';
+import { AbstractAdapter, IHttpAdapterRequest } from './../abstractAdapter';
 import { RequestContext, Pipeline } from './../requestContext';
 import { IContainer } from '../../di/resolvers';
 import { DefaultServiceNames } from '../../di/annotations';
@@ -25,7 +25,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express = express();
 
         this.express.use(function (req, res, next) {
-            self.createRequestContext(<IHttpRequest>(<any>req));
+            self.createRequestContext(<IHttpAdapterRequest>(<any>req));
             return next();
         });
 
@@ -63,7 +63,7 @@ export class ExpressAdapter extends AbstractAdapter {
         }
     }
 
-    protected initializeRequestContext(ctx: RequestContext, request: IHttpRequest) {
+    protected initializeRequestContext(ctx: RequestContext, request: IHttpAdapterRequest) {
         ctx.headers = request.headers;
         ctx.hostName = (<express.Request><any>request).get('Host');
         // Set requestcontext for authentication middlewares
@@ -91,7 +91,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.get(Conventions.instance.defaultUrlprefix + '/:schemaAction?/:id?', this.auth, async (req: any, res: express.Response) => {
             let ctx: RequestContext = req.requestContext;
             req.requestContext = null; // release for gc
-            let result = await this.executeQueryRequest(<IHttpRequest>req, ctx);
+            let result = await this.executeQueryRequest(<IHttpAdapterRequest>req, ctx);
             this.sendResponse(res, result);
         });
 
@@ -99,7 +99,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.post(Conventions.instance.defaultUrlprefix + '/:schemaAction?', this.auth, async (req: any, res: express.Response) => {
             let ctx: RequestContext = req.requestContext;
             req.requestContext = null; // release for gc
-            let result = await this.executeActionRequest(<IHttpRequest><any>req, ctx);
+            let result = await this.executeActionRequest(<IHttpAdapterRequest><any>req, ctx);
             this.sendResponse(res, result);
         });
     }
@@ -114,7 +114,7 @@ export class ExpressAdapter extends AbstractAdapter {
                 throw new Error("Invalid custom command configuration");
             }
             command.domain = this.domainName;
-            let result = await this.executeActionRequest(<IHttpRequest><any>req, ctx, command);
+            let result = await this.executeActionRequest(<IHttpAdapterRequest><any>req, ctx, command);
             this.sendResponse(res, result);
         });
     }

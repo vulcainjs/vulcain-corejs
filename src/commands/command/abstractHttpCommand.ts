@@ -108,7 +108,7 @@ export abstract class AbstractHttpCommand {
                         reject(response.error);
                     }
                     else {
-                        System.log.info(this.requestContext, `Http request ${verb} ${url} completed with status code ${response.status}`);
+                        System.log.info(this.requestContext, `Http request ${verb} ${url} completed with error ${response.error}`);
                         resolve(response);
                     }
                 });

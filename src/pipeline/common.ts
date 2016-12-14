@@ -35,7 +35,7 @@ export interface CommonRequestResponse<T> {
     action: string;
     schema: string;
     error?: ErrorResponse;
-    value?: HttpResponse;
+    value?: T;
     inputSchema?: string;
 }
 

@@ -76,8 +76,8 @@ export class VulcainLogger {
             service: System.serviceName,
             version: System.serviceVersion,
             timestamp: System.nowAsString(),
-            correlationId: requestContext && requestContext.correlationId,
-            correlationPath: requestContext && requestContext.correlationPath
+            correlationId: (requestContext && requestContext.correlationId) || null,
+            correlationPath: (requestContext && requestContext.correlationPath) || null
         };
 
         if (typeof info === "string")

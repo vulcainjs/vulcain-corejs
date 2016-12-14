@@ -20,7 +20,7 @@ import { CommonRequestData } from '../pipeline/common';
 const guid = require('uuid');
 
 // internal
-export interface IHttpRequest {
+export interface IHttpAdapterRequest {
     readonly body;
     readonly params;
     readonly query;
@@ -59,14 +59,14 @@ export abstract class AbstractAdapter {
     public abstract initialize();
     public abstract setStaticRoot(basePath: string);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
-    protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpRequest);
+    protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpAdapterRequest);
 
     private startRequest(command) {
         // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
         return process.hrtime();
     }
 
-    protected createRequestContext(request: IHttpRequest) {
+    protected createRequestContext(request: IHttpAdapterRequest) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
 
         // Initialize headers & hostname
@@ -144,7 +144,7 @@ export abstract class AbstractAdapter {
         }
     }
 
-    private populateFromQuery(request: IHttpRequest) {
+    private populateFromQuery(request: IHttpAdapterRequest) {
         let params = {};
         let count = 0;;
         Object.keys(request.query).forEach(name => {
@@ -187,7 +187,7 @@ export abstract class AbstractAdapter {
         action.schema = action.schema || s;
     }
 
-    private normalizeCommand(request: IHttpRequest) {
+    private normalizeCommand(request: IHttpAdapterRequest) {
         let action = request.body;
 
         // Body contains only data -> create a new action object
@@ -200,7 +200,7 @@ export abstract class AbstractAdapter {
         return action;
     }
 
-    protected async executeQueryRequest(request: IHttpRequest, ctx: RequestContext) {
+    protected async executeQueryRequest(request: IHttpAdapterRequest, ctx: RequestContext) {
 
         if (request.user) {
             ctx.user = request.user;
@@ -230,7 +230,7 @@ export abstract class AbstractAdapter {
         return await this.executeRequest(this.queryManager, query, ctx);
     }
 
-    protected executeActionRequest(request: IHttpRequest, ctx: RequestContext, command?) {
+    protected executeActionRequest(request: IHttpAdapterRequest, ctx: RequestContext, command?) {
         if (request.user) {
             ctx.user = request.user;
         }

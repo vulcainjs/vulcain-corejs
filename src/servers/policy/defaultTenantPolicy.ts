@@ -1,9 +1,9 @@
 import { System } from '../../configurations/globals/system';
 import { RequestContext } from '../requestContext';
-import { IHttpRequest } from '../abstractAdapter';
+import { IHttpAdapterRequest } from '../abstractAdapter';
 
 export interface ITenantPolicy {
-    resolveTenant(ctx: RequestContext, req: IHttpRequest);
+    resolveTenant(ctx: RequestContext, req: IHttpAdapterRequest);
 }
 
 /**
@@ -14,7 +14,7 @@ export interface ITenantPolicy {
  */
 export class DefaultTenantPolicy {
 
-    protected resolveFromHeader(ctx: RequestContext, req: IHttpRequest): string {
+    protected resolveFromHeader(ctx: RequestContext, req: IHttpAdapterRequest): string {
         let tenant = req.headers["X-VULCAIN-TENANT"];
         if (!tenant)
             return;
@@ -52,7 +52,7 @@ export class DefaultTenantPolicy {
         }
     }
 
-    resolveTenant(ctx: RequestContext, req: IHttpRequest): string {
+    resolveTenant(ctx: RequestContext, req: IHttpAdapterRequest): string {
         let tenant: string;
         // 1 - tenant in url (test only)
         tenant = (System.isTestEnvironnment && req.query.$tenant);

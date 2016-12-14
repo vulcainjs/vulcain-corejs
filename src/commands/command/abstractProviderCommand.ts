@@ -83,7 +83,7 @@ export abstract class AbstractProviderCommand<T> {
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });
         }
-        this.customTags = this.metrics.encodeTags("host=" + address, "schema=" + schema, "tenant=" + (tenant||this.requestContext.tenant));
+        this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant||this.requestContext.tenant));
     }
 
     onCommandCompleted(duration: number, success: boolean) {

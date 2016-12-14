@@ -38,7 +38,7 @@ export class ExpressAuthentication {
         }
         catch (err) {
             System.log.error(ctx, err, "Bearer authentication: Error with jwtToken " + accessToken);
-            throw err;
+            return null;
         }
     }
 

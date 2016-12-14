@@ -1,17 +1,18 @@
-import {MessageBus} from './messageBus';
-import {IContainer} from '../di/resolvers';
-import {Domain} from '../schemas/schema';
-import {DefaultServiceNames} from '../di/annotations';
+import { MessageBus } from './messageBus';
+import { IContainer } from '../di/resolvers';
+import { Domain } from '../schemas/schema';
+import { DefaultServiceNames } from '../di/annotations';
 import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import * as os from 'os';
-import {RequestContext, Pipeline} from '../servers/requestContext';
+import { RequestContext, Pipeline, ICustomEvent } from '../servers/requestContext';
 import * as RX from 'rx';
-import {EventHandlerFactory} from './eventHandlerFactory';
-import {Conventions} from '../utils/conventions';
+import { EventHandlerFactory } from './eventHandlerFactory';
+import { Conventions } from '../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
 import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
+import { Command } from '../commands/command/commandFactory';
 const guid = require('uuid');
 
 export interface ActionData extends CommonRequestData {
@@ -131,9 +132,32 @@ export class CommandManager implements IManager {
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
     }
 
-    public startMessageBus(hasAsyncTasks:boolean) {
+    public startMessageBus(hasAsyncTasks: boolean) {
         this.messageBus = new MessageBus(this, hasAsyncTasks);
         this.subscribeToEvents();
+    }
+
+    private sendCustomEvent(ctx: RequestContext) {
+        let events = (<any>ctx)._customEvents;
+        if (!events) {
+            return;
+        }
+
+        events.forEach((event: ICustomEvent) => {
+            let command: ActionData = {
+                service: System.serviceName,
+                startedAt: System.nowAsString(),
+                domain: System.domainName,
+                action: event.action,
+                schema: event.schema,
+                correlationId: null,
+                correlationPath: null,
+                params: event.params
+            };
+            let res = this.createResponse(ctx, command);
+            this.messageBus.sendEvent(res);
+        });
+        (<any>ctx)._customEvents = null;
     }
 
     private createResponse(ctx: RequestContext, command: ActionData, error?: ErrorResponse) {
@@ -145,10 +169,10 @@ export class CommandManager implements IManager {
             schema: command.schema,
             inputSchema: command.inputSchema,
             action: command.action,
-            userContext: command.userContext,
+            userContext: command.userContext || ctx.user,
             domain: command.domain,
             status: error ? "Error" : command.status,
-            correlationId: command.correlationId,
+            correlationId: command.correlationId || ctx.correlationId,
             taskId: command.taskId
         };
         if (error)
@@ -187,7 +211,7 @@ export class CommandManager implements IManager {
         return errors;
     }
 
-    getInfoHandler(command: CommonRequestData, container?:IContainer) {
+    getInfoHandler(command: CommonRequestData, container?: IContainer) {
         if (!this._serviceDescriptors) {
             this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         }
@@ -225,19 +249,25 @@ export class CommandManager implements IManager {
                 command.status = "Success";
                 let res = this.createResponse(ctx, command);
                 res.completedAt = System.nowAsString();
+
+                if (!(result instanceof HttpResponse)) {
+                    res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
+                    result = new VulcainResponse(res);
+                }
+                else if (result.contentType === HttpResponse.VulcainContentType) {
+                    result.content = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
+                    res.value = result.content;
+                }
+
                 if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                     this.messageBus.sendEvent(res);
                 }
 
-                if (!(result instanceof HttpResponse)) {
-                    res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
-                    return new VulcainResponse(res);
-                }
-                else if (result.contentType === HttpResponse.VulcainContentType) {
-                    result.content = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result.content);
-                }
+                this.sendCustomEvent(ctx);
+
                 return result;
-            } else {
+            }
+            else {
                 // Pending
                 this.messageBus.pushTask(command);
                 return new VulcainResponse(this.createResponse(ctx, command));
@@ -277,6 +307,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                 this.messageBus.sendEvent(res);
             }
+            this.sendCustomEvent(ctx);
         }
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
