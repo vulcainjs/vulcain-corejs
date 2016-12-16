@@ -95,11 +95,11 @@ export class System {
     }
 
     static get hasMocks() {
-        return this.isTestEnvironnment && this._vulcainConfig && this._vulcainConfig.mocks;
+        return System.isTestEnvironnment && System._vulcainConfig && System._vulcainConfig.mocks;
     }
 
     static get mocks() {
-        return <MockManager>this._vulcainConfig.mocks;
+        return <MockManager>System._vulcainConfig.mocks;
     }
 
     /**
