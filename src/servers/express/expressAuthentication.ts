@@ -9,7 +9,7 @@ export class ExpressAuthentication {
 
     private strategies = new Map<string, (ctx: RequestContext, token: string) => Promise<UserContext>>();
 
-    constructor( ) {
+    constructor() {
         this.addOrReplaceStrategy('bearer', this.bearerAuthentication);
         this.addOrReplaceStrategy('apikey', this.apiKeyAuthentication);
     }
@@ -111,24 +111,20 @@ export class ExpressAuthentication {
                         next();
                         return;
                     }
+                    else if (strategyName !== "bearer") {
+                        res.status(401);
+                        res.send();
+                        return;
+                    }
+                    next();
+                    return;
                 }
             }
             catch (err) {
                 ctx.logError(err, "Authentication error");
             }
-
             res.status(401);
             res.send();
         };
     };
 }
-
-
-
-
-
-
-
-
-
-
