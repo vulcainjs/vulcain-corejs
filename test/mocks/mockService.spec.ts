@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { MockManager } from '../../dist/commands/mocks/mockManager';
+import { System } from '../../src/configurations/globals/system';
 
 let mockDefinitions = {
     services: {
@@ -36,6 +37,11 @@ let mockDefinitions = {
 };
 
 describe('Mock service', function () {
+
+    it('should do be available from System', function () {
+
+        expect(System.hasMocks).to.be.false;
+    });
 
     it('should do nothing if no match', function () {
 

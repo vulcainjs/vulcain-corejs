@@ -26,7 +26,7 @@ export class VulcainLogger {
      */
     error(requestContext, error: Error, msg?: string) {
         if (!error) return;
-        let txt = msg || "";
+        let txt = (msg || "") + ": ";
         if (VulcainLogger.enableInfo || System.isTestEnvironnment) {
             txt = txt + (error.stack || error.message);
         }

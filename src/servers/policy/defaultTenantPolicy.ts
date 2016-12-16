@@ -1,6 +1,6 @@
 import { System } from '../../configurations/globals/system';
 import { RequestContext } from '../requestContext';
-import { IHttpAdapterRequest } from '../abstractAdapter';
+import { IHttpAdapterRequest, VulcainHeaderNames } from '../abstractAdapter';
 
 export interface ITenantPolicy {
     resolveTenant(ctx: RequestContext, req: IHttpAdapterRequest);
@@ -15,7 +15,7 @@ export interface ITenantPolicy {
 export class DefaultTenantPolicy {
 
     protected resolveFromHeader(ctx: RequestContext, req: IHttpAdapterRequest): string {
-        let tenant = req.headers["X-VULCAIN-TENANT"];
+        let tenant = req.headers[VulcainHeaderNames.X_VULCAIN_TENANT];
         if (!tenant)
             return;
 

@@ -6,9 +6,10 @@ import { AbstractServiceCommand } from './../../commands/command/abstractService
 import { AbstractHandler } from '../../pipeline/abstractHandlers';
 import { IContainer } from '../../di/resolvers';
 import { UserContext } from '../../servers/requestContext';
+import { DefaultServiceNames, Inject } from '../../di/annotations';
 
 export class ApiKeyService extends AbstractHandler implements ITokenService {
-    constructor(container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
+    constructor(@Inject(DefaultServiceNames.Container) container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
         super(container);
     }
 
@@ -30,7 +31,7 @@ class ApiKeyVerifyCommand extends AbstractServiceCommand {
     }
 
     async runAsync(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
-        this.setMetricsTags("targetServiceName=" + apiKeyServiceName, "targetServiceVersion=" + apiKeyServiceVersion);
+        this.setMetricsTags(apiKeyServiceName, apiKeyServiceVersion);
         let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "verifyToken", data);
         return !resp.error && resp.value;
     }

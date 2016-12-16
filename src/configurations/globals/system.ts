@@ -27,6 +27,7 @@ export class System {
     private static crypter: CryptoHelper;
     private static _environmentMode: "local" | "test" | "production";
     private static _manifest: VulcainManifest;
+    private static _mocksManager: MockManager;
 
     static defaultDomainName: string;
 
@@ -95,11 +96,11 @@ export class System {
     }
 
     static get hasMocks() {
-        return System.isTestEnvironnment && System._vulcainConfig && System._vulcainConfig.mocks;
+        return !!System._mocksManager;
     }
 
     static get mocks() {
-        return <MockManager>System._vulcainConfig.mocks;
+        return System._mocksManager;
     }
 
     /**
@@ -139,7 +140,11 @@ export class System {
             System.log.error(null, e, "VULCAIN MANIFEST : Loading error");
             System._environmentMode = "production";
         }
+
         System.log.info(null, `Running in ${System._environmentMode} mode`);
+        if (System.isTestEnvironnment && System._vulcainConfig.mocks) {
+            System._mocksManager = new MockManager(System._vulcainConfig.mocks);
+        }
     }
 
     /**

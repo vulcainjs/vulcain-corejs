@@ -4,6 +4,7 @@ import { CommandFactory } from '../commands/command/commandFactory';
 import { DefaultServiceNames } from '../di/annotations';
 import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
+import { VulcainHeaderNames } from './abstractAdapter';
 
 export enum Pipeline {
     EventNotification,
@@ -328,6 +329,6 @@ export class RequestContext {
      * @memberOf RequestContext
      */
     get publicPath() {
-        return this.headers["X-VULCAIN-PUBLICPATH"];
+        return this.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH];
     }
 }

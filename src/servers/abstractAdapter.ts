@@ -19,6 +19,17 @@ import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
 const guid = require('uuid');
 
+export class VulcainHeaderNames {
+    static X_VULCAIN_TENANT = "x-vulcain-tenant";
+    static X_VULCAIN_CORRELATION_ID = "x-vulcain-correlation-id";
+    static X_VULCAIN_CORRELATION_PATH = "x-vulcain-correlation-path";
+    static X_VULCAIN_SERVICE_NAME = "x-vulcain-service-name";
+    static X_VULCAIN_SERVICE_VERSION = "x-vulcain-service-version";
+    static X_VULCAIN_ENV = "x-vulcain-env";
+    static X_VULCAIN_CONTAINER = "x-vulcain-container";
+    static X_VULCAIN_PUBLICPATH = "x-vulcain-publicpath";
+}
+
 // internal
 export interface IHttpAdapterRequest {
     readonly body;
@@ -72,8 +83,8 @@ export abstract class AbstractAdapter {
         // Initialize headers & hostname
         this.initializeRequestContext(ctx, request);
 
-        ctx.correlationId = ctx.headers["X-VULCAIN-CORRELATION-ID"] || guid.v4();
-        ctx.correlationPath = ctx.headers["X-VULCAIN-CORRELATION-PATH"] || "-";
+        ctx.correlationId = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID] || guid.v4();
+        ctx.correlationPath = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_PATH] || "-";
 
         let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
         ctx.tenant = tenantPolicy.resolveTenant(ctx, request);
@@ -261,7 +272,7 @@ export abstract class AbstractAdapter {
             // Process handler
             let result: HttpResponse = await manager.runAsync(command, ctx);
             if (result && command.correlationId) {
-                result.addHeader("X-VULCAIN-CORRELATION-ID", command.correlationId);
+                result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
             }
             // Response
             this.endRequest(begin, result, ctx);

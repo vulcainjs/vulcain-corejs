@@ -12,6 +12,7 @@ import { ApplicationRequestError } from './../../errors/applicationRequestError'
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 import { ITokenService } from '../../defaults/services';
+import { VulcainHeaderNames } from '../../servers/abstractAdapter';
 const rest = require('unirest');
 
 /**
@@ -54,22 +55,22 @@ export abstract class AbstractServiceCommand {
     }
 
     /**
-     * Set (or reset) apikey authorization to use for calling service.
+     * Set (or reset) user context to use for calling service.
      *
      * @protected
      * @param {string} apiKey - null for reset
+     * @param {string} tenant - null for reset
      *
      * @memberOf AbstractServiceCommand
      */
-    protected useApiKey(apiKey: string, tenant?: string) {
+    protected setRequestContext(apiKey?: string, tenant?: string) {
         if (!apiKey) {
-            this.overrideTenant = null;
             this.overrideAuthorization = null;
         }
         else {
             this.overrideAuthorization = "ApiKey " + apiKey;
-            this.overrideTenant = tenant;
         }
+        this.overrideTenant = tenant;
     }
 
     protected initializeMetricsInfo() {
@@ -227,14 +228,13 @@ export abstract class AbstractServiceCommand {
     }
 
     private async setUserContextAsync(request: types.IHttpRequest) {
+        request.header( VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.tenant);
+
         if (this.overrideAuthorization) {
-            if (this.overrideTenant)
-                request.header("X-VULCAIN-TENANT", this.overrideTenant);
             request.header("Authorization", this.overrideAuthorization);
             return;
         }
 
-        request.header("X-VULCAIN-TENANT", this.requestContext.tenant);
         let token = this.requestContext.bearer;
         if (!token) {
             let tokens = this.requestContext.container.get<ITokenService>("TokenService");
@@ -259,12 +259,12 @@ export abstract class AbstractServiceCommand {
         let request: types.IHttpRequest = rest[verb](url);
 
         // Propagate context
-        request.header("X-VULCAIN-CORRELATION-ID", this.requestContext.correlationId);
-        request.header("X-VULCAIN-CORRELATION-PATH", this.calculateRequestPath() + "-");
-        request.header("X-VULCAIN-SERVICE-NAME", System.serviceName);
-        request.header("X-VULCAIN-SERVICE-VERSION", System.serviceVersion);
-        request.header("X-VULCAIN-ENV", System.environment);
-        request.header("X-VULCAIN-CONTAINER", os.hostname());
+        request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.requestContext.correlationId);
+        request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_PATH, this.calculateRequestPath() + "-");
+        request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
+        request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
+        request.header(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
+        request.header(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
         await this.setUserContextAsync(request);
 
         prepareRequest && prepareRequest(request);
@@ -300,17 +300,17 @@ export abstract class AbstractServiceCommand {
     protected async exec(kind: string, serviceName: string, version: string, verb: string, userContext, data, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
-                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
                 let response = await this.sendActionAsync(serviceName, version, verb, data);
                 return response.value;
             }
             case 'query': {
-                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
                 let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
                 return { values: response.value, total: response.total, page };
             }
             case 'get': {
-                userContext && this.useApiKey(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
                 let response = await this.getRequestAsync(serviceName, version, data);
                 return response.value;
             }

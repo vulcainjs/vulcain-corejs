@@ -47,7 +47,7 @@ export class Application {
      * @memberOf Application
      */
     enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.container.injectInstance(new ApiKeyService(this.container, apiKeyServiceName, version), DefaultServiceNames.ApiKeyService);
+        this.container.injectScoped(ApiKeyService, DefaultServiceNames.ApiKeyService, apiKeyServiceName, version);
     }
 
     /**

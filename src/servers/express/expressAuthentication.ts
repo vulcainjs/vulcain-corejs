@@ -45,8 +45,10 @@ export class ExpressAuthentication {
     private async apiKeyAuthentication(ctx: RequestContext, accessToken: string) {
         try {
             let apiKeys = ctx.container.get<ITokenService>("ApiKeyService", true);
-            if (!apiKeys)
+            if (!apiKeys) {
+                System.log.info(ctx, `ApiKey authentication ERROR: Apikey is not enabled. Use enableApiKeyAuthentication in application.ts.`);
                 return null;
+            }
             let token = await apiKeys.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
 
             // No token found
