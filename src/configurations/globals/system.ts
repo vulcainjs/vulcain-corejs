@@ -7,6 +7,7 @@ import { VulcainManifest } from './../dependencies/annotations';
 import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from '../dynamicProperty';
 import { MockManager } from '../../commands/mocks/mockManager';
+import { DefaultServiceNames } from '../../di/annotations';
 
 /**
  * Static class providing service helper methods
@@ -190,16 +191,34 @@ export class System {
                 if (typeof alias === "string") {
                     return alias;
                 }
-                return alias[version];
+                alias = alias[version];
+                if (alias)
+                    return alias;
             }
         }
 
-        let propertyName = '$alternates.' + name;
+        let propertyName = '$alias.' + name;
         if (version)
             propertyName = propertyName + "-" + version;
 
         let prop = DynamicConfiguration.getProperty<any>(propertyName);
-        return prop && <string>prop.value;
+        if (prop && prop.value) {
+            if (!prop.value.serviceName && !prop.value.version) return prop.value;
+            name = prop.value.serviceName || name;
+            version = prop.value.version || version;
+            return System.createContainerEndpoint(name, version);
+        }
+        return null;
+    }
+
+    /**
+     * Create container endpoint from service name and version
+     *
+     * @readonly
+     * @static
+     */
+    static createContainerEndpoint(serviceName: string, version: string) {
+        return (serviceName + version).replace(/[\.-]/g, '').toLowerCase() + ":8080";
     }
 
     /**

@@ -47,11 +47,11 @@ export abstract class AbstractAdapter {
     private domain: Domain;
     private metrics: IMetrics;
 
-    private calcDelayInMs(begin: [number, number]): number {
+    private calcDelayInNanoSeconds(begin: [number, number]): number {
         // ts = [seconds, nanoseconds]
         const ts = process.hrtime(begin);
         // convert seconds to miliseconds and nanoseconds to miliseconds as well
-        return (ts[0] * 1000) + (ts[1] / 1000000);
+        return ts[0] * 1e9 + ts[1];
     }
 
     constructor(protected domainName: string, protected container: IContainer) {
@@ -115,10 +115,11 @@ export abstract class AbstractAdapter {
             hasError = true;
         }
 
-        const ms = this.calcDelayInMs(begin);
+        const duration = this.calcDelayInNanoSeconds(begin);
+
         // Duration
-        prefix && this.metrics.timing(prefix + MetricsConstant.duration, ms);
-        this.metrics.timing(MetricsConstant.allRequestsDuration, ms);
+        prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);
+        this.metrics.timing(MetricsConstant.allRequestsDuration, duration);
 
         // Failure
         if (hasError) {
@@ -132,7 +133,7 @@ export abstract class AbstractAdapter {
         }
 
         let trace: any = {
-            duration: ms,
+            duration: duration,
             info: Object.assign({}, value)
         };
 
@@ -141,7 +142,7 @@ export abstract class AbstractAdapter {
 
         if (e) {
             trace.stackTrace = e.stack;
-            trace.message = e.message;
+            trace.error = e.message;
         }
 
         System.log.write(ctx, trace);

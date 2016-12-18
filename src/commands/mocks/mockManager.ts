@@ -2,7 +2,7 @@ import { CommonRequestData } from '../../pipeline/common';
 
 export class MockManager {
 
-    constructor( private mocks) {
+    constructor(private mocks) {
     }
 
     private deepCompare(a, b) {
@@ -68,7 +68,7 @@ export class MockManager {
                 continue;
             }
             let ok = true;
-            if(this.deepCompare(data, input)) {
+            if (this.deepCompare(data, input)) {
                 return item.output;
             }
         }

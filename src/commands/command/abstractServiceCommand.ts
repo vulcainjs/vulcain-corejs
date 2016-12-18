@@ -109,23 +109,11 @@ export abstract class AbstractServiceCommand {
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
             throw new Error("Invalid version number. Must be on the form major.minor");
 
-        if (System.isTestEnvironnment) {
-            let alias = System.resolveAlias(serviceName, version);
-            if (alias)
-                return alias;
-        }
+        let alias = System.resolveAlias(serviceName, version);
+        if (alias)
+            return alias;
 
-        // Check if there is a service $redirect config property in shared properties
-        // Consul = shared/$redirect/serviceName-version
-        let name = `$redirect.${serviceName}-${version}`;
-        let prop = DynamicConfiguration.getProperty<any>(name);
-        if (prop && prop.value) {
-            if (!prop.value.serviceName && !prop.value.version) return prop.value;
-            serviceName = prop.value.serviceName || serviceName;
-            version = prop.value.version || version;
-        }
-
-        return (serviceName + version).replace(/[\.-]/g, '').toLowerCase() + ":8080";
+        return System.createContainerEndpoint(serviceName, version);
     }
 
     /**
