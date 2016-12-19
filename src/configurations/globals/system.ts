@@ -143,7 +143,7 @@ export class System {
         }
 
         System.log.info(null, `Running in ${System._environmentMode} mode`);
-        if (System.isTestEnvironnment && System._vulcainConfig.mocks) {
+        if (System.isTestEnvironnment && System._vulcainConfig && System._vulcainConfig.mocks) {
             System._mocksManager = new MockManager(System._vulcainConfig.mocks);
         }
     }
