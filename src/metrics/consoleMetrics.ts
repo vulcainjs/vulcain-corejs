@@ -1,5 +1,7 @@
 import { System } from '../configurations/globals/system';
 import { IMetrics } from './metrics';
+import { IHttpAdapterRequest } from '../servers/abstractAdapter';
+import { IRequestTracer } from './statsdMetrics';
 
 /**
  * Metrics adapter for testing
@@ -38,5 +40,13 @@ export class ConsoleMetrics implements IMetrics {
 
     timing(metric:string, duration:number, customTags?: string) {
         this.log(`METRICS: timing  ${metric + this.tags + customTags} : ${duration}ms`);
+    }
+
+        startTrace(request: IHttpAdapterRequest) {
+            return null;
+    }
+
+    endTrace(tracer: IRequestTracer) {
+        tracer && tracer.endTrace();
     }
 }

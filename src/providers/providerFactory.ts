@@ -60,7 +60,9 @@ export class ProviderFactory {
             provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
             let item: PoolItem = {provider};
             item.dispose = await provider.initializeTenantAsync(tenant);
-            this.addToPool(poolKey, item);
+            if (item.dispose) {
+                this.addToPool(poolKey, item);
+            }
         }
 
         return provider;

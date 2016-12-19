@@ -16,6 +16,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
+        this.requestContext.logVerbose(`DefaultRepositoryCommand - Execute ${action} action with data=${data}`);
         this.setMetricsTags(this.provider.address, this.schema.name, this.requestContext.tenant);
         return this[action + "Internal"](data);
     }

@@ -1,3 +1,5 @@
+import { IHttpAdapterRequest } from '../servers/abstractAdapter';
+import { IRequestTracer } from './statsdMetrics';
 
 export class MetricsConstant {
     static duration = "_duration";
@@ -66,5 +68,9 @@ export interface IMetrics {
      * @memberOf IMetrics
      */
     timing(metric: string, duration: number, customTags?: string);
+
+    startTrace(request: IHttpAdapterRequest);
+
+    endTrace(tracer: IRequestTracer);
 }
 

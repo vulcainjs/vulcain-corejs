@@ -5,6 +5,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
 import { VulcainHeaderNames } from './abstractAdapter';
+import { IRequestTracer } from '../metrics/statsdMetrics';
 
 export enum Pipeline {
     EventNotification,
@@ -122,6 +123,9 @@ export class RequestContext {
     static TestTenant = "TesT";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
 
+    public beginTime: [number, number];
+    public tracer: IRequestTracer;
+
     private _customEvents: Array<ICustomEvent>;
 
     /**
@@ -233,6 +237,7 @@ export class RequestContext {
     }
 
     dispose() {
+        this.tracer && this.tracer.endTrace();
         this.container.dispose();
     }
 

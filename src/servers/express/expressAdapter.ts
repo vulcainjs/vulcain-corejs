@@ -25,7 +25,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express = express();
 
         this.express.use(function (req, res, next) {
-            self.createRequestContext(<IHttpAdapterRequest>(<any>req));
+            self.startRequest(<IHttpAdapterRequest>(<any>req));
             return next();
         });
 
