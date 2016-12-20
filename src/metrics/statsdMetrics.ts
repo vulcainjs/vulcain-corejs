@@ -6,7 +6,8 @@ import { ZipkinInstrumentation, ZipkinTrace } from './zipkinInstrumentation';
 import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 
 export interface IRequestTracer {
-    endTrace();
+    endTrace(result);
+    setCommand(verb: string);
 }
 
 /**
@@ -59,13 +60,5 @@ export class StatsdMetrics implements IMetrics {
 
     timing(metric: string, duration: number, customTags?: string) {
         this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + (customTags||StatsdMetrics.EmptyString), duration);
-    }
-
-    startTrace(request: IHttpAdapterRequest): IRequestTracer {
-        return this.zipkin.startTrace(request);
-    }
-
-    endTrace(tracer: IRequestTracer) {
-        tracer && tracer.endTrace();
     }
 }

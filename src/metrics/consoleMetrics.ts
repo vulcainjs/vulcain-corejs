@@ -41,12 +41,4 @@ export class ConsoleMetrics implements IMetrics {
     timing(metric:string, duration:number, customTags?: string) {
         this.log(`METRICS: timing  ${metric + this.tags + customTags} : ${duration}ms`);
     }
-
-        startTrace(request: IHttpAdapterRequest) {
-            return null;
-    }
-
-    endTrace(tracer: IRequestTracer) {
-        tracer && tracer.endTrace();
-    }
 }

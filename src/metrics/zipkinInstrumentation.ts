@@ -2,6 +2,7 @@ import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 import { System } from '../configurations/globals/system';
 import { IRequestTracer } from './statsdMetrics';
 import { Logger } from '../servers/requestContext';
+import { Conventions } from '../utils/conventions';
 const {
     Annotation,
     HttpHeaders: Header,
@@ -15,20 +16,23 @@ export class ZipkinInstrumentation {
     private tracer;
 
     constructor() {
-        const ctxImpl = new ExplicitContext();
-        const recorder = System.isDevelopment
-            ? new ConsoleRecorder()
-            : new BatchRecorder({
-                logger: new HttpLogger({
-                    endpoint: 'http://zipkin-agent:9411/api/v1/spans',
-                    httpInterval: 10000
-                })
-            });
-        this.tracer = new Tracer({ ctxImpl, recorder: new ConsoleRecorder() });
+        let zipkinAddress = process.env[Conventions.instance.ENV_VULCAIN_ZIPKIN];
+        if (zipkinAddress) {
+            const ctxImpl = new ExplicitContext();
+            const recorder = System.isDevelopment
+                ? new ConsoleRecorder()
+                : new BatchRecorder({
+                    logger: new HttpLogger({
+                        endpoint: `http://${zipkinAddress}:9411/api/v1/spans`,
+                        httpInterval: 10000
+                    })
+                });
+            this.tracer = new Tracer({ ctxImpl, recorder });
+        }
     }
 
     startTrace(request: IHttpAdapterRequest): IRequestTracer {
-        return new ZipkinTrace(this.tracer, request);
+        return this.tracer && new ZipkinTrace(this.tracer, request);
     }
 }
 
@@ -89,6 +93,10 @@ export class ZipkinTrace implements IRequestTracer {
         });
     }
 
+    setCommand(verb: string) {
+        this.tracer.recordBinary("verb", verb);
+    }
+
     private readHeader(request: IHttpAdapterRequest, header: string) {
         const val = request.headers[header];
         if (val) {
@@ -102,11 +110,12 @@ export class ZipkinTrace implements IRequestTracer {
         return request.headers[Header.TraceId] !== undefined && request.headers[Header.SpanId] !== undefined;
     }
 
-    endTrace() {
+    endTrace(result) {
         try {
             this.tracer.scoped(() => {
                 this.tracer.setId(this.id);
-                // this.tracer.recordBinary('http.status_code', res.statusCode.toString());
+                if(result.error)
+                    this.tracer.recordBinary('error', result.error);
                 this.tracer.recordAnnotation(new Annotation.ServerSend());
             });
         }

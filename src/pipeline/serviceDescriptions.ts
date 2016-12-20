@@ -72,15 +72,16 @@ export class ServiceDescriptors {
     getHandlerInfo<T extends CommonActionMetadata>(container: IContainer, schema: string, action: string, optional?: boolean) {
         this.createHandlersTable();
 
-        let a = action && action.toLowerCase();
+        let verb = action && action.toLowerCase();
         let item:HandlerItem;
 
         if (this.monoSchema || !schema) {
-            item = this.routes.get(a);
+            item = this.routes.get(verb);
         }
         else {
             let s = schema && schema.toLowerCase();
-            item = this.routes.get(s + "." + a);
+            verb = s + "." + verb;
+            item = this.routes.get(verb);
         }
 
         if (!item) {
@@ -92,7 +93,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, kind: item.kind };
+            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, verb:verb, kind: item.kind };
         }
         catch (e) {
             System.log.error(null, e, `Unable to create handler action ${action}, schema ${schema}`);

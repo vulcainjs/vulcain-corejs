@@ -17,6 +17,7 @@ import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
+import { ZipkinTrace, ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 const guid = require('uuid');
 
 export class VulcainHeaderNames {
@@ -46,11 +47,11 @@ export abstract class AbstractAdapter {
     protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
+    private zipKin: ZipkinInstrumentation;
 
     private calcDelayInNanoSeconds(begin: [number, number]): number {
         // ts = [seconds, nanoseconds]
         const ts = process.hrtime(begin);
-        // convert seconds to miliseconds and nanoseconds to miliseconds as well
         return ts[0] * 1e9 + ts[1];
     }
 
@@ -64,6 +65,7 @@ export abstract class AbstractAdapter {
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let hasAsyncTasks = descriptors.getDescriptions().hasAsyncTasks;
         this.commandManager.startMessageBus(hasAsyncTasks);
+        this.zipKin = new ZipkinInstrumentation();
     }
 
     public abstract start(port: number);
@@ -74,7 +76,7 @@ export abstract class AbstractAdapter {
 
     protected startRequest(request: IHttpAdapterRequest) {
         let ctx = this.createRequestContext(request);
-        ctx.tracer = this.metrics.startTrace(request);
+        ctx.tracer = this.zipKin &&  this.zipKin.startTrace(request);
         ctx.beginTime = process.hrtime();
         return ctx;
     }
@@ -129,6 +131,8 @@ export abstract class AbstractAdapter {
             prefix && this.metrics.increment(prefix + MetricsConstant.failure);
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
+
+        ctx && ctx.tracer && ctx.tracer.endTrace(value);
 
         // Always remove userContext
         if (value) {
@@ -216,7 +220,6 @@ export abstract class AbstractAdapter {
     }
 
     protected async executeQueryRequest(request: IHttpAdapterRequest, ctx: RequestContext) {
-
         if (request.user) {
             ctx.user = request.user;
         }
@@ -264,6 +267,7 @@ export abstract class AbstractAdapter {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
             System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+            ctx.tracer.setCommand(info.verb);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {

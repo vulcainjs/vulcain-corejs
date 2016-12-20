@@ -237,7 +237,6 @@ export class RequestContext {
     }
 
     dispose() {
-        this.tracer && this.tracer.endTrace();
         this.container.dispose();
     }
 
