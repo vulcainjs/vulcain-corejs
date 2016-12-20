@@ -17,6 +17,7 @@ import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
+import { ZipkinTrace, ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 const guid = require('uuid');
 
 export class VulcainHeaderNames {
@@ -46,11 +47,11 @@ export abstract class AbstractAdapter {
     protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
+    private zipKin: ZipkinInstrumentation;
 
     private calcDelayInNanoSeconds(begin: [number, number]): number {
         // ts = [seconds, nanoseconds]
         const ts = process.hrtime(begin);
-        // convert seconds to miliseconds and nanoseconds to miliseconds as well
         return ts[0] * 1e9 + ts[1];
     }
 
@@ -64,6 +65,7 @@ export abstract class AbstractAdapter {
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let hasAsyncTasks = descriptors.getDescriptions().hasAsyncTasks;
         this.commandManager.startMessageBus(hasAsyncTasks);
+        this.zipKin = new ZipkinInstrumentation();
     }
 
     public abstract start(port: number);
@@ -72,12 +74,14 @@ export abstract class AbstractAdapter {
     public abstract useMiddleware(verb: string, path: string, handler: Function);
     protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpAdapterRequest);
 
-    private startRequest(command) {
-        // util.log("Request : " + JSON.stringify(command)); // TODO remove sensible data
-        return process.hrtime();
+    protected startRequest(request: IHttpAdapterRequest) {
+        let ctx = this.createRequestContext(request);
+        ctx.tracer = this.zipKin &&  this.zipKin.startTrace(request);
+        ctx.beginTime = process.hrtime();
+        return ctx;
     }
 
-    protected createRequestContext(request: IHttpAdapterRequest) {
+    private createRequestContext(request: IHttpAdapterRequest) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
 
         // Initialize headers & hostname
@@ -88,9 +92,10 @@ export abstract class AbstractAdapter {
 
         let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
         ctx.tenant = tenantPolicy.resolveTenant(ctx, request);
+        return ctx;
     }
 
-    private endRequest(begin: [number, number], response, ctx: RequestContext, e?: Error) {
+    private endRequest(response, ctx: RequestContext, e?: Error) {
         let value = response.value;
         let hasError = false;
         let prefix: string;
@@ -115,7 +120,7 @@ export abstract class AbstractAdapter {
             hasError = true;
         }
 
-        const duration = this.calcDelayInNanoSeconds(begin);
+        const duration = this.calcDelayInNanoSeconds(ctx.beginTime);
 
         // Duration
         prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);
@@ -126,6 +131,8 @@ export abstract class AbstractAdapter {
             prefix && this.metrics.increment(prefix + MetricsConstant.failure);
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
+
+        ctx && ctx.tracer && ctx.tracer.endTrace(value);
 
         // Always remove userContext
         if (value) {
@@ -213,7 +220,6 @@ export abstract class AbstractAdapter {
     }
 
     protected async executeQueryRequest(request: IHttpAdapterRequest, ctx: RequestContext) {
-
         if (request.user) {
             ctx.user = request.user;
         }
@@ -251,8 +257,6 @@ export abstract class AbstractAdapter {
     }
 
     private async executeRequest(manager: IManager, command, ctx: RequestContext): Promise<HttpResponse> {
-        const begin = this.startRequest(command);
-
         if (!command || !command.domain) {
             return new BadRequestResponse("domain is required.");
         }
@@ -263,6 +267,7 @@ export abstract class AbstractAdapter {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
             System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+            ctx.tracer.setCommand(info.verb);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {
@@ -276,13 +281,13 @@ export abstract class AbstractAdapter {
                 result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
             }
             // Response
-            this.endRequest(begin, result, ctx);
+            this.endRequest(result, ctx);
             return result;
         }
         catch (e) {
             let result = command;
             result.error = { message: e.message || e, errors: e.errors };
-            this.endRequest(begin, result, ctx, e);
+            this.endRequest(result, ctx, e);
             return new HttpResponse(result, e.statusCode);
         }
         finally {

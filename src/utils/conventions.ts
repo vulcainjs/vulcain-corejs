@@ -46,6 +46,7 @@ export class Conventions {
     defaultApplicationFolder = "/api";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
+
     defaultRabbitAddress = "rabbit";
     defaultMongoAddress = "mongo";
     defaultStatsdAddress = "statsd-agent";
@@ -55,10 +56,6 @@ export class Conventions {
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
     defaultTokenExpiration = "20m";
 
-    /**
-     * Environment variable for rabbit server address
-     *
-     */
     ENV_TOKEN_ISSUER = "VULCAIN_TOKEN_ISSUER";
     ENV_TOKEN_EXPIRATION = "VULCAIN_TOKEN_EXPIRATION";
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
@@ -76,6 +73,7 @@ export class Conventions {
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
     ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE";
     ENV_VULCAIN_SECRET_KEY = "VULCAIN_SECRET_KEY";
+    ENV_VULCAIN_ZIPKIN = "VULCAIN_ZIPKIN_HOST";
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,

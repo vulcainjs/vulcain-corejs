@@ -1,7 +1,14 @@
 import { Conventions } from '../utils/conventions';
 import * as Statsd from "statsd-client";
 import { System } from './../configurations/globals/system';
-import { IMetrics } from './metrics';
+import { IMetrics, MetricsConstant } from './metrics';
+import { ZipkinInstrumentation, ZipkinTrace } from './zipkinInstrumentation';
+import { IHttpAdapterRequest } from '../servers/abstractAdapter';
+
+export interface IRequestTracer {
+    endTrace(result);
+    setCommand(verb: string);
+}
 
 /**
  * Default metrics adapter
@@ -15,6 +22,7 @@ export class StatsdMetrics implements IMetrics {
     private statsd: Statsd;
     private tags: string;
     private static EmptyString = "";
+    private zipkin: ZipkinInstrumentation;
 
     constructor(address?: string) {
         if (!System.isDevelopment) {
@@ -24,6 +32,7 @@ export class StatsdMetrics implements IMetrics {
             this.tags = ",service=" + System.serviceName + ',version=' + System.serviceVersion;
             this.tags = this.tags.replace(/:/g, '-');
             System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
+            this.zipkin = new ZipkinInstrumentation();
         }
     }
 
