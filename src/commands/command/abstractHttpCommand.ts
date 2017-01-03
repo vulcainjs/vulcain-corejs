@@ -23,10 +23,9 @@ export abstract class AbstractHttpCommand {
 
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
-        if (!dep) {
-            throw new Error("HttpDependency annotation is required on command " + Object.getPrototypeOf(this).name);
+        if (dep) {
+            this.setMetricsTags(dep.uri);
         }
-        this.setMetricsTags(dep.uri);
     }
 
     /**
@@ -58,16 +57,20 @@ export abstract class AbstractHttpCommand {
     }
 
     protected async execAsync(verb: string, url: string, data?): Promise<any> {
+
+        this.setMetricsTags(url);
+
         if (System.hasMocks) {
             let result = System.mocks.applyMockHttp(url, verb);
             if (result !== undefined) {
                 return result;
             }
         }
-        let method = this[verb + "Async"];
+
+        let method: Function = this[verb + "Async"];
         if (!method)
             throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);
-        return await method(url, data);
+        return await method.apply(this, [url, data]);
     }
 
     protected postAsync(url: string, data) {
@@ -109,7 +112,7 @@ export abstract class AbstractHttpCommand {
                     }
                     else {
                         System.log.info(this.requestContext, `Http request ${verb} ${url} completed with error ${response.error}`);
-                        resolve(response);
+                        resolve(response.body);
                     }
                 });
             }

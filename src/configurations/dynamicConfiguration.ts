@@ -1,6 +1,8 @@
 import {DynamicProperties as DP} from './properties/dynamicProperties';
 import {IDynamicProperty} from './dynamicProperty';
 import { ConfigurationSourceBuilder } from './configurationSources/configurationSourceBuilder';
+import { Conventions } from '../utils/conventions';
+import { System } from './globals/system';
 
 /**
  *
@@ -45,11 +47,9 @@ export class DynamicConfiguration
      /**
       * Create a new property
       */
-     static asProperty<T>(value:T, name?:string, onPropertyChanged?: (e:IDynamicProperty<T>)=>void) : IDynamicProperty<T>
+     static asProperty<T>(value:T, name?:string) : IDynamicProperty<T>
      {
-         let prop = DP.factory.asProperty<T>(value, name);
-         if(onPropertyChanged)
-            prop.propertyChanged.subscribe(onPropertyChanged);
+         let prop = DP.factory.asProperty<T>( value, name);
          return prop;
      }
 
@@ -63,16 +63,17 @@ export class DynamicConfiguration
       *
       * @memberOf DynamicConfiguration
       */
-     static get<T>(name:string) {
-         let p = DP.instance.getProperty(name);
-         return p && p.value;
+     static getPropertyValue<T>(name:string) {
+         let p = DynamicConfiguration.getProperty(name);
+         return p && <T>p.value;
      }
 
      /**
       * Get a dynamic property
       */
      static getProperty<T>(name:string) : IDynamicProperty<T> {
-         return DP.instance.getProperty(name);
+         let prop = DP.instance.getProperty(name);
+         return prop;
      }
 
      /**
@@ -80,14 +81,28 @@ export class DynamicConfiguration
       * defaultValue can be a value or a factory
       */
      static getOrCreateProperty<T>( name:string, defaultValue: T ) : IDynamicProperty<T> {
-         return DP.instance.getOrCreateProperty(name, defaultValue);
+        let prop = this.getProperty<T>( name );
+        if( prop )
+            return prop;
+
+        return this.asProperty<T>( defaultValue, name );
      }
 
      /**
       * Update a property value or create a new one if not exists
       */
-     static setOrCreateProperty<T>( name:string, defaultValue: ()=>IDynamicProperty<T> | T ) : IDynamicProperty<T> {
-         return DP.instance.createOrUpdateProperty(name, defaultValue);
+     static setOrCreateProperty<T>( name:string, defaultValue: T ) : IDynamicProperty<T> {
+
+        let prop = this.getProperty<T>( name );
+        if( !prop )
+        {
+            prop = this.asProperty<T>( defaultValue, name );
+        }
+        else
+        {
+            prop.set(defaultValue);
+        }
+        return prop;
      }
 
      /**

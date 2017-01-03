@@ -67,7 +67,18 @@ export class ExpressAuthentication {
         }
     }
 
-    init(testUser: UserContext) {
+
+    /**
+     * Initialize authentication process
+     *
+     * @param {UserContext} testUser User to use for testing when no authentication is provide
+     * @param {boolean} ignoreInvalidBearer Do not reject invalid bearer token, just ignore it. Can be initialize with application.ignoreInvalidBearer property.
+     * @returns
+     *
+     * @memberOf ExpressAuthentication
+     */
+    init(testUser: UserContext, ignoreInvalidBearer: boolean) {
+
         return async (req, res: express.Response, next) => {
             let ctx: RequestContext = req.requestContext;
             let authorization = req.headers['authorization'];
@@ -113,7 +124,7 @@ export class ExpressAuthentication {
                         next();
                         return;
                     }
-                    else if (strategyName !== "bearer") {
+                    else if (strategyName !== "bearer" || !ignoreInvalidBearer) {
                         res.status(401);
                         res.send();
                         return;

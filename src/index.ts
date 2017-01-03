@@ -1,4 +1,4 @@
-import './preloader';
+import './preloader'; // First
 
 // Configurations
 
@@ -18,7 +18,7 @@ export * from './schemas/annotations'
 
 // Auth
 export { ExpressAuthentication } from './servers/express/expressAuthentication';
-export { VerifyTokenParameter } from './defaults/services';
+export { VerifyTokenParameter, ITokenService } from './defaults/services';
 
 // Core
 export * from './application'

@@ -266,7 +266,7 @@ export class ServiceDescriptors {
             let type = this.getPropertyType(p.item || p.type);
             if (type) {
                 let metadata = { type: p.type, item: p.item, values: p.values, required: p.required, description: p.description };
-                let pdesc: PropertyDescription = <any>{ name: k, type: p.item ? type.name + "[]" : type.name, required: p.required, description: p.description, metadata };
+                let pdesc: PropertyDescription = <any>{ name: k, type: p.item ? p.item + "[]" : type.name, required: p.required, description: p.description, metadata };
                 // Insert required at the beginning
                 if (!pdesc.required)
                     desc.properties.push(pdesc);
@@ -302,6 +302,9 @@ export class ServiceDescriptors {
     }
 
     private getPropertyType(name: string) {
+        if(!name || name === "any")
+            return {name:"any"};
+            
         while (true) {
             let type = this.domain._findType(name);
             if (!type) {

@@ -3,6 +3,7 @@ import { System } from '../configurations/globals/system';
 import { IRequestTracer } from './statsdMetrics';
 import { Logger } from '../servers/requestContext';
 import { Conventions } from '../utils/conventions';
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 const {
     Annotation,
     HttpHeaders: Header,
@@ -16,17 +17,18 @@ export class ZipkinInstrumentation {
     private tracer;
 
     constructor() {
-        let zipkinAddress = process.env[Conventions.instance.ENV_VULCAIN_ZIPKIN];
+        let zipkinAddress = DynamicConfiguration.getPropertyValue<string>("zipkinAgent");
         if (zipkinAddress) {
+            if (!zipkinAddress.startsWith("http://")) {
+                zipkinAddress = "http://" + zipkinAddress;
+            }
             const ctxImpl = new ExplicitContext();
-            const recorder = System.isDevelopment
-                ? new ConsoleRecorder()
-                : new BatchRecorder({
-                    logger: new HttpLogger({
-                        endpoint: `http://${zipkinAddress}:9411/api/v1/spans`,
-                        httpInterval: 10000
-                    })
-                });
+            const recorder = new BatchRecorder({
+                logger: new HttpLogger({
+                    endpoint: `${zipkinAddress}:9411/api/v1/spans`,
+                    httpInterval: 10000
+                })
+            });
             this.tracer = new Tracer({ ctxImpl, recorder });
         }
     }
@@ -114,7 +116,7 @@ export class ZipkinTrace implements IRequestTracer {
         try {
             this.tracer.scoped(() => {
                 this.tracer.setId(this.id);
-                if(result.error)
+                if (result.error)
                     this.tracer.recordBinary('error', result.error);
                 this.tracer.recordAnnotation(new Annotation.ServerSend());
             });

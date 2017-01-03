@@ -6,17 +6,15 @@ const moment = require('moment');
 
 export class VulcainConfigurationSource extends HttpConfigurationSource
 {
+    private token: string;
+
     constructor(uri: string, private options) {
         super(uri);
-        if (!System.vulcainToken && !System.isTestEnvironnment) {
-            System.log.info(null, "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
-        }
+        this.token = System.vulcainToken;
     }
 
     protected prepareRequest(request) {
-        if (System.vulcainToken)
-            request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
-
+        request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
         return request;
     }
 

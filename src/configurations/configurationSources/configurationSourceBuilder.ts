@@ -20,14 +20,21 @@ export class ConfigurationSourceBuilder {
     }
 
     public addVulcainSource() {
-        let uri = `http://${System.vulcainServer}/api/config.forservice`;
-        let options = {
-            cluster: System.environment,
-            service: System.serviceName,
-            version: System.serviceVersion,
-            namespace: System.domainName
-        };
-        this.addSource(new VulcainConfigurationSource(uri, options));
+        if (System.vulcainServer) {
+            if (!System.vulcainToken && !System.isTestEnvironnment) {
+                System.log.info(null, "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
+            }
+            else {
+                let uri = `http://${System.vulcainServer}/api/config.forservice`;
+                let options = {
+                    cluster: System.environment,
+                    service: System.serviceName,
+                    version: System.serviceVersion,
+                    namespace: System.domainName
+                };
+                this.addSource(new VulcainConfigurationSource(uri, options));
+            }
+        }
 
         return this;
     }

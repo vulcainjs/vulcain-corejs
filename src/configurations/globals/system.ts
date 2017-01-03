@@ -183,7 +183,10 @@ export class System {
      *
      * @memberOf System
      */
-    static resolveAlias(name: string, version?: string) {
+    static resolveAlias(name: string, version?: string): string {
+        if(!name)
+            return null;
+
         // Try to find an alternate uri
         if (System._vulcainConfig && System._vulcainConfig.alias) {
             let alias = System._vulcainConfig.alias[name];
@@ -250,8 +253,8 @@ export class System {
      */
     static get vulcainServer() {
         if (!System._vulcainServer) {
-            let env = process.env[Conventions.instance.ENV_VULCAIN_SERVER];
-            System._vulcainServer = env || Conventions.instance.defaultVulcainServerName; // for dev
+            let env = DynamicConfiguration.getPropertyValue<string>("vulcainServer");
+            System._vulcainServer = env; // for dev
         }
         return System._vulcainServer;
     }
@@ -266,7 +269,7 @@ export class System {
      */
     static get vulcainToken() {
         if (System._vulcainToken === undefined) {
-            System._vulcainToken = process.env[Conventions.instance.ENV_VULCAIN_TOKEN];
+            System._vulcainToken = DynamicConfiguration.getPropertyValue<string>("vulcainToken");
         }
         return System._vulcainToken;
     }
@@ -367,13 +370,8 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createSharedConfigurationProperty<T>(name: string, schema: string, defaultValue?: T): IDynamicProperty<T> {
-        defaultValue = process.env[name.toUpperCase().replace('.', '_')] || defaultValue;
+    public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
 
-        if (!defaultValue && !schema)
-            throw new Error("Schema is required if defaultValue is null");
-
-        System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
             System.domainName + "." + name,
@@ -386,13 +384,8 @@ export class System {
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createServiceConfigurationProperty<T>(name: string, schema: string, defaultValue?: T) {
-        defaultValue = process.env[name.toUpperCase().replace('.', '_')] || defaultValue;
+    public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
 
-        if (!defaultValue && !schema)
-            throw new Error("Schema is required if defaultValue is null");
-
-        System.manifest.configurations[name] = schema || typeof defaultValue || "any";
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
             System.serviceName + "." + System.serviceVersion + "." + name,

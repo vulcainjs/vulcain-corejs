@@ -39,41 +39,36 @@ export class Conventions {
         return Conventions._instance;
     }
 
+    static toEnvironmentVariableName(name: string) {
+        const regex = /([A-Z])|(\.)/g;
+        const subst = `_\$1`;
+        let res = name.replace(regex, subst);
+        return res.toUpperCase();
+    }
+
     /**
-     * Default api source files
+     * Naming
      *
      */
     defaultApplicationFolder = "/api";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
-
-    defaultRabbitAddress = "rabbit";
-    defaultMongoAddress = "mongo";
-    defaultStatsdAddress = "statsd-agent";
-    defaultStatsdDelayInMs = 10000;
-    defaultVulcainServerName = "vulcain-server";
     vulcainFileName = ".vulcain";
+
+    defaultStatsdDelayInMs = 10000;
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
     defaultTokenExpiration = "20m";
 
+    ENV_VULCAIN_SECRET_KEY = "VULCAIN_SECRET_KEY";
     ENV_TOKEN_ISSUER = "VULCAIN_TOKEN_ISSUER";
     ENV_TOKEN_EXPIRATION = "VULCAIN_TOKEN_EXPIRATION";
+
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
-    /**
-     * Api key to get config from vulcain server
-     *
-     *
-     * @memberOf Conventions
-     */
-    ENV_VULCAIN_TOKEN = "VULCAIN_TOKEN";
-    ENV_VULCAIN_ENV = "VULCAIN_ENV";
+    ENV_VULCAIN_ENV = "VULCAIN_ENV";            // staging, prod, test...
     ENV_VULCAIN_DOMAIN = "VULCAIN_DOMAIN";
-    ENV_VULCAIN_SERVER = "VULCAIN_SERVER";
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
-    ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE";
-    ENV_VULCAIN_SECRET_KEY = "VULCAIN_SECRET_KEY";
-    ENV_VULCAIN_ZIPKIN = "VULCAIN_ZIPKIN_HOST";
+    ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE"; // 'production', 'test' or 'local'
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,

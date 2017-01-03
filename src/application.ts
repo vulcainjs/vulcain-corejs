@@ -34,8 +34,27 @@ export class Application {
     private _executablePath: string;
     private _container: IContainer;
     private _domain: Domain;
+    /**
+     * Enable hystrix metrics available from /hystrix.stream
+     *
+     * @type {boolean}
+     * @memberOf Application
+     */
     public enableHystrixStream: boolean;
+    /**
+     * Ignore invalid bearer token
+     *
+     * @type {boolean}
+     * @memberOf Application
+     */
+    public ignoreInvalidBearerToken: boolean=false;
     private _basePath: string;
+    /**
+     *
+     *
+     * @type {AbstractAdapter}
+     * @memberOf Application
+     */
     public adapter: AbstractAdapter;
 
     /**
@@ -72,6 +91,9 @@ export class Application {
      * Called when the server adapter is started
      *
      * @param {*} server
+     * @param {*} adapter
+     *
+     * @memberOf Application
      */
     onServerStarted(server: any, adapter: any) { }
 
@@ -160,6 +182,14 @@ export class Application {
         });
     }
 
+    /**
+     * Define all scopes used in this service
+     *
+     * @protected
+     * @param {ScopesDescriptor} scopes Scope definitions manager - Use scopes.defineScope for each scope
+     *
+     * @memberOf Application
+     */
     protected defineScopes(scopes: ScopesDescriptor) {
 
     }

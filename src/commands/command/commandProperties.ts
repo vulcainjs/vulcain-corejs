@@ -159,7 +159,6 @@ export class CommandProperties {
     private get<TValue>(name: string, schema: string, defaultValue?: TValue) {
         return System.createServiceConfigurationProperty<TValue>(
             this.commandName + "." + name,
-            schema,
             defaultValue || Conventions.instance.hystrix[name]);
     }
 }
