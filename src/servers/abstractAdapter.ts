@@ -267,7 +267,7 @@ export abstract class AbstractAdapter {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
             System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
-            ctx.tracer.setCommand(info.verb);
+            ctx.tracer && ctx.tracer.setCommand(info.verb);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {
