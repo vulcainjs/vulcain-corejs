@@ -54,11 +54,16 @@ export class ExpressAdapter extends AbstractAdapter {
             if (response.contentType && response.contentType !== HttpResponse.VulcainContentType) {
                 expressResponse.contentType(response.contentType);
             }
-            if (response.encoding) {
-                expressResponse.end(response.content, response.encoding);
+            if (response.content) {
+                if (response.encoding) {
+                    expressResponse.end(response.content, response.encoding);
+                }
+                else {
+                    expressResponse.send(response.content);
+                }
             }
             else {
-                expressResponse.send(response.content);
+                expressResponse.end();
             }
         }
         catch (e) {
