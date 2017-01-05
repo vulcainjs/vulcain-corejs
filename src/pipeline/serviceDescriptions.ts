@@ -39,6 +39,7 @@ export class ActionDescription {
     scope: string;
     inputSchema: string;
     outputSchema: string;
+    outputType?: string;
     verb: string;
     async: boolean;
 }
@@ -195,6 +196,7 @@ export class ServiceDescriptors {
                 schema: schema,
                 kind: metadata.action === "get" ? "get" : "query",
                 verb: verb,
+                outputType: metadata.outputType || metadata.action === "get" ? "one" : "many",
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,
@@ -304,7 +306,7 @@ export class ServiceDescriptors {
     private getPropertyType(name: string) {
         if(!name || name === "any")
             return {name:"any"};
-            
+
         while (true) {
             let type = this.domain._findType(name);
             if (!type) {
