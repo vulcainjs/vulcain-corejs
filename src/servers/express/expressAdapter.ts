@@ -43,21 +43,34 @@ export class ExpressAdapter extends AbstractAdapter {
             return;
         }
 
-        if (response.headers) {
-            for (const [k, v] of response.headers) {
-                expressResponse.setHeader(k, v);
+        try {
+            if (response.headers) {
+                for (const [k, v] of response.headers) {
+                    expressResponse.setHeader(k, v);
+                }
+            }
+
+            expressResponse.statusCode = response.statusCode || 200;
+            if (response.contentType && response.contentType !== HttpResponse.VulcainContentType) {
+                expressResponse.contentType(response.contentType);
+            }
+            if (response.content) {
+                if (response.encoding) {
+                    expressResponse.end(response.content, response.encoding);
+                }
+                else {
+                    expressResponse.send(response.content);
+                }
+            }
+            else {
+                expressResponse.end();
             }
         }
-
-        expressResponse.statusCode = response.statusCode || 200;
-        if (response.contentType && response.contentType !== HttpResponse.VulcainContentType) {
-            expressResponse.contentType(response.contentType);
-        }
-        if (response.encoding) {
-            expressResponse.end(response.content, response.encoding);
-        }
-        else {
-            expressResponse.send(response.content);
+        catch (e) {
+            try {
+                expressResponse.end();
+            }
+            catch (e) { }
         }
     }
 
