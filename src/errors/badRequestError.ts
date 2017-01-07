@@ -4,7 +4,7 @@ import { ValidationError } from '../pipeline/common';
 // and do not call getfallback
 export class BadRequestError extends ApplicationRequestError {
     constructor(message: string, errors?:Array<ValidationError>) {
-        super(message, errors);
+        super(message, errors, 400);
     }
 }
 

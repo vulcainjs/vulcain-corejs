@@ -155,7 +155,7 @@ export class QueryManager implements IManager {
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
             let res = this.createResponse(ctx, query, error);
-            return new HttpResponse(res, e.statusCode);
+            return new HttpResponse(res, e.statusCode || 500);
         }
     }
 }

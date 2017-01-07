@@ -9,6 +9,7 @@ import { RuntimeError } from './../errors/runtimeError';
 import { System } from './../configurations/globals/system';
 import { ScopesDescriptor } from './scopeDescriptors';
 import * as Path from 'path';
+import { BadRequestError } from '../errors/badRequestError';
 
 export interface HandlerItem {
     methodName: string;
@@ -102,7 +103,7 @@ export class ServiceDescriptors {
             if (optional)
                 return null;
             else
-                throw new RuntimeError(`no handler method founded for action ${action}, schema ${schema}`);
+                throw new BadRequestError(`no handler method founded for action ${action}, schema ${schema}`);
         }
 
         try {

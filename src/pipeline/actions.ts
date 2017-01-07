@@ -276,7 +276,7 @@ export class CommandManager implements IManager {
         catch (e) {
             let error = (e instanceof CommandRuntimeError) ? e.error : e;
             let res = this.createResponse(ctx, command, error);
-            return new HttpResponse(res, e.statusCode);
+            return new HttpResponse(res, e.statusCode || 500);
         }
     }
 

@@ -35,6 +35,7 @@ export class DefaultTenantPolicy {
         if (!tenant.startsWith("pattern:")) {
             return tenant;
         }
+
         let pattern = tenant.substr("pattern:".length);
         try {
             const regex = new RegExp(pattern.trim());
