@@ -8,6 +8,7 @@ import { QueryActionMetadata } from './query';
 import { RuntimeError } from './../errors/runtimeError';
 import { System } from './../configurations/globals/system';
 import { ScopesDescriptor } from './scopeDescriptors';
+import * as Path from 'path';
 
 export interface HandlerItem {
     methodName: string;
@@ -54,6 +55,7 @@ export class ServiceDescription {
     schemas: Array<SchemaDescription>;
     hasAsyncTasks: boolean;
     scopes: Array<{ name: string, description: string }>;
+    packages: {name: string, version: string}[];
 }
 
 export class ServiceDescriptors {
@@ -63,7 +65,18 @@ export class ServiceDescriptors {
     private routes = new Map<string, HandlerItem>();
     private monoSchema: boolean = true;
 
-    constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) { }
+    constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
+     }
+
+    private *retrievePackage() {
+        let packageJson = require('../package.json');
+        let dependencies = packageJson.dependencies;
+
+        for(let packageName of Object.keys(dependencies)) {
+            let pkg = require(Path.join('..', 'node_modules', packageName, "package.json"));
+            yield {name: packageName, version: pkg.version};
+        }
+    }
 
     getDescriptions() {
         this.createHandlersTable();
@@ -130,6 +143,7 @@ export class ServiceDescriptors {
             serviceVersion: System.serviceVersion,
             alternateAddress: null,
             hasAsyncTasks: false,
+            packages: Array.from(this.retrievePackage()),
             scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description }; })
         };
 

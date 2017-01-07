@@ -23,7 +23,6 @@ export class StatsdMetrics implements IMetrics {
     private statsd: Statsd;
     private tags: string;
     private static EmptyString = "";
-    private zipkin: ZipkinInstrumentation;
 
     constructor(address?: string) {
         if (!System.isDevelopment) {
@@ -34,7 +33,6 @@ export class StatsdMetrics implements IMetrics {
                 this.tags = this.tags.replace(/:/g, '-');
                 System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
             }
-            this.zipkin = new ZipkinInstrumentation();
         }
     }
 
