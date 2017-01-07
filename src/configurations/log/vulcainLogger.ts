@@ -8,7 +8,7 @@ export class VulcainLogger {
 
     private static get enableInfo() {
         if (!VulcainLogger._enableInfo)
-            VulcainLogger._enableInfo = System && System.createServiceConfigurationProperty("enableVerboseLog", "boolean", false);
+            VulcainLogger._enableInfo = System && System.createServiceConfigurationProperty("enableVerboseLog", false);
         return VulcainLogger._enableInfo.value;
     }
 

@@ -1,8 +1,34 @@
 import { CommonRequestData } from '../../pipeline/common';
 
 export class MockManager {
+    private mocks;
 
-    constructor(private mocks) {
+    constructor(mocks) {
+        this.mocks = this.toJsonLowercase(mocks);
+    }
+
+    private toJsonLowercase(json) {
+        if (!json)
+            return null;
+
+        let res = {};
+        for (let key of Object.keys(json)) {
+            let val = json[key];
+            key = key.toLowerCase();
+            if (Array.isArray(val)) {
+                res[key] = [];
+                for (let item of val) {
+                    res[key].push(this.toJsonLowercase(item));
+                }
+            }
+            else if (typeof val === "object") {
+                res[key] = this.toJsonLowercase(val);
+            }
+            else {
+                res[key] = val;
+            }
+        }
+        return res;
     }
 
     private deepCompare(a, b) {
@@ -47,13 +73,16 @@ export class MockManager {
     }
 
     public applyMockService(serviceName: string, serviceVersion: string, verb: string, data) {
-        let mockService = this.mocks.services[serviceName];
+        if (!serviceName)
+            return;
+
+        let mockService = this.mocks.services[serviceName.toLowerCase()];
         mockService = (mockService && mockService[serviceVersion]) || mockService;
         if (!mockService) {
             return;
         }
 
-        let mock = mockService[verb];
+        let mock = verb && mockService[verb.toLowerCase()];
         if (!mock) {
             return;
         }

@@ -20,6 +20,7 @@ import { ConsoleMetrics } from '../metrics/consoleMetrics';
 import { StatsdMetrics } from '../metrics/statsdMetrics';
 import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizationPolicy';
 import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 /**
  * Component container for dependency injection
@@ -100,8 +101,15 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
-        let uri = System.resolveAlias(address || Conventions.instance.defaultRabbitAddress);
-        let bus = new RabbitAdapter("amqp://" + (uri || address || Conventions.instance.defaultRabbitAddress));
+        let uri = System.resolveAlias(address) || address || DynamicConfiguration.getPropertyValue<string>("rabbit");
+        if( !uri ) {
+            System.log.info(null, "no value found for rabbit address. Ignore adapter");
+            return;
+        }
+        if(!uri.startsWith("amqp://")) {
+            uri = "amqp://" + uri;
+        }
+        let bus = new RabbitAdapter(uri);
         if (usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if (usage === BusUsage.all || usage === BusUsage.commandOnly)
@@ -115,8 +123,14 @@ export class Container implements IContainer {
      * @param {any} [mongoOptions] Mongodb options
      */
     useMongoProvider(address?: string, mongoOptions?) {
-        let uri = System.resolveAlias(address || Conventions.instance.defaultMongoAddress);
-        uri = "mongodb://" + (uri || address || Conventions.instance.defaultMongoAddress);
+        let uri = System.resolveAlias(address) || address || DynamicConfiguration.getPropertyValue<string>("mongo");
+        if( !uri ) {
+            System.log.info(null, "no value found for mongo address. Ignore adapter");
+            return;
+        }
+        if(!uri.startsWith("mongodb://")) {
+            uri = "mongodb://" + uri;
+        }
         this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
     }
 

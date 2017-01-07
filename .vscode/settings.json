@@ -3,4 +3,6 @@
     "editor.renderWhitespace": true,
     "files.trimTrailingWhitespace": true,
     "tsimporter.filesToExclude": [".dist/**", "./test/**"]
+,
+"typescript.check.workspaceVersion": false
 }

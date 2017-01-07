@@ -134,7 +134,7 @@ describe('DynamicConfiguration', function () {
             let source2 = new MemoryConfigurationSource();
             await DynamicConfiguration.instance.startPollingAsync(source2);
 
-            let prop = DynamicConfiguration.instance.getOrCreateProperty("test30", 0);
+            let prop = DynamicConfiguration.getOrCreateProperty("test30", 0);
             expect(0).to.equal(prop.value);
 
             source1.set("test30", 10);
