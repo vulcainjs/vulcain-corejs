@@ -76,8 +76,8 @@ export abstract class AbstractAdapter {
 
     protected startRequest(request: IHttpAdapterRequest) {
         let ctx = this.createRequestContext(request);
-        ctx.tracer = this.zipKin &&  this.zipKin.startTrace(request);
-        ctx.beginTime = process.hrtime();
+        ctx.tracer = this.zipKin && this.zipKin.startTrace(request);
+        ctx.beginTime = <[number, number]>process.hrtime();
         return ctx;
     }
 
@@ -225,25 +225,33 @@ export abstract class AbstractAdapter {
         }
 
         let query: QueryData = <any>{ domain: this.domainName };
-        this.populateWithActionSchema(query, request, "all");
-        if (query.action === "get") {
-            if (!request.params.id) {
-                return new BadRequestResponse("Id is required");
-            }
+        try {
+            this.populateWithActionSchema(query, request, "all");
+            if (query.action === "get") {
+                if (!request.params.id) {
+                    return new BadRequestResponse("Id is required");
+                }
 
-            let requestArgs = this.populateFromQuery(request);
-            if (requestArgs.count === 0) {
-                query.params = request.params.id;
+                let requestArgs = this.populateFromQuery(request);
+                if (requestArgs.count === 0) {
+                    query.params = request.params.id;
+                }
+                else {
+                    query.params = requestArgs.params;
+                    query.params.id = request.params.id;
+                }
             }
             else {
-                query.params = requestArgs.params;
-                query.params.id = request.params.id;
+                query.maxByPage = (request.query.$maxByPage && parseInt(request.query.$maxByPage)) || 100;
+                query.page = (request.query.$page && parseInt(request.query.$page)) || 0;
+                query.params = this.populateFromQuery(request).params;
             }
         }
-        else {
-            query.maxByPage = (request.query.$maxByPage && parseInt(request.query.$maxByPage)) || 100;
-            query.page = (request.query.$page && parseInt(request.query.$page)) || 0;
-            query.params = this.populateFromQuery(request).params;
+        catch (e) {
+            let result = <any>query;
+            result.error = { message: e.message || e, errors: e.errors };
+            this.endRequest(result, ctx, e);
+            return new HttpResponse(result, e.statusCode);
         }
         return await this.executeRequest(this.queryManager, query, ctx);
     }
@@ -288,7 +296,7 @@ export abstract class AbstractAdapter {
             let result = command;
             result.error = { message: e.message || e, errors: e.errors };
             this.endRequest(result, ctx, e);
-            return new HttpResponse(result, e.statusCode);
+            return new HttpResponse(result, e.statusCode || 500);
         }
         finally {
             ctx && ctx.dispose();

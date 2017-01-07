@@ -8,6 +8,7 @@ import { QueryActionMetadata } from './query';
 import { RuntimeError } from './../errors/runtimeError';
 import { System } from './../configurations/globals/system';
 import { ScopesDescriptor } from './scopeDescriptors';
+import { BadRequestError } from '../errors/badRequestError';
 
 export interface HandlerItem {
     methodName: string;
@@ -62,7 +63,9 @@ export class ServiceDescriptors {
     private routes = new Map<string, HandlerItem>();
     private monoSchema: boolean = true;
 
-    constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) { }
+    constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
+        
+     }
 
     getDescriptions() {
         this.createHandlersTable();
@@ -88,7 +91,7 @@ export class ServiceDescriptors {
             if (optional)
                 return null;
             else
-                throw new RuntimeError(`no handler method founded for action ${action}, schema ${schema}`);
+                throw new BadRequestError(`no handler method founded for action ${action}, schema ${schema}`);
         }
 
         try {

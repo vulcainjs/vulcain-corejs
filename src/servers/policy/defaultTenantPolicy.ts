@@ -32,23 +32,20 @@ export class DefaultTenantPolicy {
             return tenant;
         }
 
-        let parts = tenant.split(':');
-        if (parts.length !== 2 || parts[0] !== "pattern") {
+        if (!tenant.startsWith("pattern:")) {
             return tenant;
         }
 
-        let patterns = parts[1].split(',');
-        for (let pattern of patterns) {
-            try {
-                const regex = new RegExp(pattern.trim());
-                const groups = regex.exec(ctx.hostName);
-                if (groups && groups.length > 0) {
-                    return groups[1];
-                }
+        let pattern = tenant.substr("pattern:".length);
+        try {
+            const regex = new RegExp(pattern.trim());
+            const groups = regex.exec(ctx.hostName);
+            if (groups && groups.length > 0) {
+                return groups[1];
             }
-            catch (e) {
-                ctx.logError(e, "TENANT pattern cannot be resolved " + pattern);
-            }
+        }
+        catch (e) {
+            ctx.logError(e, "TENANT pattern cannot be resolved " + pattern);
         }
     }
 
@@ -61,7 +58,7 @@ export class DefaultTenantPolicy {
         }
 
         // 2 - Header
-        tenant = this.resolveFromHeader( ctx, req);
+        tenant = this.resolveFromHeader(ctx, req);
         if (tenant) {
             return tenant;
         }
