@@ -56,7 +56,6 @@ export class ServiceDescription {
     schemas: Array<SchemaDescription>;
     hasAsyncTasks: boolean;
     scopes: Array<{ name: string, description: string }>;
-    packages: {name: string, version: string}[];
 }
 
 export class ServiceDescriptors {
@@ -67,16 +66,6 @@ export class ServiceDescriptors {
     private monoSchema: boolean = true;
 
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
-     }
-
-    private *retrievePackage() {
-        let packageJson = require('../package.json');
-        let dependencies = packageJson.dependencies;
-
-        for(let packageName of Object.keys(dependencies)) {
-            let pkg = require(Path.join('..', 'node_modules', packageName, "package.json"));
-            yield {name: packageName, version: pkg.version};
-        }
     }
 
     getDescriptions() {
@@ -88,7 +77,7 @@ export class ServiceDescriptors {
         this.createHandlersTable();
 
         let verb = action && action.toLowerCase();
-        let item:HandlerItem;
+        let item: HandlerItem;
 
         if (this.monoSchema || !schema) {
             item = this.routes.get(verb);
@@ -108,7 +97,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, verb:verb, kind: item.kind };
+            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
             System.log.error(null, e, `Unable to create handler action ${action}, schema ${schema}`);
@@ -144,7 +133,6 @@ export class ServiceDescriptors {
             serviceVersion: System.serviceVersion,
             alternateAddress: null,
             hasAsyncTasks: false,
-            packages: Array.from(this.retrievePackage()),
             scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description }; })
         };
 
@@ -319,8 +307,8 @@ export class ServiceDescriptors {
     }
 
     private getPropertyType(name: string) {
-        if(!name || name === "any")
-            return {name:"any"};
+        if (!name || name === "any")
+            return { name: "any" };
 
         while (true) {
             let type = this.domain._findType(name);

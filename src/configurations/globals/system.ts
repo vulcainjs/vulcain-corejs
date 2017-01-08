@@ -237,8 +237,10 @@ export class System {
             let env = process.env[Conventions.instance.ENV_VULCAIN_ENV];
             if (env)
                 System._environment = env;
-            else
-                throw new Error("Environment variable " + Conventions.instance.ENV_VULCAIN_ENV + " is required");
+            else {
+                System.log.info(null, "Environment variable " + Conventions.instance.ENV_VULCAIN_ENV + " is not defined. Using 'dev' by default.");
+                System._environment = "dev";
+            }
         }
         return System._environment;
     }
@@ -421,7 +423,7 @@ export class System {
             }
 
 
-            let query = urlSegments.filter((s: any) => typeof s !== 'string');
+            let query = urlSegments.filter((s: any) => s && typeof s !== 'string');
             if (query.length) {
                 let sep = hasQueryPoint ? "&" : '?';
                 query.forEach((obj: any) => {

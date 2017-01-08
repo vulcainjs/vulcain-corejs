@@ -1,4 +1,6 @@
 import { System } from './../globals/system';
+import * as fs from 'fs';
+import * as Path from 'path';
 
 export interface ServiceDependencyInfo {
     service: string;
@@ -30,7 +32,8 @@ export class VulcainManifest {
     dependencies: {
         services: Array<ServiceDependencyInfo>,
         externals: Array<ExternalDependencyInfo>,
-        databases: Array<DatabaseDependencyInfo>
+        databases: Array<DatabaseDependencyInfo>,
+        packages: { name: string, version: string }[]
     };
     configurations: { [name: string]: string };
 
@@ -38,9 +41,28 @@ export class VulcainManifest {
         this.dependencies = {
             services: [],
             externals: [],
-            databases: []
+            databases: [],
+            packages: Array.from(this.retrievePackage())
         };
         this.configurations = {};
+    }
+
+    private *retrievePackage() {
+        try {
+            let basePath = Path.dirname(require.main.filename);
+            let json = fs.readFileSync(Path.join(basePath, "..", "package.json"), "utf8");
+            let pkg = JSON.parse(json);
+            let dependencies = pkg.dependencies;
+
+            for (let packageName of Object.keys(dependencies)) {
+                json = fs.readFileSync(Path.join(basePath, "..", 'node_modules', packageName, "package.json"), "utf8");
+                pkg = JSON.parse(json);
+                yield { name: packageName, version: pkg.version };
+            }
+        }
+        catch (e) {
+            System.log.error(null, e, "Can not read packages version. Skip it");
+        }
     }
 }
 
