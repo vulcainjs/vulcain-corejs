@@ -85,7 +85,8 @@ export class DynamicConfiguration
         if( prop )
             return prop;
 
-        return this.asProperty<T>( defaultValue, name );
+        return  DP.factory.asProperty<T>( defaultValue, name, true);
+
      }
 
      /**
@@ -96,7 +97,7 @@ export class DynamicConfiguration
         let prop = this.getProperty<T>( name );
         if( !prop )
         {
-            prop = this.asProperty<T>( defaultValue, name );
+            prop = DP.factory.asProperty<T>( defaultValue, name, true);
         }
         else
         {

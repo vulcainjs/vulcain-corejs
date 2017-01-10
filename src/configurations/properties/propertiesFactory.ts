@@ -17,9 +17,9 @@ export class PropertiesFactory implements IPropertiesFactory
         this._properties.addProperty(name, prop);
     }
 
-    public asProperty<T>(value:T, name?:string) : IDynamicProperty<T>
+    public asProperty<T>(value:T, name?:string, dontCheck=false) : IDynamicProperty<T>
     {
-        if (name && this._properties.getProperty(name))
+        if (!dontCheck && name && this._properties.getProperty(name))
         {
             throw new Error("Duplicate property name");
         }

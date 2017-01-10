@@ -152,7 +152,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
             if (!prop) {
                 let env = process.env[Conventions.toEnvironmentVariableName(name)];
                 if (env !== undefined) {
-                    prop = this._factory.asProperty(env, name);
+                    prop = this._factory.asProperty(env, name, true);
                 }
             }
         }
