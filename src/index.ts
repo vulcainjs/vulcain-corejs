@@ -15,10 +15,12 @@ export { HttpConfigurationSource } from './configurations/configurationSources/h
 // Schemas
 export * from './schemas/schema'
 export * from './schemas/annotations'
+export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
 
 // Auth
 export { ExpressAuthentication } from './servers/express/expressAuthentication';
 export { VerifyTokenParameter, ITokenService } from './defaults/services';
+export { AbstractExpressAuthentication } from './servers/express/abstractExpressAuthentication';
 
 // Core
 export * from './application'

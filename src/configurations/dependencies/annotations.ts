@@ -116,10 +116,14 @@ export function ConfigurationProperty(propertyName: string, schema: string) {
         if (!propertyName)
             throw new Error("Invalid property propertyName");
 
+        if (!schema)
+            throw new Error("Invalid property schema");
+
+        schema = schema.toLowerCase();
         let existingSchema = System.manifest.configurations[propertyName];
         if(existingSchema) {
             if (existingSchema !== schema)
-                throw new Error("Inconsistant schema for configuration property " + propertyName);
+                throw new Error(`Inconsistant schema (${schema} <> ${existingSchema}) for configuration property ${propertyName}`);
             return;
         }
         System.manifest.configurations[propertyName] = schema;

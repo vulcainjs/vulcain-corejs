@@ -1,6 +1,27 @@
 const uuid = require('uuid');
 const validator = require('validator');
 
+export class SchemaStandardTypes {
+    static "string" = "string";
+    static "any" = "any";
+    static "boolean" = "boolean";
+    static "number" = "number";
+    static "integer" = "integer";
+    static "enum" = "enum";
+    static "uid" = "uid";
+    static "arrayOf" = "arrayOf";
+    static "range" = "range";
+    static "email" = "email";
+    static "url" = "url";
+    static "alphanumeric" = "alphanumeric";
+    static "date-iso8601" = "date-iso8601";
+}
+
+export class SchemaStandardValidators {
+    static "pattern" = "pattern";
+    static "length" = "length";
+}
+
 export let standards = {
     "$ref": {
         $cardinality: "one",
@@ -117,9 +138,11 @@ export let standards = {
         validate: function (val) {
             if (!Array.isArray(val)) return this.messages[1];
             let error = false;
-            val.forEach(e => {
-                if (e && typeof e !== this.$item) error = true;
-            });
+            if (this.$item !== "any") {
+                val.forEach(e => {
+                    if (e && typeof e !== this.$item) error = true;
+                });
+            }
             if (error) return this.messages[0];
         }
     },
@@ -155,7 +178,7 @@ export let standards = {
     alphanumeric: {
         type: "string",
         message: "Property '{$propertyName}' must be an alphanumeric.",
-        validate: function (val, ctx = {locale: 'en-US'}) {
+        validate: function (val, ctx = { locale: 'en-US' }) {
 
             if (!validator.isAlphanumeric(val, ctx.locale))
                 return this.message;
@@ -165,7 +188,7 @@ export let standards = {
     'date-iso8601': {
         type: "string",
         message: "Property '{$propertyName}' must be an date on ISO8601 format.",
-        validate: function (val, ctx = {locale: 'en-US'}) {
+        validate: function (val, ctx = { locale: 'en-US' }) {
 
             if (!validator.isISO8601(val))
                 return this.message;
