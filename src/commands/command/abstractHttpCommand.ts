@@ -106,13 +106,13 @@ export abstract class AbstractHttpCommand {
         return new Promise<types.IHttpResponse>((resolve, reject) => {
             try {
                 request.end((response) => {
-                    if (response.status >= 500) {
+                    if (response.status >= 400) {
                         System.log.info(this.requestContext, `Http request ${verb} ${url} failed with status code ${response.status}`);
-                        reject(response.error);
+                        reject(response);
                     }
                     else {
                         System.log.info(this.requestContext, `Http request ${verb} ${url} completed with error ${response.error}`);
-                        resolve(response.body);
+                        resolve(response);
                     }
                 });
             }
