@@ -9,7 +9,7 @@ export class CryptoHelper {
 
     constructor() {
         this.secretKey = System.createSharedConfigurationProperty(
-            Conventions.instance.ENV_VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
+            Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
     encrypt(value) {

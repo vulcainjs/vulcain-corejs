@@ -79,6 +79,7 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected setMetricsTags(address: string, schema: string, tenant?: string) {
+        address = System.removePasswordFromUrl(address);
         let exists = System.manifest.dependencies.databases.find(db => db.address === address && db.schema === db.schema);
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });

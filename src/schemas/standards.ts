@@ -2,24 +2,24 @@ const uuid = require('uuid');
 const validator = require('validator');
 
 export class SchemaStandardTypes {
-    static "string" = "string";
-    static "any" = "any";
-    static "boolean" = "boolean";
-    static "number" = "number";
-    static "integer" = "integer";
-    static "enum" = "enum";
-    static "uid" = "uid";
-    static "arrayOf" = "arrayOf";
-    static "range" = "range";
-    static "email" = "email";
-    static "url" = "url";
-    static "alphanumeric" = "alphanumeric";
-    static "date-iso8601" = "date-iso8601";
+    static "T_string" = "string";
+    static "T_any" = "any";
+    static "T_boolean" = "boolean";
+    static "T_number" = "number";
+    static "T_integer" = "integer";
+    static "T_enum" = "enum";
+    static "T_uid" = "uid";
+    static "T_arrayOf" = "arrayOf";
+    static "T_range" = "range";
+    static "T_email" = "email";
+    static "T_url" = "url";
+    static "T_alphanumeric" = "alphanumeric";
+    static "T_date-iso8601" = "date-iso8601";
 }
 
 export class SchemaStandardValidators {
-    static "pattern" = "pattern";
-    static "length" = "length";
+    static "V_pattern" = "pattern";
+    static "V_length" = "length";
 }
 
 export let standards = {

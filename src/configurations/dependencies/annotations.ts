@@ -121,7 +121,7 @@ export function ConfigurationProperty(propertyName: string, schema: string) {
 
         schema = schema.toLowerCase();
         let existingSchema = System.manifest.configurations[propertyName];
-        if(existingSchema) {
+        if(existingSchema && existingSchema !== "any") {
             if (existingSchema !== schema)
                 throw new Error(`Inconsistant schema (${schema} <> ${existingSchema}) for configuration property ${propertyName}`);
             return;

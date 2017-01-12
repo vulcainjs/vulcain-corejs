@@ -4,22 +4,24 @@ import { UserContext } from '../../servers/requestContext';
 import { Conventions } from '../../utils/conventions';
 import { System } from '../../configurations/globals/system';
 import { IDynamicProperty } from '../../configurations/dynamicProperty';
+import { ConfigurationProperty } from '../../configurations/dependencies/annotations';
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
 
 @Injectable(LifeTime.Singleton, DefaultServiceNames.TokenService)
+@ConfigurationProperty(Conventions.instance.TOKEN_ISSUER, "string")
+@ConfigurationProperty(Conventions.instance.TOKEN_EXPIRATION, "string")
+@ConfigurationProperty(Conventions.instance.VULCAIN_SECRET_KEY, "string")
 export class TokenService implements ITokenService {
 
     private issuer: IDynamicProperty<string>;
-    // https://github.com/auth0/node-jsonwebtoken
     private secretKey: IDynamicProperty<string>;
-    // https://github.com/rauchg/ms.js
     private tokenExpiration: IDynamicProperty<string>;
 
     constructor() {
-        this.issuer = System.createSharedConfigurationProperty<string>( Conventions.instance.ENV_TOKEN_ISSUER );
-        this.tokenExpiration = System.createSharedConfigurationProperty<string>(Conventions.instance.ENV_TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
-        this.secretKey = System.createSharedConfigurationProperty<string>(Conventions.instance.ENV_VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
+        this.issuer = System.createSharedConfigurationProperty<string>( Conventions.instance.TOKEN_ISSUER );
+        this.tokenExpiration = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
+        this.secretKey = System.createSharedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
     createTokenAsync( user: UserContext ): Promise<string> {

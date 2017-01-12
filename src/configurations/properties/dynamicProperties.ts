@@ -95,7 +95,11 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         let p = System.manifest.configurations[name];
         if( p && p !== "any")
             return;
-        System.manifest.configurations[name] = typeof defaultValue || "any";
+        let schema = "any";
+        if( typeof defaultValue === "number" || defaultValue) {
+            schema = typeof defaultValue;
+        }
+        System.manifest.configurations[name] = schema;
      }
 
     /**

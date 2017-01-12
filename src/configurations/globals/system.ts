@@ -376,7 +376,7 @@ export class System {
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
-            System.domainName + "." + name,
+            System.domainName && System.domainName + "." + name,
             name);
     }
 

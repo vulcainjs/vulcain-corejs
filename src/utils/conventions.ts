@@ -59,9 +59,9 @@ export class Conventions {
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
     defaultTokenExpiration = "20m";
 
-    ENV_VULCAIN_SECRET_KEY = "VULCAIN_SECRET_KEY";
-    ENV_TOKEN_ISSUER = "VULCAIN_TOKEN_ISSUER";
-    ENV_TOKEN_EXPIRATION = "VULCAIN_TOKEN_EXPIRATION";
+    VULCAIN_SECRET_KEY = "vulcainSecretKey";
+    TOKEN_ISSUER = "vulcainTokenIssuer";
+    TOKEN_EXPIRATION = "vulcainTokenExpiration";
 
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
     ENV_VULCAIN_ENV = "VULCAIN_ENV";            // staging, prod, test...
