@@ -5,6 +5,8 @@ import { IContainer } from './../../di/resolvers';
 import { System } from './../../configurations/globals/system';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
+import { HttpCommandError } from '../../errors/httpCommandError';
+
 
 export abstract class AbstractHttpCommand {
     protected customTags: string;
@@ -104,22 +106,33 @@ export abstract class AbstractHttpCommand {
         prepareRequest && prepareRequest(request);
 
         return new Promise<types.IHttpResponse>((resolve, reject) => {
-            try {
-                request.end((response) => {
-                    if (response.status >= 400) {
-                        System.log.info(this.requestContext, `Http request ${verb} ${url} failed with status code ${response.status}`);
-                        reject(response);
-                    }
-                    else {
-                        System.log.info(this.requestContext, `Http request ${verb} ${url} completed with error ${response.error}`);
-                        resolve(response);
-                    }
-                });
-            }
-            catch (err) {
-                System.log.error(this.requestContext, err, `Error on http request ${verb} ${url}`);
-                reject(err);
-            }
+            request.end((response) => {
+                if (response.status >= 400) {
+                    let msg = `Http request ${verb} ${url} failed with status code ${response.status}`;
+                    System.log.info(this.requestContext, msg);
+                    reject(new HttpCommandError(msg, response));
+                    return;
+                }
+
+                if (response.error) {
+                    let msg = `Error on http request ${verb} ${url} - ${response.error}`;
+                    reject(this.handleError(msg, response.error));
+                    return;
+                }
+
+                System.log.info(this.requestContext, `Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
+                resolve(response);
+            });
         });
+    }
+
+    private handleError(msg: string, err?) {
+        System.log.error(this.requestContext, err, msg);
+        if (err && !(err instanceof Error)) {
+            let tmp = err;
+            err = new Error(msg);
+            err.error = tmp;
+        }
+        return new HttpCommandError(msg, err, 500);
     }
 }

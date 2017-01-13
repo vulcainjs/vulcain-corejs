@@ -13,6 +13,7 @@ import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 import { ITokenService } from '../../defaults/services';
 import { VulcainHeaderNames } from '../../servers/abstractAdapter';
+import { HttpCommandError } from '../../errors/httpCommandError';
 const rest = require('unirest');
 
 /**
@@ -86,7 +87,7 @@ export abstract class AbstractServiceCommand {
         if (!exists) {
             System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
         }
-        this.customTags =  this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
+        this.customTags = this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -134,7 +135,7 @@ export abstract class AbstractServiceCommand {
      */
     protected getRequestAsync<T>(serviceName: string, version: string, id: string, schema?: string): Promise<QueryResponse<T>> {
         if (System.hasMocks) {
-            let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", {id});
+            let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", { id });
             if (result !== undefined) {
                 return result;
             }
@@ -216,7 +217,7 @@ export abstract class AbstractServiceCommand {
     }
 
     private async setUserContextAsync(request: types.IHttpRequest) {
-        request.header( VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.tenant);
+        request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.tenant);
 
         if (this.overrideAuthorization) {
             request.header("Authorization", this.overrideAuthorization);
@@ -282,8 +283,14 @@ export abstract class AbstractServiceCommand {
                 });
             }
             catch (err) {
-                System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed`);
-                reject(err);
+                let msg = `Service request ${verb} ${url} failed`;
+                System.log.error(this.requestContext, err, msg);
+                if (!(err instanceof Error)) {
+                    let tmp = err;
+                    err = new Error(msg);
+                    err.error = tmp;
+                }
+                reject(new HttpCommandError(msg, err));
             }
         });
     }

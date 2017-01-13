@@ -7,8 +7,11 @@ export class Semaphore {
     constructor(private maxExecution: number, private maxFallback: number) { }
 
     canExecuteCommand() {
+        if( this.maxExecution !== 0 && this.currentExecution > this.maxExecution) {
+            return false;
+        }
         this.currentExecution++;
-        return this.maxExecution === 0 || this.currentExecution <= this.maxExecution;
+        return true;
     }
 
     releaseExecutionCommand() {
@@ -16,8 +19,11 @@ export class Semaphore {
     }
 
     canExecuteFallback() {
+        if( this.maxFallback !== 0 && this.currentFallback > this.maxFallback) {
+            return false;
+        }
         this.currentFallback++;
-        return this.currentFallback === 0 || this.currentExecution <= this.maxFallback;
+        return true;
     }
 
     releaseFallback() {

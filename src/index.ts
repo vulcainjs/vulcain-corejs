@@ -61,6 +61,7 @@ export { ApplicationRequestError, ForbiddenRequestError } from './errors/applica
 export { BadRequestError } from './errors/badRequestError';
 export { CommandRuntimeError } from './errors/commandRuntimeError';
 export { RuntimeError } from './errors/runtimeError';
+export { HttpCommandError } from './errors/httpCommandError';
 
 // Commands
 export { Command, CommandFactory as __commandFactory } from './commands/command/commandFactory';
