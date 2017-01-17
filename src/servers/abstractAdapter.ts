@@ -17,7 +17,7 @@ import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
-import { ZipkinTrace, ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
+import { VulcainLogger } from '../configurations/log/vulcainLogger';
 const guid = require('uuid');
 
 export class VulcainHeaderNames {
@@ -47,7 +47,6 @@ export abstract class AbstractAdapter {
     protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
-    private zipKin: ZipkinInstrumentation;
 
     private calcDelayInNanoSeconds(begin: [number, number]): number {
         // ts = [seconds, nanoseconds]
@@ -65,7 +64,6 @@ export abstract class AbstractAdapter {
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let hasAsyncTasks = descriptors.getDescriptions().hasAsyncTasks;
         this.commandManager.startMessageBus(hasAsyncTasks);
-        this.zipKin = new ZipkinInstrumentation();
     }
 
     public abstract start(port: number);
@@ -76,8 +74,9 @@ export abstract class AbstractAdapter {
 
     protected startRequest(request: IHttpAdapterRequest) {
         let ctx = this.createRequestContext(request);
-        ctx.tracer = this.zipKin && this.zipKin.startTrace(request);
-        ctx.beginTime = <[number, number]>process.hrtime();
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(ctx, "RR");
+        ctx.startTime = <[number, number]>process.hrtime();
         return ctx;
     }
 
@@ -120,7 +119,7 @@ export abstract class AbstractAdapter {
             hasError = true;
         }
 
-        const duration = this.calcDelayInNanoSeconds(ctx.beginTime);
+        const duration = this.calcDelayInNanoSeconds(ctx.startTime);
 
         // Duration
         prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);
@@ -132,27 +131,22 @@ export abstract class AbstractAdapter {
             this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
 
-        ctx && ctx.tracer && ctx.tracer.endTrace(value);
-
         // Always remove userContext
         if (value) {
             value.userContext = undefined;
         }
 
-        let trace: any = {
-            duration: duration,
-            info: Object.assign({}, value)
-        };
 
         // Remove result value for trace
-        trace.info.value = undefined;
+        let trace = Object.assign({}, value);
+        trace.value = undefined;
 
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         if (e) {
-            trace.stackTrace = e.stack;
-            trace.error = e.message;
+            logger.error(ctx, e);
         }
 
-        System.log.write(ctx, trace);
+        logger.logAction(ctx, "ER", trace.action, trace && JSON.stringify(trace));
 
         // Normalize return value
         if (value) {
@@ -274,8 +268,7 @@ export abstract class AbstractAdapter {
         try {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
-            System.log.info(ctx, `Request context - user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
-            ctx && ctx.tracer && ctx.tracer.setCommand(info.verb);
+            System.log.info(ctx, `Initialize request context with user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {

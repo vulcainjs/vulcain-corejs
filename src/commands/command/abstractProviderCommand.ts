@@ -1,13 +1,14 @@
-import {Schema} from '../../schemas/schema';
-import {IProvider} from '../../providers/provider';
-import {DefaultServiceNames} from '../../di/annotations';
-import {IContainer} from '../../di/resolvers';
-import {Domain} from '../../schemas/schema';
-import {Inject} from '../../di/annotations';
+import { Schema } from '../../schemas/schema';
+import { IProvider } from '../../providers/provider';
+import { DefaultServiceNames } from '../../di/annotations';
+import { IContainer } from '../../di/resolvers';
+import { Domain } from '../../schemas/schema';
+import { Inject } from '../../di/annotations';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { ProviderFactory } from '../../providers/providerFactory';
 import { RequestContext } from '../../servers/requestContext';
 import { System } from '../../configurations/globals/system';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 /**
  *
@@ -84,7 +85,9 @@ export abstract class AbstractProviderCommand<T> {
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });
         }
-        this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant||this.requestContext.tenant));
+        this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant || this.requestContext.tenant));
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "BC", "Database", address);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -93,6 +96,8 @@ export abstract class AbstractProviderCommand<T> {
             if (!success)
                 this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         }
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, 'EC');
     }
 
     /**
@@ -105,5 +110,5 @@ export abstract class AbstractProviderCommand<T> {
     abstract runAsync(...args): Promise<T>;
 
     // Must be defined in command
-   // protected fallbackAsync(err, ...args)
+    // protected fallbackAsync(err, ...args)
 }

@@ -2,10 +2,11 @@ const rest = require('unirest');
 import * as types from './types';
 import { DefaultServiceNames, Inject } from './../../di/annotations';
 import { IContainer } from './../../di/resolvers';
-import { System } from './../../configurations/globals/system';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
 import { RequestContext } from '../../servers/requestContext';
 import { HttpCommandError } from '../../errors/httpCommandError';
+import { System } from '../../configurations/globals/system';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 
 export abstract class AbstractHttpCommand {
@@ -20,13 +21,13 @@ export abstract class AbstractHttpCommand {
 
     constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
-        this.initializeMetricsInfo();
+        this.initializeMetricsInfo(container);
     }
 
-    protected initializeMetricsInfo() {
+    protected initializeMetricsInfo(container: IContainer) {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricsTags(dep.uri);
+            this.setMetricsTags(container, dep.uri);
         }
     }
 
@@ -38,7 +39,7 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-    protected setMetricsTags(uri: string) {
+    protected setMetricsTags(container: IContainer, uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
@@ -46,12 +47,16 @@ export abstract class AbstractHttpCommand {
             System.manifest.dependencies.externals.push({ uri });
         }
         this.customTags = this.metrics.encodeTags("uri=" + uri);
+        let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "BC", "Http", uri);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "EC");
     }
 
     runAsync(...args): Promise<any> {
@@ -60,7 +65,7 @@ export abstract class AbstractHttpCommand {
 
     protected async execAsync(verb: string, url: string, data?): Promise<any> {
 
-        this.setMetricsTags(url);
+        this.setMetricsTags(this.container, url);
 
         if (System.hasMocks) {
             let result = System.mocks.applyMockHttp(url, verb);
@@ -104,6 +109,7 @@ export abstract class AbstractHttpCommand {
         let request: types.IHttpRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
+        System.log.info(this.requestContext, `Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
 
         return new Promise<types.IHttpResponse>((resolve, reject) => {
             request.end((response) => {

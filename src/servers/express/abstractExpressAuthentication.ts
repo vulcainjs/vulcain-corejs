@@ -3,6 +3,7 @@ import { ITokenService } from '../../defaults/services';
 import { System } from '../../configurations/globals/system';
 import { RequestContext, UserContext } from '../requestContext';
 import * as express from 'express';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 export abstract class AbstractExpressAuthentication {
     static readonly Anonymous: UserContext = { id: "_anonymous", name: "anonymous", scopes: [], tenant: null };
@@ -70,6 +71,8 @@ export abstract class AbstractExpressAuthentication {
                         return;
                     }
                     else if (strategyName !== "bearer" || !ignoreInvalidBearer) {
+                        let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+                        logger.logAction(ctx, 'ER');
                         res.status(401);
                         res.send();
                         return;
@@ -81,6 +84,9 @@ export abstract class AbstractExpressAuthentication {
             catch (err) {
                 ctx.logError(err, "Authentication error");
             }
+            let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(ctx, 'ER');
+
             res.status(401);
             res.send();
         };

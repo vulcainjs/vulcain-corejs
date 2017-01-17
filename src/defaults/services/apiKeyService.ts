@@ -31,7 +31,7 @@ class ApiKeyVerifyCommand extends AbstractServiceCommand {
     }
 
     async runAsync(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
-        this.setMetricsTags(apiKeyServiceName, apiKeyServiceVersion);
+        this.setMetricsTags(this.container, apiKeyServiceName, apiKeyServiceVersion);
         let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
         return !resp.error && resp.value;
     }

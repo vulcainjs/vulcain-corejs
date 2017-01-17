@@ -36,7 +36,7 @@ export class MessageBus {
         }
         catch (e) {
             System.log.error(
-                { correlationId: event.correlationId, correlationPath: null },
+                null,
                 e,
                 `Consume event action: ${event.action} ${event.schema ? "schema: " + event.schema : ""} tenant: ${event.tenant}`
             );

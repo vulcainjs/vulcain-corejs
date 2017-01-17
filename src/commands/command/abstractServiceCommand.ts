@@ -14,6 +14,7 @@ import { RequestContext } from '../../servers/requestContext';
 import { ITokenService } from '../../defaults/services';
 import { VulcainHeaderNames } from '../../servers/abstractAdapter';
 import { HttpCommandError } from '../../errors/httpCommandError';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 const rest = require('unirest');
 
 /**
@@ -52,7 +53,7 @@ export abstract class AbstractServiceCommand {
      */
     constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
-        this.initializeMetricsInfo();
+        this.initializeMetricsInfo(container);
     }
 
     /**
@@ -74,26 +75,30 @@ export abstract class AbstractServiceCommand {
         this.overrideTenant = tenant;
     }
 
-    protected initializeMetricsInfo() {
+    protected initializeMetricsInfo(container: IContainer) {
         let dep = this.constructor["$dependency:service"];
         if (!dep) {
             throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).name);
         }
-        this.setMetricsTags(dep.service, dep.version);
+        this.setMetricsTags(container, dep.service, dep.version);
     }
 
-    protected setMetricsTags(targetServiceName: string, targetServiceVersion: string) {
+    protected setMetricsTags(container: IContainer, targetServiceName: string, targetServiceVersion: string) {
         let exists = System.manifest.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
         if (!exists) {
             System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
         }
         this.customTags = this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
+        let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "BC", "Service", targetServiceName + "-" + targetServiceVersion);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
         this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, 'EC');
     }
 
     /**

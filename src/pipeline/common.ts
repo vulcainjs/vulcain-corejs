@@ -30,7 +30,6 @@ export interface CommonRequestData {
 export interface CommonRequestResponse<T> {
     tenant: string;
     userContext: UserContext;
-    source: string;
     domain: string;
     action: string;
     schema: string;

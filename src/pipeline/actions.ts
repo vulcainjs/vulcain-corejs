@@ -13,6 +13,7 @@ import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
 import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
 import { Command } from '../commands/command/commandFactory';
+import { VulcainLogger } from '../configurations/log/vulcainLogger';
 const guid = require('uuid');
 
 export interface ActionData extends CommonRequestData {
@@ -103,7 +104,6 @@ export class CommandManager implements IManager {
 
     private messageBus: MessageBus;
     private _domain: Domain;
-    private _hostname: string;
     private _serviceId: string;
     private _initialized = false;
     private _serviceDescriptors: ServiceDescriptors;
@@ -126,7 +126,6 @@ export class CommandManager implements IManager {
     }
 
     constructor(public container: IContainer) {
-        this._hostname = os.hostname();
         this._serviceId = process.env[Conventions.instance.ENV_SERVICE_NAME] + "-" + process.env[Conventions.instance.ENV_SERVICE_VERSION];
         if (!this._serviceId)
             throw new Error("VULCAIN_SERVICE_NAME and VULCAIN_SERVICE_VERSION must be defined.");
@@ -163,7 +162,6 @@ export class CommandManager implements IManager {
     private createResponse(ctx: RequestContext, command: ActionData, error?: ErrorResponse) {
         let res: ActionResponse<any> = {
             tenant: ctx.tenant,
-            source: this._hostname,
             startedAt: command.startedAt,
             service: command.service,
             schema: command.schema,
@@ -225,7 +223,9 @@ export class CommandManager implements IManager {
             return new BadRequestResponse("Query handler must be requested with GET.");
 
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
-        System.log.write(ctx, { RunAction: command });
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.info(ctx, "Log", command.action, JSON.stringify(command));
+
         try {
             let errors = await this.validateRequestData(ctx, info, command);
             if (errors && errors.length > 0) {
@@ -284,7 +284,8 @@ export class CommandManager implements IManager {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         ctx.correlationId = command.correlationId || guid.v4();
         ctx.correlationPath = "event-";
-        System.log.write(ctx, { runEvent: command });
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
 
         let info = this.getInfoHandler(command, ctx.container);
         let eventMode = info.metadata.eventMode || EventNotificationMode.always;
@@ -320,6 +321,7 @@ export class CommandManager implements IManager {
             System.log.error(ctx, e, `Error when processing async action : ${JSON.stringify(command)}`);
         }
         finally {
+            logger.logAction(ctx, "EE");
             ctx.dispose();
         }
     }

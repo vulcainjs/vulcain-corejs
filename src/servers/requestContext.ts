@@ -122,9 +122,7 @@ export interface ICustomEvent {
 export class RequestContext {
     static TestTenant = "TesT";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
-
-    public beginTime: [number, number];
-    public tracer: IRequestTracer;
+    public startTime: [number, number];
 
     private _customEvents: Array<ICustomEvent>;
 

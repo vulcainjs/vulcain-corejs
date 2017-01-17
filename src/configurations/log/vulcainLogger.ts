@@ -1,10 +1,35 @@
 import { System } from './../globals/system';
 import { IDynamicProperty } from './../dynamicProperty';
 import * as util from 'util';
+import { RequestContext } from '../../servers/requestContext';
+import * as os from 'os';
+
+export type entryKind = "RR"  // receive request
+    | "Log"     // normal log
+    | "BC"      // begin command
+    | "EC"      // end command
+    | "ER"      // end request
+    | "RE"      // Receive event
+    | "EE"      // end event
+    ;
+
+interface LogEntry {
+    correlationId: string;
+    correlationPath: string;
+    service: string;
+    version: string;
+    source: string; // container
+    message?: string;
+    timestamp: number;
+    kind: entryKind; // end request
+    action: string;
+    error?: string;
+}
 
 export class VulcainLogger {
 
     private static _enableInfo: IDynamicProperty<boolean>;
+    private _hostname: string;
 
     private static get enableInfo() {
         if (!VulcainLogger._enableInfo)
@@ -13,6 +38,7 @@ export class VulcainLogger {
     }
 
     constructor() {
+        this._hostname = os.hostname();
     }
 
     /**
@@ -24,20 +50,17 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    error(requestContext, error: Error, msg?: string) {
+    error(requestContext: RequestContext, error: Error, msg?: string) {
         if (!error) return;
-        let txt = (msg || "") + ": ";
-        if (VulcainLogger.enableInfo || System.isTestEnvironnment) {
-            txt = txt + (error.stack || error.message);
-        }
-        else {
-            txt = txt + (error.message);
-        }
-        this.write(requestContext, txt);
+        let entry = this.prepareEntry(requestContext);
+        entry.message = msg || "Error occured";
+        entry.error = (error.stack || error.message).replace(/[\r\n]/g, '↵');
+
+        this.writeEntry(entry);
     }
 
     /**
-     * Log a message info
+     * Log a message
      *
      * @param {any} requestContext Current requestContext
      * @param {string} msg Message format (can include %s, %j ...)
@@ -45,8 +68,10 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    info(requestContext, msg: string, ...params: Array<any>) {
-        this.write(requestContext, util.format(msg, ...params));
+    info(requestContext: RequestContext, msg: string, ...params: Array<any>) {
+        let entry = this.prepareEntry(requestContext);
+        entry.message = util.format(msg, ...params);
+        this.writeEntry(entry);
     }
 
     /**
@@ -58,40 +83,50 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    verbose(requestContext, msg: string, ...params: Array<any>) {
+    verbose(requestContext: RequestContext, msg: string, ...params: Array<any>) {
         if (VulcainLogger.enableInfo || System.isDevelopment)
-            this.write(requestContext, util.format(msg, ...params));
+            this.info(requestContext, msg, params);
     }
 
-    /**
-     * Don't use directly
-     *
-     * @param {any} requestContext
-     * @param {any} info
-     *
-     * @memberOf VulcainLogger
-     */
-    write(requestContext, info) {
-        let trace: any = {
+    logRequestStatus(requestContext: RequestContext, kind: entryKind) {
+        let entry = this.prepareEntry(requestContext);
+        entry.kind = kind;
+        this.writeEntry(entry);
+    }
+
+    logAction(requestContext: RequestContext, kind: entryKind, action?: string, message?: string) {
+        let entry = this.prepareEntry(requestContext);
+        entry.kind = kind;
+        entry.action = action;
+        entry.message = message;
+        this.writeEntry(entry);
+    }
+
+    private now() {
+        const hrtime = process.hrtime();
+        const elapsedMicros = Math.floor(hrtime[0] * 1000000 + hrtime[1] / 1000);
+        return elapsedMicros;
+    }
+
+    private prepareEntry(requestContext: RequestContext) {
+        return <LogEntry>{
             service: System.serviceName,
             version: System.serviceVersion,
-            timestamp: System.nowAsString(),
+            kind: "Log",
+            source: "", // TODO
+            timestamp: this.now(),
             correlationId: (requestContext && requestContext.correlationId) || null,
             correlationPath: (requestContext && requestContext.correlationPath) || null
         };
+    }
 
-        if (typeof info === "string")
-        {
-            trace.message = info;
+    private writeEntry(entry: LogEntry) {
+
+        if (System.isDevelopment) {
+            util.log(`${entry.correlationId}:${entry.correlationPath} - ${entry.message || (entry && JSON.stringify(entry))}`);
         }
         else {
-            trace.info = info;
-        }
-        if (System.isTestEnvironnment) {
-            util.log(`${trace.correlationId}:${trace.correlationPath} - ${trace.message || (trace.info && JSON.stringify(trace.info))}`);
-        }
-        else {
-            console.log("%j", trace);
+            console.log("%j", entry);
         }
     }
 }

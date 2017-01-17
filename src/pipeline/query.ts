@@ -8,6 +8,7 @@ import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from './../configurations/globals/system';
 import { CommandRuntimeError } from './../errors/commandRuntimeError';
 import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
+import { VulcainLogger } from '../configurations/log/vulcainLogger';
 
 export interface QueryData extends CommonRequestData {
     maxByPage?: number;
@@ -40,12 +41,11 @@ export interface QueryMetadata extends ServiceHandlerMetadata {
  */
 export interface QueryActionMetadata extends CommonActionMetadata {
     outputSchema?: string | Function;
-    outputType?: "one" | "many"
+    outputType?: "one" | "many";
 }
 
 export class QueryManager implements IManager {
     private _domain: Domain;
-    private _hostname: string;
     private _serviceDescriptors: ServiceDescriptors;
 
     /**
@@ -60,13 +60,11 @@ export class QueryManager implements IManager {
     }
 
     constructor(public container: IContainer) {
-        this._hostname = os.hostname();
     }
 
     private createResponse(ctx: RequestContext, query: QueryData, error?: ErrorResponse) {
         let res: QueryResponse<any> = {
             tenant: ctx.tenant,
-            source: this._hostname,
             userContext: undefined,
             schema: query.schema,
             domain: query.domain,
@@ -122,7 +120,8 @@ export class QueryManager implements IManager {
         if (info.kind !== "query")
             return new BadRequestResponse("Action handler must be requested with POST.");
 
-        System.log.write(ctx, { runQuery: query });
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(ctx, "Log", query.action, JSON.stringify(query));
 
         try {
             let errors = await this.validateRequestData(ctx, info, query);
