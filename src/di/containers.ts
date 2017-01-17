@@ -101,7 +101,7 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
-        let uri = System.resolveAlias(address) || address || DynamicConfiguration.getPropertyValue<string>("rabbit");
+        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit")|| address ;
         if( !uri ) {
             System.log.info(null, "no value found for rabbit address. Ignore adapter");
             return;
@@ -123,7 +123,7 @@ export class Container implements IContainer {
      * @param {any} [mongoOptions] Mongodb options
      */
     useMongoProvider(address?: string, mongoOptions?) {
-        let uri = System.resolveAlias(address) || address || DynamicConfiguration.getPropertyValue<string>("mongo");
+        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
         if( !uri ) {
             System.log.info(null, "no value found for mongo address. Ignore adapter");
             return;

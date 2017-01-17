@@ -30,7 +30,7 @@ export class MongoProvider implements IProvider<any>
         @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,
         uri: string,
         private options?) {
-        this.options = this.options || {};
+        this.options = this.options || {authSource: "admin"};
         // Try to fix topology was destroy error
         /* this.options.socketOptions = this.options.socketOptions || {
              noDelay: true,
