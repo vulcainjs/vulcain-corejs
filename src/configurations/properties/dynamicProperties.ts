@@ -136,7 +136,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
     }
 
     onPropertyChanged(property, action: string) {
-        System.log.info(null, "CONFIG: Property changed " + property.name);
+       // System.log.info(null, "CONFIG: Property changed " + property.name);
         this._propertyChanged.onNext(property);
     }
 

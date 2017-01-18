@@ -150,7 +150,6 @@ export class CommandManager implements IManager {
                 action: event.action,
                 schema: event.schema,
                 correlationId: null,
-                correlationPath: null,
                 params: event.params
             };
             let res = this.createResponse(ctx, command);
@@ -234,7 +233,6 @@ export class CommandManager implements IManager {
 
             command.schema = <string>info.metadata.schema;
             command.correlationId = ctx.correlationId;
-            command.correlationPath = ctx.correlationPath;
             command.startedAt = System.nowAsString();
             command.service = this._serviceId;
             command.userContext = ctx.user || <any>{};
@@ -283,7 +281,6 @@ export class CommandManager implements IManager {
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
         ctx.correlationId = command.correlationId || guid.v4();
-        ctx.correlationPath = "event-";
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
 
@@ -347,7 +344,6 @@ export class CommandManager implements IManager {
                 let handler;
                 let ctx = new RequestContext(this.container, Pipeline.EventNotification);
                 ctx.correlationId = evt.correlationId || guid.v4();
-                ctx.correlationPath = "-";
 
                 try {
                     ctx.user = evt.userContext || <any>{};

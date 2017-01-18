@@ -43,7 +43,7 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri, keyPropertyNameBySchemas: new Map<string, string>() };
     }
 
-    initializeTenantAsync(tenant: string) {
+    initializeTenantAsync(context: RequestContext, tenant: string) {
         if (!tenant)
             throw new Error("tenant is required");
 
@@ -68,7 +68,7 @@ export class MongoProvider implements IProvider<any>
             MongoClient.connect(state.uri, options, (err, db) => {
                 if (err) {
                     reject(err);
-                    System.log.error(null, err, `MONGODB: Error when opening database ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
+                    System.log.error(this.ctx, err, `MONGODB: Error when opening database ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
                     return;
                 }
 
@@ -116,10 +116,10 @@ export class MongoProvider implements IProvider<any>
             db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
                 (err) => {
                     if (err) {
-                        System.log.error(null, err, `MONGODB: Error when creating index for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
+                        System.log.error(this.ctx, err, `MONGODB: Error when creating index for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
                     }
                     else {
-                        System.log.info(null, `MONGODB: Unique index created for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
+                        System.log.info(this.ctx, `MONGODB: Unique index created for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
                     }
                     resolve();
                 });

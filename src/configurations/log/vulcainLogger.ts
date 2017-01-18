@@ -15,7 +15,8 @@ export type entryKind = "RR"  // receive request
 
 interface LogEntry {
     correlationId: string;
-    correlationPath: string;
+    parentId: string;
+    traceId: string;
     service: string;
     version: string;
     source: string; // container
@@ -102,28 +103,23 @@ export class VulcainLogger {
         this.writeEntry(entry);
     }
 
-    private now() {
-        const hrtime = process.hrtime();
-        const elapsedMicros = Math.floor(hrtime[0] * 1000000 + hrtime[1] / 1000);
-        return elapsedMicros;
-    }
-
     private prepareEntry(requestContext: RequestContext) {
         return <LogEntry>{
             service: System.serviceName,
             version: System.serviceVersion,
             kind: "Log",
-            source: "", // TODO
-            timestamp: this.now(),
-            correlationId: (requestContext && requestContext.correlationId) || null,
-            correlationPath: (requestContext && requestContext.correlationPath) || null
+            source: this._hostname,
+            timestamp: (requestContext && requestContext.now) || Date.now() * 1000,
+            correlationId: (requestContext && requestContext.correlationId) || undefined,
+            parentId: (requestContext && requestContext.parentId) || undefined,
+            traceId: (requestContext && requestContext.traceId) || undefined
         };
     }
 
     private writeEntry(entry: LogEntry) {
 
         if (System.isDevelopment) {
-            util.log(`${entry.correlationId}:${entry.correlationPath} - ${entry.message || (entry && JSON.stringify(entry))}`);
+            util.log(`${entry.message || JSON.stringify(entry)}`);
         }
         else {
             console.log("%j", entry);

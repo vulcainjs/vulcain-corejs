@@ -133,7 +133,6 @@ export class QueryManager implements IManager {
 
             query.schema = <string>info.metadata.schema;
             query.correlationId = ctx.correlationId;
-            query.correlationPath = ctx.correlationPath;
             info.handler.requestContext = ctx;
             info.handler.query = query;
             let result = await info.handler[info.method](query.params);

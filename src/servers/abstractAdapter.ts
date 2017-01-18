@@ -23,7 +23,8 @@ const guid = require('uuid');
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
     static X_VULCAIN_CORRELATION_ID = "x-vulcain-correlation-id";
-    static X_VULCAIN_CORRELATION_PATH = "x-vulcain-correlation-path";
+    static X_VULCAIN_TRACE_ID = "x-vulcain-trace-id";
+    static X_VULCAIN_PARENT_ID = "x-vulcain-parent-id";
     static X_VULCAIN_SERVICE_NAME = "x-vulcain-service-name";
     static X_VULCAIN_SERVICE_VERSION = "x-vulcain-service-version";
     static X_VULCAIN_ENV = "x-vulcain-env";
@@ -48,12 +49,6 @@ export abstract class AbstractAdapter {
     private domain: Domain;
     private metrics: IMetrics;
 
-    private calcDelayInNanoSeconds(begin: [number, number]): number {
-        // ts = [seconds, nanoseconds]
-        const ts = process.hrtime(begin);
-        return ts[0] * 1e9 + ts[1];
-    }
-
     constructor(protected domainName: string, protected container: IContainer) {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
@@ -76,7 +71,6 @@ export abstract class AbstractAdapter {
         let ctx = this.createRequestContext(request);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(ctx, "RR");
-        ctx.startTime = <[number, number]>process.hrtime();
         return ctx;
     }
 
@@ -87,8 +81,7 @@ export abstract class AbstractAdapter {
         this.initializeRequestContext(ctx, request);
 
         ctx.correlationId = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID] || guid.v4();
-        ctx.correlationPath = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_PATH] || "-";
-
+        ctx.parentId = ctx.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
         let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
         ctx.tenant = tenantPolicy.resolveTenant(ctx, request);
         return ctx;
@@ -119,7 +112,7 @@ export abstract class AbstractAdapter {
             hasError = true;
         }
 
-        const duration = this.calcDelayInNanoSeconds(ctx.startTime);
+        const duration = ctx.durationInMicroseconds * 1000;
 
         // Duration
         prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);

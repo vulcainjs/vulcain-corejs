@@ -4,6 +4,7 @@ import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
 import { SchemaBuilder } from '../../schemas/schemaBuilder';
+import { RequestContext } from '../../servers/requestContext';
 
 interface AstNode {
     op: string;
@@ -36,7 +37,7 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    initializeTenantAsync(tenant: string) {
+    initializeTenantAsync(context: RequestContext, tenant: string) {
 
         if (!tenant)
             throw new Error("Tenant can not be null");

@@ -207,20 +207,6 @@ export abstract class AbstractServiceCommand {
         return res;
     }
 
-    private calculateRequestPath() {
-        if (this.requestContext.correlationId[this.requestContext.correlationId.length - 1] === "-")
-            this.requestContext.correlationPath += "1";
-        else {
-            let parts = this.requestContext.correlationPath.split('-');
-            let ix = parts.length - 1;
-            let nb = (parseInt(parts[ix]) || 0) + 1;
-            parts[ix] = nb.toString();
-            this.requestContext.correlationPath = parts.join('-');
-        }
-
-        return this.requestContext.correlationPath;
-    }
-
     private async setUserContextAsync(request: types.IHttpRequest) {
         request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.tenant);
 
@@ -257,7 +243,7 @@ export abstract class AbstractServiceCommand {
 
         // Propagate context
         request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.requestContext.correlationId);
-        request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_PATH, this.calculateRequestPath() + "-");
+        request.header(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.requestContext.traceId);
         request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
         request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
         request.header(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);

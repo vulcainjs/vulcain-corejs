@@ -1,5 +1,6 @@
 
 import {Schema} from "../schemas/schema";
+import { RequestContext } from '../servers/requestContext';
 
 export interface ListOptions {
     /**
@@ -47,7 +48,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    initializeTenantAsync(tenant: string): Promise<() => Promise<any>>;
+    initializeTenantAsync(context: RequestContext, tenant: string): Promise<() => Promise<any>>;
     /**
      * Find an entity
      *

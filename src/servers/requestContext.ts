@@ -122,7 +122,9 @@ export interface ICustomEvent {
 export class RequestContext {
     static TestTenant = "TesT";
     static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
-    public startTime: [number, number];
+
+    public startTick: [number, number];
+    public startTime: number;
 
     private _customEvents: Array<ICustomEvent>;
 
@@ -133,12 +135,8 @@ export class RequestContext {
      */
     correlationId: string;
 
-    /**
-     * Request correlation path
-     *
-     * @type {string}
-     */
-    correlationPath: string;
+    traceId: string;
+    parentId: string;
 
     public _scopePolicy: IAuthorizationPolicy;
     /**
@@ -232,10 +230,44 @@ export class RequestContext {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
         this._scopePolicy = container.get<IAuthorizationPolicy>(DefaultServiceNames.AuthorizationPolicy);
+        this.traceId = this.randomTraceId();
+        this.startTime = Date.now() * 1000;
+        this.startTick = process.hrtime();
     }
 
     dispose() {
         this.container.dispose();
+    }
+
+    /**
+     * get now in microseconds
+     */
+    get now() {
+        return this.startTime + this.durationInMicroseconds;
+    }
+
+    /**
+     * current duration in microseconds
+     *
+     * @static
+     * @param {IContainer} [container]
+     * @param {UserContext} [user]
+     * @returns
+    */
+    get durationInMicroseconds() {
+        const hrtime = process.hrtime(this.startTick);
+        const elapsedMicros = Math.floor(hrtime[0] * 1000000 + hrtime[1] / 1000);
+        return elapsedMicros;
+    }
+
+    private randomTraceId() {
+        const digits = '0123456789abcdef';
+        let n = '';
+        for (let i = 0; i < 16; i++) {
+            const rand = Math.floor(Math.random() * 16);
+            n += digits[rand];
+        }
+        return n;
     }
 
     /**
