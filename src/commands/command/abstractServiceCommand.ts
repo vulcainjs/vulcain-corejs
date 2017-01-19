@@ -98,7 +98,7 @@ export abstract class AbstractServiceCommand {
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, 'EC');
+        logger.logAction(this.requestContext, 'EC', 'Service');
     }
 
     /**

@@ -22,9 +22,10 @@ interface LogEntry {
     source: string; // container
     message?: string;
     timestamp: number;
-    kind: entryKind; // end request
+    kind: entryKind; 
     action: string;
     error?: string;
+    stack?: string;
 }
 
 export class VulcainLogger {
@@ -55,7 +56,8 @@ export class VulcainLogger {
         if (!error) return;
         let entry = this.prepareEntry(requestContext);
         entry.message = msg || "Error occured";
-        entry.error = (error.stack || error.message).replace(/[\r\n]/g, '↵');
+        entry.error = error.message;
+        entry.stack = (error.stack || "").replace(/[\r\n]/g, '↵');
 
         this.writeEntry(entry);
     }

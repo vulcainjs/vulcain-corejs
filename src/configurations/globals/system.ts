@@ -138,8 +138,8 @@ export class System {
             }
         }
         catch (e) {
+            System._environmentMode = "production"; // Set this first to avoid stack overflow
             System.log.error(null, e, "VULCAIN MANIFEST : Loading error");
-            System._environmentMode = "production";
         }
 
         System.log.info(null, `Running in ${System._environmentMode} mode`);

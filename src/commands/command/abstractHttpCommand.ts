@@ -56,7 +56,7 @@ export abstract class AbstractHttpCommand {
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC");
+        logger.logAction(this.requestContext, "EC", "Http");
     }
 
     runAsync(...args): Promise<any> {

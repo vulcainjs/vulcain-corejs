@@ -223,7 +223,7 @@ export class CommandManager implements IManager {
 
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.info(ctx, "Log", command.action, JSON.stringify(command));
+        logger.logAction(ctx, "Log", command.action, JSON.stringify(command));
 
         try {
             let errors = await this.validateRequestData(ctx, info, command);
