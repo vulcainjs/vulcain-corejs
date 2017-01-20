@@ -142,6 +142,7 @@ export abstract class AbstractServiceCommand {
         if (System.hasMocks) {
             let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", { id });
             if (result !== undefined) {
+                System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
                 return result;
             }
         }
@@ -174,6 +175,7 @@ export abstract class AbstractServiceCommand {
         if (System.hasMocks) {
             let result = System.mocks.applyMockService(serviceName, version, verb, args);
             if (result !== undefined) {
+                System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
                 return result;
             }
         }
@@ -198,6 +200,7 @@ export abstract class AbstractServiceCommand {
         if (System.hasMocks) {
             let result = System.mocks.applyMockService(serviceName, version, verb, command);
             if (result !== undefined) {
+                System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
                 return result;
             }
         }

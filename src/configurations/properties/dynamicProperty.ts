@@ -14,7 +14,6 @@ export class DynamicProperty<T> implements IDynamicProperty<T>
 
     constructor(private propertiesManager: DynamicProperties, public name: string, private defaultValue?:T) {
         this._propertyChanged = new rx.Subject<IDynamicProperty<T>>();
-        DynamicProperties.registerPropertyAsDependency(name, defaultValue);
     }
 
     get value():T {

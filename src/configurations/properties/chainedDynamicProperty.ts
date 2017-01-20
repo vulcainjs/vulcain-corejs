@@ -40,8 +40,6 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
         this._reset = this.reset.bind(this);
         manager.propertyChanged.subscribe(this._reset);
         this.reset();
-
-        DynamicProperties.registerPropertyAsDependency(this.name, defaultValue);
     }
 
     // One chained property has changed

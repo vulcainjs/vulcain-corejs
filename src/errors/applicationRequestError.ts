@@ -34,6 +34,15 @@ export class ApplicationRequestError extends Error {
  * @class ForbiddenRequestError
  * @extends {ApplicationRequestError}
  */
+export class UnauthorizedRequestError extends ApplicationRequestError {
+    constructor(msg = "Unauthorized") {
+        super(msg, null, 401);
+    }
+}
+
+/**
+ * 
+ */
 export class ForbiddenRequestError extends ApplicationRequestError {
     constructor(msg = "Forbidden") {
         super(msg, null, 403);

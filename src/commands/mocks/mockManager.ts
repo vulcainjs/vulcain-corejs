@@ -67,8 +67,8 @@ export class MockManager {
     }
 
     public applyMockHttp(url: string, verb: string) {
-        let mock = this.mocks.http[url];
-        mock = mock && mock[verb];
+        let mock = this.mocks.http[url && url.toLowerCase()];
+        mock = mock && verb && mock[verb.toLowerCase()];
         return (mock && mock.output) || undefined;
     }
 

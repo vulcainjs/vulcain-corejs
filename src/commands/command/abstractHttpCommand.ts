@@ -63,17 +63,7 @@ export abstract class AbstractHttpCommand {
         return (<any>this).execAsync(...args);
     }
 
-    protected async execAsync(verb: string, url: string, data?): Promise<any> {
-
-        this.setMetricsTags(this.container, url);
-
-        if (System.hasMocks) {
-            let result = System.mocks.applyMockHttp(url, verb);
-            if (result !== undefined) {
-                return result;
-            }
-        }
-
+    private async execAsync(verb: string, url: string, data?): Promise<any> {
         let method: Function = this[verb + "Async"];
         if (!method)
             throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);
@@ -106,6 +96,17 @@ export abstract class AbstractHttpCommand {
      * @returns request response
      */
     protected sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+
+        this.setMetricsTags(this.container, url);
+
+        if (System.hasMocks) {
+            let result = System.mocks.applyMockHttp(url, verb);
+            if (result !== undefined) {
+                System.log.info(this.requestContext, `Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+                return result;
+            }
+        }
+
         let request: types.IHttpRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);

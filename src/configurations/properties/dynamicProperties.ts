@@ -91,7 +91,9 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         this.reset(pollingIntervalInSeconds, sourceTimeoutInMs);
     }
 
-     static registerPropertyAsDependency(name: string, defaultValue) {
+    static registerPropertyAsDependency(name: string, defaultValue) {
+        let prefix = (System.serviceName + "." + System.serviceVersion);
+
         let p = System.manifest.configurations[name];
         if( p && p !== "any")
             return;

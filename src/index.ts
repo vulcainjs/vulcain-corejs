@@ -57,7 +57,7 @@ export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
 
 // Errors
-export { ApplicationRequestError, ForbiddenRequestError } from './errors/applicationRequestError';
+export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError } from './errors/applicationRequestError';
 export { BadRequestError } from './errors/badRequestError';
 export { CommandRuntimeError } from './errors/commandRuntimeError';
 export { RuntimeError } from './errors/runtimeError';

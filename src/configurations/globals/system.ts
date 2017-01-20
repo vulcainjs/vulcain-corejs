@@ -8,6 +8,7 @@ import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from '../dynamicProperty';
 import { MockManager } from '../../commands/mocks/mockManager';
 import { DefaultServiceNames } from '../../di/annotations';
+import { DynamicProperties } from '../properties/dynamicProperties';
 
 /**
  * Static class providing service helper methods
@@ -373,6 +374,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
+        DynamicProperties.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -387,6 +389,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
+        DynamicProperties.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
