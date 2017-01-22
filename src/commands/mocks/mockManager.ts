@@ -7,11 +7,15 @@ export class MockManager {
         this.mocks = this.toJsonLowercase(mocks);
     }
 
+    get disabled() {
+        return this.mocks.disabled;
+    }
+
     private toJsonLowercase(json) {
         if (!json)
             return null;
 
-        let res = {};
+        let res = { disabled: json.disabled };
         for (let key of Object.keys(json)) {
             let val = json[key];
             key = key.toLowerCase();
