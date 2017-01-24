@@ -44,7 +44,7 @@ export interface IContainer {
     resolve(fn, ...args);
     dispose();
     useRabbitBusAdapter(address?: string, usage?: BusUsage);
-    useMongoProvider(uri: string, mongoOptions?);
+    useMongoProvider(uri?: string, mongoOptions?);
     useMemoryProvider(folder?: string);
     inject(name: string, fn, lifeTime: LifeTime);
 }
