@@ -27,7 +27,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(function (req, res, next) {
             if (req.originalUrl.startsWith('/api/')) {
                 self.startRequest(<IHttpAdapterRequest>(<any>req));
-            }    
+            }
             return next();
         });
 
@@ -135,21 +135,20 @@ export class ExpressAdapter extends AbstractAdapter {
     /**
      * Set static root for public web site
      *
-     * @param {string} basePath
+     * @param {string} urlPath - url path
+     * @param {string} folderPath - folder static path
      *
      * @memberOf ExpressAdapter
      */
-    setStaticRoot(basePath: string) {
-        System.log.info(null, "Set wwwroot to " + basePath);
-        if (!basePath) {
-            throw new Error("BasePath is required.");
+    setStaticRoot(urlPath: string, folderPath: string, options?) {
+        System.log.info(null, `Set static path ${urlPath} to ${folderPath}`);
+        if (!urlPath) {
+            throw new Error("urlPath is required.");
         }
-        this.express.use(express.static(basePath));
-        /*        this.express.use('/assets', express.static(basePath + '/assets'));
-                this.express.all('/*', function (req, res, next) {
-                    // Just send the index.html for other files to support HTML5Mode
-                    res.sendFile('index.html', { root: basePath });
-                });*/
+        if (!folderPath) {
+            throw new Error("folderPath is required.");
+        }
+        this.express.use(urlPath, express.static(folderPath, options));
     }
 
     start(port: number) {

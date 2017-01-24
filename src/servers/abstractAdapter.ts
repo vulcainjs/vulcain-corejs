@@ -63,7 +63,7 @@ export abstract class AbstractAdapter {
 
     public abstract start(port: number);
     public abstract initialize();
-    public abstract setStaticRoot(basePath: string);
+    public abstract setStaticRoot(urlPath: string, folderPath: string, options?);
     public abstract useMiddleware(verb: string, path: string, handler: Function);
     protected abstract initializeRequestContext(ctx: RequestContext, request: IHttpAdapterRequest);
 
@@ -261,11 +261,12 @@ export abstract class AbstractAdapter {
         try {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
-            System.log.info(ctx, `Initialize request context with user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+            System.log.info(ctx, `Request input   : ${JSON.stringify(command)}`);
+            System.log.info(ctx, `Request context : user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {
-                System.log.info(ctx, `user=${ctx.user ? ctx.user.name : "<null>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"} - Unauthorized for handler scope=${info.metadata.scope} `);
+                System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), `Current user is user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
                 return new HttpResponse({ error: { message: http.STATUS_CODES[403] } }, 403);
             }
 
