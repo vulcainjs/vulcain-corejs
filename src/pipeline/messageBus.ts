@@ -1,9 +1,9 @@
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
-const guid = require('uuid');
 import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {DefaultServiceNames} from '../di/annotations';
 import * as RX from 'rx';
 import { System } from '../configurations/globals/system';
+import { RequestContext } from '../servers/requestContext';
 
 export class MessageBus {
     private commandBus: IActionBusAdapter;
@@ -45,7 +45,7 @@ export class MessageBus {
 
     pushTask(command: ActionData) {
         command.status = "Pending";
-        command.taskId = guid.v4();
+        command.taskId = RequestContext.createCorrelationId();
         this.commandBus.publishTask(command.domain, this.manager.serviceId, command);
     }
 

@@ -149,12 +149,12 @@ export class HystrixCommand {
             if (this.isUnrecoverable(error)) {
                 this.logInfo("Unrecoverable error for command so will throw CommandRuntimeError and not apply fallback " + error);
                 this.status.addEvent(eventType);
-                throw new CommandRuntimeError(failureType, this.properties.commandName, this.getLogMessagePrefix() + " " + message + " and encountered unrecoverable error", error);
+                throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and encountered unrecoverable error", error);
             }
             let fallback = (<any>this.command).fallbackAsync;
             if (!fallback) {
                 //this.logInfo("No fallback for command");
-                throw new CommandRuntimeError(failureType, this.properties.commandName, this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
+                throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
                 try {
@@ -168,7 +168,7 @@ export class HystrixCommand {
                     this.logInfo("Fallback failed " + e);
                     this.metrics.markFallbackFailure();
                     this.status.addEvent(EventType.FALLBACK_FAILURE);
-                    throw new CommandRuntimeError(failureType, this.properties.commandName, this.getLogMessagePrefix() + " and fallback failed.", e);
+                    throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " and fallback failed.", e);
                 }
                 finally {
                     this.semaphore.releaseFallback();
@@ -178,7 +178,7 @@ export class HystrixCommand {
                 this.logInfo("Command fallback rejection.");
                 this.metrics.markFallbackRejection();
                 this.status.addEvent(EventType.FALLBACK_REJECTION);
-                throw new CommandRuntimeError(FailureType.REJECTED_SEMAPHORE_FALLBACK, this.properties.commandName, this.getLogMessagePrefix() + " fallback execution rejected.");
+                throw new CommandRuntimeError(FailureType.REJECTED_SEMAPHORE_FALLBACK, this.getCommandName(), this.getLogMessagePrefix() + " fallback execution rejected.");
             }
         }
         catch (e) {
@@ -202,7 +202,7 @@ export class HystrixCommand {
     }
 
     private logInfo(msg: string) {
-        System.log.info(this.context, this.properties.commandName + ": " + msg);
+        System.log.info(this.context, this.getCommandName() + ": " + msg);
     }
 
     private isUnrecoverable(e) {
@@ -210,7 +210,11 @@ export class HystrixCommand {
     }
 
     private getLogMessagePrefix() {
-        return this.properties.commandName;
+        return this.getCommandName();
+    }
+
+    private getCommandName() {
+        return Object.getPrototypeOf(this.command).constructor.name || this.properties.commandName;
     }
 
     ///

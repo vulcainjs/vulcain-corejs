@@ -48,7 +48,7 @@ export abstract class AbstractHttpCommand {
         }
         this.customTags = this.metrics.encodeTags("uri=" + uri);
         let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Http", uri);
+        logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -56,7 +56,7 @@ export abstract class AbstractHttpCommand {
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC", "Http");
+        logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     runAsync(...args): Promise<any> {

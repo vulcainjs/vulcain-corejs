@@ -87,7 +87,7 @@ export abstract class AbstractProviderCommand<T> {
         }
         this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant || this.requestContext.tenant));
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Database", address);
+        logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -97,7 +97,7 @@ export abstract class AbstractProviderCommand<T> {
                 this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         }
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, 'EC', 'Database');
+        logger.logAction(this.requestContext, 'EC', 'Database', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     /**

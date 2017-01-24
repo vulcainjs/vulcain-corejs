@@ -78,9 +78,9 @@ export abstract class AbstractServiceCommand {
     protected initializeMetricsInfo(container: IContainer) {
         let dep = this.constructor["$dependency:service"];
         if (!dep) {
-            throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).name);
+            throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).constructor.name);
         }
-        this.setMetricsTags(container, dep.service, dep.version);
+        this.setMetricsTags(container, dep.targetServiceName, dep.targetServiceVersion);
     }
 
     protected setMetricsTags(container: IContainer, targetServiceName: string, targetServiceVersion: string) {
@@ -90,7 +90,7 @@ export abstract class AbstractServiceCommand {
         }
         this.customTags = this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
         let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Service", targetServiceName + "-" + targetServiceVersion);
+        logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -98,7 +98,7 @@ export abstract class AbstractServiceCommand {
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, 'EC', 'Service');
+        logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     /**

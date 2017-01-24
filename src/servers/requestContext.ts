@@ -6,6 +6,7 @@ import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
 import { VulcainHeaderNames } from './abstractAdapter';
 import { IRequestTracer } from '../metrics/statsdMetrics';
+const guid = require('uuid');
 
 export enum Pipeline {
     EventNotification,
@@ -258,6 +259,10 @@ export class RequestContext {
         const hrtime = process.hrtime(this.startTick);
         const elapsedMicros = Math.floor(hrtime[0] * 1000000 + hrtime[1] / 1000);
         return elapsedMicros;
+    }
+
+    static createCorrelationId() {
+        return guid.v4().replace(/-/g, '');
     }
 
     private randomTraceId() {

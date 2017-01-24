@@ -14,7 +14,6 @@ import { CommandRuntimeError } from './../errors/commandRuntimeError';
 import { HttpResponse, BadRequestResponse, VulcainResponse } from './response';
 import { Command } from '../commands/command/commandFactory';
 import { VulcainLogger } from '../configurations/log/vulcainLogger';
-const guid = require('uuid');
 
 export interface ActionData extends CommonRequestData {
     service: string;
@@ -223,7 +222,6 @@ export class CommandManager implements IManager {
 
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(ctx, "Log", command.action, JSON.stringify(command));
 
         try {
             let errors = await this.validateRequestData(ctx, info, command);
@@ -280,7 +278,7 @@ export class CommandManager implements IManager {
 
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
-        ctx.correlationId = command.correlationId || guid.v4();
+        ctx.correlationId = command.correlationId || RequestContext.createCorrelationId();
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
 
@@ -343,7 +341,7 @@ export class CommandManager implements IManager {
             for (let info of handlers) {
                 let handler;
                 let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-                ctx.correlationId = evt.correlationId || guid.v4();
+                ctx.correlationId = evt.correlationId || RequestContext.createCorrelationId();
 
                 try {
                     ctx.user = evt.userContext || <any>{};

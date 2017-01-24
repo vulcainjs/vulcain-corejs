@@ -18,7 +18,6 @@ import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
 import { VulcainLogger } from '../configurations/log/vulcainLogger';
-const guid = require('uuid');
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -80,21 +79,21 @@ export abstract class AbstractAdapter {
         // Initialize headers & hostname
         this.initializeRequestContext(ctx, request);
 
-        ctx.correlationId = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID] || guid.v4();
+        ctx.correlationId = ctx.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID] || RequestContext.createCorrelationId();
         ctx.parentId = ctx.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
         let tenantPolicy = ctx.container.get<ITenantPolicy>(DefaultServiceNames.TenantPolicy);
         ctx.tenant = tenantPolicy.resolveTenant(ctx, request);
         return ctx;
     }
 
-    private endRequest(response, ctx: RequestContext, e?: Error) {
+    private endRequest(response, ctx: RequestContext, e?) {
         let value = response.value;
         let hasError = false;
         let prefix: string;
 
         if (response instanceof HttpResponse) {
             value = response.content;
-            hasError = response.statusCode && response.statusCode >= 400;
+            hasError = e || response.statusCode && response.statusCode >= 400;
         }
         if (value) {
             hasError = hasError || value.error;
@@ -139,7 +138,7 @@ export abstract class AbstractAdapter {
             logger.error(ctx, e);
         }
 
-        logger.logAction(ctx, "ER", trace.action, trace && JSON.stringify(trace));
+        logger.logAction(ctx, "ER",trace.action, `End request status: ${(e && e.statusCode) || response.statusCode || 200} value: ${trace && JSON.stringify(trace)}`);
 
         // Normalize return value
         if (value) {

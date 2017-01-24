@@ -121,7 +121,6 @@ export class QueryManager implements IManager {
             return new BadRequestResponse("Action handler must be requested with POST.");
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(ctx, "Log", query.action, JSON.stringify(query));
 
         try {
             let errors = await this.validateRequestData(ctx, info, query);
