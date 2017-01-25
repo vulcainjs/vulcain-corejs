@@ -50,7 +50,6 @@ export class HttpConfigurationSource implements ConfigurationSource
                             let data = response.body;
                             data.value && data.value.forEach(cfg => values.set(cfg.key, cfg));
                             self.lastUpdate = moment.utc().format();
-                            System.log.verbose(null, `HTTP CONFIG : polling properties on ${uri}`);
                         }
                     }
                     else {

@@ -22,7 +22,7 @@ interface LogEntry {
     source: string; // container
     message?: string;
     timestamp: number;
-    kind: entryKind; 
+    kind: entryKind;
     action: string;
     error?: string;
     stack?: string;
@@ -121,7 +121,7 @@ export class VulcainLogger {
     private writeEntry(entry: LogEntry) {
 
         if (System.isDevelopment) {
-            util.log(`${entry.message || JSON.stringify(entry)}`);
+            util.log(`${entry.message} - ${JSON.stringify(entry)}`);
         }
         else {
             console.log("%j", entry);
