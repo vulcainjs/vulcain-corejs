@@ -448,8 +448,8 @@ export class System {
     }
 
     static removePasswordFromUrl(url: string) {
-        const regex = /^([^:]*:\/\/)((\w*:)(\w*)@)?(.*)/g;
-        const subst = `\$1\$3***@\$5`;
+        const regex = /(\/[^:]*:[^@]*@)/g;
+        const subst = `****@`;
 
         // The substituted value will be contained in the result variable
         return url.replace(regex, subst);
