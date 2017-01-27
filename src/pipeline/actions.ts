@@ -79,10 +79,8 @@ export interface ActionMetadata extends CommonActionMetadata {
 }
 
 export interface ActionResponse<T> extends CommonRequestResponse<T> {
-    correlationId: string;
     startedAt: string;
     completedAt?: string;
-    service: string;
     taskId?: string;
     status: "Error" | "Success" | "Pending";
     commandMode?: string;
@@ -161,7 +159,6 @@ export class CommandManager implements IManager {
         let res: ActionResponse<any> = {
             tenant: ctx.tenant,
             startedAt: command.startedAt,
-            service: command.service,
             schema: command.schema,
             inputSchema: command.inputSchema,
             action: command.action,
