@@ -70,6 +70,7 @@ export class QueryManager implements IManager {
             domain: query.domain,
             action: query.action,
             maxByPage: query.maxByPage,
+            correlationId: query.correlationId || ctx.correlationId,
             page: query.page
         };
         if (error)

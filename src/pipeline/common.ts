@@ -35,6 +35,7 @@ export interface CommonRequestResponse<T> {
     error?: ErrorResponse;
     value?: T;
     inputSchema?: string;
+    correlationId: string;
 }
 
 export interface CommonActionMetadata {

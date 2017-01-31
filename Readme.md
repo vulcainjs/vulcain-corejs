@@ -1,26 +1,7 @@
 # Micro service framework
 
-Documentation for the vulcain-corejs API can be found [here](./docs/index.md).
+[![NPM](https://nodei.co/npm/vulcain-corejs.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/vulcain-corejs/)
 
-## Generate Typedoc
+A backend micro-service framework writing in typescript.
 
-Generate Typescript documentation
-Launch :
-
-```bash
-$ gulp doc
-```
-
-After launch web-server for visualize documentation on **docs** folder
-
-If you haven't **live-server** installed, launch
-
-```bash
-$ npm install -g live-server
-```
-
-Visualize :
-
-```bash
-$ live-server ts-doc
-```
+See [web site](http://vulcainjs.github.io) for more details.
