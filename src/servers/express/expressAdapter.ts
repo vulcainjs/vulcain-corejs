@@ -25,7 +25,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express = express();
 
         this.express.use(function (req, res, next) {
-            if (req.originalUrl.startsWith('/api/')) {
+            if (req.originalUrl.startsWith('/api/') || req.originalUrl === "/api") {
                 self.startRequest(<IHttpAdapterRequest>(<any>req));
             }
             return next();

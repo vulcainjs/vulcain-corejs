@@ -251,6 +251,9 @@ export abstract class AbstractAdapter {
     }
 
     private async executeRequest(manager: IManager, command, ctx: RequestContext): Promise<HttpResponse> {
+        if (!ctx) {
+            return new BadRequestResponse("Url malformed.");
+        }
         if (!command || !command.domain) {
             return new BadRequestResponse("domain is required.");
         }
