@@ -33,7 +33,7 @@ export abstract class AbstractProviderCommand<T> {
     public requestContext: RequestContext;
 
     get container() {
-        return this.requestContext.container;
+        return this.requestContext && this.requestContext.container;
     }
     /**
      *
@@ -76,18 +76,21 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected initializeMetricsInfo() {
-        this.setMetricsTags(this.provider.address, this.schema.name);
+        this.setMetricsTags(this.provider.address, this.schema.name, null, false);
     }
 
-    protected setMetricsTags(address: string, schema: string, tenant?: string) {
+    protected setMetricsTags(address: string, schema: string, tenant?: string, emitLog = true) {
         address = System.removePasswordFromUrl(address);
         let exists = System.manifest.dependencies.databases.find(db => db.address === address && db.schema === db.schema);
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });
         }
         this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant || this.requestContext.tenant));
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
+
+        if (emitLog) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
+        }
     }
 
     onCommandCompleted(duration: number, success: boolean) {

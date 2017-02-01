@@ -16,7 +16,7 @@ export abstract class AbstractHttpCommand {
     private static METRICS_NAME = "external_call";
 
     get container() {
-        return this.requestContext.container;
+        return this.requestContext && this.requestContext.container;
     }
 
     constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
@@ -27,7 +27,7 @@ export abstract class AbstractHttpCommand {
     protected initializeMetricsInfo(container: IContainer) {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricsTags(container, dep.uri);
+            this.setMetricsTags(container, dep.uri, false);
         }
     }
 
@@ -39,7 +39,7 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-    protected setMetricsTags(container: IContainer, uri: string) {
+    protected setMetricsTags(container: IContainer, uri: string, emitLog = true) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
@@ -47,8 +47,10 @@ export abstract class AbstractHttpCommand {
             System.manifest.dependencies.externals.push({ uri });
         }
         this.customTags = this.metrics.encodeTags("uri=" + uri);
-        let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+        if (emitLog) {
+            let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+        }
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -66,7 +68,7 @@ export abstract class AbstractHttpCommand {
     private async execAsync(verb: string, url: string, data?): Promise<any> {
         let method: Function = this[verb + "Async"];
         if (!method)
-            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);
+            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb or use sendRequestAsync directly.`);
         return await method.apply(this, [url, data]);
     }
 
