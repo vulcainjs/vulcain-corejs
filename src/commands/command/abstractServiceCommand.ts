@@ -76,17 +76,21 @@ export abstract class AbstractServiceCommand {
         if (!dep) {
             throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).constructor.name);
         }
-        this.setMetricsTags(dep.targetServiceName, dep.targetServiceVersion);
+        this.setMetricsTags(dep.targetServiceName, dep.targetServiceVersion, false);
     }
 
-    protected setMetricsTags(targetServiceName: string, targetServiceVersion: string) {
+    protected setMetricsTags( targetServiceName: string, targetServiceVersion: string, emitLog = true) {
+
         let exists = System.manifest.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
         if (!exists) {
             System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
         }
         this.customTags = this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
+
+        if (emitLog) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
+        }
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -110,6 +114,8 @@ export abstract class AbstractServiceCommand {
             throw new Error("You must provide a service name");
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
             throw new Error("Invalid version number. Must be on the form major.minor");
+
+        this.setMetricsTags(serviceName, version);
 
         let alias = System.resolveAlias(serviceName, version);
         if (alias)
@@ -238,6 +244,7 @@ export abstract class AbstractServiceCommand {
      * @returns request response
      */
     protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+
         let request: types.IHttpRequest = rest[verb](url);
 
         // Propagate context

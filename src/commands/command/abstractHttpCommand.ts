@@ -15,6 +15,7 @@ export abstract class AbstractHttpCommand {
     public requestContext: RequestContext;
     private static METRICS_NAME = "external_call";
 
+
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
@@ -35,7 +36,8 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-    protected setMetricsTags(uri: string) {
+
+    protected setMetricsTags( uri: string, emitLog = true) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
@@ -43,8 +45,11 @@ export abstract class AbstractHttpCommand {
             System.manifest.dependencies.externals.push({ uri });
         }
         this.customTags = this.metrics.encodeTags("uri=" + uri);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+
+        if (emitLog) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+        }
     }
 
     onCommandCompleted(duration: number, success: boolean) {
@@ -62,7 +67,7 @@ export abstract class AbstractHttpCommand {
     private async execAsync(verb: string, url: string, data?): Promise<any> {
         let method: Function = this[verb + "Async"];
         if (!method)
-            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb.`);
+            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb or use sendRequestAsync directly.`);
         return await method.apply(this, [url, data]);
     }
 
