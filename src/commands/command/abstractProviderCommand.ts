@@ -32,9 +32,6 @@ export abstract class AbstractProviderCommand<T> {
      */
     public requestContext: RequestContext;
 
-    get container() {
-        return this.requestContext.container;
-    }
     /**
      *
      *
@@ -57,7 +54,7 @@ export abstract class AbstractProviderCommand<T> {
      * @param {any} providerFactory
      */
     constructor(
-        @Inject(DefaultServiceNames.Container) container: IContainer) {
+        @Inject(DefaultServiceNames.Container) public container: IContainer) {
         this.providerFactory = container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
     }

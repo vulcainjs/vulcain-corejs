@@ -15,19 +15,15 @@ export abstract class AbstractHttpCommand {
     public requestContext: RequestContext;
     private static METRICS_NAME = "external_call";
 
-    get container() {
-        return this.requestContext.container;
-    }
-
-    constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
+    constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
-        this.initializeMetricsInfo(container);
+        this.initializeMetricsInfo();
     }
 
-    protected initializeMetricsInfo(container: IContainer) {
+    protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricsTags(container, dep.uri);
+            this.setMetricsTags(dep.uri);
         }
     }
 
@@ -39,7 +35,7 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-    protected setMetricsTags(container: IContainer, uri: string) {
+    protected setMetricsTags(uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
@@ -47,7 +43,7 @@ export abstract class AbstractHttpCommand {
             System.manifest.dependencies.externals.push({ uri });
         }
         this.customTags = this.metrics.encodeTags("uri=" + uri);
-        let logger = container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
     }
 
@@ -97,7 +93,7 @@ export abstract class AbstractHttpCommand {
      */
     protected sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
 
-        this.setMetricsTags(this.container, url);
+        this.setMetricsTags(url);
 
         if (System.hasMocks) {
             let result = System.mocks.applyMockHttp(url, verb);

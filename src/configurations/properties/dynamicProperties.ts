@@ -6,7 +6,7 @@ import { DynamicProperty } from './dynamicProperty';
 import { IDynamicProperty } from '../dynamicProperty';
 import { ConfigurationSourceBuilder } from "../configurationSources/configurationSourceBuilder";
 import { ConfigurationSource } from "../configurationSources/configurationSource";
-import * as rx from 'rx';
+import * as rx from 'rxjs';
 import { Conventions } from '../../utils/conventions';
 
 /**
@@ -24,7 +24,7 @@ import { Conventions } from '../../utils/conventions';
 * </code>
 */
 export class DynamicProperties implements DynamicPropertiesUpdater {
-    private _propertyChanged: rx.Subject<IDynamicProperty<any>>;
+    private _propertyChanged: rx.ReplaySubject<IDynamicProperty<any>>;
 
     /// <summary>
     /// Raises when a property has changed
@@ -86,7 +86,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
      * <param name="sourceTimeoutInMs"></param>
      */
     constructor(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
-        this._propertyChanged = new rx.Subject<IDynamicProperty<any>>();
+        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<any>>(1);
         this._factory = new PropertiesFactory(this);
         this.reset(pollingIntervalInSeconds, sourceTimeoutInMs);
     }
@@ -112,8 +112,8 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
      /// <param name="sourceTimeoutInMs"></param>
      */
     public reset(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
-        this._propertyChanged.dispose();
-        this._propertyChanged = new rx.Subject<IDynamicProperty<any>>();
+        //this._propertyChanged.dispose();
+        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<any>>(1);
 
         let tmp = this._properties;
         let tmp2 = this._configurationManager;
@@ -139,7 +139,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
 
     onPropertyChanged(property, action: string) {
        // System.log.info(null, "CONFIG: Property changed " + property.name);
-        this._propertyChanged.onNext(property);
+        this._propertyChanged.next(property);
     }
 
     // for tests only
@@ -191,6 +191,6 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         this._configurationManager.dispose();
         this._properties.clear();
         this._factory = null;
-        this._propertyChanged.dispose();
+        this._propertyChanged = null;
     }
 }

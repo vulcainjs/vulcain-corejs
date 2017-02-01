@@ -49,9 +49,7 @@ export abstract class AbstractCommand<T> {
      *
      * @memberOf AbstractCommand
      */
-    get container() {
-        return this.requestContext.container;
-    }
+    container: IContainer;
 
     /**
      * Creates an instance of AbstractCommand.

@@ -1,7 +1,7 @@
 import {ActionData, ActionResponse, CommandManager, EventData} from './actions';
 import {IActionBusAdapter, IEventBusAdapter} from '../bus/busAdapter';
 import {DefaultServiceNames} from '../di/annotations';
-import * as RX from 'rx';
+import * as RX from 'rxjs';
 import { System } from '../configurations/globals/system';
 import { RequestContext } from '../servers/requestContext';
 
@@ -32,7 +32,7 @@ export class MessageBus {
 
     private consumeEventAsync(event: EventData) {
         try {
-            (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).onNext(event);
+            (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).next(event);
         }
         catch (e) {
             System.log.error(

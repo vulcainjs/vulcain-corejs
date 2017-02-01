@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.1.105",
+  "version": "1.1.106",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "files": [
@@ -22,7 +22,6 @@
     "@types/fast-stats": "0.0.29",
     "@types/mocha": "^2.2.33",
     "@types/mongodb": "^2.1.35",
-    "@types/rx": "^2.5.34",
     "@types/sinon": "^1.16.32",
     "@types/statsd-client": "^0.1.30",
     "chai": "^3.5.0",
@@ -53,7 +52,7 @@
     "moment": "^2.15.1",
     "mongodb": "^2.2.13",
     "reflect-metadata": "^0.1.3",
-    "rx": "^4.1.0",
+    "rxjs": "^5.1.0",
     "statsd-client": "^0.2.2",
     "unirest": "^0.5.0",
     "uuid": "^3.0.1",

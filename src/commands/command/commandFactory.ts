@@ -4,6 +4,7 @@ import { HystrixCommand } from "./command";
 import { ICommand } from './abstractCommand';
 import { CommandProperties } from './commandProperties';
 import { RequestContext } from '../../servers/requestContext';
+import { IContainer } from '../../di/resolvers';
 
 export interface CommandConfiguration {
     circuitEnabled?: boolean;
@@ -48,11 +49,14 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static async getAsync(commandKey: string, context: RequestContext, schema?: string): Promise<ICommand> {
+    static async getAsync(commandKey: string, container: IContainer): Promise<ICommand>;
+    static async getAsync(commandKey: string, context: RequestContext, schema?: string): Promise<ICommand>;
+    static async getAsync(commandKey: string, contextOrContainer: RequestContext|IContainer, schema?: string): Promise<ICommand> {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
-            let resolvedCommand = context.container.resolve(cache.command);
-            let cmd = new HystrixCommand(cache.properties, resolvedCommand, context);
+            let container = contextOrContainer instanceof RequestContext ? contextOrContainer.container : contextOrContainer;
+            let resolvedCommand = container.resolve(cache.command);
+            let cmd = new HystrixCommand(cache.properties, resolvedCommand, context, container);
             await cmd.setSchemaOnCommandAsync(schema);
             return cmd;
         }

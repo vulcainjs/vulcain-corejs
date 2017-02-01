@@ -6,7 +6,7 @@
 /// <typeparam name="T">Property type</typeparam>
 import { IDynamicProperty } from '../dynamicProperty';
 import {DynamicProperties} from "./dynamicProperties";
-import * as rx from 'rx';
+import * as rx from 'rxjs';
 
 export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
 {
@@ -16,7 +16,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     private  _defaultValue;
     private disposed = false;
     private _reset;
-    private _propertyChanged: rx.Subject<IDynamicProperty<T>>;
+    private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
         return this._propertyChanged;
@@ -30,7 +30,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     constructor( manager:DynamicProperties, properties:Array<string>, defaultValue? )
     {
         if (properties.length < 2) throw new Error("You must provided at least 2 properties.");
-        this._propertyChanged = new rx.Subject<IDynamicProperty<T>>();
+        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
         this._propertiesManager  = manager;
         this._defaultValue       = defaultValue;
 
@@ -45,7 +45,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     // One chained property has changed
     reset()
     {
-        let old = this._activeProperty;
+        let oldValue = this._activeProperty && this._activeProperty.value;
         let tmp;
         for( let propertyName of this._fallbackProperties )
         {
@@ -57,7 +57,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
         }
 
         this._activeProperty = tmp;
-        if( old !== this._activeProperty)
+        if( oldValue !== (this._activeProperty && this._activeProperty.value))
         {
             this.onPropertyChanged();
         }
@@ -65,7 +65,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
 
     private onPropertyChanged()
     {
-        this._propertyChanged.onNext( this );
+        this._propertyChanged.next( this );
         this._propertiesManager.onPropertyChanged(this, "changed");
     }
 
@@ -100,7 +100,6 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     {
         this.disposed = true;
         this.onPropertyChanged();
-        this._propertyChanged.dispose();
-        this._propertyChanged = new rx.Subject<IDynamicProperty<T>>();
+        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
     }
 }

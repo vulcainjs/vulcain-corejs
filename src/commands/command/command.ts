@@ -9,6 +9,7 @@ import { TimeoutError } from './../../errors/timeoutError';
 import { CommandRuntimeError } from './../../errors/commandRuntimeError';
 import { BadRequestError } from './../../errors/badRequestError';
 import { System } from './../../configurations/globals/system';
+import { IContainer } from '../../di/resolvers';
 
 export interface CommandInfo {
     commandKey: string;
@@ -27,8 +28,9 @@ export class HystrixCommand {
     private _arguments;
     private metrics: ICommandMetrics;
 
-    constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context) {
+    constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context, container: IContainer) {
         command.requestContext = context;
+        command.container = container;
         this.metrics = CommandMetricsFactory.getOrCreate(properties);
     }
 

@@ -5,7 +5,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { HandlerFactory, CommonRequestData, CommonMetadata, ErrorResponse, CommonRequestResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import * as os from 'os';
 import { RequestContext, Pipeline, ICustomEvent } from '../servers/requestContext';
-import * as RX from 'rx';
+import * as RX from 'rxjs';
 import { EventHandlerFactory } from './eventHandlerFactory';
 import { Conventions } from '../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';

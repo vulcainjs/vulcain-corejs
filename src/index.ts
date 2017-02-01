@@ -64,7 +64,7 @@ export { RuntimeError } from './errors/runtimeError';
 export { HttpCommandError } from './errors/httpCommandError';
 
 // Commands
-export { Command, CommandFactory as __commandFactory } from './commands/command/commandFactory';
+export { Command, CommandFactory } from './commands/command/commandFactory';
 export { EventType, FailureType, ExecutionResult } from './commands/command/executionResult';
 export { AbstractCommand, ICommand } from './commands/command/abstractCommand';
 export { HystrixSSEStream } from './commands/http/hystrixSSEStream';
