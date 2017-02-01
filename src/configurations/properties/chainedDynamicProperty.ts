@@ -17,6 +17,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     private disposed = false;
     private _reset;
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
+    private _oldValue;
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
         return this._propertyChanged;
@@ -45,7 +46,6 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
     // One chained property has changed
     reset()
     {
-        let oldValue = this._activeProperty && this._activeProperty.value;
         let tmp;
         for( let propertyName of this._fallbackProperties )
         {
@@ -57,8 +57,9 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
         }
 
         this._activeProperty = tmp;
-        if( oldValue !== (this._activeProperty && this._activeProperty.value))
+        if( this._oldValue !== (this._activeProperty && this._activeProperty.value))
         {
+            this._oldValue = this._activeProperty && this._activeProperty.value;
             this.onPropertyChanged();
         }
     }

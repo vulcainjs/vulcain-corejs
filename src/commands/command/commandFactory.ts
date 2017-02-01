@@ -54,7 +54,15 @@ export class CommandFactory {
     static async getAsync(commandKey: string, contextOrContainer: RequestContext|IContainer, schema?: string): Promise<ICommand> {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
-            let container = contextOrContainer instanceof RequestContext ? contextOrContainer.container : contextOrContainer;
+            let container: IContainer;
+            let context: RequestContext;
+            if (contextOrContainer instanceof RequestContext) {
+                context = contextOrContainer;
+                container = context.container;
+            }
+            else {
+                container = contextOrContainer;
+            }
             let resolvedCommand = container.resolve(cache.command);
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context, container);
             await cmd.setSchemaOnCommandAsync(schema);

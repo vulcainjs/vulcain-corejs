@@ -3,7 +3,8 @@ import { DefaultServiceNames } from '../../di/annotations';
 import { IContainer } from '../../di/resolvers';
 import { Inject } from '../../di/annotations';
 import { RequestContext } from '../../servers/requestContext';
-import { IMetrics } from '../../metrics/metrics';
+import { IMetrics, MetricsConstant } from '../../metrics/metrics';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 /**
  * command
@@ -34,6 +35,7 @@ export interface ICommand {
 export abstract class AbstractCommand<T> {
     protected metrics: IMetrics;
     protected customTags: string;
+    private static METRICS_NAME = "custom_command";
 
     /**
      *
@@ -63,6 +65,20 @@ export abstract class AbstractCommand<T> {
 
     protected setMetricsTags(...args: Array<string>) {
         this.customTags = this.metrics.encodeTags(...args);
+
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
+    }
+
+    onCommandCompleted(duration: number, success: boolean) {
+        if (!this.customTags) {
+            throw new Error("setMetricTags must be called at the beginning of runAsync.");
+        }
+        this.metrics.timing(AbstractCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
+        if (!success)
+            this.metrics.increment(AbstractCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
+        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+        logger.logAction(this.requestContext, "EC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     /**
