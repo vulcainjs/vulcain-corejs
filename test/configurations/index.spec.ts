@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 import { MemoryConfigurationSource } from '../../dist/configurations/configurationSources/memoryConfigurationSource';
+import { DynamicProperty } from '../../src/configurations/properties/dynamicProperty';
 
 describe('DynamicConfiguration', function () {
 
@@ -38,11 +39,12 @@ describe('DynamicConfiguration', function () {
         ).to.throw();
     });
 
-    it('should raise changed event', function () {
+    it('should raise changed event', () => {
 
         let cx = 0;
+        DynamicProperties.instance.reset();
         DynamicProperties.instance.propertyChanged
-            .where( p => p.name === "test")
+            .filter( p => p.name === "test")
             .subscribe((property) => {
                 cx += property.value;
             });
@@ -51,6 +53,7 @@ describe('DynamicConfiguration', function () {
         prop.set(15);
         let prop2 = DynamicConfiguration.asProperty(10, "test2");
         prop.set(20);
+
         expect(10 + 15 + 20).to.equal(cx);
         expect(20).to.equal(prop.value);
     });

@@ -175,7 +175,7 @@ export class Application {
             );
             request.on("close", () => {
                 System.log.info(null, "close hystrix.stream");
-                subscription.dispose();
+                subscription.unsubscribe();
             });
 
             return subscription;

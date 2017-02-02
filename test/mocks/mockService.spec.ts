@@ -38,7 +38,7 @@ let mockDefinitions = {
 
 describe('Mock service', function () {
 
-    it('should do be available from System', function () {
+    it('should be available from System', function () {
 
         expect(System.hasMocks).to.be.false;
     });

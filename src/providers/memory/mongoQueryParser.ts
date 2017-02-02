@@ -81,6 +81,12 @@ export class MongoQueryParser {
     }
 
     private getExpressionValue(val) {
+        if (!val || typeof val !== "object") {
+            return { op: "$eq", val };
+        }
+        if (Object.prototype.toString.call(val) === '[object RegExp]') {
+            return { op: "$regex", val };
+        }
         let keys = Object.keys(val);
         if (keys.length !== 1)
             throw new Error("Syntax error");
@@ -110,7 +116,7 @@ export class MongoQueryParser {
             case "$exists":
                 return (left !== undefined) === right;
             case "$regex":
-                return left.match(RegExp(right)) !== null;
+                return left && left.match(RegExp(right)) !== null;
             case "$in":
                 if (!Array.isArray(right))
                     throw new Error("Syntax error for $in");
@@ -130,7 +136,7 @@ export class MongoQueryParser {
                 }
                 return true;
             case "$startsWith":
-                return ((<string>left).startsWith(right));
+                return left && ((<string>left).startsWith(right));
             case "$mod":
                 if (!Array.isArray(right))
                     throw new Error("Syntax error for $mod");

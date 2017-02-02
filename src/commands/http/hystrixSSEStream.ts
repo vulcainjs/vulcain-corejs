@@ -3,14 +3,14 @@ import {CircuitBreakerFactory} from "../command/circuitBreaker";
 import ActualTime from "../../utils/actualTime";
 import RollingNumberEvent from "../metrics/hystrix/rollingNumberEvent";
 import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
-import * as rx from 'rxjs';
+import {Observable} from 'rxjs';
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {
-        let observableMetrics = (<any>rx.Observable)
+        let observableMetrics = Observable
             .interval(delay)
             .flatMap(() => {
-                return rx.Observable.from( Array.from(CommandMetricsFactory.getAllMetrics()));
+                return Observable.from( Array.from(CommandMetricsFactory.getAllMetrics()));
             })
             .map((metrics: any) => {
                 return HystrixSSEStream.toCommandJson(metrics);

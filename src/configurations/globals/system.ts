@@ -98,7 +98,7 @@ export class System {
     }
 
     static get hasMocks() {
-        return System._mocksManager && !System._mocksManager.disabled;
+        return !!(System._mocksManager && !System._mocksManager.disabled);
     }
 
     static get mocks() {
