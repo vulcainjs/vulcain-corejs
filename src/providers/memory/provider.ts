@@ -107,7 +107,7 @@ export class MemoryProvider implements IProvider<any>
         let take = options.maxByPage || -1;
         let skip = take * (options.page || 0);
         let cx = 0;
-        let query = new MongoQueryParser(options.query.filter || options.query);
+        let query = new MongoQueryParser( (options.query && options.query.filter) || options.query);
         if (list) {
             for (let k in list) {
                 let v = list[k];
