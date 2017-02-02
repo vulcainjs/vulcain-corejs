@@ -12,15 +12,23 @@ export class Conventions {
 
     private static _instance: Conventions;
 
-    static deepAssign(from, target) {
-        from && Object.keys(from).forEach(k => {
-            if (typeof from === "Object") {
-                target[k] = target[k] || {};
-                Conventions.deepAssign(from[k], target[k]);
+    static clone(source, target?) {
+        if (!source || !(typeof source === "object")) {
+            return source;
+        }
+
+        target = target || {};
+        for (let key of Object.keys(source)) {
+            let val = source[key];
+            if (Array.isArray(val)) {
+                target[key] = [];
+                val.forEach(v => target[key].push(Conventions.clone(v)));
             }
-            else
-                target[k] = from[k];
-        });
+            else {
+                target[key] = Conventions.clone(val, target[key]);
+            }
+        }
+        return target;
     }
 
     static get instance() {
@@ -29,7 +37,7 @@ export class Conventions {
             try {
                 if (fs.existsSync("vulcain.conventions")) {
                     const data = JSON.parse(fs.readFileSync("vulcain.conventions", "utf8"));
-                    Conventions.deepAssign(data, Conventions._instance);
+                    Conventions.clone(data, Conventions._instance);
                 }
             }
             catch (e) {

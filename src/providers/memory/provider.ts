@@ -5,6 +5,7 @@ import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
 import { SchemaBuilder } from '../../schemas/schemaBuilder';
 import { RequestContext } from '../../servers/requestContext';
+import { Conventions } from '../../utils/conventions';
 
 interface AstNode {
     op: string;
@@ -59,7 +60,7 @@ export class MemoryProvider implements IProvider<any>
     private ensureSchema(schema: Schema) {
         let schemaInfo = this.state.schemas.get(schema.name);
         if (!schemaInfo) {
-            schemaInfo = { data: {}};
+            schemaInfo = { data: {} };
             if (this.state.folder) {
                 schemaInfo.saveToFile = this.state.folder + "/" + schema.description.storageName + ".json";
                 if (fs.existsSync(schemaInfo.saveToFile)) {
@@ -79,9 +80,6 @@ export class MemoryProvider implements IProvider<any>
         fs.writeFileSync(schemaInfo.saveToFile, JSON.stringify(schemaInfo.data), "UTF-8");
     }
 
-    static clone(obj) {
-        return obj && Object.assign({}, obj);
-    }
 
     /**
      * Return a list of entities
@@ -117,7 +115,7 @@ export class MemoryProvider implements IProvider<any>
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {
                     cx++;
-                    yield MemoryProvider.clone(v);
+                    yield Conventions.clone(v);
                 }
                 else
                     break;
@@ -145,7 +143,7 @@ export class MemoryProvider implements IProvider<any>
         return new Promise((resolve, reject) => {
             try {
                 let list = data[schema.description.storageName];
-                resolve(list && MemoryProvider.clone(list[name] || []));
+                resolve(list && Conventions.clone(list[name]));
             }
             catch (err) {
                 reject(err);
@@ -217,7 +215,7 @@ export class MemoryProvider implements IProvider<any>
                     return;
                 }
 
-                list[name] = MemoryProvider.clone(entity);
+                list[name] = Conventions.clone(entity);
                 self.save(schema);
                 resolve(entity);
             }
@@ -251,7 +249,7 @@ export class MemoryProvider implements IProvider<any>
                 }
 
                 entity = schema.deepAssign(list[name], entity);
-                list[name] = MemoryProvider.clone(entity);
+                list[name] = Conventions.clone(entity);
                 self.save(schema);
                 resolve(entity);
             }

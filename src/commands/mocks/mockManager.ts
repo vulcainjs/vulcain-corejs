@@ -43,6 +43,9 @@ export class MockManager {
             return false;
         }
 
+        if (a === b)
+            return true;
+        
         for (let p of Object.keys(b)) {
             let val = b[p];
             if (typeof val === "object") {

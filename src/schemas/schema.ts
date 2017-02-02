@@ -137,6 +137,10 @@ export class Schema {
         if (!source) {
             return target;
         }
+        if (!(typeof source === "object")) {
+            return source;
+        }
+
         schema = schema || this.description;
         for (let key of Object.keys(source)) {
             let val = source[key];
