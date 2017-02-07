@@ -69,9 +69,7 @@ export class QueryManager implements IManager {
             schema: query.schema,
             domain: query.domain,
             action: query.action,
-            maxByPage: query.maxByPage,
             correlationId: query.correlationId || ctx.correlationId,
-            page: query.page
         };
         if (error)
             res.error = { message: error.message, errors: error.errors };
@@ -119,7 +117,7 @@ export class QueryManager implements IManager {
     async runAsync(query: QueryData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(query, ctx.container);
         if (info.kind !== "query")
-            return new BadRequestResponse("Action handler must be requested with POST.");
+            return new BadRequestResponse("Action handler must be requested with POST.", 405);
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
@@ -141,6 +139,8 @@ export class QueryManager implements IManager {
             if (!(result instanceof HttpResponse)) {
                 if (result && Array.isArray(result)) {
                     res.total = result.length;
+                    res.maxByPage = query.maxByPage;
+                    res.page = query.page;
                 }
                 res.value = HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 return new VulcainResponse(res);

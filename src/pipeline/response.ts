@@ -72,8 +72,8 @@ export class HttpRedirectResponse extends HttpResponse {
 }
 
 export class BadRequestResponse extends HttpResponse {
-    constructor(content) {
-        super(content, 400);
+    constructor(content, status=400) {
+        super(content, status);
         if (typeof content === "string") {
             this.content = {
                 error: { message: content }

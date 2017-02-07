@@ -10,6 +10,7 @@ import { System } from './../configurations/globals/system';
 import { ScopesDescriptor } from './scopeDescriptors';
 import * as Path from 'path';
 import { BadRequestError } from '../errors/badRequestError';
+import { ApplicationRequestError } from '../errors/applicationRequestError';
 
 export interface HandlerItem {
     methodName: string;
@@ -92,7 +93,7 @@ export class ServiceDescriptors {
             if (optional)
                 return null;
             else
-                throw new BadRequestError(`no handler method founded for action ${action}, schema ${schema}`);
+                throw new ApplicationRequestError(`no handler method founded for action ${action}, schema ${schema}`, null, 405);
         }
 
         try {
@@ -289,7 +290,7 @@ export class ServiceDescriptors {
                 name: k,
                 reference: r.cardinality,
                 type: r.cardinality === "many" ? r.item + "[]" : r.item,
-                required: false,
+                required: r.required,
                 description: r.description,
                 metadata
             };

@@ -215,7 +215,7 @@ export class CommandManager implements IManager {
     async runAsync(command: ActionData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
         if (info.kind !== "action")
-            return new BadRequestResponse("Query handler must be requested with GET.");
+            return new BadRequestResponse("Query handler must be requested with GET.", 405);
 
         let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);

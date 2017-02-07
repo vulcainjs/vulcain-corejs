@@ -140,7 +140,7 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getRequestAsync<T>(serviceName: string, version: string, id: string, schema?: string): Promise<QueryResponse<T>> {
+    protected getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResponse<T>> {
         if (System.hasMocks) {
             let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", { id });
             if (result !== undefined) {
@@ -148,9 +148,8 @@ export abstract class AbstractServiceCommand {
                 return result;
             }
         }
-        let url = schema ? `http://${this.createServiceName(serviceName, version)}/api/{schema}/get/${id}`
-            : `http://${this.createServiceName(serviceName, version)}/api/get/${id}`;
 
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', schema, 'get', id, args);
         let res = this.sendRequestAsync("get", url);
         return res;
     }
@@ -169,19 +168,19 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, page?: number, maxByPage?: number, schema?: string): Promise<QueryResponse<T>> {
-        let args: any = {};
-        args.$maxByPage = maxByPage;
-        args.$page = page;
-        args.$query = query && JSON.stringify(query);
+    protected getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResponse<T>> {
+        let data: any = {};
+        data.$maxByPage = maxByPage;
+        data.$page = page;
+        data.$query = query && JSON.stringify(query);
         if (System.hasMocks) {
-            let result = System.mocks.applyMockService(serviceName, version, verb, args);
+            let result = System.mocks.applyMockService(serviceName, version, verb, data);
             if (result !== undefined) {
                 System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
                 return result;
             }
         }
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args);
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args, data);
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -197,7 +196,7 @@ export abstract class AbstractServiceCommand {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any): Promise<ActionResponse<T>> {
+    protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResponse<T>> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
         if (System.hasMocks) {
             let result = System.mocks.applyMockService(serviceName, version, verb, command);
@@ -206,8 +205,7 @@ export abstract class AbstractServiceCommand {
                 return result;
             }
         }
-        let url = `http://${this.createServiceName(serviceName, version)}/api/${verb}`;
-
+        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', verb, args);
         let res = this.sendRequestAsync("post", url, (req) => req.json(command));
         return res;
     }
@@ -292,21 +290,21 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(kind: string, serviceName: string, version: string, verb: string, userContext, data, page, maxByPage): Promise<any> {
+    protected async exec(kind: string, serviceName: string, version: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.sendActionAsync(serviceName, version, verb, data);
+                let response = await this.sendActionAsync(serviceName, version, verb, data, args);
                 return response.value;
             }
             case 'query': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.getQueryAsync(serviceName, version, verb, data, page, maxByPage);
+                let response = await this.getQueryAsync(serviceName, version, verb, data, args, page, maxByPage);
                 return { values: response.value, total: response.total, page };
             }
             case 'get': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.getRequestAsync(serviceName, version, data);
+                let response = await this.getRequestAsync(serviceName, version, data, args);
                 return response.value;
             }
         }

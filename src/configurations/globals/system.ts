@@ -102,7 +102,7 @@ export class System {
     }
 
     static get mocks() {
-        return System._mocksManager;
+        return System._mocksManager; // TODO as service
     }
 
     /**
