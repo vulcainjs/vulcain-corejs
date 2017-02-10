@@ -28,7 +28,9 @@ export abstract class AbstractExpressAuthentication {
         return async (req, res: express.Response, next) => {
             let ctx: RequestContext = req.requestContext;
             if (!ctx) {
-                throw new Error("Invalid request");
+                res.status(400);
+                res.send();
+                return;
             }
             let authorization = req.headers['authorization'];
             // Perhaps in cookies

@@ -27,6 +27,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(function (req, res, next) {
             const regex = /^\/api[\/?#]/;
             if (regex.test(req.originalUrl) || req.originalUrl === "/api") {
+                // Initialize request context
                 self.startRequest(<IHttpAdapterRequest>(<any>req));
             }
             return next();

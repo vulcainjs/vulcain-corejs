@@ -117,7 +117,7 @@ export class ConfigurationManager
                     return new DynamicProperty<any>(this.properties, key);
                 });
 
-                prop.set(item.encrypted ? JSON.parse(System.decrypt(item.value)) : item.value);
+                prop.set(item.encrypted ? System.decrypt(item.value) : item.value);
                 let v = item.encrypted ? "********" : item.value;
                 System.log.info(null, `CONFIG: Setting property value '${v}' for key ${key}`);
             }
