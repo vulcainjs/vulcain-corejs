@@ -1,4 +1,4 @@
-import { HystrixSSEStream } from "../../dist/commands/http/HystrixSSEStream";
+import { HystrixSSEStream } from "../../dist/commands/http/hystrixSSEStream";
 import { CommandFactory } from '../../dist/commands/command/commandFactory';
 import { CommandProperties } from "../../dist/commands/command/commandProperties";
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
