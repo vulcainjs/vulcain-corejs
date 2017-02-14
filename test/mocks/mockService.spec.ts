@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { MockManager } from '../../dist/commands/mocks/mockManager';
+import { MockManager } from '../../dist/mocks/mockManager';
 import { System } from '../../dist/configurations/globals/system';
 
 let mockDefinitions = {

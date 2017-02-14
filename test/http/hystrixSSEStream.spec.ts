@@ -9,6 +9,7 @@ import { TestContainer } from '../../dist/di/containers';
 @Command()
 export class HystrixSSECommand1 extends AbstractCommand<any> {
     runAsync(args) {
+        this.setMetricsTags("test");
         return new Promise((resolve, reject) => {
             setTimeout(function () {
                 resolve(args);
