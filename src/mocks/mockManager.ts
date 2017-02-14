@@ -1,4 +1,4 @@
-import { CommonRequestData } from '../../pipeline/common';
+import { CommonRequestData } from '../pipeline/common';
 
 export class MockManager {
     private mocks;
@@ -45,7 +45,7 @@ export class MockManager {
 
         if (a === b)
             return true;
-        
+
         for (let p of Object.keys(b)) {
             let val = b[p];
             if (typeof val === "object") {

@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import { VulcainManifest } from './../dependencies/annotations';
 import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from '../dynamicProperty';
-import { MockManager } from '../../commands/mocks/mockManager';
+import { MockManager } from '../../mocks/mockManager';
 import { DefaultServiceNames } from '../../di/annotations';
 import { DynamicProperties } from '../properties/dynamicProperties';
 

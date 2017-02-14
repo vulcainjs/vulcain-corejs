@@ -24,7 +24,7 @@ export abstract class AbstractHttpCommand {
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricsTags(dep.uri);
+            this.setMetricsTags(dep.uri, false);
         }
     }
 
