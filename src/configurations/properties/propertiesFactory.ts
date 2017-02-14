@@ -33,10 +33,7 @@ export class PropertiesFactory implements IPropertiesFactory
 
     public asChainedProperty<T>(defaultValue:T, name:string, fallbackPropertyNames:Array<string>) : IDynamicProperty<T>
     {
-        fallbackPropertyNames = fallbackPropertyNames.filter(n=>!!n);
-        if(fallbackPropertyNames.length === 0 || !name) throw new Error("You must provide at least one fallback property name");
-
-        let properties = [name].concat(fallbackPropertyNames);
+        let properties = [name].concat(fallbackPropertyNames).filter(n => !!n);
         let p = new ChainedDynamicProperty<T>(this._properties, properties, defaultValue);
         return p;
     }

@@ -378,8 +378,8 @@ export class System {
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
-            System.domainName && System.domainName + "." + name,
-            name);
+            name,
+            System.domainName && System.domainName + "." + name);
     }
 
     /**
@@ -393,10 +393,10 @@ export class System {
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
+            name,
             System.serviceName + "." + System.serviceVersion + "." + name,
             System.serviceName + "." + name,
-            System.domainName + "." + name,
-            name);
+            System.domainName + "." + name);
     }
 
     /**

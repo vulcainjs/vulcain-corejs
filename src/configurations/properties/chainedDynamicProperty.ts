@@ -30,7 +30,7 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T>
 
     constructor( manager:DynamicProperties, properties:Array<string>, defaultValue? )
     {
-        if (properties.length < 2) throw new Error("You must provided at least 2 properties.");
+        if (properties.length < 1) throw new Error("You must provided at least 1 property.");
         this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
         this._propertiesManager  = manager;
         this._defaultValue       = defaultValue;

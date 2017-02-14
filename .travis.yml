@@ -5,6 +5,7 @@ node_js:
 before_script:
   - npm install -g gulp
 script: gulp
+before_deploy:
 deploy:
   provider: npm
   api_key: $NPM_KEY
