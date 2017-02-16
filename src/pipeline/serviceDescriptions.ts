@@ -64,7 +64,6 @@ export class ServiceDescriptors {
     private descriptions: ServiceDescription;
     private handlers = new Array<HandlerItem>();
     private routes = new Map<string, HandlerItem>();
-    private monoSchema: boolean = true;
 
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
     }
@@ -80,7 +79,7 @@ export class ServiceDescriptors {
         let verb = action && action.toLowerCase();
         let item: HandlerItem;
 
-        if (this.monoSchema || !schema) {
+        if (!schema) {
             item = this.routes.get(verb);
         }
         else {
@@ -114,18 +113,6 @@ export class ServiceDescriptors {
 
         let schemas = new Map<string, SchemaDescription>();
 
-        // Check if there is only one Schema
-        let lastSchema: string;
-        this.handlers.forEach(item => {
-            if (!item.metadata.schema)
-                return;
-            if (!lastSchema)
-                lastSchema = <string>item.metadata.schema;
-            else if (item.metadata.schema !== lastSchema) {
-                this.monoSchema = false;
-            }
-        });
-
         this.descriptions = {
             services: [],
             schemas: new Array<SchemaDescription>(),
@@ -140,7 +127,7 @@ export class ServiceDescriptors {
         for (let item of this.handlers.filter(h => h.kind === "action")) {
             let schema = this.getSchemaDescription(schemas, item.metadata.schema);
 
-            let verb = !item.metadata.schema || this.monoSchema
+            let verb = !item.metadata.schema
                 ? item.metadata.action
                 : schema + "." + item.metadata.action;
 
@@ -178,7 +165,7 @@ export class ServiceDescriptors {
 
             let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
 
-            let verb = !item.metadata.schema || this.monoSchema
+            let verb = !item.metadata.schema
                 ? item.metadata.action
                 : schema + "." + item.metadata.action;
 
