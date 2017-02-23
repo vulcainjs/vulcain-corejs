@@ -9,6 +9,7 @@
         "target": "es6",
         "watch": false,
         "noUnusedParameters": false,
-        "noUnusedLocals": false
+        "noUnusedLocals": false,
+        "skipLibCheck": true
     }
 }

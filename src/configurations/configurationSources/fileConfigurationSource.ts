@@ -46,8 +46,8 @@ export class FileConfigurationSource implements ConfigurationSource
                         let obj = JSON.parse(data);
                         for(let key of Object.keys(obj)) {
                             let encrypted = false;
-                            let val = obj[key];
-                            if( typeof val === "Object") {
+                            let val = <any>obj[key];
+                            if( typeof val === "object") {
                                 val = val.value;
                                 encrypted = val.encrypted;
                             }
