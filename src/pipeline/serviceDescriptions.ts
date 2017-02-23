@@ -64,6 +64,7 @@ export class ServiceDescriptors {
     private descriptions: ServiceDescription;
     private handlers = new Array<HandlerItem>();
     private routes = new Map<string, HandlerItem>();
+    private defaultSchema: string;
 
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
     }
@@ -81,9 +82,13 @@ export class ServiceDescriptors {
 
         if (!schema) {
             item = this.routes.get(verb);
+            if (!item) {
+                schema = this.defaultSchema;
+            }
         }
-        else {
-            let s = schema && schema.toLowerCase();
+
+        if(schema) {
+            let s = schema.toLowerCase();
             verb = s + "." + verb;
             item = this.routes.get(verb);
         }
@@ -112,6 +117,22 @@ export class ServiceDescriptors {
         let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
 
         let schemas = new Map<string, SchemaDescription>();
+
+        // Check if there is only one Schema
+        let lastSchema: string;
+        let monoSchema = true;
+        this.handlers.forEach(item => {
+            if (!item.metadata.schema)
+                return;
+            if (!lastSchema)
+                lastSchema = <string>item.metadata.schema;
+            else if (item.metadata.schema !== lastSchema) {
+                monoSchema = false;
+            }
+        });
+        if (monoSchema && lastSchema) {
+            this.defaultSchema = lastSchema;
+        }
 
         this.descriptions = {
             services: [],
