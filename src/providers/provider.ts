@@ -42,6 +42,7 @@ export interface IProvider<T>
     address: string;
     /**
      * Initialize the provider with a tenant and a schema.
+     * Called only once by tenant
      *
      * @param {string} tenant - The tenant to use
      * @returns {Promise<() => Promise<any>>} Dispose function
@@ -53,14 +54,14 @@ export interface IProvider<T>
      * Find an entity
      *
      * @param {Schema} schema
-     * @param {any} query
+     * @param {any} query provider specific query
      * @returns {Promise<T>}
      *
      * @memberOf IProvider
      */
     findOneAsync(schema: Schema, query): Promise<T>;
     /**
-     * Get a entity list
+     * Get an entity list
      *
      * @param {Schema} schema
      * @param {ListOptions} options

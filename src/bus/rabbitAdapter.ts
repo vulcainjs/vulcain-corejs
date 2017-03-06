@@ -38,7 +38,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
                 });
             })
             .catch(err => {
-                System.log.error(null, err, "Unable to open rabbit connexion");
+                System.log.error(null, err, `Unable to open rabbit connexion. Verify if virtualHost ${System.environment} exists.`);
                 resolve(self);
             });
         });
