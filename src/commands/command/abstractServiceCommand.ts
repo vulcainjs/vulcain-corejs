@@ -16,6 +16,7 @@ import { VulcainHeaderNames } from '../../servers/abstractAdapter';
 import { HttpCommandError } from '../../errors/httpCommandError';
 import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 const rest = require('unirest');
+import * as URL from 'url';
 
 /**
  *
@@ -109,7 +110,7 @@ export abstract class AbstractServiceCommand {
      * @param {number} version
      * @returns
      */
-    private createServiceName(serviceName: string, version: string) {
+    protected createServiceName(serviceName: string, version: string) {
         if (!serviceName)
             throw new Error("You must provide a service name");
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
@@ -120,6 +121,17 @@ export abstract class AbstractServiceCommand {
         let alias = System.resolveAlias(serviceName, version);
         if (alias)
             return alias;
+
+        if (System.isDevelopment) {
+            try {
+                let deps = System.manifest.dependencies.services.find(svc => svc.service === serviceName && svc.version === version);
+                if (deps && deps.discoveryAddress) {
+                    const url = URL.parse(deps.discoveryAddress);
+                    return url.host;
+                }
+            }
+            catch(e) {/*ignore*/}
+        }
 
         return System.createContainerEndpoint(serviceName, version);
     }
@@ -300,7 +312,7 @@ export abstract class AbstractServiceCommand {
             case 'query': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
                 let response = await this.getQueryAsync(serviceName, version, verb, data, args, page, maxByPage);
-                return { values: response.value, total: response.total, page };
+                return response.value;
             }
             case 'get': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);

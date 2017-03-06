@@ -63,18 +63,7 @@ export class DefaultTenantPolicy {
             return tenant;
         }
 
-        // 3 - Environnement variable
-        if (System.defaultTenant) {
-            return System.defaultTenant;
-        }
-
-        // 4 - test mode
-        if (System.isTestEnvironnment) {
-            return RequestContext.TestTenant;
-        }
-        else {
-            // 5 - default
-            return "vulcain";
-        }
+        // 3 - default
+        return System.defaultTenant;
     }
 }

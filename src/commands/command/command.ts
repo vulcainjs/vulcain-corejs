@@ -21,6 +21,9 @@ export interface CommandInfo {
     requestVolumeRejectionThreshold: number;
 }
 
+export interface IHasFallbackCommand<T extends any> {
+    fallbackAsync(...args): Promise<T>;
+}
 
 export class HystrixCommand {
     public status: ExecutionResult = new ExecutionResult();

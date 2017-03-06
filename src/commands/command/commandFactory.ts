@@ -68,7 +68,6 @@ export class CommandFactory {
             await cmd.setSchemaOnCommandAsync(schema);
             return cmd;
         }
-        throw new Error(`Command ${commandKey} not found`);
     }
 
     static resetCache() {

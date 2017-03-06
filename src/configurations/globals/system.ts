@@ -94,7 +94,7 @@ export class System {
      * @memberOf System
      */
     static get defaultTenant() {
-        return process.env[Conventions.instance.ENV_VULCAIN_TENANT];
+        return process.env[Conventions.instance.ENV_VULCAIN_TENANT] || 'vulcain';
     }
 
     static get hasMocks() {

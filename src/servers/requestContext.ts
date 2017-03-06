@@ -6,6 +6,7 @@ import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
 import { VulcainHeaderNames } from './abstractAdapter';
 import { IRequestTracer } from '../metrics/statsdMetrics';
+import { System } from "../index";
 const guid = require('uuid');
 
 export enum Pipeline {
@@ -121,8 +122,7 @@ export interface ICustomEvent {
  * @class RequestContext
  */
 export class RequestContext {
-    static TestTenant = "TesT";
-    static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: RequestContext.TestTenant };
+    static TestUser = { id: "test", scopes: ["*"], name: "test", displayName: "test", email: "test", tenant: System.defaultTenant };
 
     public startTick: [number, number];
     public startTime: number;
@@ -286,7 +286,7 @@ export class RequestContext {
     static createMock(container?: IContainer, user?: UserContext) {
         let ctx = new RequestContext(container || new Container(), Pipeline.Test);
         ctx.user = user || RequestContext.TestUser;
-        ctx.user.tenant = ctx.tenant = RequestContext.TestTenant;
+        ctx.user.tenant = ctx.tenant = System.defaultTenant;
         return ctx;
     }
 

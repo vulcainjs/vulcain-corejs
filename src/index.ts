@@ -72,3 +72,4 @@ export { IHttpRequest, IHttpResponse } from './commands/command/types';
 export { AbstractServiceCommand } from './commands/command/abstractServiceCommand';
 export { AbstractHttpCommand } from './commands/command/abstractHttpCommand';
 export { AbstractProviderCommand } from './commands/command/abstractProviderCommand';
+export { IHasFallbackCommand } from './commands/command/command';
