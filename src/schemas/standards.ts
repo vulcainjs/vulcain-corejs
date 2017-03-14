@@ -2,24 +2,24 @@ const uuid = require('uuid');
 const validator = require('validator');
 
 export class SchemaStandardTypes {
-    static "T_string" = "string";
-    static "T_any" = "any";
-    static "T_boolean" = "boolean";
-    static "T_number" = "number";
-    static "T_integer" = "integer";
-    static "T_enum" = "enum";
-    static "T_uid" = "uid";
-    static "T_arrayOf" = "arrayOf";
-    static "T_range" = "range";
-    static "T_email" = "email";
-    static "T_url" = "url";
-    static "T_alphanumeric" = "alphanumeric";
-    static "T_date-iso8601" = "date-iso8601";
+    static "string" = "string";
+    static "any" = "any";
+    static "boolean" = "boolean";
+    static "number" = "number";
+    static "integer" = "integer";
+    static "enum" = "enum";
+    static "uid" = "uid";
+    static "arrayOf" = "arrayOf";
+    static "range" = "range";
+    static "email" = "email";
+    static "url" = "url";
+    static "alphanumeric" = "alphanumeric";
+    static "date-iso8601" = "date-iso8601";
 }
 
 export class SchemaStandardValidators {
-    static "V_pattern" = "pattern";
-    static "V_length" = "length";
+    static "patternValidator" = "pattern";
+    static "lengthValidator" = "length";
 }
 
 export let standards = {
@@ -119,9 +119,10 @@ export let standards = {
     },
     "enum": {
         type: "string",
-        $values: [],
+        $values: null,
         message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
         validate: function (val) {
+            if (!this.values) return "You must define a list of valid values with the 'values' property.";
             if (this.$values.indexOf(val) === -1) return this.message;
         }
     },
@@ -136,6 +137,7 @@ export let standards = {
             "Invalid value '{$value}' for '{$propertyName}', value must be an array.",
         ],
         validate: function (val) {
+            if (!this.values) return "You must define array item type with the 'item' property.";
             if (!Array.isArray(val)) return this.messages[1];
             let error = false;
             if (this.$item !== "any") {

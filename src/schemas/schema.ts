@@ -3,7 +3,7 @@ import { standards } from './standards';
 import { Validator } from './validator';
 import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
-import { PropertyOptions } from './annotations';
+import { ModelPropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
 import { System } from './../configurations/globals/system';
 import { RequestContext } from '../servers/requestContext';
@@ -16,7 +16,7 @@ export interface ErrorMessage {
 
 export interface SchemaDescription {
     name: string;
-    properties: { [index: string]: PropertyOptions };
+    properties: { [index: string]: ModelPropertyOptions };
     references: { [index: string]: ReferenceOptions };
     extends?: SchemaDescription | string;
     hasSensibleData?: boolean;
@@ -336,7 +336,7 @@ export class Domain {
         // Convert properties
         for (const ps in schema.properties) {
             if (!schema.properties.hasOwnProperty(ps)) { continue; }
-            let prop: PropertyOptions = schema.properties[ps];
+            let prop: ModelPropertyOptions = schema.properties[ps];
             if (prop) {
                 try {
                     let val = this.applyBinding(prop, origin, origin[ps]);

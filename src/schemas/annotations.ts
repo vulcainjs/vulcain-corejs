@@ -36,7 +36,7 @@ export interface PropertyOptions {
      * @type {string} - a valid base type
      * @memberOf PropertyOptions
      */
-    type: string;
+    type?: string;
     /**
      * List of values for 'enum' type
      *
@@ -80,13 +80,6 @@ export interface PropertyOptions {
      */
     unique?: boolean;
     /**
-     * List of validators - Do not use directly, use @Validator instead
-     *
-     * @type {Array<any>}
-     * @memberOf PropertyOptions
-     */
-    validators?: Array<any>;
-    /**
      * Function to transform an input value. If null or false, the value are ignored.
      *
      *
@@ -124,11 +117,44 @@ export interface PropertyOptions {
     defaultValue?;
 }
 
-export function Property(info: PropertyOptions) {
+/**
+ * Property definition
+ *
+ * @export
+ * @interface PropertyOptions
+ */
+export interface ModelPropertyOptions extends PropertyOptions {
+     /**
+     * List of validators - Do not use directly, use @Validator instead
+     *
+     * @type {Array<any>}
+     * @memberOf PropertyOptions
+     */
+    validators?: Array<any>;
+    /**
+     * Custom options for custom types
+     *
+     * @memberOf PropertyOptions
+     */
+    custom?: any;
+}
+
+export function Property(info?: PropertyOptions, customOptions?:any) {
     return (target, key) => {
         const symProperties = Symbol.for("design:properties");
         let properties = Reflect.getOwnMetadata(symProperties, target) || {};
-        properties[key] = info;
+        let data: ModelPropertyOptions = info || {};
+        data.custom = customOptions;
+        if (!data.type) {
+            let type = <string>Reflect.getOwnMetadata("design:type", target, key);
+            if (type && ['String', 'Boolean', 'Number'].indexOf(type) >= 0) {
+                data.type = type.toLowerCase();
+            }
+            else {
+                throw new Error(`You must define a type for property ${key} in model ${target.name}`);
+            }
+        }
+        properties[key] = data;
         Reflect.defineMetadata(symProperties, properties, target);
     };
 }
