@@ -1,5 +1,5 @@
-import { ApiKeyService } from './defaults/services/apiKeyService';
-import { Preloader } from './preloader';
+import { Preloader } from './preloader'; // always on first line
+
 import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
 import { LocalAdapter } from './bus/localAdapter';
@@ -21,6 +21,7 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
+import { ApiKeyService } from './defaults/services/apiKeyService';
 import { ExpressAuthentication } from './servers/express/expressAuthentication';
 
 /**
@@ -47,7 +48,7 @@ export class Application {
      * @type {boolean}
      * @memberOf Application
      */
-    public ignoreInvalidBearerToken: boolean=false;
+    public ignoreInvalidBearerToken: boolean = false;
     private _basePath: string;
     /**
      *
