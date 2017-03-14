@@ -1,6 +1,6 @@
 import { Domain, SchemaDescription } from './schema';
 import 'reflect-metadata';
-import { PropertyOptions, ReferenceOptions } from './annotations';
+import { ModelPropertyOptions, ReferenceOptions } from './annotations';
 import { ModelOptions } from './annotations';
 
 export class SchemaBuilder {
@@ -30,7 +30,7 @@ export class SchemaBuilder {
 
         let properties = Reflect.getOwnMetadata(symProperties, model.prototype);
         for (let propertyName in properties) {
-            let propAttr: PropertyOptions = properties[propertyName];
+            let propAttr: ModelPropertyOptions = properties[propertyName];
             if (propAttr) {
                 if (propAttr.type !== "any" && !this.domain._findType(propAttr.type))
                     throw new Error(`Unknown type ${propAttr.type} for property ${propertyName} of schema ${schema.name}`);
@@ -124,18 +124,19 @@ export class SchemaBuilder {
     }
 
     // Copy all schema property names from 'from'
-    // TODO use extends
-    static clone(schema, from): any {
-        let clone = {};
+    static clone(schema, from, clone?): any {
+        clone = clone || {};
         for (let key of Object.keys(schema)) {
             if (key && key[0] === "$") {
                 let pname = key.substr(1);
                 clone[key] = (from && from[pname]) || schema[key];
             }
-            else if (key !== "validators") {
-                clone[key] =  schema[key];
-            }
         }
+
+        if (from.custom) {
+            clone = SchemaBuilder.clone(schema, from.custom, clone);
+        }
+
         return clone;
     }
 }
