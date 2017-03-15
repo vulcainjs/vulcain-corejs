@@ -131,18 +131,18 @@ export let standards = {
         bind: (v) => v || uuid.v1()
     },
     "arrayOf": {
-        $item: "string",
+        $items: "string",
         messages: [
-            "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$item}.",
+            "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$items}.",
             "Invalid value '{$value}' for '{$propertyName}', value must be an array.",
         ],
         validate: function (val) {
-            if (!this.values) return "You must define array item type with the 'item' property.";
+            if (!this.values) return "You must define array item type with the 'items' property.";
             if (!Array.isArray(val)) return this.messages[1];
             let error = false;
-            if (this.$item !== "any") {
+            if (this.$items !== "any") {
                 val.forEach(e => {
-                    if (e && typeof e !== this.$item) error = true;
+                    if (e && typeof e !== this.$items) error = true;
                 });
             }
             if (error) return this.messages[0];

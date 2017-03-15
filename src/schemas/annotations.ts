@@ -64,7 +64,7 @@ export interface PropertyOptions {
      * @type {string} - A valid type for all elements of the array
      * @memberOf PropertyOptions
      */
-    item?: string;
+    items?: string;
     /**
      * Entity key - Only one property by entity can be define.
      *
@@ -146,12 +146,13 @@ export function Property(info?: PropertyOptions, customOptions?:any) {
         let data: ModelPropertyOptions = info || {};
         data.custom = customOptions;
         if (!data.type) {
-            let type = <string>Reflect.getOwnMetadata("design:type", target, key);
-            if (type && ['String', 'Boolean', 'Number'].indexOf(type) >= 0) {
-                data.type = type.toLowerCase();
+            let type = <Function>Reflect.getOwnMetadata("design:type", target, key);
+            let typeName = type && type.name;
+            if (typeName && ['String', 'Boolean', 'Number'].indexOf(typeName) >= 0) {
+                data.type = typeName.toLowerCase();
             }
             else {
-                throw new Error(`You must define a type for property ${key} in model ${target.name}`);
+                throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
             }
         }
         properties[key] = data;
@@ -159,11 +160,11 @@ export function Property(info?: PropertyOptions, customOptions?:any) {
     };
 }
 
-export function Validator(name: string, info?) {
+export function Validator(name: string, options?) {
     return (target, key) => {
         const symValidators = Symbol.for("design:validators");
         let validators = Reflect.getOwnMetadata(symValidators, target, key) || [];
-        validators.push({ name, info });
+        validators.push({ name, options });
         Reflect.defineMetadata(symValidators, validators, target, key);
     };
 }

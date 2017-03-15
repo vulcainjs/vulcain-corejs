@@ -277,10 +277,10 @@ export class ServiceDescriptors {
 
         for (let k of Object.keys(schema.description.properties)) {
             const p = schema.description.properties[k];
-            let type = this.getPropertyType(p.item || p.type);
+            let type = this.getPropertyType(p.items || p.type);
             if (type) {
-                let metadata = { type: p.type, item: p.item, values: p.values, required: p.required, description: p.description };
-                let pdesc: PropertyDescription = <any>{ name: k, type: p.item ? p.item + "[]" : type.name, required: p.required, description: p.description, metadata };
+                let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description };
+                let pdesc: PropertyDescription = <any>{ name: k, type: p.items ? p.items + "[]" : type.name, required: p.required, description: p.description, metadata };
                 // Insert required at the beginning
                 if (!pdesc.required)
                     desc.properties.push(pdesc);
@@ -325,12 +325,12 @@ export class ServiceDescriptors {
                 name = name.toLowerCase();
                 type = this.domain._findType(name);
             }
-            if (!type || (!type.type && !type.item)) {
+            if (!type || (!type.type && !type.items)) {
                 if (type)
                     type.name = name;
                 return type;
             }
-            name = type.type || type.item;
+            name = type.type || type.items;
         }
     }
 

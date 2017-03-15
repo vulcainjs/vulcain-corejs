@@ -272,8 +272,22 @@ export class Domain {
         this.types.set(ns, old);
     }
 
+    /**
+     * Add a custom validator
+     *
+     */
+    addValidator(name: string, validator: any, ns = '') {
+        if (!name || !validator) { throw new Error("Invalid argument"); }
+        let types = this.types.get(ns);
+        if (!types) {
+            types = {};
+            this.types.set(ns, types);
+        }
+        types[name] = validator;
+    }
+
     addType(name: string, type: string, info: any, ns: string = "") {
-        if (!name || !type) { throw new Error("Invalid type argument"); }
+        if (!name || !type) { throw new Error("Invalid argument"); }
         let subType = this._findType(type);
         if (!subType) { throw new Error("Unknow type " + type); }
 
@@ -324,7 +338,7 @@ export class Domain {
         if (!origin) { return null; }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, obj);
         if (typeof schema.bind === "function") {
-            obj = schema.bind(origin);
+            return schema.bind(origin);
         }
 
         obj = obj || origin;
