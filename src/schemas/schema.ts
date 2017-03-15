@@ -211,9 +211,26 @@ export class Domain {
         schemaName = name || schema.name;
         if (!schemaName) { return; }
         // Existing Model extension
-        if (schema.extends === schema.name) {
-            throw new Error("Invalid schema extension. Can not be the same schema.");
+        if (schema.extends) {
+            if (schema.extends === schema.name) {
+                throw new Error("Invalid schema extension. Can not be the same schema.");
+            }
+
+            // Overriding schema
+            if (schema.extends[0] === '+') {
+                let baseName = schema.extends.substr(1);
+                let base = this._schemaDescriptions.get(baseName);
+                if (!base) {
+                    throw new Error(`Invalid model overriding with model ${schemaName}. ${baseName} doesn't exist`);
+                }
+                if ( baseName !== schemaName ) {
+                    throw new Error(`Invalid model overriding with model ${schemaName} extends options must be equal to '+${baseName}'`);
+                }
+                // Rename old
+                this._schemaDescriptions.set(schema.extends, base);
+            }
         }
+
         this._schemaDescriptions.set(schemaName, schema);
         return schemaName;
     }
