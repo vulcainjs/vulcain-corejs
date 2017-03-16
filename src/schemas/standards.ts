@@ -122,7 +122,7 @@ export let standards = {
         $values: null,
         message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
         validate: function (val) {
-            if (!this.values) return "You must define a list of valid values with the 'values' property.";
+            if (!this.$values) return "You must define a list of valid values with the 'values' property.";
             if (this.$values.indexOf(val) === -1) return this.message;
         }
     },
@@ -131,13 +131,13 @@ export let standards = {
         bind: (v) => v || uuid.v1()
     },
     "arrayOf": {
-        $items: "string",
+        $items: null,
         messages: [
             "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$items}.",
             "Invalid value '{$value}' for '{$propertyName}', value must be an array.",
         ],
         validate: function (val) {
-            if (!this.values) return "You must define array item type with the 'items' property.";
+            if (!this.$items) return "You must define array item type with the 'items' property.";
             if (!Array.isArray(val)) return this.messages[1];
             let error = false;
             if (this.$items !== "any") {
