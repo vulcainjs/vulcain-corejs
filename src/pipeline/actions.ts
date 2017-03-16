@@ -75,7 +75,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
 export interface ActionMetadata extends CommonActionMetadata {
     async?: boolean;
     eventMode?: EventNotificationMode;
-    outputSchema: string | Function;
+    outputSchema: string;
 }
 
 export interface ActionResponse<T> extends CommonRequestResponse<T> {

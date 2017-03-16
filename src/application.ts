@@ -77,13 +77,13 @@ export class Application {
      * @returns
      */
     setTestUser(user?: UserContext) {
-        user = user || RequestContext.TestUser;
-        if (!user.id || !user.name || !user.scopes) {
-            throw new Error("Invalid test user - Properties must be set.");
-        }
         if (!System.isDevelopment) {
             System.log.info(null, "Warning : TestUser ignored");
             return;
+        }
+        user = user || RequestContext.TestUser;
+        if (!user.id || !user.name || !user.scopes) {
+            throw new Error("Invalid test user - Properties must be set.");
         }
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }

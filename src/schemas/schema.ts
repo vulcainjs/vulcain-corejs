@@ -18,7 +18,7 @@ export interface SchemaDescription {
     name: string;
     properties: { [index: string]: ModelPropertyOptions };
     references: { [index: string]: ReferenceOptions };
-    extends?: SchemaDescription | string;
+    extends?: string;
     hasSensibleData?: boolean;
     bind?: (obj) => any;
     validate?: (val, ctx: RequestContext) => string;
@@ -45,12 +45,7 @@ export class Schema {
         if (!this.description.extends) {
             return null;
         }
-        if (typeof this.description.extends === "string") {
-            return this._domain.findSchemaDescription(<string>this.description.extends);
-        }
-        else {
-            return <SchemaDescription>this.description.extends;
-        }
+        return this._domain.findSchemaDescription(this.description.extends);
     }
     /**
      * Create a new schema
@@ -217,7 +212,8 @@ export class Domain {
             }
 
             // Overriding schema
-            if (schema.extends[0] === '+') {
+            let overrideOperator = schema.extends[0];
+            if ( overrideOperator === '+' || overrideOperator === '-') {
                 let baseName = schema.extends.substr(1);
                 let base = this._schemaDescriptions.get(baseName);
                 if (!base) {
@@ -227,7 +223,14 @@ export class Domain {
                     throw new Error(`Invalid model overriding with model ${schemaName} extends options must be equal to '+${baseName}'`);
                 }
                 // Rename old
-                this._schemaDescriptions.set(schema.extends, base);
+                if (overrideOperator === '+') {
+                    // Extends old definition (which will be called +<schemaName>)
+                    this._schemaDescriptions.set(schema.extends, base);
+                }
+                else {
+                    // Replace old definition (which will be override below)
+                    schema.extends = null;
+                }
             }
         }
 
@@ -463,7 +466,7 @@ export class Domain {
         let schema: SchemaDescription;
         if (!schemaName || typeof schemaName === "string") {
             schemaName = schemaName || val && val.__schema;
-            schema = this._schemaDescriptions.get(<string>schemaName);
+            schema = schemaName && this._schemaDescriptions.get(<string>schemaName);
             if (!schema) { throw new Error("Unknown schema " + schemaName); }
         }
         else {
@@ -474,7 +477,13 @@ export class Domain {
     }
 
     getIdProperty(schemaName?: string | SchemaDescription) {
-        let schema = this.resolveSchemaDescription(schemaName);
-        return schema.idProperty;
+        while (schemaName) {
+            let schema = this.resolveSchemaDescription(schemaName);
+            if (schema && schema.idProperty) {
+                return schema.idProperty;
+            }
+            schemaName = schema && schema.extends;
+        }
+        return null;
     }
 }

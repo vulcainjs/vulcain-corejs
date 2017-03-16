@@ -10,7 +10,7 @@ import { System } from '../configurations/globals/system';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
-function resolveType(type) {
+function resolveType(type): string {
     if (typeof type === "function" && ServiceDescriptors.nativeTypes.indexOf(type.name) >= 0)
         return type.name;
     return type;

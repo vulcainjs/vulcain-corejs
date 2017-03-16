@@ -11,7 +11,7 @@ export class DependencyExplorer {
     constructor() {
     }
 
-    @Query({ outputSchema: VulcainManifest, description: "Get service dependencies", action: "_serviceDependencies" })
+    @Query({ outputSchema: "VulcainManifest", description: "Get service dependencies", action: "_serviceDependencies" })
     getDependencies() {
         let ctx: RequestContext = (<any>this).requestContext;
         if (ctx.publicPath)

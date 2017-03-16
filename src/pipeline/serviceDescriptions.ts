@@ -253,7 +253,7 @@ export class ServiceDescriptors {
         return result.join(',');
     }
 
-    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?) {
+    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?: string): string {
         if (schemaName === "none")
             return;
         if (!schemaName)
@@ -279,12 +279,7 @@ export class ServiceDescriptors {
         let sd = schema.description;
         while (sd) {
             this.updateDescription(schemas, sd, desc);
-            if (typeof sd.extends === "string") {
-                sd = this.domain.findSchemaDescription(<string>sd.extends);
-            }
-            else {
-                sd = sd.extends;
-            }
+            sd = this.domain.findSchemaDescription(sd.extends);
         }
         return desc.name;
     }

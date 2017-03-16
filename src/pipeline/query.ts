@@ -40,7 +40,7 @@ export interface QueryMetadata extends ServiceHandlerMetadata {
  * @extends {CommonActionMetadata}
  */
 export interface QueryActionMetadata extends CommonActionMetadata {
-    outputSchema?: string | Function;
+    outputSchema?: string;
     outputType?: "one" | "many";
 }
 

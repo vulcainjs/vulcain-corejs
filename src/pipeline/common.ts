@@ -4,7 +4,6 @@ import {Domain} from '../schemas/schema';
 import {UserContext} from '../servers/requestContext';
 import { HttpResponse } from './response';
 
-
 export interface ValidationError {
     id?: string;
     field?: string;
@@ -42,13 +41,13 @@ export interface CommonActionMetadata {
     description: string;
     action?: string;
     scope?: string;
-    schema?: string|Function;
-    inputSchema?: string | Function;
+    schema?: string;
+    inputSchema?: string;
 }
 
 export interface CommonMetadata {
     description?: string;
-    schema?: string|Function;
+    schema?: string;
 }
 
 export interface CommonHandlerMetadata extends CommonMetadata {
