@@ -208,7 +208,7 @@ export class MemoryProvider implements IProvider<any>
                 }
                 let name = schema.getId(entity);
                 if (!name)
-                    throw new Error(`Can not create a ${schema.name} entity with undefined id ${schema.getIdProperty()} `);
+                    throw new Error(`Can not create a ${schema.name} entity with undefined id : ${schema.getIdProperty()} `);
 
                 if (list[name]) {
                     reject(new Error(`Can not add existing ${schema.name} ${name}`));
