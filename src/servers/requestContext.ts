@@ -24,13 +24,6 @@ export enum Pipeline {
  */
 export interface UserContext {
     /**
-     * User id
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    id: string;
-    /**
      * User display name
      *
      * @type {string}

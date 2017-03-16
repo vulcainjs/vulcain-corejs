@@ -32,7 +32,6 @@ export class TokenService implements ITokenService {
                 {
                     user: {
                         displayName: user.displayName,
-                        id: user.id,
                         email: user.email,
                         name: user.name,
                         tenant: user.tenant

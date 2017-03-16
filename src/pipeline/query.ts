@@ -127,7 +127,7 @@ export class QueryManager implements IManager {
                 return new BadRequestResponse(this.createResponse(ctx, query, { message: "Validation errors", errors: errors }));
             }
             if (ctx.user)
-                query.userContext = <UserContext>{ id: ctx.user.id, scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
+                query.userContext = <UserContext>{ scopes: ctx.user.scopes, name: ctx.user.name, displayName: ctx.user.displayName, tenant: ctx.user.tenant };
 
             query.schema = <string>info.metadata.schema;
             query.correlationId = ctx.correlationId;

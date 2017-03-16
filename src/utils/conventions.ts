@@ -77,6 +77,7 @@ export class Conventions {
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
     ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE"; // 'production', 'test' or 'local'
+    ENV_TEST_USER = "VULCAIN_TEST_USER";
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,

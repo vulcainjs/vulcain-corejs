@@ -71,20 +71,36 @@ export class Application {
     }
 
     /**
-     * Set the user to use in local development
+     * Set the user to use in local or test mode.
+     * VULCAIN_TEST_USER must be set to 'true' to enable it.
      *
-     * @param {UserContext} user
+     * @param {UserContext} forcedUser - User definition to utilize otherwise a default one is provided.
      * @returns
      */
-    setTestUser(user?: UserContext) {
-        if (!System.isDevelopment) {
-            System.log.info(null, "Warning : TestUser ignored");
+    setTestUser(forcedUser?: UserContext) {
+        let user: UserContext = null;
+        let tmp = process.env[Conventions.instance.ENV_TEST_USER];
+        if (tmp) {
+            if (tmp === 'true') {
+                user = forcedUser || RequestContext.TestUser;
+            } else if (typeof tmp === "string") {
+                try {
+                    user = JSON.parse(tmp);
+                }
+                catch (e) {
+                    System.log.info(null, `Invalid ${Conventions.instance.ENV_TEST_USER} value. ` + e);
+                }
+            }
+        }
+
+        if (!user || !System.isTestEnvironnment) {
+            user && System.log.info(null, "Warning : Forcing test user is ignored in production mode.");
             return;
         }
-        user = user || RequestContext.TestUser;
-        if (!user.id || !user.name || !user.scopes) {
-            throw new Error("Invalid test user - Properties must be set.");
+        if ( !user.name || !user.scopes) {
+            throw new Error("Invalid test user - Properties name and scopes are required.");
         }
+        
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
