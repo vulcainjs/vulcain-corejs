@@ -1,8 +1,6 @@
 import './preloader'; // First
-import { Validator } from './schemas/annotations';
 
 // Configurations
-
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './configurations/dependencies/annotations';
 export { DynamicConfiguration } from './configurations/dynamicConfiguration';
 export { IDynamicProperty } from './configurations/dynamicProperty';

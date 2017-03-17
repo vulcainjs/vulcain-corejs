@@ -23,6 +23,7 @@ import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
 import { ApiKeyService } from './defaults/services/apiKeyService';
 import { ExpressAuthentication } from './servers/express/expressAuthentication';
+import { LifeTime } from "./di/annotations";
 
 /**
  * Application base class
@@ -100,7 +101,7 @@ export class Application {
         if ( !user.name || !user.scopes) {
             throw new Error("Invalid test user - Properties name and scopes are required.");
         }
-        
+
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
@@ -247,6 +248,8 @@ export class Application {
         try {
             this.initializeDefaultServices(this.container);
 
+            this.setTestUser(); // TODO remove from template
+
             let local = new LocalAdapter();
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
             if (!eventBus) {
@@ -326,5 +329,32 @@ export class Application {
         }
         this._container.injectFrom(path);
         return this._container;
+    }
+}
+
+export class ApplicationBuilder {
+    private app: Application;
+
+    constructor(domain: string) {
+        this.app = new Application(domain);
+    }
+
+    public enableHystrixStream() {
+        this.app.enableHystrixStream = true;
+        return this;
+    }
+
+    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
+        this.app.enableApiKeyAuthentication(apiKeyServiceName, version);
+        return this;
+    }
+
+     protected withDefaultService(name: string, service: Function, lifeTime?: LifeTime) {
+        this.app.container.inject(name, service, lifeTime);
+        return this;
+    }
+
+    runAsync(port = 8080) {
+        return this.app.start(port);
     }
 }
