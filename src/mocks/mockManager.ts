@@ -75,20 +75,23 @@ export class MockManager {
 
     public applyMockHttp(url: string, verb: string) {
         let mock = this.mocks.http[url && url.toLowerCase()];
-        mock = mock && verb && mock[verb.toLowerCase()];
-        return (mock && mock.output) || undefined;
+        mock = (mock && verb && mock[verb.toLowerCase()]) || mock;
+        return (mock && mock.output) || mock || undefined;
     }
 
     public applyMockService(serviceName: string, serviceVersion: string, verb: string, data) {
         if (!serviceName)
             return;
 
+        // Find on service name
         let mockService = this.mocks.services[serviceName.toLowerCase()];
+        // And optionaly on service version
         mockService = (mockService && mockService[serviceVersion]) || mockService;
         if (!mockService) {
             return;
         }
 
+        // Verb is optional
         let mock = verb && mockService[verb.toLowerCase()];
         if (!mock) {
             return;
@@ -98,14 +101,15 @@ export class MockManager {
             return mock;
         }
 
+        // Iterate over data input filter
         for (let item of mock) {
-            let input = item.input;
+            let input = item.input; // Input filter
             if (!input) {
                 continue;
             }
             let ok = true;
             if (this.deepCompare(data, input)) {
-                return item.output;
+                return item.output; // result
             }
         }
         return;
