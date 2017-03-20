@@ -36,7 +36,7 @@ export interface PropertyOptions {
      * @type {string} - a valid base type
      * @memberOf PropertyOptions
      */
-    type?: string;
+    type: string;
     /**
      * List of values for 'enum' type
      *
@@ -139,21 +139,14 @@ export interface ModelPropertyOptions extends PropertyOptions {
     custom?: any;
 }
 
-export function Property(info?: PropertyOptions, customOptions?:any) {
+export function Property(info: PropertyOptions, customOptions?:any) {
     return (target, key) => {
         const symProperties = Symbol.for("design:properties");
         let properties = Reflect.getOwnMetadata(symProperties, target) || {};
-        let data: ModelPropertyOptions = info || {};
+        let data: ModelPropertyOptions = info;
         data.custom = customOptions;
         if (!data.type) {
-            let type = <Function>Reflect.getOwnMetadata("design:type", target, key);
-            let typeName = type && type.name;
-            if (typeName && ['String', 'Boolean', 'Number'].indexOf(typeName) >= 0) {
-                data.type = typeName.toLowerCase();
-            }
-            else {
-                throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
-            }
+            throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
         }
         properties[key] = data;
         Reflect.defineMetadata(symProperties, properties, target);

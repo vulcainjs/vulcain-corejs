@@ -152,9 +152,9 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResponse<T>> {
+    protected async getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResponse<T>> {
         if (System.hasMocks) {
-            let result = System.mocks.applyMockService(serviceName, version, schema ? schema + ".get" : "get", { id });
+            let result = await System.mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
             if (result !== undefined) {
                 System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
                 return result;

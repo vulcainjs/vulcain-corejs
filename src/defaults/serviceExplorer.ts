@@ -2,7 +2,8 @@ import { DefaultServiceNames, Inject, LifeTime } from '../di/annotations';
 import { IContainer } from "../di/resolvers";
 import { Domain } from '../schemas/schema';
 import { ServiceDescriptors, ServiceDescription } from '../pipeline/serviceDescriptions';
-import { Query, QueryHandler } from '../pipeline/annotations';
+import { Query } from '../pipeline/annotations';
+import { QueryHandler } from '../pipeline/annotations.handlers';
 import { ForbiddenRequestError } from '../errors/applicationRequestError';
 import { RequestContext } from '../servers/requestContext';
 

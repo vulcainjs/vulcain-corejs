@@ -35,10 +35,6 @@ export abstract class AbstractHandler implements IScopedComponent {
     get metadata(): IActionMetadata {
         return Reflect.getMetadata(symMetadata, this.constructor);
     }
-
-    get metadataActions() {
-        return Reflect.getMetadata(symActions, this.constructor);
-    }
 }
 
 export abstract class AbstractActionHandler extends AbstractHandler{

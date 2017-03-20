@@ -73,13 +73,13 @@ export class MockManager {
         return true;
     }
 
-    public applyMockHttp(url: string, verb: string) {
+    public async applyMockHttpAsync(url: string, verb: string) {
         let mock = this.mocks.http[url && url.toLowerCase()];
         mock = (mock && verb && mock[verb.toLowerCase()]) || mock;
         return (mock && mock.output) || mock || undefined;
     }
 
-    public applyMockService(serviceName: string, serviceVersion: string, verb: string, data) {
+    public async applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data) {
         if (!serviceName)
             return;
 

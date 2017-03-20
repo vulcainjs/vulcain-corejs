@@ -96,12 +96,12 @@ export abstract class AbstractHttpCommand {
      * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
 
         this.setMetricsTags(url);
 
         if (System.hasMocks) {
-            let result = System.mocks.applyMockHttp(url, verb);
+            let result = await System.mocks.applyMockHttpAsync(url, verb);
             if (result !== undefined) {
                 System.log.info(this.requestContext, `Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
                 return result;

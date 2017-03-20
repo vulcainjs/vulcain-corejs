@@ -11,6 +11,7 @@ import { ScopesDescriptor } from './scopeDescriptors';
 import * as Path from 'path';
 import { BadRequestError } from '../errors/badRequestError';
 import { ApplicationRequestError } from '../errors/applicationRequestError';
+import { AbstractHandler } from "./abstractHandlers";
 
 export interface HandlerItem {
     methodName: string;
