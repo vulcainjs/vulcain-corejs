@@ -33,7 +33,7 @@ class DefaultCircuitBreaker implements CircuitBreaker {
         }
 
         if (this.properties.circuitBreakerForceClosed.value) {
-            this.isOpen();
+           // this.isOpen();
             return true;
         }
         return !this.isOpen() || this.allowSingleTest();

@@ -130,10 +130,6 @@ export class System {
                 throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
             }
 
-            // TODO remove
-            if (process.env["VULCAIN_TEST"] === "true") {
-                System._environmentMode = "test";
-            }
             if (System._environmentMode !== "local") {
                 System._vulcainConfig = null; // reset all local config
             }

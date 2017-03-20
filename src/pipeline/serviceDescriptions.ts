@@ -1,4 +1,4 @@
-import { Domain, Schema } from './../schemas/schema';
+import { Domain, Schema, SchemaDescription as schDesc } from './../schemas/schema';
 import { ActionMetadata } from './actions';
 import { LifeTime, Inject, DefaultServiceNames } from '../di/annotations';
 import { Model } from './../schemas/annotations';
@@ -87,7 +87,7 @@ export class ServiceDescriptors {
             }
         }
 
-        if(schema) {
+        if (schema) {
             let s = schema.toLowerCase();
             verb = s + "." + verb;
             item = this.routes.get(verb);
@@ -244,14 +244,16 @@ export class ServiceDescriptors {
         let result = [];
         for (let sc of parts) {
             sc = System.domainName + ":" + sc.trim();
-            if (!scopes.getScopes().find(s => s.name === sc))
-                throw new Error(`${sc} not found in scopes descriptor for ${verb}. You must define it in (Startup)application.defineScopes.`);
+            if (!scopes.getScopes().find(s => s.name === sc)) {
+                //throw new Error(`${sc} not found in scopes descriptor for ${verb}. You must define it in (Startup)application.defineScopes.`);
+                scopes.defineScope(sc, 'Generated description for ' + metadata.description);
+            }
             result.push(sc);
         }
         return result.join(',');
     }
 
-    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?) {
+    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?: string): string {
         if (schemaName === "none")
             return;
         if (!schemaName)
@@ -274,13 +276,21 @@ export class ServiceDescriptors {
         desc = { name: schema.name, properties: [], dependencies: new Set<string>() };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
+        let sd = schema.description;
+        while (sd) {
+            this.updateDescription(schemas, sd, desc);
+            sd = this.domain.findSchemaDescription(sd.extends);
+        }
+        return desc.name;
+    }
 
-        for (let k of Object.keys(schema.description.properties)) {
-            const p = schema.description.properties[k];
-            let type = this.getPropertyType(p.item || p.type);
+    private updateDescription(schemas: Map<string, SchemaDescription>, schema: schDesc, desc: SchemaDescription) {
+        for (let k of Object.keys(schema.properties)) {
+            const p = schema.properties[k];
+            let type = this.getPropertyType(p.items || p.type);
             if (type) {
-                let metadata = { type: p.type, item: p.item, values: p.values, required: p.required, description: p.description };
-                let pdesc: PropertyDescription = <any>{ name: k, type: p.item ? p.item + "[]" : type.name, required: p.required, description: p.description, metadata };
+                let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description };
+                let pdesc: PropertyDescription = <any>{ name: k, type: p.items ? p.items + "[]" : type.name, required: p.required, description: p.description, metadata };
                 // Insert required at the beginning
                 if (!pdesc.required)
                     desc.properties.push(pdesc);
@@ -288,8 +298,8 @@ export class ServiceDescriptors {
                     desc.properties.unshift(pdesc);
             }
         }
-        for (let k of Object.keys(schema.description.references)) {
-            const r = schema.description.references[k];
+        for (let k of Object.keys(schema.references)) {
+            const r = schema.references[k];
             if (schemas.has(k)) return k;
             this.getSchemaDescription(schemas, r.item);
 
@@ -312,7 +322,6 @@ export class ServiceDescriptors {
             else
                 desc.properties.unshift(pdesc);
         }
-        return desc.name;
     }
 
     private getPropertyType(name: string) {
@@ -325,12 +334,12 @@ export class ServiceDescriptors {
                 name = name.toLowerCase();
                 type = this.domain._findType(name);
             }
-            if (!type || (!type.type && !type.item)) {
+            if (!type || (!type.type && !type.items)) {
                 if (type)
                     type.name = name;
                 return type;
             }
-            name = type.type || type.item;
+            name = type.type || type.items;
         }
     }
 

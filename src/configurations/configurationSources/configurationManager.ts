@@ -45,7 +45,12 @@ export class ConfigurationManager
                 System.log.info(null, "CONFIG: Some dynamic properties sources failed. Retry polling.");
         }
 
-        throw new Error("CONFIG: Cannot read properties for all sources.");
+        if (!System.isDevelopment) {
+            throw new Error("CONFIG: Cannot read properties from sources. Program is stopped.");
+        }
+        else {
+            System.log.info(null, "CONFIG: Cannot read properties from sources.");
+        }
     }
 
     /**

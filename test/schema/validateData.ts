@@ -3,6 +3,7 @@ import {expect} from "chai";
 import {Model, Property, Reference, Validator} from "../../dist/schemas/annotations";
 import {Domain} from "../../dist/schemas/schema";
 import 'mocha';
+import { SchemaStandardTypes } from "../../dist/schemas/standards";
 
 @Model()
 class BaseModel {
@@ -13,9 +14,9 @@ class BaseModel {
 
 @Model({extends: "BaseModel"})
 class SimpleModel extends BaseModel {
-    @Property({type: "string", required: true})
+    @Property({ required: true})
     text: string;
-    @Property({type: "number"})
+    @Property()
     number: number;
 }
 
@@ -30,7 +31,7 @@ class ReferenceModel {
 
 @Model()
 class EmailModel {
-    @Property({type: "email"})
+    @Property({type: SchemaStandardTypes.email})
     email: string;
 }
 

@@ -112,12 +112,12 @@ export class SchemaBuilder {
         // And validator
         let validators = Reflect.getOwnMetadata(symValidators, obj.prototype, propertyName);
         if (validators) {
-            for (let {name, info} of validators) {
-                let validator = this.domain._findType(name);
+            for (let info of validators) {
+                let validator = this.domain._findType(info.name);
                 if (!validator)
-                    throw new Error(`Unknow validator ${name}`);
+                    throw new Error(`Unknow validator ${info.name}`);
                 else
-                    chain.push(SchemaBuilder.clone(validator, info));
+                    chain.push(SchemaBuilder.clone(validator, info.options));
             }
         }
         return chain;
@@ -130,6 +130,9 @@ export class SchemaBuilder {
             if (key && key[0] === "$") {
                 let pname = key.substr(1);
                 clone[key] = (from && from[pname]) || schema[key];
+            }
+            else {
+                clone[key] = schema[key];
             }
         }
 

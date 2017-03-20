@@ -6,7 +6,7 @@ import * as express from 'express';
 import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 export abstract class AbstractExpressAuthentication {
-    static readonly Anonymous: UserContext = { id: "_anonymous", name: "anonymous", scopes: [], tenant: null };
+    static readonly Anonymous: UserContext = { name: "_anonymous", scopes: [], tenant: null };
 
     private strategies = new Map<string, (ctx: RequestContext, token: string) => Promise<UserContext>>();
 

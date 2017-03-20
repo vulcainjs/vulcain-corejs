@@ -7,5 +7,6 @@ before_deploy:
 deploy:
   provider: npm
   api_key: $NPM_KEY
+  email: "alain.metge@zenasoft.com"
   on:
     tags: true

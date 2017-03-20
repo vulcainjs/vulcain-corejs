@@ -1,5 +1,5 @@
-import { ApiKeyService } from './defaults/services/apiKeyService';
-import { Preloader } from './preloader';
+import { Preloader } from './preloader'; // always on first line
+
 import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
 import { LocalAdapter } from './bus/localAdapter';
@@ -21,7 +21,9 @@ import './pipeline/scopeDescriptors';  // Don't remove (auto register)
 import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
+import { ApiKeyService } from './defaults/services/apiKeyService';
 import { ExpressAuthentication } from './servers/express/expressAuthentication';
+import { LifeTime } from "./di/annotations";
 
 /**
  * Application base class
@@ -47,7 +49,7 @@ export class Application {
      * @type {boolean}
      * @memberOf Application
      */
-    public ignoreInvalidBearerToken: boolean=false;
+    public ignoreInvalidBearerToken: boolean = false;
     private _basePath: string;
     /**
      *
@@ -70,20 +72,36 @@ export class Application {
     }
 
     /**
-     * Set the user to use in local development
+     * Set the user to use in local or test mode.
+     * VULCAIN_TEST_USER must be set to 'true' to enable it.
      *
-     * @param {UserContext} user
+     * @param {UserContext} forcedUser - User definition to utilize otherwise a default one is provided.
      * @returns
      */
-    setTestUser(user?: UserContext) {
-        user = user || RequestContext.TestUser;
-        if (!user.id || !user.name || !user.scopes) {
-            throw new Error("Invalid test user - Properties must be set.");
+    setTestUser(forcedUser?: UserContext) {
+        let user: UserContext = null;
+        let tmp = process.env[Conventions.instance.ENV_TEST_USER];
+        if (tmp) {
+            if (tmp === 'true') {
+                user = forcedUser || RequestContext.TestUser;
+            } else if (typeof tmp === "string") {
+                try {
+                    user = JSON.parse(tmp);
+                }
+                catch (e) {
+                    System.log.info(null, `Invalid ${Conventions.instance.ENV_TEST_USER} value. ` + e);
+                }
+            }
         }
-        if (!System.isDevelopment) {
-            System.log.info(null, "Warning : TestUser ignored");
+
+        if (!user || !System.isTestEnvironnment) {
+            user && System.log.info(null, "Warning : Forcing test user is ignored in production mode.");
             return;
         }
+        if ( !user.name || !user.scopes) {
+            throw new Error("Invalid test user - Properties name and scopes are required.");
+        }
+
         this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
@@ -230,6 +248,8 @@ export class Application {
         try {
             this.initializeDefaultServices(this.container);
 
+            this.setTestUser(); // TODO remove from template
+
             let local = new LocalAdapter();
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
             if (!eventBus) {
@@ -309,5 +329,32 @@ export class Application {
         }
         this._container.injectFrom(path);
         return this._container;
+    }
+}
+
+export class ApplicationBuilder {
+    private app: Application;
+
+    constructor(domain: string) {
+        this.app = new Application(domain);
+    }
+
+    public enableHystrixStream() {
+        this.app.enableHystrixStream = true;
+        return this;
+    }
+
+    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
+        this.app.enableApiKeyAuthentication(apiKeyServiceName, version);
+        return this;
+    }
+
+     protected withDefaultService(name: string, service: Function, lifeTime?: LifeTime) {
+        this.app.container.inject(name, service, lifeTime);
+        return this;
+    }
+
+    runAsync(port = 8080) {
+        return this.app.start(port);
     }
 }

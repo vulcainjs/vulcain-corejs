@@ -12,7 +12,7 @@ class TestModel {
     Date: number;
 }
 
-@ActionHandler({ schema: TestModel, scope: "?" })
+@ActionHandler({ schema: "TestModel", scope: "?" })
 class TestActionHandler extends DefaultActionHandler {
     constructor(container: IContainer) {
         super(container);
@@ -20,7 +20,7 @@ class TestActionHandler extends DefaultActionHandler {
     }
 }
 
-@QueryHandler({ scope: "?", schema: TestModel, serviceName: "TestQueryService" })
+@QueryHandler({ scope: "?", schema: "TestModel", serviceName: "TestQueryService" })
 class TestQueryHandler extends DefaultQueryHandler<TestModel> {
     constructor(container: IContainer) {
         super(container);

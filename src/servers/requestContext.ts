@@ -6,7 +6,7 @@ import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
 import { VulcainHeaderNames } from './abstractAdapter';
 import { IRequestTracer } from '../metrics/statsdMetrics';
-import { System } from "../index";
+import { System } from '../configurations/globals/system';
 const guid = require('uuid');
 
 export enum Pipeline {
@@ -23,13 +23,6 @@ export enum Pipeline {
  * @interface UserContext
  */
 export interface UserContext {
-    /**
-     * User id
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    id: string;
     /**
      * User display name
      *
