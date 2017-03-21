@@ -21,6 +21,7 @@ import { StatsdMetrics } from '../metrics/statsdMetrics';
 import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizationPolicy';
 import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
+import { MockManager } from "../mocks/mockManager";
 
 /**
  * Component container for dependency injection
@@ -58,6 +59,7 @@ export class Container implements IContainer {
             this.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
             this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
+            this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
         }
     }
 

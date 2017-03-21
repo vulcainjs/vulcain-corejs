@@ -17,10 +17,10 @@ export class HttpResponse {
     /**
      * List of response headers
      *
-     * @type {Map<string, string>}
+     * @type {any}
      * @memberOf HttpResponse
      */
-    public headers: Map<string, string>;
+    public headers: any;
     /**
      * Define a specific ContentType
      *
@@ -44,8 +44,16 @@ export class HttpResponse {
      */
     public encoding: string;
 
+    static createFromResponse(data): HttpResponse {
+        let res = new HttpResponse(data.content, data.statusCode);
+        res.encoding = data.encoding;
+        res.contentType = data.contentType;
+        res.headers = data.headers;
+        return res;
+    }
+
     constructor(content?, statusCode=200) {
-        this.headers = new Map<string, string>();
+        this.headers = {};
         this.statusCode = statusCode;
         this.content = content;
     }
@@ -57,7 +65,7 @@ export class HttpResponse {
      * @param {string} value
      */
     addHeader(name: string, value: string) {
-        this.headers.set(name, value);
+        this.headers[name] = value;
     }
 }
 

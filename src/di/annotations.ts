@@ -30,6 +30,7 @@ export class DefaultServiceNames {
     static RequestContext = "RequestContext";
     static Metrics = "Metrics";
     static ApiKeyService = "ApiKeyService";
+    static MockManager = "MockManager";
 }
 
 /**

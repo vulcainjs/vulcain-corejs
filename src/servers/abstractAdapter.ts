@@ -29,6 +29,9 @@ export class VulcainHeaderNames {
     static X_VULCAIN_ENV = "x-vulcain-env";
     static X_VULCAIN_CONTAINER = "x-vulcain-container";
     static X_VULCAIN_PUBLICPATH = "x-vulcain-publicpath";
+    static X_VULCAIN_USE_MOCK = 'x-vulcain-use-mock-session';
+    static X_VULCAIN_REGISTER_MOCK = 'x-vulcain-register-mock-session';
+
 }
 
 // internal
@@ -273,12 +276,19 @@ export abstract class AbstractAdapter {
             }
 
             // Process handler
-            let result: HttpResponse = await manager.runAsync(command, ctx);
+            let result: HttpResponse;
+            const mocks = System.getMocks(this.container);
+            let params = Object.assign({}, command.params || {});
+            result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, info.metadata, info.verb, params);
+            if (!mocks.enabled || result === undefined) {
+                result = await manager.runAsync(command, ctx);
+            }
             if (result && command.correlationId) {
                 result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
             }
             // Response
             this.endRequest(result, ctx);
+            mocks.enabled && await mocks.saveMockValueAsync(ctx, info.metadata, info.verb, params, result);
             return result;
         }
         catch (e) {

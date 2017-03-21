@@ -6,9 +6,10 @@ import * as fs from 'fs';
 import { VulcainManifest } from './../dependencies/annotations';
 import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from '../dynamicProperty';
-import { MockManager } from '../../mocks/mockManager';
+import { IMockManager, DummyMockManager } from '../../mocks/imockManager';
 import { DefaultServiceNames } from '../../di/annotations';
 import { DynamicProperties } from '../properties/dynamicProperties';
+import { IContainer } from '../../di/resolvers';
 
 /**
  * Static class providing service helper methods
@@ -29,7 +30,7 @@ export class System {
     private static crypter: CryptoHelper;
     private static _environmentMode: "local" | "test" | "production";
     private static _manifest: VulcainManifest;
-    private static _mocksManager: MockManager;
+    private static _mocksManager: IMockManager;
 
     static defaultDomainName: string;
 
@@ -97,12 +98,29 @@ export class System {
         return process.env[Conventions.instance.ENV_VULCAIN_TENANT] || 'vulcain';
     }
 
-    static get hasMocks() {
-        return !!(System._mocksManager && !System._mocksManager.disabled);
+    static getMocks(container: IContainer) {
+        if (!System._mocksManager) {
+            if (System.isTestEnvironnment) {
+                let manager:any = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
+                manager.initialize && manager.initialize(System._vulcainConfig && System._vulcainConfig.mocks, System.saveSessionsAsync);
+            }
+            else {
+                System._mocksManager = new DummyMockManager();
+            }
+        }
+        return System._mocksManager; // TODO as service
     }
 
-    static get mocks() {
-        return System._mocksManager; // TODO as service
+    private static async saveSessionsAsync(sessions): Promise<any> {
+        try {
+            this._vulcainConfig = this._vulcainConfig || {};
+            this._vulcainConfig.mocks = this._vulcainConfig.mocks || {};
+            this._vulcainConfig.mocks.sessions = sessions;
+            fs.writeFileSync(Conventions.instance.vulcainFileName, JSON.stringify(this._vulcainConfig));
+        }
+        catch (e) {
+            System.log.error(null, e, "VULCAIN MANIFEST : Error when savings mock sessions.");
+        }
     }
 
     /**
@@ -129,10 +147,6 @@ export class System {
             if (System._environmentMode !== "production" && System._environmentMode !==  "test" && System._environmentMode !== "local") {
                 throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
             }
-
-            if (System._environmentMode !== "local") {
-                System._vulcainConfig = null; // reset all local config
-            }
         }
         catch (e) {
             System._environmentMode = "production"; // Set this first to avoid stack overflow
@@ -140,9 +154,6 @@ export class System {
         }
 
         System.log.info(null, `Running in ${System._environmentMode} mode`);
-        if (System.isTestEnvironnment && System._vulcainConfig && System._vulcainConfig.mocks) {
-            System._mocksManager = new MockManager(System._vulcainConfig.mocks);
-        }
     }
 
     /**
@@ -185,7 +196,7 @@ export class System {
             return null;
 
         // Try to find an alternate uri
-        if (System._vulcainConfig && System._vulcainConfig.alias) {
+        if (System.isDevelopment && System._vulcainConfig && System._vulcainConfig.alias) {
             let alias = System._vulcainConfig.alias[name];
             if (alias) {
                 if (typeof alias === "string") {

@@ -18,6 +18,7 @@ export interface HandlerItem {
     handler;
     metadata: CommonActionMetadata;
     kind: "action" | "query" | "event";
+    verb?: string;
 }
 
 export class PropertyDescription {
@@ -159,6 +160,7 @@ export class ServiceDescriptors {
 
             System.log.info(null, "Handler registered for action verb %s", verb);
             this.routes.set(verb, item);
+            item.verb = verb;
 
             let metadata = <ActionMetadata>item.metadata;
             metadata.scope = this.checkScopes(scopes, metadata, verb);
@@ -197,7 +199,8 @@ export class ServiceDescriptors {
 
             System.log.info(null, "Handler registered for query verb %s", verb);
             this.routes.set(verb, item);
-
+            item.verb = verb;
+            
             if (item.metadata.action.startsWith("_service")) continue;
 
             let metadata = <QueryActionMetadata>item.metadata;

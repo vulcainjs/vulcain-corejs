@@ -25,6 +25,8 @@ export { AbstractExpressAuthentication } from './servers/express/abstractExpress
 export * from './application'
 export { Conventions } from './utils/conventions';
 export { IMetrics } from './metrics/metrics';
+export { IMockManager } from './mocks/imockManager';
+export { MockManager } from './mocks/mockManager';
 
 // Pipeline
 export * from './pipeline/annotations';

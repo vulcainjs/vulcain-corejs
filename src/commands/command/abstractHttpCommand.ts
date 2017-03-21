@@ -37,7 +37,7 @@ export abstract class AbstractHttpCommand {
      * @memberOf AbstractHttpCommand
      */
 
-    protected setMetricsTags( uri: string, emitLog = true) {
+    protected setMetricsTags(uri: string, emitLog = true) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
@@ -100,12 +100,11 @@ export abstract class AbstractHttpCommand {
 
         this.setMetricsTags(url);
 
-        if (System.hasMocks) {
-            let result = await System.mocks.applyMockHttpAsync(url, verb);
-            if (result !== undefined) {
-                System.log.info(this.requestContext, `Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
-                return result;
-            }
+        const mocks = System.getMocks(this.container);
+        let result = mocks.enabled && await mocks.applyMockHttpAsync(url, verb);
+        if (result !== undefined) {
+            System.log.info(this.requestContext, `Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+            return result;
         }
 
         let request: types.IHttpRequest = rest[verb](url);

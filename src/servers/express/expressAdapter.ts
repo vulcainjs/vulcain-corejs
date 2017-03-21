@@ -49,8 +49,8 @@ export class ExpressAdapter extends AbstractAdapter {
 
         try {
             if (response.headers) {
-                for (const [k, v] of response.headers) {
-                    expressResponse.setHeader(k, v);
+                for (const k of Object.keys(response.headers)) {
+                    expressResponse.setHeader(k, response.headers[k]);
                 }
             }
 

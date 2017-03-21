@@ -14,9 +14,9 @@ class BaseModel {
 
 @Model({extends: "BaseModel"})
 class SimpleModel extends BaseModel {
-    @Property({ required: true})
+    @Property({ type: 'string', required: true})
     text: string;
-    @Property()
+    @Property({type:'number'})
     number: number;
 }
 

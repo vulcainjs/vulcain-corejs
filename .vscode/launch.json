@@ -29,7 +29,7 @@
             "name": "Test",
             "type": "node",
 			"request": "launch",
-			"smartStep": true,
+			"smartStep": false,
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             "preLaunchTask": "compile-test",

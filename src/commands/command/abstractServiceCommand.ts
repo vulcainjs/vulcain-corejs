@@ -80,7 +80,7 @@ export abstract class AbstractServiceCommand {
         this.setMetricsTags(dep.targetServiceName, dep.targetServiceVersion, false);
     }
 
-    protected setMetricsTags( targetServiceName: string, targetServiceVersion: string, emitLog = true) {
+    protected setMetricsTags(targetServiceName: string, targetServiceVersion: string, emitLog = true) {
 
         let exists = System.manifest.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
         if (!exists) {
@@ -130,7 +130,7 @@ export abstract class AbstractServiceCommand {
                     return url.host;
                 }
             }
-            catch(e) {/*ignore*/}
+            catch (e) {/*ignore*/ }
         }
 
         return System.createContainerEndpoint(serviceName, version);
@@ -153,12 +153,11 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<QueryResponse<T>>}
      */
     protected async getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResponse<T>> {
-        if (System.hasMocks) {
-            let result = await System.mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
-            if (result !== undefined) {
-                System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
-                return result;
-            }
+        const mocks = System.getMocks(this.container);
+        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
+        if (result !== undefined) {
+            System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
+            return result;
         }
 
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', schema, 'get', id, args);
@@ -180,18 +179,18 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResponse<T>> {
+    protected async getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResponse<T>> {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
         data.$query = query && JSON.stringify(query);
-        if (System.hasMocks) {
-            let result = System.mocks.applyMockService(serviceName, version, verb, data);
-            if (result !== undefined) {
-                System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
-                return result;
-            }
+        const mocks = System.getMocks(this.container);
+        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
+        if (result !== undefined) {
+            System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
+            return result;
         }
+
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args, data);
 
         let res = this.sendRequestAsync("get", url);
@@ -208,17 +207,16 @@ export abstract class AbstractServiceCommand {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResponse<T>> {
+    protected async sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResponse<T>> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
-        if (System.hasMocks) {
-            let result = System.mocks.applyMockService(serviceName, version, verb, command);
-            if (result !== undefined) {
-                System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
-                return result;
-            }
+        const mocks = System.getMocks(this.container);
+        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, command);
+        if (result !== undefined) {
+            System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
+            return result;
         }
         let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', verb, args);
-        let res = this.sendRequestAsync("post", url, (req) => req.json(command));
+        let res = <any>this.sendRequestAsync("post", url, (req) => req.json(command));
         return res;
     }
 
@@ -264,6 +262,13 @@ export abstract class AbstractServiceCommand {
         request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
         request.header(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
         request.header(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
+        if (this.requestContext.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
+            request.header(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, this.requestContext.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
+        }
+        if (this.requestContext.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
+            request.header(VulcainHeaderNames.X_VULCAIN_USE_MOCK, this.requestContext.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
+        }
+
         await this.setUserContextAsync(request);
 
         prepareRequest && prepareRequest(request);
