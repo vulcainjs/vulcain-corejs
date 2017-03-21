@@ -5,7 +5,7 @@ import { CommandManager, ActionMetadata } from '../pipeline/actions';
 import { QueryManager } from '../pipeline/query';
 import { IManager } from '../pipeline/common';
 import { RequestContext, UserContext, Pipeline } from './requestContext';
-import { DefaultServiceNames } from '../di/annotations';
+import { DefaultServiceNames, LifeTime } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { System } from './../configurations/globals/system';
@@ -18,6 +18,7 @@ import { MessageBus } from '../pipeline/messageBus';
 import { IHttpResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
 import { VulcainLogger } from '../configurations/log/vulcainLogger';
+import { IRequestTracer } from '../metrics/zipkinInstrumentation';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -77,7 +78,10 @@ export abstract class AbstractAdapter {
     }
 
     private createRequestContext(request: IHttpAdapterRequest) {
-        let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
+        let ctx = new RequestContext(this.container,
+            Pipeline.HttpRequest,
+            this.container.get<IRequestTracer>(DefaultServiceNames.RequestTracer, true, LifeTime.Singleton)
+        );
 
         // Initialize headers & hostname
         this.initializeRequestContext(ctx, request);
@@ -131,6 +135,7 @@ export abstract class AbstractAdapter {
             value.userContext = undefined;
         }
 
+        ctx && ctx.endTrace(value);
 
         // Remove result value for trace
         let trace = Object.assign({}, value);
@@ -263,11 +268,14 @@ export abstract class AbstractAdapter {
         if (command.domain.toLowerCase() !== this.domainName.toLowerCase()) {
             return new BadRequestResponse("this service doesn't belong to domain " + this.domainName);
         }
+
         try {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
             System.log.info(ctx, `Request input   : ${JSON.stringify(command)}`);
             System.log.info(ctx, `Request context : user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+
+            ctx.startTrace(info.verb, command.params);
 
             // Verify authorization
             if (!ctx.hasScope(info.metadata.scope)) {

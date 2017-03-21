@@ -91,6 +91,7 @@ export abstract class AbstractServiceCommand {
         if (emitLog) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
+            this.requestContext.setCommand(`Call service ${targetServiceName} version ${targetServiceVersion}`);
         }
     }
 

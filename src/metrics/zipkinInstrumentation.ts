@@ -1,9 +1,9 @@
 import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 import { System } from '../configurations/globals/system';
-import { IRequestTracer } from './statsdMetrics';
-import { Logger } from '../servers/requestContext';
+import { Logger, RequestContext } from '../servers/requestContext';
 import { Conventions } from '../utils/conventions';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
+import { ActionMetadata } from '../pipeline/actions';
 const {
     Annotation,
     HttpHeaders: Header,
@@ -13,7 +13,19 @@ const {
 const {HttpLogger} = require('zipkin-transport-http');
 //const url = require('url');
 
-export class ZipkinInstrumentation {
+/**
+ * Request tracer interface
+ */
+export interface IRequestTracer {
+    startTrace(ctx: RequestContext, verb: string, params): any;
+    endTrace(tracer, result);
+    setCommand(tracer, verb: string);
+}
+
+/**
+ * Needs a property named : zipkinAgent
+ */
+export class ZipkinInstrumentation implements IRequestTracer{
     private tracer;
 
     constructor() {
@@ -22,10 +34,13 @@ export class ZipkinInstrumentation {
             if (!zipkinAddress.startsWith("http://")) {
                 zipkinAddress = "http://" + zipkinAddress;
             }
+            if (!/:[0-9]+/.test(zipkinAddress)) {
+                zipkinAddress = zipkinAddress + ':9411';
+            }
             const ctxImpl = new ExplicitContext();
             const recorder = new BatchRecorder({
                 logger: new HttpLogger({
-                    endpoint: `${zipkinAddress}:9411/api/v1/spans`,
+                    endpoint: `${zipkinAddress}/api/v1/spans`,
                     httpInterval: 10000
                 })
             });
@@ -33,25 +48,33 @@ export class ZipkinInstrumentation {
         }
     }
 
-    startTrace(request: IHttpAdapterRequest): IRequestTracer {
-        return this.tracer && new ZipkinTrace(this.tracer, request);
+    startTrace(ctx: RequestContext, verb: string, params) {
+        return this.tracer && new ZipkinTrace(this.tracer, ctx, verb, params);
+    }
+
+    setCommand(tracer, verb: string) {
+        tracer && tracer.setCommand(verb);
+    }
+
+    endTrace(tracer, result) {
+        tracer && tracer.endTrace(result);
     }
 }
 
-export class ZipkinTrace implements IRequestTracer {
+export class ZipkinTrace {
     private id;
 
-    constructor(private tracer, request: IHttpAdapterRequest) {
+    constructor(private tracer, ctx: RequestContext, verb: string, params) {
         tracer.scoped(() => {
 
-            if (this.containsRequiredHeaders(request)) {
+            if (this.containsRequiredHeaders(ctx)) {
                 // Child span
-                const spanId = this.readHeader(request, Header.SpanId);
+                const spanId = this.readHeader(ctx, Header.SpanId);
                 spanId.ifPresent(sid => {
-                    const traceId = this.readHeader(request, Header.TraceId);
-                    const parentSpanId = this.readHeader(request, Header.ParentSpanId);
-                    const sampled = this.readHeader(request, Header.Sampled);
-                    const flags = this.readHeader(request, Header.Flags).flatMap(this.stringToIntOption).getOrElse(0);
+                    const traceId = this.readHeader(ctx, Header.TraceId);
+                    const parentSpanId = this.readHeader(ctx, Header.ParentSpanId);
+                    const sampled = this.readHeader(ctx, Header.Sampled);
+                    const flags = this.readHeader(ctx, Header.Flags).flatMap(this.stringToIntOption).getOrElse(0);
                     const id = new TraceId({
                         traceId,
                         parentId: parentSpanId,
@@ -64,14 +87,14 @@ export class ZipkinTrace implements IRequestTracer {
             } else {
                 // Root span
                 tracer.setId(tracer.createRootId());
-                if (request.headers[Header.Flags]) {
+                if (ctx.headers[Header.Flags]) {
                     const currentId = tracer.id;
                     const idWithFlags = new TraceId({
                         traceId: currentId.traceId,
                         parentId: currentId.parentId,
                         spanId: currentId.spanId,
                         sampled: currentId.sampled,
-                        flags: this.readHeader(request, Header.Flags)
+                        flags: this.readHeader(ctx, Header.Flags)
                     });
                     tracer.setId(idWithFlags);
                 }
@@ -80,12 +103,8 @@ export class ZipkinTrace implements IRequestTracer {
             this.id = tracer.id;
 
             tracer.recordServiceName(System.serviceName + "-" + System.serviceVersion);
-            // tracer.recordRpc(request.method);
-            /*  tracer.recordBinary('http.url', url.format({
-                  protocol: req.isSecure() ? 'https' : 'http',
-                  host: req.header('host'),
-                  pathname: req.path()
-              }));*/
+            tracer.recordRpc(verb);
+            tracer.recordBinary('arguments', JSON.stringify(params));
             tracer.recordAnnotation(new Annotation.ServerRecv());
             //  tracer.recordAnnotation(new Annotation.LocalAddr({ port }));
 
@@ -99,8 +118,8 @@ export class ZipkinTrace implements IRequestTracer {
         this.tracer.recordBinary("verb", verb);
     }
 
-    private readHeader(request: IHttpAdapterRequest, header: string) {
-        const val = request.headers[header];
+    private readHeader(ctx: RequestContext, header: string) {
+        const val = ctx.headers[header];
         if (val) {
             return new Some(val);
         } else {
@@ -108,8 +127,8 @@ export class ZipkinTrace implements IRequestTracer {
         }
     }
 
-    private containsRequiredHeaders(request: IHttpAdapterRequest) {
-        return request.headers[Header.TraceId] !== undefined && request.headers[Header.SpanId] !== undefined;
+    private containsRequiredHeaders(ctx: RequestContext) {
+        return ctx.headers[Header.TraceId] !== undefined && ctx.headers[Header.SpanId] !== undefined;
     }
 
     endTrace(result) {

@@ -5,11 +5,6 @@ import { IMetrics, MetricsConstant } from './metrics';
 import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
-export interface IRequestTracer {
-    endTrace(result);
-    setCommand(verb: string);
-}
-
 /**
  * Default metrics adapter
  * Emit metrics on statsd

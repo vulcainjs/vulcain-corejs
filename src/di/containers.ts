@@ -22,6 +22,7 @@ import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizati
 import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { MockManager } from "../mocks/mockManager";
+import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 
 /**
  * Component container for dependency injection
@@ -60,6 +61,7 @@ export class Container implements IContainer {
             this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
+            this.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
         }
     }
 

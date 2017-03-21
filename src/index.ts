@@ -1,4 +1,5 @@
 import './preloader'; // First
+import { IRequestTracer } from './metrics/zipkinInstrumentation';
 
 // Configurations
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './configurations/dependencies/annotations';
@@ -27,6 +28,7 @@ export { Conventions } from './utils/conventions';
 export { IMetrics } from './metrics/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
+export { IRequestTracer } from './metrics/zipkinInstrumentation';
 
 // Pipeline
 export * from './pipeline/annotations';

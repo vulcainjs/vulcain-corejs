@@ -49,6 +49,7 @@ export abstract class AbstractHttpCommand {
         if (emitLog) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+            this.requestContext.setCommand(`Call external api: ${uri}`);
         }
     }
 

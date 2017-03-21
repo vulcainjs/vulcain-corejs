@@ -4,9 +4,10 @@ import { CommandFactory } from '../commands/command/commandFactory';
 import { DefaultServiceNames } from '../di/annotations';
 import { IAuthorizationPolicy } from './policy/defaultAuthorizationPolicy';
 import { ICommand } from '../commands/command/abstractCommand';
-import { VulcainHeaderNames } from './abstractAdapter';
-import { IRequestTracer } from '../metrics/statsdMetrics';
+import { VulcainHeaderNames, IHttpAdapterRequest } from './abstractAdapter';
 import { System } from '../configurations/globals/system';
+import { IRequestTracer } from '../metrics/zipkinInstrumentation';
+import { ActionMetadata } from '../pipeline/actions';
 const guid = require('uuid');
 
 export enum Pipeline {
@@ -128,7 +129,7 @@ export class RequestContext {
      * @type {string}
      */
     correlationId: string;
-
+    tracerInfo: any;
     traceId: string;
     parentId: string;
 
@@ -220,7 +221,7 @@ export class RequestContext {
      * @param {IContainer} container
      * @param {Pipeline} pipeline
      */
-    constructor(container: IContainer, public pipeline: Pipeline) {
+    constructor(container: IContainer, public pipeline: Pipeline, private tracer?: IRequestTracer) {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
         this._scopePolicy = container.get<IAuthorizationPolicy>(DefaultServiceNames.AuthorizationPolicy);
@@ -281,6 +282,17 @@ export class RequestContext {
         ctx.user = user || RequestContext.TestUser;
         ctx.user.tenant = ctx.tenant = System.defaultTenant;
         return ctx;
+    }
+
+    startTrace(verb: string, params) {
+        this.tracerInfo = this.tracer && this.tracer.startTrace(this, verb, params);
+    }
+
+    endTrace(result) {
+        this.tracerInfo && this.tracer.endTrace(this.tracerInfo, result);
+    }
+    setCommand(verb: string) {
+        this.tracerInfo && this.tracer.setCommand(this.tracerInfo, verb);
     }
 
     /**
