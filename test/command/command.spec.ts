@@ -16,7 +16,7 @@ describe("Command", function () {
         let command = await CommandFactory.getAsync("TestCommand", container.scope.requestContext);
         expect(command).not.to.be.undefined;
 
-        let result = await command.executeAsync<string>("success");
+        let result = await command.runAsync<string>("success");
         expect(result).to.be.equal("success");
         let metrics = CommandMetricsFactory.get("TestCommand");
         expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
@@ -28,7 +28,7 @@ describe("Command", function () {
 
         expect(command).not.to.be.undefined;
         try {
-            await command.executeAsync("success");
+            await command.runAsync("success");
             expect.fail();
         }
         catch (err) {
@@ -43,7 +43,7 @@ describe("Command", function () {
     it("should resolve with fallback if the run function fails", async () => {
         let command = await CommandFactory.getAsync("TestCommandFallback", container.scope.requestContext);
 
-        let result = await command.executeAsync("success");
+        let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
         let metrics = CommandMetricsFactory.get("TestCommandFallback");
         expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
@@ -55,7 +55,7 @@ describe("Command", function () {
         let spy = sinon.spy((<any>command).command, "runAsync");
 
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
-        let result = await command.executeAsync("success");
+        let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
         expect(spy.notCalled);
     });
@@ -83,7 +83,7 @@ describe("Command", function () {
            metrics.incrementExecutionCount();
            metrics.markFailure();
            metrics.markFailure();
-           command.executeAsync().then(function(result) {
+           command.runAsync().then(function(result) {
                expect(result).to.be.equal("fallback");
                expect(object.run).toHaveBeenCalled();
                done();
@@ -112,7 +112,7 @@ describe("Command", function () {
                .build();
 
                let metrics = CommandMetricsFactory.get("TestCommandErrorHandler");
-           command.executeAsync().then(function(result) {
+           command.runAsync().then(function(result) {
                expect(result).to.be.equal("fallback");
                let errorCount = metrics.getHealthCounts().errorCount;
                expect(errorCount).to.be.equal(0);
@@ -135,7 +135,7 @@ describe("Command", function () {
                let metrics = CommandMetricsFactory.get("VolumeThresholdCommand");
            metrics.incrementExecutionCount();
            metrics.incrementExecutionCount();
-           command.executeAsync("success").then(failTest(done)).fail(function(error) {
+           command.runAsync("success").then(failTest(done)).fail(function(error) {
                expect(error.message).to.be.equal("CommandRejected");
                expect(metrics.getRollingCount(RollingNumberEvent.REJECTED)).to.be.equal(1);
                done();
@@ -163,7 +163,7 @@ describe("Command", function () {
                let metrics = CommandMetricsFactory.get("VolumeThresholdCommandFallback");
            metrics.incrementExecutionCount();
            metrics.incrementExecutionCount();
-           command.executeAsync("success").then(function(result) {
+           command.runAsync("success").then(function(result) {
                expect(result).to.be.equal("fallback");
                expect(metrics.getRollingCount(RollingNumberEvent.REJECTED)).to.be.equal(1);
                expect(object.run).not.toHaveBeenCalled();

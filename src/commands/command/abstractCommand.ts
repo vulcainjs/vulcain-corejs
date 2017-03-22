@@ -17,11 +17,7 @@ export interface ICommand {
      * execute the command
      * @param args
      */
-    executeAsync<T>(...args): Promise<T>;
-    /**
-     * execution result
-     */
-    status: ExecutionResult;
+    runAsync<T>(...args): Promise<T>;
 }
 
 /**

@@ -24,7 +24,7 @@ describe("HystrixSSEStream", function () {
 
     async function executeCommand(commandKey) {
         let command = await CommandFactory.getAsync(commandKey, container.scope.requestContext);
-        command.executeAsync("success");
+        command.runAsync("success");
     }
 
     it("should poll metrics every second", function (done) {

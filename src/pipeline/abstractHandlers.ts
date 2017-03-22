@@ -4,6 +4,7 @@ import {QueryData} from './query';
 import {IContainer} from '../di/resolvers';
 import { Inject, DefaultServiceNames, IScopedComponent } from '../di/annotations';
 import 'reflect-metadata';
+import { ICommand } from '../commands/command/abstractCommand';
 const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 
@@ -34,6 +35,14 @@ export abstract class AbstractHandler implements IScopedComponent {
 
     get metadata(): IActionMetadata {
         return Reflect.getMetadata(symMetadata, this.constructor);
+    }
+
+    /**
+     * Create a new command
+     * @param commandName
+     */
+    createCommandAsync<T extends ICommand>(commandName: string) {
+        return <T><any>this.requestContext.getCommandAsync(commandName, this.metadata.schema);
     }
 }
 
