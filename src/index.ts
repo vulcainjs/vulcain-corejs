@@ -54,7 +54,7 @@ export * from './providers/mongo/provider'
 export { ProviderFactory } from './providers/providerFactory';
 
 // Containers
-export { IContainer } from './di/resolvers';
+export { IContainer, IInjectionNotification } from './di/resolvers';
 export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
 

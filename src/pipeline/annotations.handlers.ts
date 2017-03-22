@@ -52,7 +52,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
                 // ActionHandler targets a model
                 metadata.schema = modelMetadatas.name || target.name;
                 let newName = '$$' + target.name + 'ActionHandler';
-                target = (s => class extends DefaultActionHandler { })();
+                target = class extends DefaultActionHandler { };
                 Object.defineProperty(target, 'name', {value: newName, configurable: true});
             }
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
@@ -83,7 +83,7 @@ export function QueryHandler(metadata: QueryMetadata) {
                 // QueryHandler targets a model
                 metadata.schema = modelMetadatas.name || target.name;
                 let newName = '$$' + target.name + 'QueryHandler';
-                target = (s => class extends DefaultQueryHandler<any> { })();
+                target = class extends DefaultQueryHandler<any> { };
                 Object.defineProperty(target, 'name', {value: newName, configurable: true});
             }
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);

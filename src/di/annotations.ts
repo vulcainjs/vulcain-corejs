@@ -76,11 +76,29 @@ export interface IScopedComponent {
  * @param {string} component name
  * @param {boolean} [optional] True to not raise an exception if component doesn't exist
  */
-export function Inject(name: string, optional?: boolean) {
-    return function (target, key, i) {
-        let injects = Reflect.getOwnMetadata(Symbol.for("di:injects"), target) ||  [];
-        injects[i] = { name: name, optional: !!optional };
-        Reflect.defineMetadata(Symbol.for("di:injects"), injects, target);
+export function Inject(optional?: boolean);
+export function Inject(name: string, optional?: boolean);
+export function Inject(nameOrBool?: string | boolean, optional?: boolean) {
+    let name: string;
+    if (typeof nameOrBool === "string") {
+        name = nameOrBool;
+    }
+    else {
+        optional = nameOrBool;
+    }
+    return function (target, key, i?) {
+        if (i !== undefined) {
+            // Constructor injection
+            let injects = Reflect.getOwnMetadata(Symbol.for("di:ctor_injects"), target) || [];
+            injects[i] = { name: name, optional: !!optional };
+            Reflect.defineMetadata(Symbol.for("di:ctor_injects"), injects, target);
+        }
+        else {
+            // Property constructor
+            let injects = Reflect.getOwnMetadata(Symbol.for("di:props_injects"), target) || [];
+            injects.push({ name: name || Reflect.getOwnMetadata("design:type", target, key).name, optional: !!optional, property: key });
+            Reflect.defineMetadata(Symbol.for("di:props_injects"), injects, target);
+        }
     };
 }
 
