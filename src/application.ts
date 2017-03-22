@@ -43,13 +43,7 @@ export class Application {
      * @memberOf Application
      */
     public enableHystrixStream: boolean;
-    /**
-     * Ignore invalid bearer token
-     *
-     * @type {boolean}
-     * @memberOf Application
-     */
-    public ignoreInvalidBearerToken: boolean = false;
+
     private _basePath: string;
     /**
      *
@@ -69,40 +63,6 @@ export class Application {
      */
     enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
         this.container.injectScoped(ApiKeyService, DefaultServiceNames.ApiKeyService, apiKeyServiceName, version);
-    }
-
-    /**
-     * Set the user to use in local or test mode.
-     * VULCAIN_TEST_USER must be set to 'true' to enable it.
-     *
-     * @param {UserContext} forcedUser - User definition to utilize otherwise a default one is provided.
-     * @returns
-     */
-    setTestUser(forcedUser?: UserContext) {
-        let user: UserContext = null;
-        let tmp = process.env[Conventions.instance.ENV_TEST_USER];
-        if (tmp) {
-            if (tmp === 'true') {
-                user = forcedUser || RequestContext.TestUser;
-            } else if (typeof tmp === "string") {
-                try {
-                    user = JSON.parse(tmp);
-                }
-                catch (e) {
-                    System.log.info(null, `Invalid ${Conventions.instance.ENV_TEST_USER} value. ` + e);
-                }
-            }
-        }
-
-        if (!user || !System.isTestEnvironnment) {
-            user && System.log.info(null, "Warning : Forcing test user is ignored in production mode.");
-            return;
-        }
-        if ( !user.name || !user.scopes) {
-            throw new Error("Invalid test user - Properties name and scopes are required.");
-        }
-
-        this._container.injectInstance(user, DefaultServiceNames.TestUser);
     }
 
     /**
@@ -247,8 +207,6 @@ export class Application {
     async start(port: number) {
         try {
             this.initializeDefaultServices(this.container);
-
-            this.setTestUser(); // TODO remove from template
 
             let local = new LocalAdapter();
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);

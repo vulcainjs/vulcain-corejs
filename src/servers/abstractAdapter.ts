@@ -48,14 +48,12 @@ export interface IHttpAdapterRequest {
 export abstract class AbstractAdapter {
     private commandManager: CommandManager;
     private queryManager;
-    protected testUser: UserContext;
     private domain: Domain;
     private metrics: IMetrics;
 
     constructor(protected domainName: string, protected container: IContainer) {
         this.commandManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
-        this.testUser = container.get<UserContext>(DefaultServiceNames.TestUser, true);
         this.domain = container.get<Domain>(DefaultServiceNames.Domain);
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
 

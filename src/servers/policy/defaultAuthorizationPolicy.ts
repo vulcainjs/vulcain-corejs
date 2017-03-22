@@ -55,7 +55,7 @@ export class DefaultAuthorizationPolicy {
      * @returns {number}
      */
     hasScope(requestContext: RequestContext, handlerScope: string): boolean {
-        if (!handlerScope || handlerScope === "?") {
+        if (!handlerScope || handlerScope === "?" || System.isDevelopment) {
             return true;
         }
         if (!requestContext.user) {

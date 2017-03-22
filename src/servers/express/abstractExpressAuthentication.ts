@@ -23,7 +23,7 @@ export abstract class AbstractExpressAuthentication {
      *
      * @memberOf ExpressAuthentication
      */
-    init(testUser: UserContext, ignoreInvalidBearer: boolean) {
+    init() {
 
         return async (req, res: express.Response, next) => {
             let ctx: RequestContext = req.requestContext;
@@ -38,12 +38,6 @@ export abstract class AbstractExpressAuthentication {
                 authorization = req.cookies && req.cookies.Authorization;
 
             if (!authorization) {
-                // Force test user only if there is no authorization
-                if (testUser) {
-                    ctx.user = testUser;
-                    ctx.tenant = ctx.tenant || ctx.user.tenant;
-                    System.log.info(ctx, `Request context - force test user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.tenant}`);
-                }
                 next();
                 return;
             }
@@ -75,7 +69,7 @@ export abstract class AbstractExpressAuthentication {
                         next();
                         return;
                     }
-                    else if (strategyName !== "bearer" || !ignoreInvalidBearer) {
+                    else if (strategyName !== "bearer") {
                         let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
                         logger.logAction(ctx, 'ER');
                         res.status(401);
