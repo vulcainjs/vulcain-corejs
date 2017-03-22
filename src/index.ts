@@ -32,7 +32,7 @@ export { IRequestTracer } from './metrics/zipkinInstrumentation';
 
 // Pipeline
 export * from './pipeline/annotations';
-export { QueryHandler, ActionHandler } from './pipeline/annotations.handlers';
+export { QueryHandler, ActionHandler, EventHandler } from './pipeline/annotations.handlers';
 export { EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/actions';
 export { QueryData, QueryActionMetadata, QueryMetadata, QueryResponse } from './pipeline/query';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/abstractHandlers';
@@ -56,7 +56,7 @@ export * from './providers/mongo/provider'
 export { ProviderFactory } from './providers/providerFactory';
 
 // Containers
-export { IContainer } from './di/resolvers';
+export { IContainer, IInjectionNotification } from './di/resolvers';
 export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
 

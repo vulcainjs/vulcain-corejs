@@ -12,7 +12,6 @@ import { DefaultActionHandler, DefaultQueryHandler } from "../defaults/crudHandl
 const symActions = Symbol.for("handler:actions");
 const symMetadata = Symbol.for("handler:metadata");
 
-
 function getMetadata(key, target) {
     let metadata = {};
     while (target) {
@@ -52,7 +51,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
                 // ActionHandler targets a model
                 metadata.schema = modelMetadatas.name || target.name;
                 let newName = '$$' + target.name + 'ActionHandler';
-                target = (s => class extends DefaultActionHandler { })();
+                target = class extends DefaultActionHandler { };
                 Object.defineProperty(target, 'name', {value: newName, configurable: true});
             }
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
@@ -83,12 +82,30 @@ export function QueryHandler(metadata: QueryMetadata) {
                 // QueryHandler targets a model
                 metadata.schema = modelMetadatas.name || target.name;
                 let newName = '$$' + target.name + 'QueryHandler';
-                target = (s => class extends DefaultQueryHandler<any> { })();
+                target = class extends DefaultQueryHandler<any> { };
                 Object.defineProperty(target, 'name', {value: newName, configurable: true});
             }
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             let actions = getMetadata(symActions, target);
             descriptors.register(container, domain, target, actions, metadata, "query");
+            Reflect.defineMetadata(symMetadata, metadata, target);
+        });
+    };
+}
+
+/**
+ * Define an event handler class
+ *
+ * @export
+ * @param {EventMetadata} [metadata]
+ * @returns
+ */
+export function EventHandler(metadata?: EventMetadata) {
+    return function (target: Function) {
+        let actions = getMetadata(symActions, target);
+
+        Preloader.instance.registerHandler(target, (container, domain) => {
+            CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     };

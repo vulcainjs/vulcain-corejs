@@ -49,6 +49,10 @@ export interface IContainer {
     inject(name: string, fn, lifeTime: LifeTime);
 }
 
+export interface IInjectionNotification {
+    onInjectionCompleted();
+}
+
 export interface IResolver {
     lifeTime: LifeTime;
     resolve(container: Container, name?: string, parentContainer?: Container);
@@ -70,9 +74,53 @@ export class Resolver implements IResolver {
     constructor(private fn, public lifeTime: LifeTime, private args?: Array<any>) { }
 
     resolve(container: Container, name?: string) {
-        let injects;
-        try { injects = Reflect.getMetadata(Symbol.for("di:injects"), this.fn); } catch (e) { }
         let params = [];
+
+        this.injectArguments(container, name, params);
+
+        if (this.args) {
+            this.args.forEach(a => {
+                params.push(a);
+            });
+        }
+
+        let component = invoke(this.fn, params);
+        component._id = Resolver.nb++;
+
+        this.injectProperties(container, name, component);
+
+        component.onInjectionCompleted && component.onInjectionCompleted();
+
+        return component;
+    }
+
+    private injectProperties(container: Container, name: string, component) {
+        let injects = [];
+        let target = this.fn.prototype;
+        while (target) {
+            try {
+                let tmp = Reflect.getMetadata(Symbol.for("di:props_injects"), target);
+                if (tmp) {
+                    injects = injects.concat(tmp);
+                }
+            } catch (e) { }
+            target = Object.getPrototypeOf(target);
+        }
+
+        for (let inject in injects) {
+            let info = injects[inject];
+            try {
+                component[info.property] = container.get<any>(info.name, info.optional);
+            }
+            catch (e) {
+                throw new Error(`Error when instanciating component ${name} on injected property ${info.property} : ${e.message}`);
+            }
+        }
+    }
+
+    private injectArguments(container: Container, name: string, params: any[]) {
+        let injects;
+        try { injects = Reflect.getMetadata(Symbol.for("di:ctor_injects"), this.fn); } catch (e) { }
 
         if (injects) {
             try {
@@ -85,16 +133,6 @@ export class Resolver implements IResolver {
                 throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`);
             }
         }
-
-        if (this.args) {
-            this.args.forEach(a => {
-                params.push(a);
-            });
-        }
-
-        let component = invoke(this.fn, params);
-        component._id = Resolver.nb++;
-        return component;
     }
 }
 

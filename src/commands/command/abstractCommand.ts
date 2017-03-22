@@ -1,6 +1,6 @@
 import { ExecutionResult } from './executionResult';
 import { DefaultServiceNames } from '../../di/annotations';
-import { IContainer } from '../../di/resolvers';
+import { IContainer, IInjectionNotification } from '../../di/resolvers';
 import { Inject } from '../../di/annotations';
 import { RequestContext } from '../../servers/requestContext';
 import { IMetrics, MetricsConstant } from '../../metrics/metrics';
@@ -17,11 +17,7 @@ export interface ICommand {
      * execute the command
      * @param args
      */
-    executeAsync<T>(...args): Promise<T>;
-    /**
-     * execution result
-     */
-    status: ExecutionResult;
+    runAsync<T>(...args): Promise<T>;
 }
 
 /**
@@ -32,7 +28,8 @@ export interface ICommand {
  * @class AbstractCommand
  * @template T
  */
-export abstract class AbstractCommand<T> {
+export abstract class AbstractCommand<T> implements IInjectionNotification {
+
     protected metrics: IMetrics;
     protected customTags: string;
     private static METRICS_NAME = "custom_command";
@@ -51,6 +48,7 @@ export abstract class AbstractCommand<T> {
      *
      * @memberOf AbstractCommand
      */
+    @Inject(DefaultServiceNames.Container)
     container: IContainer;
 
     /**
@@ -59,8 +57,11 @@ export abstract class AbstractCommand<T> {
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor( @Inject(DefaultServiceNames.Container) container: IContainer) {
-        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
+    constructor() {
+    }
+
+    onInjectionCompleted() {
+        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
     protected setMetricsTags(...args: Array<string>) {

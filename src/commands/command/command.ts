@@ -50,7 +50,7 @@ export class HystrixCommand {
             await (<any>this.command).setSchemaAsync(schema);
     }
 
-    async executeAsync<T>(...args): Promise<T> {
+    async runAsync<T>(...args): Promise<T> {
         if (this.running) {
             throw new Error("This instance can only be executed once. Please instantiate a new instance.");
         }
