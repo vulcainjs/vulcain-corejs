@@ -12,7 +12,6 @@ import { DefaultActionHandler, DefaultQueryHandler } from "../defaults/crudHandl
 const symActions = Symbol.for("handler:actions");
 const symMetadata = Symbol.for("handler:metadata");
 
-
 function getMetadata(key, target) {
     let metadata = {};
     while (target) {
@@ -89,6 +88,24 @@ export function QueryHandler(metadata: QueryMetadata) {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             let actions = getMetadata(symActions, target);
             descriptors.register(container, domain, target, actions, metadata, "query");
+            Reflect.defineMetadata(symMetadata, metadata, target);
+        });
+    };
+}
+
+/**
+ * Define an event handler class
+ *
+ * @export
+ * @param {EventMetadata} [metadata]
+ * @returns
+ */
+export function EventHandler(metadata?: EventMetadata) {
+    return function (target: Function) {
+        let actions = getMetadata(symActions, target);
+
+        Preloader.instance.registerHandler(target, (container, domain) => {
+            CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     };

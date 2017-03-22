@@ -95,18 +95,25 @@ export class Resolver implements IResolver {
     }
 
     private injectProperties(container: Container, name: string, component) {
-        let injects;
-        try { injects = Reflect.getMetadata(Symbol.for("di:props_injects"), this.fn.prototype); } catch (e) { }
+        let injects = [];
+        let target = this.fn.prototype;
+        while (target) {
+            try {
+                let tmp = Reflect.getMetadata(Symbol.for("di:props_injects"), target);
+                if (tmp) {
+                    injects = injects.concat(tmp);
+                }
+            } catch (e) { }
+            target = Object.getPrototypeOf(target);
+        }
 
-        if (injects) {
-            for (let inject in injects) {
-                let info = injects[inject];
-                try {
-                    component[info.property] = container.get<any>(info.name, info.optional);
-                }
-                catch (e) {
-                    throw new Error(`Error when instanciating component ${name} on injected property ${info.property} : ${e.message}`);
-                }
+        for (let inject in injects) {
+            let info = injects[inject];
+            try {
+                component[info.property] = container.get<any>(info.name, info.optional);
+            }
+            catch (e) {
+                throw new Error(`Error when instanciating component ${name} on injected property ${info.property} : ${e.message}`);
             }
         }
     }

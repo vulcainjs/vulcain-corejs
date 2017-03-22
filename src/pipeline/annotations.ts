@@ -18,25 +18,6 @@ function resolveType(type): string {
     return type;
 }
 
-function getMetadata(key, target) {
-    let metadata = {};
-    while (target) {
-        let tmp = Reflect.getOwnMetadata(key, target);
-        if (tmp) {
-            // merge by action
-            Object.keys(tmp).forEach(p => {
-                let pv = tmp[p];
-                // Do not override action
-                if (Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
-                    metadata[p] = Object.assign({}, pv); // clone
-                }
-            });
-        }
-        target = Object.getPrototypeOf(target);
-    }
-    return metadata;
-}
-
 /**
  * Define an action handler
  *
@@ -101,24 +82,6 @@ export function Query(actionMetadata: QueryActionMetadata) {
             actions[key].action = tmp;
         }
         Reflect.defineMetadata(symActions, actions, target.constructor);
-    };
-}
-
-/**
- * Define an event handler class
- *
- * @export
- * @param {EventMetadata} [metadata]
- * @returns
- */
-export function EventHandler(metadata?: EventMetadata) {
-    return function (target: Function) {
-        let actions = getMetadata(symActions, target);
-
-        Preloader.instance.registerHandler(target, (container, domain) => {
-            CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
-            Reflect.defineMetadata(symMetadata, metadata, target);
-        });
     };
 }
 

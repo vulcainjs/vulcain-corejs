@@ -30,7 +30,7 @@ export { MockManager } from './mocks/mockManager';
 
 // Pipeline
 export * from './pipeline/annotations';
-export { QueryHandler, ActionHandler } from './pipeline/annotations.handlers';
+export { QueryHandler, ActionHandler, EventHandler } from './pipeline/annotations.handlers';
 export { EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/actions';
 export { QueryData, QueryActionMetadata, QueryMetadata, QueryResponse } from './pipeline/query';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/abstractHandlers';

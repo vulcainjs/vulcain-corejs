@@ -17,6 +17,11 @@ export class ClassC {
     classA: ClassA;
 }
 
+export class ClassD extends ClassB {
+    @Inject('ClassA')
+    classAA: ClassA;
+}
+
 describe("Dependency injection", function () {
 
     it("should inject properties", () => {
@@ -28,10 +33,22 @@ describe("Dependency injection", function () {
         expect(clazz.classA).to.be.not.null;
     });
 
+    it("should inject parent properties", () => {
+        let container = new Container();
+        container.injectSingleton(ClassA);
+        container.injectSingleton(ClassB);
+        container.injectSingleton(ClassD);
+
+        let clazz = container.get<ClassD>('ClassD');
+        expect(clazz.classA).to.be.not.null;
+        expect(clazz.classAA).to.be.not.null;
+    });
+
     it("should failed if component does not exist", () => {
         let container = new Container();
         container.injectSingleton(ClassA);
         container.injectSingleton(ClassB);
+        container.injectSingleton(ClassC);
 
         expect(() => {
             let clazz = container.get<ClassC>('ClassC');
