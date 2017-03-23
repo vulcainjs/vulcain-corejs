@@ -1,15 +1,13 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
 import { Scope } from './scope';
-import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver } from './resolvers';
-import { IContainer, BusUsage } from '../di/resolvers';
-import { DefaultServiceNames } from '../di/annotations';
+import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver, IContainer, BusUsage } from './resolvers';
 import { RabbitAdapter } from '../bus/rabbitAdapter';
 import { MemoryProvider } from "../providers/memory/provider";
 import { MongoProvider } from "../providers/mongo/provider";
 import { ProviderFactory } from '../providers/providerFactory';
 import { Domain } from '../schemas/schema';
-import { LifeTime } from './annotations';
+import { LifeTime, DefaultServiceNames } from './annotations';
 import { Files } from '../utils/files';
 import { Conventions } from '../utils/conventions';
 import { RequestContext } from './../servers/requestContext';
@@ -23,6 +21,7 @@ import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { MockManager } from "../mocks/mockManager";
 import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
+import { ServiceResolver } from '../configurations/globals/serviceResolver';
 
 /**
  * Component container for dependency injection
@@ -62,6 +61,7 @@ export class Container implements IContainer {
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
             this.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
+            this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
         }
     }
 

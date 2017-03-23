@@ -1,5 +1,6 @@
 import './preloader'; // First
 import { IRequestTracer } from './metrics/zipkinInstrumentation';
+import { IServiceResolver } from './configurations/globals/serviceResolver';
 
 // Configurations
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './configurations/dependencies/annotations';
@@ -10,6 +11,7 @@ export { FileConfigurationSource } from './configurations/configurationSources/f
 export { ConfigurationDataType } from './configurations/configurationSources/configurationSource';
 export { VulcainLogger } from './configurations/log/vulcainLogger';
 export { System } from './configurations/globals/system';
+export { IServiceResolver } from './configurations/globals/serviceResolver';
 export { HttpConfigurationSource } from './configurations/configurationSources/httpConfigurationSource';
 
 // Schemas
