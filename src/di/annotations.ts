@@ -31,6 +31,7 @@ export class DefaultServiceNames {
     static ApiKeyService = "ApiKeyService";
     static MockManager = "MockManager";
     static RequestTracer = "RequestTracer";
+    static ServiceResolver = "ServiceResolver";
 }
 
 /**

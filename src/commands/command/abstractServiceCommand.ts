@@ -16,6 +16,7 @@ import { VulcainHeaderNames } from '../../servers/abstractAdapter';
 import { HttpCommandError } from '../../errors/httpCommandError';
 import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 const rest = require('unirest');
+import { IServiceResolver } from '../../configurations/globals/serviceResolver';
 import * as URL from 'url';
 
 /**
@@ -29,9 +30,11 @@ import * as URL from 'url';
 export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
     private overrideTenant: string;
-
     protected metrics: IMetrics;
     private customTags: string;
+
+    @Inject(DefaultServiceNames.ServiceResolver)
+    serviceResolver: IServiceResolver;
 
     /**
      *
@@ -111,7 +114,7 @@ export abstract class AbstractServiceCommand {
      * @param {number} version
      * @returns
      */
-    protected createServiceName(serviceName: string, version: string) {
+    protected async createServiceName(serviceName: string, version: string) {
         if (!serviceName)
             throw new Error("You must provide a service name");
         if (!version || !version.match(/[0-9]+\.[0-9]+/))
@@ -134,7 +137,7 @@ export abstract class AbstractServiceCommand {
             catch (e) {/*ignore*/ }
         }
 
-        return System.createContainerEndpoint(serviceName, version);
+        return await this.serviceResolver.resolveAsync(serviceName, version);
     }
 
     /**
@@ -161,7 +164,7 @@ export abstract class AbstractServiceCommand {
             return result;
         }
 
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', schema, 'get', id, args);
+        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', schema, 'get', id, args);
         let res = this.sendRequestAsync("get", url);
         return res;
     }
@@ -192,7 +195,7 @@ export abstract class AbstractServiceCommand {
             return result;
         }
 
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}/api/${verb}`, args, data);
+        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}/api/${verb}`, args, data);
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -216,7 +219,7 @@ export abstract class AbstractServiceCommand {
             System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
-        let url = System.createUrl(`http://${this.createServiceName(serviceName, version)}`, 'api', verb, args);
+        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', verb, args);
         let res = <any>this.sendRequestAsync("post", url, (req) => req.json(command));
         return res;
     }
