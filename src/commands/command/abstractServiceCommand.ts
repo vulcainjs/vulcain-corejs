@@ -155,7 +155,7 @@ export abstract class AbstractServiceCommand {
      */
     protected async getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResponse<T>> {
         const mocks = System.getMocks(this.container);
-        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
             System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
             return result;
@@ -186,7 +186,7 @@ export abstract class AbstractServiceCommand {
         data.$page = page;
         data.$query = query && JSON.stringify(query);
         const mocks = System.getMocks(this.container);
-        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
         if (result !== undefined) {
             System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
             return result;
@@ -211,7 +211,7 @@ export abstract class AbstractServiceCommand {
     protected async sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResponse<T>> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
         const mocks = System.getMocks(this.container);
-        let result = mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, command);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, command);
         if (result !== undefined) {
             System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
             return result;

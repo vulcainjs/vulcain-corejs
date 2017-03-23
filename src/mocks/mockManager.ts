@@ -82,8 +82,8 @@ export class MockManager implements IMockManager {
         let mock = this.mocks.http[url && url.toLowerCase()];
         mock = (mock && verb && mock[verb.toLowerCase()]) || mock;
         const res = (mock && mock.output) || mock || undefined;
-        if (res !== undefined && mock.output && mock.delay) {
-            await this.sleep(mock.delay);
+        if (res !== undefined && mock.output && mock.latency) {
+            await this.sleep(mock.latency);
         }
         return res;
     }
@@ -117,12 +117,9 @@ export class MockManager implements IMockManager {
         // Iterate over data input filter
         for (let item of mock) {
             let input = item.input; // Input filter
-            if (!input) {
-                continue;
-            }
             if (this.deepCompare(data, input)) {
-                if (item.lag) {
-                    await this.sleep(item.lag);
+                if (item.latency) {
+                    await this.sleep(item.latency);
                 }
                 return item.output; // result
             }
