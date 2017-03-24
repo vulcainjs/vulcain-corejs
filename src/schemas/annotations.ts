@@ -2,6 +2,7 @@ import { Preloader } from '../preloader';
 import { IContainer } from '../di/resolvers';
 import 'reflect-metadata';
 import { RequestContext } from '../servers/requestContext';
+import { Domain } from './schema';
 
 export interface ModelOptions {
     name?: string;
@@ -19,7 +20,7 @@ export function Model(options?: ModelOptions) {
         options.name = options.name || target.name;
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
-        Preloader.instance.registerModel(target, (container, domain) => domain.addSchemaDescription(target, options.name));
+        Preloader.instance.registerModel(target, (container, domain: Domain) => domain.addSchemaDescription(target, options.name));
     };
 }
 
@@ -109,12 +110,6 @@ export interface PropertyOptions {
      * @memberOf PropertyOptions
      */
     sensible?: boolean;
-    /**
-     * Default value
-     *
-     * @memberOf PropertyOptions
-     */
-    defaultValue?;
 }
 
 /**

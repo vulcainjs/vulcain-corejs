@@ -9,7 +9,7 @@ export class SchemaBuilder {
 
     build(model) {
         if (!model) return null;
-        let schema: SchemaDescription = { name: model.name, properties: {}, references: {} };
+        let schema: SchemaDescription = { name: model.name, properties: {}, references: {}, schemaType: model };
 
         const symModel = Symbol.for("design:model");
         let modelAttr: ModelOptions = Reflect.getMetadata(symModel, model);
