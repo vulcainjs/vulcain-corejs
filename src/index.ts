@@ -59,8 +59,9 @@ export { ProviderFactory } from './providers/providerFactory';
 
 // Containers
 export { IContainer, IInjectionNotification } from './di/resolvers';
-export { TestContainer } from './di/containers';
+//export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
+export { TestContext } from './di/testContext';
 
 // Errors
 export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError } from './errors/applicationRequestError';

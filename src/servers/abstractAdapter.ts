@@ -276,7 +276,7 @@ export abstract class AbstractAdapter {
             ctx.startTrace(info.verb, command.params);
 
             // Verify authorization
-            if (!ctx.hasScope(info.metadata.scope)) {
+            if (!ctx.userHasScope(info.metadata.scope)) {
                 System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), `Current user is user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
                 return new HttpResponse({ error: { message: http.STATUS_CODES[403] } }, 403);
             }

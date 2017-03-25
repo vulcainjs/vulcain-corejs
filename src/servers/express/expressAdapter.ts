@@ -37,7 +37,7 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
-        let auth = this.container.get<any>(DefaultServiceNames.Authentication, true);
+        let auth = this.container.get<any>(DefaultServiceNames.Authentication, true) || new ExpressAuthentication();
         this.auth = auth && auth.init();
     }
 

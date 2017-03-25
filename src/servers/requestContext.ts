@@ -268,22 +268,7 @@ export class RequestContext {
         }
         return n;
     }
-
-    /**
-     * Create a request context for testing
-     *
-     * @static
-     * @param {IContainer} [container]
-     * @param {UserContext} [user]
-     * @returns
-     */
-    static createMock(container?: IContainer, user?: UserContext) {
-        let ctx = new RequestContext(container || new Container(), Pipeline.Test);
-        ctx.user = user || RequestContext.TestUser;
-        ctx.user.tenant = ctx.tenant = System.defaultTenant;
-        return ctx;
-    }
-
+    
     startTrace(verb: string, params) {
         this.tracerInfo = this.tracer && this.tracer.startTrace(this, verb, params);
     }
@@ -305,7 +290,7 @@ export class RequestContext {
         return this._scopePolicy.scopes(this);
     }
 
-    hasScope(handlerScope: string): boolean {
+    userHasScope(handlerScope: string): boolean {
         this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`);
         return this._scopePolicy.hasScope(this, handlerScope);
     }

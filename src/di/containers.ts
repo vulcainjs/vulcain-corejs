@@ -62,6 +62,7 @@ export class Container implements IContainer {
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
             this.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
             this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
+            this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         }
     }
 
@@ -331,13 +332,7 @@ export class Container implements IContainer {
  * @class TestContainer
  * @extends {Container}
  */
-export class TestContainer extends Container {
-    /**
-     * Creates an instance of TestContainer.
-     *
-     * @param {string} domainName Domain name
-     * @param {(container: IContainer) => void} [addDefaultServices] Additional default services to register
-     */
+/*export class TestContainer extends Container {
     constructor(public domainName: string, addDefaultServices?: (container: IContainer) => void) {
         super();
         this.setRequestContext(RequestContext.createMock(this));
@@ -350,4 +345,4 @@ export class TestContainer extends Container {
 
         Preloader.instance.runPreloads(this, domain);
     }
-}
+}*/
