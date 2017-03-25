@@ -19,22 +19,12 @@ export class ConsoleMetrics implements IMetrics {
     private log(msg: string) {
     }
 
-    encodeTags(...tags: Array<string>) { }
-
-    increment(metric: string, customTags?: string, delta?: number) {
+    increment(metric: string, customTags?: any, delta?: number) {
         this.log(`METRICS: incr    ${metric + this.tags + customTags} : ${delta||1}`);
     }
 
-    decrement(metric:string, customTags?: string, delta?:number) {
+    decrement(metric:string, customTags?: any, delta?:number) {
         this.log(`METRICS: decr    ${metric + this.tags + customTags} : ${delta||-1}`);
-    }
-
-    counter(metric:string, delta:number, customTags?: string) {
-        this.log(`METRICS: counter ${metric + this.tags + customTags} : ${delta}`);
-    }
-
-    gauge(metric:string, value:number, customTags?: string) {
-        this.log(`METRICS: gauge   ${metric + this.tags + customTags} : ${value}`);
     }
 
     timing(metric:string, duration:number, customTags?: string) {

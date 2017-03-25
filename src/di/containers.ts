@@ -15,13 +15,13 @@ import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { VulcainLogger } from './../configurations/log/vulcainLogger';
 import { System } from './../configurations/globals/system';
 import { ConsoleMetrics } from '../metrics/consoleMetrics';
-import { StatsdMetrics } from '../metrics/statsdMetrics';
 import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizationPolicy';
 import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { MockManager } from "../mocks/mockManager";
 import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
+import { MetricsWrapper } from '../metrics/metricsWrapper';
 
 /**
  * Component container for dependency injection
@@ -56,7 +56,7 @@ export class Container implements IContainer {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
-            this.injectSingleton(System.isDevelopment ? ConsoleMetrics : StatsdMetrics, DefaultServiceNames.Metrics);
+            this.injectSingleton(MetricsWrapper, DefaultServiceNames.Metrics);
             this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);

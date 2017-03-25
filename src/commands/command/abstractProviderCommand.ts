@@ -23,7 +23,7 @@ export abstract class AbstractProviderCommand<T> {
     private providerFactory: ProviderFactory;
 
     protected metrics: IMetrics;
-    private customTags: string;
+    private customTags: any;
 
     /**
      *
@@ -82,7 +82,7 @@ export abstract class AbstractProviderCommand<T> {
         if (!exists) {
             System.manifest.dependencies.databases.push({ address, schema });
         }
-        this.customTags = this.metrics.encodeTags("address=" + address, "schema=" + schema, "tenant=" + (tenant || this.requestContext.tenant));
+        this.customTags = { address: address, schema: schema, tenant: (tenant || this.requestContext.tenant) };
 
         if (emitLog) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);

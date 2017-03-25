@@ -3,9 +3,10 @@ import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 export class MetricsConstant {
     static duration = "_duration";
     static failure = "_failure";
-
+    static total = "_total";
     static allRequestsFailure = "requests_failure";
     static allRequestsDuration = "requests_duration";
+    static allRequestsTotal = "requests_total";
 }
 
 /**
@@ -15,9 +16,6 @@ export class MetricsConstant {
  * @interface IMetrics
  */
 export interface IMetrics {
-
-    encodeTags(...tags: Array<string>);
-
     /**
      * Increment a gauge
      *
@@ -26,7 +24,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    increment(metric: string, customTags?: string, delta?: number);
+    increment(metric: string, customTags?: any, delta?: number);
 
     /**
      * Decrement a gauge
@@ -36,27 +34,7 @@ export interface IMetrics {
      *      *
      * @memberOf IMetrics
      */
-    decrement(metric: string, customTags?: string, delta?: number);
-
-    /**
-     * Add value to a counter
-     *
-     * @param {string} metric metric name
-     * @param {number} [delta] value to add
-     *
-     * @memberOf IMetrics
-     */
-    counter(metric: string, delta: number, customTags?: string);
-
-    /**
-     *
-     *
-     * @param {string} metric metric name
-     * @param {number} [delta] value to add
-     *
-     * @memberOf IMetrics
-     */
-    gauge(metric: string, value: number, customTags?: string);
+    decrement(metric: string, customTags?: any, delta?: number);
 
     /**
      * Set a duration
@@ -66,6 +44,5 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    timing(metric: string, duration: number, customTags?: string);
+    timing(metric: string, duration: number, customTags?: any);
 }
-

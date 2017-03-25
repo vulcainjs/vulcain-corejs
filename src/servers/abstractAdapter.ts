@@ -116,7 +116,10 @@ export abstract class AbstractAdapter {
             hasError = true;
         }
 
-        const duration = ctx.durationInMicroseconds * 1000;
+        const duration = ctx.durationInMicroseconds;
+
+        prefix && this.metrics.increment(prefix + MetricsConstant.total);
+        this.metrics.increment(MetricsConstant.allRequestsTotal);
 
         // Duration
         prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);

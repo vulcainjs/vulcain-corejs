@@ -251,7 +251,7 @@ export class RequestContext {
     */
     get durationInMicroseconds() {
         const hrtime = process.hrtime(this.startTick);
-        const elapsedMicros = Math.floor(hrtime[0] * 1000000 + hrtime[1] / 1000);
+        const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
         return elapsedMicros;
     }
 
@@ -268,7 +268,7 @@ export class RequestContext {
         }
         return n;
     }
-    
+
     startTrace(verb: string, params) {
         this.tracerInfo = this.tracer && this.tracer.startTrace(this, verb, params);
     }

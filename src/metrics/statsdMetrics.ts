@@ -15,44 +15,43 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 export class StatsdMetrics implements IMetrics {
 
     private statsd: Statsd;
-    private tags: string;
+    private tags: any;
     private static EmptyString = "";
 
-    constructor(address?: string) {
+    constructor(private address?: string) {
+    }
+
+    initialize() {
         if (!System.isDevelopment) {
-            let host = DynamicConfiguration.getPropertyValue<string>("statsdAgent") || System.resolveAlias(address) || address;
+            let host = DynamicConfiguration.getPropertyValue<string>("statsdAgent") || System.resolveAlias(this.address) || this.address;
             if (host) {
                 this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
-                this.tags = ",service=" + System.serviceName + ',version=' + System.serviceVersion;
-                this.tags = this.tags.replace(/:/g, '-');
+                this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
                 System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
+                return this;
             }
         }
+        return null;
     }
 
-    encodeTags(...tags: Array<string>) {
-        if (!tags || tags.length === 0)
+    private encodeTags(tags: { [key: string]: string }): any {
+        if (!tags)
             return StatsdMetrics.EmptyString;
-        return "," + tags.map(t => t.replace(/[:|,]/g, '-')).join(',');
+        return ',' + Object.keys(tags).map(key => key + '=' + tags[key].replace(/[:|,]/g, '-')).join(',');
     }
 
-    increment(metric: string, customTags?: string, delta?: number) {
-        this.statsd && this.statsd.increment(metric.toLowerCase() + this.tags + (customTags || StatsdMetrics.EmptyString), delta);
+    increment(metric: string, customTags?: any, delta?: number) {
+        const tags = this.tags + this.encodeTags(customTags);
+        this.statsd && this.statsd.increment(metric.toLowerCase() + tags, delta);
     }
 
-    decrement(metric: string, customTags?: string, delta?: number) {
-        this.statsd && this.statsd.decrement(metric.toLowerCase() + this.tags + (customTags || StatsdMetrics.EmptyString), delta);
+    decrement(metric: string, customTags?: any, delta?: number) {
+        const tags = this.tags + this.encodeTags(customTags);
+        this.statsd && this.statsd.decrement(metric.toLowerCase() + tags, delta);
     }
 
-    counter(metric: string, delta: number, customTags?: string) {
-        this.statsd && this.statsd.counter(metric.toLowerCase() + this.tags + (customTags || StatsdMetrics.EmptyString), delta);
-    }
-
-    gauge(metric: string, value: number, customTags?: string) {
-        this.statsd && this.statsd.gauge(metric.toLowerCase() + this.tags + (customTags || StatsdMetrics.EmptyString), value);
-    }
-
-    timing(metric: string, duration: number, customTags?: string) {
-        this.statsd && this.statsd.timing(metric.toLowerCase() + this.tags + (customTags || StatsdMetrics.EmptyString), duration);
+    timing(metric: string, duration: number, customTags?: any) {
+        const tags = this.tags + this.encodeTags(customTags);
+        this.statsd && this.statsd.timing(metric.toLowerCase() + tags, duration);
     }
 }
