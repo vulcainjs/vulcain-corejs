@@ -8,6 +8,7 @@ import { ConfigurationSourceBuilder } from "../configurationSources/configuratio
 import { ConfigurationSource } from "../configurationSources/configurationSource";
 import * as rx from 'rxjs';
 import { Conventions } from '../../utils/conventions';
+import * as fs from 'fs';
 
 /**
  *
@@ -156,7 +157,18 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         let prop = this._properties.get(name);
         if (!prop) {
             if (!prop) {
+                // Check if proerty exists as environment variable
                 let env = process.env[Conventions.toEnvironmentVariableName(name)];
+                // Otherwise as a docker secret
+                if (env === undefined) {
+                    try {
+                        // Using sync method here is assumed
+                        env = fs.readFileSync('/run/secrets/' + name, { encoding: 'utf8', flag: 'r' });
+                    }
+                    catch (e) {
+                        // ignore error
+                    }
+                }
                 if (env !== undefined) {
                     prop = this._factory.asProperty(env, name, true);
                 }
