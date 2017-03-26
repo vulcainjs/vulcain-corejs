@@ -1,8 +1,8 @@
-import { TestContainer } from '../../dist/di/containers';
 import { expect } from 'chai';
 import { Model, Property, Reference, Validator } from '../../dist/schemas/annotations';
 import { Domain } from '../../dist/schemas/schema';
 import { TestCommand } from './../command/commands';
+import { TestContext } from '../../dist/di/testContext';
 
 
 @Model()
@@ -19,13 +19,13 @@ class AggregateModel {
     simple: SimpleModel;
 }
 
-let container = new TestContainer("Test");
+let context = new TestContext();
 
 describe("Bind data", function () {
 
     it("should create uid", () => {
 
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AggregateModel");
 
         let data = { simple: { test: "test" } };

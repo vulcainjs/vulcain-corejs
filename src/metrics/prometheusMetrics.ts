@@ -15,7 +15,7 @@ export class PrometheusMetrics implements IMetrics {
             return PrometheusMetrics.Empty;
 
         Object.keys(tags)
-            .forEach(key => key + '="' + tags[key].replace(/[:|,\.?&]/g, '-') + '"');
+            .forEach(key => key + '="' + (tags[key] || '').replace(/[:|,\.?&]/g, '-') + '"');
         return tags;
     }
 

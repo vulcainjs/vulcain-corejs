@@ -118,9 +118,6 @@ export abstract class AbstractAdapter {
 
         const duration = ctx.durationInMicroseconds;
 
-        prefix && this.metrics.increment(prefix + MetricsConstant.total);
-        this.metrics.increment(MetricsConstant.allRequestsTotal);
-
         // Duration
         prefix && this.metrics.timing(prefix + MetricsConstant.duration, duration);
         this.metrics.timing(MetricsConstant.allRequestsDuration, duration);

@@ -1,7 +1,7 @@
-import { TestContainer } from './../../dist/di/containers';
 import { expect } from 'chai';
 import { Model, Property, Reference } from '../../dist/schemas/annotations';
 import { Domain } from '../../dist/schemas/schema';
+import { TestContext } from '../../dist/di/testContext';
 
 @Model()
 class SimpleModel {
@@ -17,13 +17,13 @@ class AggregateModel {
     simple: SimpleModel;
 }
 
-let container = new TestContainer("Test");
+let context = new TestContext();
 
 describe("Sensible data", function () {
 
     it("should encrypt sensible properties", () => {
         let model = { normal: "normal", password: "password" };
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
         schema.encrypt(model);
         expect(model.normal).equals("normal");
@@ -32,7 +32,7 @@ describe("Sensible data", function () {
 
     it("should encrypt embedded sensible properties", () => {
         let model = { simple: { normal: "normal", password: "password" } };
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AggregateModel");
         schema.encrypt(model);
         expect(model.simple.normal).equals("normal");
@@ -41,7 +41,7 @@ describe("Sensible data", function () {
 
     it("should decrypt sensible properties", () => {
         let model = { normal: "normal", password: "password" };
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
         schema.encrypt(model);
         schema.decrypt(model);
@@ -51,7 +51,7 @@ describe("Sensible data", function () {
 
     it("should remove sensible properties", () => {
         let model = { normal: "normal", password: "password" };
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
         domain.obfuscate(model, schema);
         expect(model.normal).equals("normal");

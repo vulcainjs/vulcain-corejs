@@ -293,6 +293,11 @@ export class ApplicationBuilder {
         this.app = new Application(domain);
     }
 
+    public useMongo(address?: string) {
+        this.app.container.useMongoProvider(address);
+        return this;
+    }
+
     public enableHystrixStream() {
         this.app.enableHystrixStream = true;
         return this;
@@ -303,7 +308,7 @@ export class ApplicationBuilder {
         return this;
     }
 
-     protected withDefaultService(name: string, service: Function, lifeTime?: LifeTime) {
+     protected useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.app.container.inject(name, service, lifeTime);
         return this;
     }
