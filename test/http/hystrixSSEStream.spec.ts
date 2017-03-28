@@ -4,12 +4,12 @@ import { CommandProperties } from "../../dist/commands/command/commandProperties
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
 import { AbstractCommand } from '../../dist/commands/command/abstractCommand';
 import { Command } from '../../dist/commands/command/commandFactory';
-import { TestContainer } from '../../dist/di/containers';
+import { TestContext } from '../../dist/di/testContext';
 
 @Command()
 export class HystrixSSECommand1 extends AbstractCommand<any> {
     runAsync(args) {
-        this.setMetricsTags("test");
+        this.setMetricsTags({ test: "true" });
         return new Promise((resolve, reject) => {
             setTimeout(function () {
                 resolve(args);
@@ -18,12 +18,12 @@ export class HystrixSSECommand1 extends AbstractCommand<any> {
     }
 }
 
-let container = new TestContainer("Test");
+let context = new TestContext();
 
 describe("HystrixSSEStream", function () {
 
     async function executeCommand(commandKey) {
-        let command = await CommandFactory.getAsync(commandKey, container.scope.requestContext);
+        let command = await CommandFactory.getAsync(commandKey, context.requestContext);
         command.runAsync("success");
     }
 

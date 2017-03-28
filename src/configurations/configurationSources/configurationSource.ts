@@ -1,8 +1,6 @@
 export interface ConfigurationItem {
     key: string;
     value: any;
-    description?:string;
-    ownerTeam?:string;
     lastUpdate?: string;
     encrypted?: boolean;
     deleted?: boolean;

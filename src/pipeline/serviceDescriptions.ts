@@ -26,8 +26,9 @@ export class PropertyDescription {
     required: boolean;
     description: string;
     type: string;
-    reference: "no" | "many" | "one";
+    reference?: "no" | "many" | "one";
     metadata: any;
+    order: number;
 }
 
 export class SchemaDescription {
@@ -200,7 +201,7 @@ export class ServiceDescriptors {
             System.log.info(null, "Handler registered for query verb %s", verb);
             this.routes.set(verb, item);
             item.verb = verb;
-            
+
             if (item.metadata.action.startsWith("_service")) continue;
 
             let metadata = <QueryActionMetadata>item.metadata;
@@ -288,18 +289,22 @@ export class ServiceDescriptors {
         return desc.name;
     }
 
+    private addDescription(desc: SchemaDescription, pdesc: PropertyDescription) {
+        // Insert required at the beginning
+        if (!pdesc.required)
+            desc.properties.push(pdesc);
+        else
+            desc.properties.unshift(pdesc);
+    }
+
     private updateDescription(schemas: Map<string, SchemaDescription>, schema: schDesc, desc: SchemaDescription) {
         for (let k of Object.keys(schema.properties)) {
             const p = schema.properties[k];
             let type = this.getPropertyType(p.items || p.type);
             if (type) {
                 let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description };
-                let pdesc: PropertyDescription = <any>{ name: k, type: p.items ? p.items + "[]" : type.name, required: p.required, description: p.description, metadata };
-                // Insert required at the beginning
-                if (!pdesc.required)
-                    desc.properties.push(pdesc);
-                else
-                    desc.properties.unshift(pdesc);
+                let pdesc: PropertyDescription = { name: k, type: p.items ? p.items + "[]" : type.name, order: p.order || 0, required: p.required, description: p.description, metadata };
+                this.addDescription(desc, pdesc);
             }
         }
         for (let k of Object.keys(schema.references)) {
@@ -314,17 +319,14 @@ export class ServiceDescriptors {
                 type: r.cardinality === "many" ? r.item + "[]" : r.item,
                 required: r.required,
                 description: r.description,
-                metadata
+                metadata,
+                order: r.order
             };
 
             if (r.item !== "any")
                 desc.dependencies.add(r.item);
 
-            // Insert required at the beginning
-            if (!pdesc.required)
-                desc.properties.push(pdesc);
-            else
-                desc.properties.unshift(pdesc);
+            this.addDescription(desc, pdesc);
         }
     }
 

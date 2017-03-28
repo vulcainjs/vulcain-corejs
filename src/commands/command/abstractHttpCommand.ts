@@ -10,7 +10,7 @@ import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 
 
 export abstract class AbstractHttpCommand {
-    protected customTags: string;
+    protected customTags: any;
     protected metrics: IMetrics;
     public requestContext: RequestContext;
     private static METRICS_NAME = "external_call";
@@ -44,7 +44,7 @@ export abstract class AbstractHttpCommand {
         if (!exists) {
             System.manifest.dependencies.externals.push({ uri });
         }
-        this.customTags = this.metrics.encodeTags("uri=" + uri);
+        this.customTags = { uri: uri };
 
         if (emitLog) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);

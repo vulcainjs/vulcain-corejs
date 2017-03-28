@@ -31,7 +31,7 @@ export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
     private overrideTenant: string;
     protected metrics: IMetrics;
-    private customTags: string;
+    private customTags: any;
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
@@ -89,7 +89,7 @@ export abstract class AbstractServiceCommand {
         if (!exists) {
             System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
         }
-        this.customTags = this.metrics.encodeTags("targetServiceName=" + targetServiceName, "targetServiceVersion=" + targetServiceVersion);
+        this.customTags = { targetServiceName: targetServiceName, targetServiceVersion: targetServiceVersion };
 
         if (emitLog) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);

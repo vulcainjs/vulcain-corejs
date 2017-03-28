@@ -1,9 +1,9 @@
-import {TestContainer} from "../../dist/di/containers";
 import {expect} from "chai";
 import {Model, Property, Reference, Validator} from "../../dist/schemas/annotations";
 import {Domain} from "../../dist/schemas/schema";
 import 'mocha';
 import { SchemaStandardTypes } from "../../dist/schemas/standards";
+import { TestContext } from '../../dist/di/testContext';
 
 @Model()
 class BaseModel {
@@ -54,12 +54,12 @@ class DateIsoModel {
 }
 
 
-let container = new TestContainer("Test");
+let context = new TestContext();
 
 describe("Validate data", function () {
 
     it("should validate base class", async() => {
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
 
         let model: SimpleModel = {text: "text", number: 1, baseText: ""};
@@ -69,7 +69,7 @@ describe("Validate data", function () {
     });
 
     it("should validate call validator", async() => {
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
 
         let model: SimpleModel = {text: "text", number: 1, baseText: "a"};
@@ -79,7 +79,7 @@ describe("Validate data", function () {
     });
 
     it("should validate malformed number", async() => {
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
 
         let model = schema.bind({text: "text", number: "1w1", baseText: "text"});
@@ -90,7 +90,7 @@ describe("Validate data", function () {
 
     it("should validate valid values", async() => {
         let model: SimpleModel = {text: "text", number: 1, baseText: "text"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
         let errors = await schema.validateAsync(null, model);
 
@@ -101,7 +101,7 @@ describe("Validate data", function () {
         let model: any = { text: "text", number: "1M", baseText: "text" };
         let refs = { simple: model };
 
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
         let errors = await schema.validateAsync(null, refs);
 
@@ -112,7 +112,7 @@ describe("Validate data", function () {
         let model: any = { text: "text", number: "1M", baseText: "text" };
         let refs = { simple: model, multiples: model };
 
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
         let errors = await schema.validateAsync(null, refs);
 
@@ -123,7 +123,7 @@ describe("Validate data", function () {
         let model: any = { text: "text", number: "1M", baseText: "text" };
         let refs = { simple: model, multiples: [model, model] };
 
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
         let errors = await schema.validateAsync(null, refs);
 
@@ -133,7 +133,7 @@ describe("Validate data", function () {
     it("should validate required reference", async() => {
         let refs = { };
 
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
         let errors = await schema.validateAsync(null, refs);
 
@@ -145,7 +145,7 @@ describe("Validate data", function () {
     it('should validate email value', async() => {
 
         let model: EmailModel = {email: "first.name@email.com"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("EmailModel");
         let errors = await schema.validateAsync(null, model);
 
@@ -154,7 +154,7 @@ describe("Validate data", function () {
     it('should validate malformed email value', async() => {
 
         let model: EmailModel = {email: "first.name@email"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("EmailModel");
         let errors = await schema.validateAsync(null, model);
 
@@ -167,7 +167,7 @@ describe("Validate data", function () {
     it('should validate url value', async() => {
 
         let model: UrlModel = {url: "https://myWebsite.com/#ancre/1"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("UrlModel");
         let errors = await schema.validateAsync(null, model);
 
@@ -176,7 +176,7 @@ describe("Validate data", function () {
     it('should validate malformed url value', async() => {
 
         let model: UrlModel = {url: "http://site.r"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("UrlModel");
         let errors = await schema.validateAsync(null, model);
 
@@ -188,7 +188,7 @@ describe("Validate data", function () {
     it('should validate alphanumeric value', async() => {
 
         let model: AlphanumericModel = {value: "abcde1345fghik6789"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AlphanumericModel");
         let errors = await schema.validateAsync(undefined, model);
 
@@ -197,7 +197,7 @@ describe("Validate data", function () {
     it('should validate malformed alphanumeric value', async() => {
 
         let model: AlphanumericModel = {value: "abc123!"};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AlphanumericModel");
         let errors = await schema.validateAsync(undefined, model);
 
@@ -209,7 +209,7 @@ describe("Validate data", function () {
     it('should validate date ISO8601', async() => {
 
         let model: DateIsoModel = {date: new Date().toISOString()};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("DateIsoModel");
         let errors = await schema.validateAsync(undefined, model);
 
@@ -220,7 +220,7 @@ describe("Validate data", function () {
     it('should validate malformed date ISO8601', async() => {
 
         let model: DateIsoModel = {date: new Date().toDateString()};
-        let domain = container.get<Domain>("Domain");
+        let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("DateIsoModel");
         let errors = await schema.validateAsync(undefined, model);
 

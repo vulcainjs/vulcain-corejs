@@ -19,7 +19,7 @@ export interface IActionMetadata {
 export abstract class AbstractHandler implements IScopedComponent {
    private _requestContext: RequestContext;
 
-    constructor( @Inject("Container") protected container: IContainer) {
+    constructor( @Inject("Container") public container: IContainer) {
     }
 
     get requestContext(): RequestContext {

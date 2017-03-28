@@ -22,7 +22,6 @@ import { ServiceDescriptors } from './pipeline/serviceDescriptions';
 import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
 import { ApiKeyService } from './defaults/services/apiKeyService';
-import { ExpressAuthentication } from './servers/express/expressAuthentication';
 import { LifeTime } from "./di/annotations";
 
 /**
@@ -119,13 +118,10 @@ export class Application {
         const test = System.isDevelopment;
 
         this._container = container || new Container();
-        this._container.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         this._container.injectInstance(this, DefaultServiceNames.Application);
 
-        this._container.injectSingleton(ExpressAuthentication, DefaultServiceNames.Authentication);
-
         this._domain = new Domain(domainName, this._container);
-        this._container.injectInstance(this.domain, DefaultServiceNames.Domain);
+        this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
     }
 
     private startHystrixStream() {
@@ -297,6 +293,11 @@ export class ApplicationBuilder {
         this.app = new Application(domain);
     }
 
+    public useMongo(address?: string) {
+        this.app.container.useMongoProvider(address);
+        return this;
+    }
+
     public enableHystrixStream() {
         this.app.enableHystrixStream = true;
         return this;
@@ -307,7 +308,7 @@ export class ApplicationBuilder {
         return this;
     }
 
-     protected withDefaultService(name: string, service: Function, lifeTime?: LifeTime) {
+     protected useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.app.container.inject(name, service, lifeTime);
         return this;
     }

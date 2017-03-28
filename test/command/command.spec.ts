@@ -7,13 +7,13 @@ import * as sinon from 'sinon';
 import './commands';
 import { CommandRuntimeError } from '../../dist/errors/commandRuntimeError';
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
-import { TestContainer } from '../../dist/di/containers';
+import { TestContext } from '../../dist/di/testContext';
 
-let container = new TestContainer("Test");
+let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = await CommandFactory.getAsync("TestCommand", container.scope.requestContext);
+        let command = await CommandFactory.getAsync("TestCommand", context.requestContext);
         expect(command).not.to.be.undefined;
 
         let result = await command.runAsync<string>("success");
@@ -24,7 +24,7 @@ describe("Command", function () {
     });
 
     it("should timeout if the function does not resolve within the configured timeout", async () => {
-        let command = await CommandFactory.getAsync("TestCommandTimeout", container.scope.requestContext);
+        let command = await CommandFactory.getAsync("TestCommandTimeout", context.requestContext);
 
         expect(command).not.to.be.undefined;
         try {
@@ -41,7 +41,7 @@ describe("Command", function () {
     });
 
     it("should resolve with fallback if the run function fails", async () => {
-        let command = await CommandFactory.getAsync("TestCommandFallback", container.scope.requestContext);
+        let command = await CommandFactory.getAsync("TestCommandFallback", context.requestContext);
 
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
@@ -51,7 +51,7 @@ describe("Command", function () {
     });
 
     it("should not execute the run command, if the circuit is open", async () => {
-        let command = await CommandFactory.getAsync("TestCommandCircuitOpen", container.scope.requestContext);
+        let command = await CommandFactory.getAsync("TestCommandCircuitOpen", context.requestContext);
         let spy = sinon.spy((<any>command).command, "runAsync");
 
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");

@@ -27,10 +27,10 @@ export class ConfigurationSourceBuilder {
             else {
                 let uri = `http://${System.vulcainServer}/api/config.forservice`;
                 let options = {
-                    cluster: System.environment,
+                    environment: System.environment,
                     service: System.serviceName,
                     version: System.serviceVersion,
-                    namespace: System.domainName
+                    domain: System.domainName
                 };
                 this.addSource(new VulcainConfigurationSource(uri, options));
             }

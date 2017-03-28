@@ -10,6 +10,8 @@ import { System } from './../../configurations/globals/system';
 import { ITenantPolicy } from './../policy/defaultTenantPolicy';
 import { IHttpResponse } from '../../commands/command/types';
 import { ExpressAuthentication } from './expressAuthentication';
+import * as Prometheus from 'prom-client';
+
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const cors = require("cors");
@@ -24,6 +26,7 @@ export class ExpressAdapter extends AbstractAdapter {
         const self = this;
         this.express = express();
 
+        // Request middleware
         this.express.use(function (req, res, next) {
             const regex = /^\/api[\/?#]/;
             if (regex.test(req.originalUrl) || req.originalUrl === "/api") {
@@ -37,7 +40,8 @@ export class ExpressAdapter extends AbstractAdapter {
         this.express.use(cors());
         this.express.use(bodyParser.urlencoded({ extended: true }));
         this.express.use(bodyParser.json());
-        let auth = this.container.get<any>(DefaultServiceNames.Authentication, true);
+
+        let auth = this.container.get<any>(DefaultServiceNames.Authentication, true) || new ExpressAuthentication();
         this.auth = auth && auth.init();
     }
 
@@ -89,6 +93,11 @@ export class ExpressAdapter extends AbstractAdapter {
 
         this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
+        });
+
+        // Prometheus
+        this.express.get('/metrics', (req: express.Request, res: express.Response) => {
+            res.end(Prometheus.register.metrics());
         });
 
         this.express.get(Conventions.instance.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {

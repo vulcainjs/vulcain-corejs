@@ -31,7 +31,7 @@ export interface ICommand {
 export abstract class AbstractCommand<T> implements IInjectionNotification {
 
     protected metrics: IMetrics;
-    protected customTags: string;
+    protected customTags: any;
     private static METRICS_NAME = "custom_command";
 
     /**
@@ -64,8 +64,8 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
         this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
-    protected setMetricsTags(...args: Array<string>) {
-        this.customTags = this.metrics.encodeTags(...args);
+    protected setMetricsTags(args: { [key: string] : string }) {
+        this.customTags = args;
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);

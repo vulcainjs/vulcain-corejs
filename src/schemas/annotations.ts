@@ -110,6 +110,10 @@ export interface PropertyOptions {
      * @memberOf PropertyOptions
      */
     sensible?: boolean;
+    /**
+     * Property sequence order
+     */
+    order?: number;
 }
 
 /**
@@ -141,7 +145,11 @@ export function Property(info: PropertyOptions, customOptions?:any) {
         let data: ModelPropertyOptions = info;
         data.custom = customOptions;
         if (!data.type) {
-            throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
+            let t = Reflect.getOwnMetadata('design:type', target, key);
+            data.type = t && t.name;
+            if (!data.type) {
+                throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
+            }
         }
         properties[key] = data;
         Reflect.defineMetadata(symProperties, properties, target);
@@ -167,6 +175,7 @@ export interface ReferenceOptions {
     validate?: (val, ctx?: RequestContext) => string;
     validators?: Array<any>;
     type?: string;
+    order?: number;
 }
 
 export function Reference(info: ReferenceOptions) {
