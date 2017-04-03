@@ -32,7 +32,7 @@
 			"smartStep": false,
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "preLaunchTask": "compile-test",
+            "preLaunchTask": "test",
             "args": ["${workspaceRoot}/dist-test/**/*.js"],
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,

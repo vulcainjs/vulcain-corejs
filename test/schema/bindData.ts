@@ -21,7 +21,7 @@ class AggregateModel {
 
 @Model()
 class ModelWithDefaultValues {
-    @Property({ type: "string", required: true })
+    @Property({ type: 'string', required: true })
     value1 = "value1";
 }
 
