@@ -22,7 +22,7 @@ import { MockManager } from "../mocks/mockManager";
 import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
 import { MetricsWrapper } from '../metrics/metricsWrapper';
-import { SwaggerServiceDescriptor } from '../pipeline/swaggerServiceDescriptions';
+import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 
 /**
  * Component container for dependency injection
@@ -55,7 +55,7 @@ export class Container implements IContainer {
 
         if (!parent) {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
-            this.injectSingleton(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
+            this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
             this.injectSingleton(MetricsWrapper, DefaultServiceNames.Metrics);

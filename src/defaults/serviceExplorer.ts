@@ -6,11 +6,10 @@ import { Query } from '../pipeline/annotations';
 import { QueryHandler } from '../pipeline/annotations.handlers';
 import { ForbiddenRequestError } from '../errors/applicationRequestError';
 import { RequestContext } from '../servers/requestContext';
-import { SwaggerServiceDescriptor } from '../pipeline/swaggerServiceDescriptions';
-import { SwaggerApiDefinition } from '../pipeline/swaggerApiDefinition';
+import { SwaggerServiceDescriptor } from './swagger/swaggerServiceDescriptions';
+import { SwaggerApiDefinition } from './swagger/swaggerApiDefinition';
 import { HttpResponse } from '../pipeline/response';
 import { Model, Property } from '../schemas/annotations';
-
 
 
 @Model()
@@ -23,7 +22,6 @@ export class ServiceExplorerParameter {
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class ServiceExplorer {
-
 
     constructor( @Inject(DefaultServiceNames.Domain) private domain: Domain,
         @Inject(DefaultServiceNames.Container) private container: IContainer) {

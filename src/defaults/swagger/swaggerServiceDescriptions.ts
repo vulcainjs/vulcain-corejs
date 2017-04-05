@@ -1,28 +1,35 @@
-import { Inject, DefaultServiceNames } from '../di/annotations';
-import { IContainer } from '../di/resolvers';
-import { Domain } from '../schemas/schema';
-import { Model } from '../schemas/annotations';
-import { ServiceDescriptors, ServiceDescription, SchemaDescription, PropertyDescription, ActionDescription } from './serviceDescriptions';
+import { Inject, DefaultServiceNames } from '../../di/annotations';
+import { IContainer } from '../../di/resolvers';
+import { Domain } from '../../schemas/schema';
+import { Model } from '../../schemas/annotations';
+import { ServiceDescriptors, ServiceDescription, SchemaDescription, PropertyDescription, ActionDescription } from '../../pipeline/serviceDescriptions';
 import { DefinitionsObject, SwaggerApiDefinition, TagObject, PathsObject, PathItemObject, OperationObject, Parameters, ParameterObject } from './swaggerApiDefinition';
+import { IScopedComponent } from '../../di/annotations';
+import { RequestContext } from '../../servers/requestContext';
 
 
-export class SwaggerServiceDescriptor {
+export class SwaggerServiceDescriptor implements IScopedComponent {
+    requestContext: RequestContext;
 
     private static defaultDefinitionType: string = "object";
-    private descriptions: SwaggerApiDefinition;
 
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
     }
 
     async getDescriptionsAsync(serviceDescription: ServiceDescription) {
-        this.descriptions = this.initialize();
-        this.descriptions.info.version = serviceDescription.serviceVersion;
-        this.descriptions.info.title = serviceDescription.serviceName;
-        this.descriptions.tags = this.computeTags(serviceDescription.services);
-        this.descriptions.paths = this.computePaths(serviceDescription.services);
-        this.descriptions.definitions = this.computeDefinitions(serviceDescription.schemas);
+        let descriptions = this.initialize();
 
-        return this.descriptions;
+        descriptions.info.version = serviceDescription.serviceVersion;
+        descriptions.info.title = serviceDescription.serviceName;
+        descriptions.tags = this.computeTags(serviceDescription.services);
+        descriptions.paths = this.computePaths(serviceDescription.services);
+        descriptions.definitions = this.computeDefinitions(serviceDescription.schemas);
+        descriptions.host = this.requestContext.hostName;
+        descriptions.basePath = '/api';
+
+        descriptions.definitions['_BadRequestError'] = this.createResponseDefinition({ error: { message: { type: 'string' } } });
+
+        return descriptions;
     }
 
     private initialize(): SwaggerApiDefinition {
@@ -90,6 +97,7 @@ export class SwaggerServiceDescriptor {
             operationObject.produces = ['application/json'];
             operationObject.parameters = this.computeParameters(service);
 
+            this.computeResponses(service, operationObject);
 
             if (service.kind === 'action') {
                 paths['/' + service.verb] = {
@@ -105,6 +113,45 @@ export class SwaggerServiceDescriptor {
         return paths;
     }
 
+    createResponseDefinition(payload: any): any {
+        let res = {
+            type: 'object',
+            properties: {
+                tenant: {type: 'string'},
+                correlationId: {type: 'string'},
+                source: {type: 'string'}
+            }
+        };
+        res.properties = Object.assign(res.properties, payload);
+        return res;
+    }
+
+
+    private computeResponses(service: ActionDescription, operationObject: OperationObject) {
+
+        operationObject.responses = {};
+
+        operationObject.responses['400'] = { description: 'Invalid input', schema: { $ref: '#/definitions/_BadRequestError' } };
+
+        if (service.scope !== '?') {
+            operationObject.responses['401'] = { description: 'Not authentified' };
+            operationObject.responses['403'] = { description: 'Not authorized' };
+        }
+
+        operationObject.responses['500'] = { description: 'Handler exception', schema: { $ref: '#/definitions/_BadRequestError' } };
+
+        if (service.async) {
+            operationObject.responses['200'] = { description: 'Processing task', schema: { $ref: '#/definitions/_BadRequestError' } };
+        }
+        else {
+            operationObject.responses['200'] = { description: 'Successful operation', schema: this.createResponseDefinition({ value: {}}) };
+
+            if (service.outputSchema) {
+                this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema);
+            }
+        }
+    }
+
     /**
      * Format the json parameters object for swagger
      *  See the documentation here: http://swagger.io/specification/#parameterObject
@@ -112,24 +159,23 @@ export class SwaggerServiceDescriptor {
      */
     private computeParameters(service: ActionDescription): Parameters {
         let parameters: ParameterObject = {};
-
-        parameters.name = service.action;
-
-        if (service.kind === 'action') {
-            parameters['in'] = 'body';
-        } else {
-            parameters['in'] = 'query';
+        if (service.kind === 'get') {
+            parameters.name = 'id';
+            parameters.in = 'query';
+            parameters['type'] = 'string';
+            parameters.required = true;
         }
-        if (service.inputSchema) {
-            if (this.isFundamentalObject(service.inputSchema)) {
-                parameters['type'] = service.inputSchema;
+        else if (service.inputSchema) {
+            parameters.name = 'args';
+            if (service.kind === 'action') {
+                parameters['in'] = 'body';
+                this.setReferenceDefinition(parameters, service.inputSchema);
             } else {
-                parameters['schema'] = {
-                    '$ref': this.getReferenceDefinition(service.inputSchema)
-                };
+                parameters['in'] = 'query';
+                parameters.required = true;
+                parameters['type'] = 'string'; // TODO destructure schema
             }
         }
-
 
         return [<Parameters>parameters];
     }
@@ -155,7 +201,7 @@ export class SwaggerServiceDescriptor {
                 };
 
                 if (property.reference === 'one' || property.reference === 'many') {
-                    jsonSchema.properties[property.name].$ref = this.getReferenceDefinition(property.type);
+                    this.setReferenceDefinition(jsonSchema.properties[property.name], property.type);
                 }
 
                 if (property.description) {
@@ -177,8 +223,14 @@ export class SwaggerServiceDescriptor {
     }
 
 
-    private getReferenceDefinition(definitionName) {
-        return `#/definitions/${definitionName}`;
+    private setReferenceDefinition(desc, definitionName) {
+        if (this.isFundamentalObject(definitionName)) {
+            desc['type'] = definitionName;
+        } else {
+            desc['schema'] = {
+                '$ref': `#/definitions/${definitionName}`
+            };
+        }
     }
 
     private isFundamentalObject(inputSchema: string) {

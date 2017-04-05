@@ -1,4 +1,4 @@
-import { Model } from '../schemas/annotations';
+import { Model } from '../../schemas/annotations';
 //copied from swaggerize-express typed definitions
 //and amended with customizations
 
