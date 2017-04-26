@@ -37,12 +37,12 @@ export class Preloader {
         this.register(Handlers, key, callback);
     }
 
-    private register(key: string, name: string, fn) {
+    private register(key: string, name: string, callback) {
         let list = this._preloads[key];
         if (!list) {
             this._preloads[key] = list = [];
         }
-        list.push({ name, callback: fn });
+        list.push({ name, callback: callback });
     }
 
     private run(key: string, container, domain) {

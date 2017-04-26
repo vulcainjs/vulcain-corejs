@@ -24,6 +24,7 @@ export interface SchemaDescription {
     validate?: (val, ctx: RequestContext) => string;
     storageName?: string;
     idProperty?: string;
+    schemaType: () => void;
 }
 
 /**
@@ -128,7 +129,7 @@ export class Schema {
      *
      * @memberOf Schema
      */
-    deepAssign( target, source, schema?: SchemaDescription) {
+    deepAssign(target, source, schema?: SchemaDescription) {
         if (!source) {
             return target;
         }
@@ -150,7 +151,7 @@ export class Schema {
                     if (elemSchema) {
                         if (Array.isArray(val)) {
                             target[key] = [];
-                            val.forEach(v => target[key].push(this.deepAssign( {}, v, elemSchema)));
+                            val.forEach(v => target[key].push(this.deepAssign({}, v, elemSchema)));
                         }
                         else {
                             target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
@@ -213,13 +214,13 @@ export class Domain {
 
             // Overriding schema
             let overrideOperator = schema.extends[0];
-            if ( overrideOperator === '+' || overrideOperator === '-') {
+            if (overrideOperator === '+' || overrideOperator === '-') {
                 let baseName = schema.extends.substr(1);
                 let base = this._schemaDescriptions.get(baseName);
                 if (!base) {
                     throw new Error(`Invalid model overriding with model ${schemaName}. ${baseName} doesn't exist`);
                 }
-                if ( baseName !== schemaName ) {
+                if (baseName !== schemaName) {
                     throw new Error(`Invalid model overriding with model ${schemaName} extends options must be equal to '+${baseName}'`);
                 }
                 // Rename old
@@ -244,7 +245,7 @@ export class Domain {
      * @param {string} schema name
      * @returns a schema
      */
-    getSchema(name: string | Function, optional=false) {
+    getSchema(name: string | Function, optional = false) {
         if (typeof name === "string") {
             try {
                 return new Schema(this, name);
@@ -361,10 +362,11 @@ export class Domain {
             return schema.bind(origin);
         }
 
-        obj = obj || origin;
-        if (typeof obj !== "object") {
-            return obj;
+        if (typeof origin !== "object") {
+            return origin;
         }
+        obj = obj || new schema.schemaType(); //origin;
+
         (<any>obj).__schema = (<any>obj).__schema || schema.name;
 
         // Convert properties
@@ -377,9 +379,6 @@ export class Domain {
 
                     if (val !== undefined) {
                         obj[ps] = val;
-                    }
-                    else if (prop.defaultValue !== undefined) {
-                        obj[ps] = prop.defaultValue;
                     }
                 }
                 catch (e) {

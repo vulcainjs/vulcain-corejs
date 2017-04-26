@@ -302,8 +302,14 @@ export class ServiceDescriptors {
             const p = schema.properties[k];
             let type = this.getPropertyType(p.items || p.type);
             if (type) {
-                let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description };
-                let pdesc: PropertyDescription = { name: k, type: p.items ? p.items + "[]" : type.name, order: p.order || 0, required: p.required, description: p.description, metadata };
+                let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description, isKey: p.isKey };
+                let pdesc: PropertyDescription = {
+                    name: k,
+                    type: p.items ? p.items + "[]" : type.name, order: p.order || 0,
+                    required: p.required,
+                    description: p.description,
+                    metadata
+                };
                 this.addDescription(desc, pdesc);
             }
         }

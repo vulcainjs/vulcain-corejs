@@ -2,6 +2,7 @@ import { Preloader } from '../preloader';
 import { IContainer } from '../di/resolvers';
 import 'reflect-metadata';
 import { RequestContext } from '../servers/requestContext';
+import { Domain } from './schema';
 
 export interface ModelOptions {
     name?: string;
@@ -19,7 +20,7 @@ export function Model(options?: ModelOptions) {
         options.name = options.name || target.name;
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
-        Preloader.instance.registerModel(target, (container, domain) => domain.addSchemaDescription(target, options.name));
+        Preloader.instance.registerModel(target, (container, domain: Domain) => domain.addSchemaDescription(target, options.name));
     };
 }
 
@@ -36,7 +37,7 @@ export interface PropertyOptions {
      * @type {string} - a valid base type
      * @memberOf PropertyOptions
      */
-    type: string;
+    type?: string;
     /**
      * List of values for 'enum' type
      *
@@ -113,12 +114,6 @@ export interface PropertyOptions {
      * Property sequence order
      */
     order?: number;
-    /**
-     * Default value
-     *
-     * @memberOf PropertyOptions
-     */
-    defaultValue?;
 }
 
 /**
@@ -143,16 +138,16 @@ export interface ModelPropertyOptions extends PropertyOptions {
     custom?: any;
 }
 
-export function Property(info: PropertyOptions, customOptions?:any) {
+export function Property(info?: PropertyOptions, customOptions?:any) {
     return (target, key) => {
         const symProperties = Symbol.for("design:properties");
         let properties = Reflect.getOwnMetadata(symProperties, target) || {};
-        let data: ModelPropertyOptions = info;
+        let data: ModelPropertyOptions = info || <any>{};
         data.custom = customOptions;
         if (!data.type) {
             let t = Reflect.getOwnMetadata('design:type', target, key);
             data.type = t && t.name;
-            if (!data.type) {
+            if (!data.type || ['string','number','boolean'].indexOf(data.type) < 0) {
                 throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
             }
         }

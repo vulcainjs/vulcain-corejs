@@ -33,7 +33,7 @@ describe("Default action handler", function () {
         let entity = { firstName: "elvis", lastName: "Presley" };
         await actionHandler.createAsync(entity);
 
-        let query = context.createHandler<TestQueryHandler>(TestQueryHandler);
+        let query = context.getService<TestQueryHandler>("TestQueryService");
         entity = await query.getAsync("Presley");
         expect(entity).to.be.not.null;
     });

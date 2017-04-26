@@ -29,6 +29,10 @@ export class TestContext {
         return this;
     }
 
+    getService<T>(name: string) {
+        return this.requestContext.container.get<T>(name);
+    }
+
     get requestContext() {
         let ctx = new RequestContext(this._container, Pipeline.Test);
         ctx.user = this.user || RequestContext.TestUser;
