@@ -42,7 +42,7 @@ export abstract class AbstractHandler implements IScopedComponent {
      * @param commandName
      */
     createCommandAsync<T extends ICommand>(commandName: string) {
-        return <T><any>this.requestContext.getCommandAsync(commandName, this.metadata.schema);
+        return <T><any>this.requestContext.getCommandAsync(commandName, this.metadata && this.metadata.schema);
     }
 }
 

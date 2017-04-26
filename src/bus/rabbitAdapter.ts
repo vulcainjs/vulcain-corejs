@@ -17,7 +17,6 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
         if (!address.startsWith("amqp://"))
             this.address = "amqp://" + address;
-        this.address += "/" + System.environment;
     }
 
     startAsync() {
