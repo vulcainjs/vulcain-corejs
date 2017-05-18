@@ -72,7 +72,7 @@ export class TokenService implements ITokenService {
     verifyTokenAsync(p: VerifyTokenParameter): Promise<any> {
         return new Promise(async (resolve, reject) => {
             if (!p.token) {
-                reject("You must provided a valid token");
+                reject("You must provide a valid token");
                 return;
             }
             let options: any = { "issuer": this.issuer.value };

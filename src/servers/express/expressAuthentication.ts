@@ -15,13 +15,19 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
 
     private async bearerAuthentication(ctx: RequestContext, accessToken: string) {
         try {
-            let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
+            // HACK
+            // let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
+            let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.StsTokenService);
             let token = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
 
             // No token found
             if (!token) {
                 System.log.info(ctx, "Bearer authentication: Invalid jwtToken : " + accessToken);
                 return null;
+            }
+
+            if(!token.user) {
+                token.user = {};
             }
 
             token.user.tenant = token.user.tenant || token.tenantId;

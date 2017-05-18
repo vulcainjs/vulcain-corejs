@@ -70,6 +70,7 @@ export class Conventions {
     VULCAIN_SECRET_KEY = "vulcainSecretKey";
     TOKEN_ISSUER = "vulcainTokenIssuer";
     TOKEN_EXPIRATION = "vulcainTokenExpiration";
+    TOKEN_STS_AUTHORITY = "vulcainStsAuthority";
 
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
     ENV_VULCAIN_ENV = "VULCAIN_ENV";            // staging, prod, test...
