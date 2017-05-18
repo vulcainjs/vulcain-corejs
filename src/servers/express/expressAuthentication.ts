@@ -15,9 +15,7 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
 
     private async bearerAuthentication(ctx: RequestContext, accessToken: string) {
         try {
-            // HACK
-            // let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
-            let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.StsTokenService);
+            let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
             let token = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
 
             // No token found

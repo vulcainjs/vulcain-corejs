@@ -11,7 +11,6 @@ import { RequestContext } from '../servers/requestContext';
  */
 export class DefaultServiceNames {
     static TokenService = "TokenService";
-    static StsTokenService = "StsTokenService";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";
 

@@ -11,7 +11,6 @@ const jwks = require('jwks-rsa');
 const ms = require('ms');
 const unirest = require('unirest');
 
-@Injectable(LifeTime.Singleton, DefaultServiceNames.StsTokenService)
 @ConfigurationProperty(Conventions.instance.TOKEN_STS_AUTHORITY, "string")
 export class StsTokenService implements ITokenService {
 
