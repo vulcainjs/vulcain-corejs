@@ -99,15 +99,9 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
             this.computeResponses(service, operationObject);
 
-            if (service.kind === 'action') {
-                paths['/' + service.verb] = {
-                    post: operationObject
-                };
-            } else {
-                paths['/' + service.verb] = {
-                    get: operationObject
-                };
-            }
+            paths[`/${service.verb}`] = {
+                [service.kind === 'action' ? 'post' : 'get']: operationObject
+            };
         });
 
         return paths;
