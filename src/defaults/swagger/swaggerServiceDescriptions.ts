@@ -233,7 +233,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 desc['$ref'] = `#/definitions/${definitionName}`;
             }
         } else {
-            console.log('Michel', propertyReference, definitionName);
+            // is a 'many' outputType
             desc['type'] = 'array';
             desc['items'] = {
                 '$ref': `#/definitions/${definitionName}`
