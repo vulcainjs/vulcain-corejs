@@ -42,7 +42,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             schemes: [
                 'http'
             ],
-            paths: { },
+            paths: {},
             definitions: {}
         };
     }
@@ -70,7 +70,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         tags = <TagObject[]>allTags.map((tag) => {
             return {
-                name : tag,
+                name: tag,
                 description: ''
             };
         });
@@ -90,7 +90,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             let operationObject: OperationObject = {};
 
             //TODO : put this split hack into method
-            operationObject.tags = [ service.verb.split('.')[0]];
+            operationObject.tags = [service.verb.split('.')[0]];
             operationObject.summary = service.description;
             operationObject.description = service.description;
             operationObject.consumes = ['application/json'];
@@ -99,15 +99,9 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
             this.computeResponses(service, operationObject);
 
-            if (service.kind === 'action') {
-                paths['/' + service.verb] = {
-                    post : operationObject
-                };
-            } else {
-                paths['/' + service.verb] = {
-                    get : operationObject
-                };
-            }
+            paths[`/${service.verb}`] = {
+                [service.kind === 'action' ? 'post' : 'get']: operationObject
+            };
         });
 
         return paths;
@@ -117,9 +111,9 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         let res = {
             type: 'object',
             properties: {
-                tenant: {type: 'string'},
-                correlationId: {type: 'string'},
-                source: {type: 'string'}
+                tenant: { type: 'string' },
+                correlationId: { type: 'string' },
+                source: { type: 'string' }
             }
         };
         res.properties = Object.assign(res.properties, payload);
@@ -144,10 +138,10 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             operationObject.responses['200'] = { description: 'Processing task', schema: { $ref: '#/definitions/_BadRequestError' } };
         }
         else {
-            operationObject.responses['200'] = { description: 'Successful operation', schema: this.createResponseDefinition({ value: {}}) };
+            operationObject.responses['200'] = { description: 'Successful operation', schema: this.createResponseDefinition({ value: {} }) };
 
             if (service.outputSchema) {
-                this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema);
+                this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema, service.outputType);
             }
         }
     }
@@ -192,7 +186,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         schemas.forEach((schema: SchemaDescription) => {
 
             let jsonSchema = {
-                properties : {}
+                properties: {}
             };
 
             schema.properties.forEach((property: PropertyDescription) => {
@@ -201,7 +195,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 };
 
                 if (property.reference === 'one' || property.reference === 'many') {
-                    this.setReferenceDefinition(jsonSchema.properties[property.name], property.type);
+                    this.setReferenceDefinition(jsonSchema.properties[property.name], property.type, property.reference);
                 }
 
                 if (property.description) {
@@ -216,21 +210,31 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
             currentDef[schema.name] = {
                 type: SwaggerServiceDescriptor.defaultDefinitionType,
-                properties : jsonSchema.properties
+                properties: jsonSchema.properties
             };
         });
         return currentDef;
     }
 
 
-    private setReferenceDefinition(desc, definitionName) {
-        if (this.isFundamentalObject(definitionName)) {
-            desc['type'] = definitionName;
+    private setReferenceDefinition(desc, definitionName, propertyReference = 'one') {
+
+        if (propertyReference === 'one') {
+            if (this.isFundamentalObject(definitionName)) {
+                desc['type'] = definitionName;
+            } else {
+                desc['type'] = 'object';
+                desc['$ref'] = `#/definitions/${definitionName}`;
+            }
         } else {
-            desc['schema'] = {
+            // is a 'many' outputType
+            desc['type'] = 'array';
+            desc['items'] = {
                 '$ref': `#/definitions/${definitionName}`
             };
+
         }
+
     }
 
     private isFundamentalObject(inputSchema: string) {
