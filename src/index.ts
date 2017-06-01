@@ -43,7 +43,7 @@ export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
 
 export { AbstractAdapter, IHttpAdapterRequest } from './servers/abstractAdapter';
-export { RequestContext, Pipeline, UserContext } from './servers/requestContext'
+export { RequestContext, Pipeline, UserContext, Logger } from './servers/requestContext'
 export { ExpressAdapter } from './servers/express/expressAdapter';
 export { DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand } from './defaults/crudHandlers';
 
