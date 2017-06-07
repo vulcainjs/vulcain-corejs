@@ -23,6 +23,8 @@ import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
 import { MetricsWrapper } from '../metrics/metricsWrapper';
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
+import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpResponse } from "../pipeline/response";
 
 /**
  * Component container for dependency injection
@@ -32,7 +34,7 @@ import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDesc
  * @implements {IContainer}
  */
 export class Container implements IContainer {
-
+    private customEndpoints: {verb:string, path:string, handler:(req:IHttpAdapterRequest)=>HttpResponse}[] = [];
     private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
 
@@ -58,11 +60,9 @@ export class Container implements IContainer {
             this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
-            this.injectSingleton(MetricsWrapper, DefaultServiceNames.Metrics);
             this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
-            this.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
             this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
         }
@@ -86,6 +86,7 @@ export class Container implements IContainer {
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
+        this.customEndpoints = null;
         this.parent = null;
     }
 
@@ -99,6 +100,14 @@ export class Container implements IContainer {
     injectFrom(path: string) {
         Files.traverse(path);
         return this;
+    }
+
+    registerEndpoint(path: string, handler: (req:IHttpAdapterRequest)=>HttpResponse, httpVerb="get") {
+        this.customEndpoints.push({path, handler, verb: httpVerb});
+    }
+
+    getCustomEndpoints():{verb:string, path:string, handler: (req:IHttpAdapterRequest)=>HttpResponse}[] {
+        return this.customEndpoints;
     }
 
     /**

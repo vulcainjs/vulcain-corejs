@@ -1,16 +1,16 @@
 import { ApplicationRequestError } from './applicationRequestError';
-import { IHttpResponse } from '../commands/command/types';
+import { IHttpCommandResponse } from '../commands/command/types';
 
 export class HttpCommandError extends ApplicationRequestError {
-    response: IHttpResponse;
+    response: IHttpCommandResponse;
     error: Error;
 
-    constructor(msg, response: IHttpResponse | Error, statusCode?: number) {
+    constructor(msg, response: IHttpCommandResponse | Error, statusCode?: number) {
         super(msg);
         if(!response) {
             return;
         }
-        
+
         if (response instanceof Error) {
             this.error = response;
             this.statusCode = statusCode || 500;

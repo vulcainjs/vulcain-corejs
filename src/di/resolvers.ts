@@ -1,5 +1,7 @@
 import { Container } from './containers';
 import { LifeTime } from './annotations';
+import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpResponse } from "../pipeline/response";
 
 export enum BusUsage {
     all,
@@ -8,6 +10,9 @@ export enum BusUsage {
 }
 
 export interface IContainer {
+    registerEndpoint(path: string, handler: Function, httpVerb?:string);
+    getCustomEndpoints():{verb:string, path:string, handler: (req:IHttpAdapterRequest)=>HttpResponse}[];
+
     injectInstance(fn, name: string): IContainer;
     injectSingleton(fn, ...args): IContainer;
     injectSingleton(fn, name?: string, ...args): IContainer;

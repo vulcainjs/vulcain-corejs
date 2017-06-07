@@ -15,7 +15,7 @@ import { ITenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { QueryData } from '../pipeline/query';
 import { ErrorMessage } from '../schemas/schema';
 import { MessageBus } from '../pipeline/messageBus';
-import { IHttpResponse } from '../commands/command/types';
+import { IHttpCommandResponse } from '../commands/command/types';
 import { CommonRequestData } from '../pipeline/common';
 import { VulcainLogger } from '../configurations/log/vulcainLogger';
 import { IRequestTracer } from '../metrics/zipkinInstrumentation';
@@ -35,7 +35,6 @@ export class VulcainHeaderNames {
 
 }
 
-// internal
 export interface IHttpAdapterRequest {
     readonly body;
     readonly params;

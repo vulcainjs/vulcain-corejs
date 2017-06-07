@@ -23,6 +23,8 @@ import { System } from './configurations/globals/system';
 import { ScopesDescriptor } from './pipeline/scopeDescriptors';
 import { ApiKeyService } from './defaults/services/apiKeyService';
 import { LifeTime } from "./di/annotations";
+import { MetricsWrapper } from "./metrics/metricsWrapper";
+import { ZipkinInstrumentation } from "./metrics/zipkinInstrumentation";
 
 /**
  * Application base class
@@ -230,6 +232,15 @@ export class Application {
 
             let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.createHandlersTable();
+
+            // Ensures metrics are initialized before creating adapter
+            // because metrics can declare endpoints (e.g promotheus)
+            if(this.container.get(DefaultServiceNames.Metrics, true) === null) {
+                this.container.injectInstance(new MetricsWrapper(this.container), DefaultServiceNames.Metrics);
+            }
+            if(this.container.get(DefaultServiceNames.RequestTracer, true) === null) {
+                this.container.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
+            }
 
             this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
             if (!this.adapter) {

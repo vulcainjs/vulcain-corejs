@@ -8,7 +8,7 @@ import { Conventions } from '../../utils/conventions';
 import { HttpResponse } from './../../pipeline/response';
 import { System } from './../../configurations/globals/system';
 import { ITenantPolicy } from './../policy/defaultTenantPolicy';
-import { IHttpResponse } from '../../commands/command/types';
+import { IHttpCommandResponse } from '../../commands/command/types';
 import { ExpressAuthentication } from './expressAuthentication';
 import * as Prometheus from 'prom-client';
 
@@ -91,18 +91,22 @@ export class ExpressAdapter extends AbstractAdapter {
 
     initialize() {
 
+        for(let e of this.container.getCustomEndpoints()) {
+            this.express[e.verb](e.path,  (req: any, res: express.Response) => {
+                let result = e.handler(<IHttpAdapterRequest>req);
+                if(req.requestContext) req.requestContext = null;
+                this.sendResponse(res, result);
+            });
+        }
+
         this.express.get('/health', (req: express.Request, res: express.Response) => {
             res.status(200).end();
-        });
-
-        // Prometheus
-        this.express.get('/metrics', (req: express.Request, res: express.Response) => {
-            res.end(Prometheus.register.metrics());
         });
 
         this.express.get(Conventions.instance.defaultUrlprefix + '/_schemas/:name?', (req: express.Request, res: express.Response) => {
             let domain: any = this.container.get(DefaultServiceNames.Domain);
             let name = req.params.name;
+            (<any>req).requestContext = null;
             if (name) {
                 let schema = domain.getSchema(name, true);
                 res.send(schema);

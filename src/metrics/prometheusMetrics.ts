@@ -1,13 +1,21 @@
 import { System } from './../configurations/globals/system';
 import { IMetrics, MetricsConstant } from './metrics';
 import * as Prometheus from 'prom-client';
+import { IContainer } from "../di/resolvers";
+import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpResponse } from "../pipeline/response";
 
 export class PrometheusMetrics implements IMetrics {
     private tags: any;
     private static Empty = {};
 
-    constructor() {
+    constructor(container: IContainer) {
         this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
+        container.registerEndpoint( '/metrics', (req: IHttpAdapterRequest) => {
+            let res = new HttpResponse(Prometheus.register.metrics());
+            res.contentType = (<any>Prometheus.Registry).contentType;
+            return res;
+        });
     }
 
     private encodeTags(tags: { [key: string] : string }): any {

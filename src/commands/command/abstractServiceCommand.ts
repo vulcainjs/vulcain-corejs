@@ -224,7 +224,7 @@ export abstract class AbstractServiceCommand {
         return res;
     }
 
-    private async setUserContextAsync(request: types.IHttpRequest) {
+    private async setUserContextAsync(request: types.IHttpCommandRequest) {
         request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.tenant);
 
         if (this.overrideAuthorization) {
@@ -252,12 +252,12 @@ export abstract class AbstractServiceCommand {
      * @protected
      * @param {string} http verb to use
      * @param {string} url
-     * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
+     * @param {(req:types.IHttpCommandRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
-        let request: types.IHttpRequest = rest[verb](url);
+        let request: types.IHttpCommandRequest = rest[verb](url);
 
         // Propagate context
         request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.requestContext.correlationId);
@@ -280,7 +280,7 @@ export abstract class AbstractServiceCommand {
         this.requestContext.logInfo("Calling vulcain service on " + url);
         return new Promise<CommonRequestResponse<any>>((resolve, reject) => {
             try {
-                request.end((response: types.IHttpResponse) => {
+                request.end((response: types.IHttpCommandResponse) => {
                     if (response.error || response.status !== 200) {
                         let err = new Error(response.error ? response.error.message : response.body);
                         System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);

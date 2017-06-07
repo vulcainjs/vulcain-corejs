@@ -94,10 +94,10 @@ export abstract class AbstractHttpCommand {
      * @protected
      * @param {string} http verb to use
      * @param {string} url
-     * @param {(req:types.IHttpRequest) => void} [prepareRequest] Callback to configure request before sending
+     * @param {(req:types.IHttpCommandRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpRequest) => void) {
+    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
         this.setMetricsTags(url);
 
@@ -108,12 +108,12 @@ export abstract class AbstractHttpCommand {
             return result;
         }
 
-        let request: types.IHttpRequest = rest[verb](url);
+        let request: types.IHttpCommandRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
         System.log.info(this.requestContext, `Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
 
-        return new Promise<types.IHttpResponse>((resolve, reject) => {
+        return new Promise<types.IHttpCommandResponse>((resolve, reject) => {
             request.end((response) => {
                 if (response.status >= 400) {
                     let msg = `Http request ${verb} ${url} failed with status code ${response.status}`;

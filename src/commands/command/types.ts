@@ -1,4 +1,4 @@
-export interface IHttpResponse {
+export interface IHttpCommandResponse {
     body: any;
     ok: boolean;
     code: number;
@@ -30,30 +30,30 @@ export interface IHttpResponse {
     on(evt: string, callback: (data: any) => void);
 }
 
-export interface IHttpRequest {
-    url(url: string): IHttpRequest;
-    method(verb: string): IHttpRequest;
-    form(options: any): IHttpRequest;
-    maxRedirects(nb: number): IHttpRequest;
-    followRedirect(flag: boolean): IHttpRequest;
-    encoding(encoding: string): IHttpRequest;
-    strictSSL(flag: boolean): IHttpRequest;
-    httpSignature(data: any): IHttpRequest;
-    secureProtocol(protocol:string): IHttpRequest;
-    proxy(proxy: string): IHttpRequest;
-    timeout(ms: number): IHttpRequest;
-    send(data?: any):IHttpRequest;
-    end(callback: (response: IHttpResponse) => void);
+export interface IHttpCommandRequest {
+    url(url: string): IHttpCommandRequest;
+    method(verb: string): IHttpCommandRequest;
+    form(options: any): IHttpCommandRequest;
+    maxRedirects(nb: number): IHttpCommandRequest;
+    followRedirect(flag: boolean): IHttpCommandRequest;
+    encoding(encoding: string): IHttpCommandRequest;
+    strictSSL(flag: boolean): IHttpCommandRequest;
+    httpSignature(data: any): IHttpCommandRequest;
+    secureProtocol(protocol:string): IHttpCommandRequest;
+    proxy(proxy: string): IHttpCommandRequest;
+    timeout(ms: number): IHttpCommandRequest;
+    send(data?: any):IHttpCommandRequest;
+    end(callback: (response: IHttpCommandResponse) => void);
     on(evt: string, callback: (data: any) => void);
     hasHeader(name: string): boolean;
-    stream(): IHttpRequest;
-    field(name: string, value: any, options?):IHttpRequest;
-    attach(name: string, path: string, options?):IHttpRequest;
-    rawField(name: string, value: any, options?):IHttpRequest;
-    auth(user: string, password: string, sendImmediately?: boolean): IHttpRequest;
-    header(name: string|any, value?: string): IHttpRequest;
-    query(value: string): IHttpRequest;
-    type(type: string): IHttpRequest;
-    part(options: string | any): IHttpRequest;
+    stream(): IHttpCommandRequest;
+    field(name: string, value: any, options?):IHttpCommandRequest;
+    attach(name: string, path: string, options?):IHttpCommandRequest;
+    rawField(name: string, value: any, options?):IHttpCommandRequest;
+    auth(user: string, password: string, sendImmediately?: boolean): IHttpCommandRequest;
+    header(name: string|any, value?: string): IHttpCommandRequest;
+    query(value: string): IHttpCommandRequest;
+    type(type: string): IHttpCommandRequest;
+    part(options: string | any): IHttpCommandRequest;
     json(data):any;
 }
