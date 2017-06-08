@@ -41,7 +41,7 @@ export class Conventions {
                 }
             }
             catch (e) {
-                System.log.error(null, e, "Error when reading vulcain.conventions file. Custom conventions are ignored.");
+                System.log.error(null, e, ()=> "Error when reading vulcain.conventions file. Custom conventions are ignored.");
             }
         }
         return Conventions._instance;

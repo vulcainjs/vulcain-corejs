@@ -104,41 +104,41 @@ export abstract class AbstractHttpCommand {
         const mocks = System.getMocks(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttpAsync(url, verb);
         if (result !== undefined) {
-            System.log.info(this.requestContext, `Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+            System.log.info(this.requestContext, ()=>`Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
             return result;
         }
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
-        System.log.info(this.requestContext, `Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
+        System.log.info(this.requestContext, ()=>`Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
 
         return new Promise<types.IHttpCommandResponse>((resolve, reject) => {
             request.end((response) => {
                 if (response.status >= 400) {
-                    let msg = `Http request ${verb} ${url} failed with status code ${response.status}`;
+                    let msg = ()=> `Http request ${verb} ${url} failed with status code ${response.status}`;
                     System.log.info(this.requestContext, msg);
                     reject(new HttpCommandError(msg, response));
                     return;
                 }
 
                 if (response.error) {
-                    let msg = `Error on http request ${verb} ${url} - ${response.error}`;
+                    let msg = ()=>`Error on http request ${verb} ${url} - ${response.error}`;
                     reject(this.handleError(msg, response.error));
                     return;
                 }
 
-                System.log.info(this.requestContext, `Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
+                System.log.info(this.requestContext, ()=>`Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
                 resolve(response);
             });
         });
     }
 
-    private handleError(msg: string, err?) {
+    private handleError(msg: ()=>string, err?) {
         System.log.error(this.requestContext, err, msg);
         if (err && !(err instanceof Error)) {
             let tmp = err;
-            err = new Error(msg);
+            err = new Error(msg());
             err.error = tmp;
         }
         return new HttpCommandError(msg, err, 500);

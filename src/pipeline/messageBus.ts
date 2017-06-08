@@ -38,7 +38,7 @@ export class MessageBus {
             System.log.error(
                 null,
                 e,
-                `Consume event action: ${event.action} ${event.schema ? "schema: " + event.schema : ""} tenant: ${event.tenant}`
+                ()=>`Consume event action: ${event.action} ${event.schema ? "schema: " + event.schema : ""} tenant: ${event.tenant}`
             );
         }
     }

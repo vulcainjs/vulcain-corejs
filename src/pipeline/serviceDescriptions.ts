@@ -108,7 +108,7 @@ export class ServiceDescriptors {
             return { handler: handler, metadata: <T>item.metadata, method: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
-            System.log.error(null, e, `Unable to create handler action ${action}, schema ${schema}`);
+            System.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);
             throw new Error(`Unable to create handler for action ${action}, schema ${schema}`);
         }
     }
@@ -159,7 +159,7 @@ export class ServiceDescriptors {
             if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for action ${item.metadata.action} for handler ${item.handler.name}`);
 
-            System.log.info(null, "Handler registered for action verb %s", verb);
+            System.log.info(null, ()=> `Handler registered for action verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
@@ -198,7 +198,7 @@ export class ServiceDescriptors {
             if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for query ${item.metadata.action} for handler ${item.handler.name}`);
 
-            System.log.info(null, "Handler registered for query verb %s", verb);
+            System.log.info(null, ()=> `Handler registered for query verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 

@@ -21,7 +21,7 @@ export class ProviderFactory {
     }
 
     private addToPool(context: RequestContext, key: string, item: PoolItem) {
-        System.log.info(context, "Adding a new provider pool item : " + key);
+        System.log.info(context, ()=>`Adding a new provider pool item : ${key}`);
         if (this.pool.size >= this.maxPoolSize) {
             // remove the least used
             let keyToRemove;
@@ -35,7 +35,7 @@ export class ProviderFactory {
             let item = this.pool.get(keyToRemove);
             item.dispose && item.dispose();
             this.pool.delete(keyToRemove);
-            System.log.info(context, "Ejecting " + keyToRemove + " from provider pool item.");
+            System.log.info(context, ()=> `Ejecting ${keyToRemove} from provider pool item.`);
         }
         item.count = 1;
         this.pool.set(key, item);

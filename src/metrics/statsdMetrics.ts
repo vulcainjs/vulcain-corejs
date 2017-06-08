@@ -27,7 +27,7 @@ export class StatsdMetrics implements IMetrics {
             if (host) {
                 this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
                 this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
-                System.log.info(null, "Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
+                System.log.info(null, ()=>"Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
                 return this;
             }
         }

@@ -160,7 +160,7 @@ export abstract class AbstractServiceCommand {
         const mocks = System.getMocks(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            System.log.info(this.requestContext, `Using mock database result for ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for ${serviceName}`);
             return result;
         }
 
@@ -191,7 +191,7 @@ export abstract class AbstractServiceCommand {
         const mocks = System.getMocks(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
         if (result !== undefined) {
-            System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
 
@@ -216,7 +216,7 @@ export abstract class AbstractServiceCommand {
         const mocks = System.getMocks(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, command);
         if (result !== undefined) {
-            System.log.info(this.requestContext, `Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
         let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', verb, args);
@@ -277,33 +277,33 @@ export abstract class AbstractServiceCommand {
 
         prepareRequest && prepareRequest(request);
 
-        this.requestContext.logInfo("Calling vulcain service on " + url);
+        this.requestContext.logInfo(()=>"Calling vulcain service on " + url);
         return new Promise<CommonRequestResponse<any>>((resolve, reject) => {
             try {
                 request.end((response: types.IHttpCommandResponse) => {
                     if (response.error || response.status !== 200) {
                         let err = new Error(response.error ? response.error.message : response.body);
-                        System.log.error(this.requestContext, err, `Service request ${verb} ${url} failed with status code ${response.status}`);
+                        System.log.error(this.requestContext, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;
                     }
                     let vulcainResponse = response.body;
                     if (vulcainResponse.error) {
-                        System.log.info(this.requestContext, `Service request ${verb} ${url} failed with status code ${response.status}`);
+                        System.log.info(this.requestContext, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(new ApplicationRequestError(vulcainResponse.error.message, vulcainResponse.error.errors, response.status));
                     }
                     else {
-                        System.log.info(this.requestContext, `Service request ${verb} ${url} completed with status code ${response.status}`);
+                        System.log.info(this.requestContext, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
                         resolve(vulcainResponse);
                     }
                 });
             }
             catch (err) {
-                let msg = `Service request ${verb} ${url} failed`;
+                let msg = ()=>`Service request ${verb} ${url} failed`;
                 System.log.error(this.requestContext, err, msg);
                 if (!(err instanceof Error)) {
                     let tmp = err;
-                    err = new Error(msg);
+                    err = new Error(msg());
                     err.error = tmp;
                 }
                 reject(new HttpCommandError(msg, err));

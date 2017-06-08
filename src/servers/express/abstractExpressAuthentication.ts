@@ -81,7 +81,7 @@ export abstract class AbstractExpressAuthentication {
                 }
             }
             catch (err) {
-                ctx.logError(err, "Authentication error");
+                ctx.logError(err, ()=> "Authentication error");
             }
             let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             logger.logAction(ctx, 'ER');

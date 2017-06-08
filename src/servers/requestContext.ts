@@ -72,29 +72,27 @@ export interface Logger {
      * Log an error
      *
      * @param {Error} error Error instance
-     * @param {string} [msg] Additional message
+     * @param {string} [msg] Additional lazy message
      *
      */
-    error(ctx: RequestContext, error: Error, msg?: string);
+    error(ctx: RequestContext, error: Error, msg?:()=>string);
 
     /**
      * Log a message info
      *
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
+     * @param {string} msg Lazy message
      *
      */
-    info(ctx: RequestContext, msg: string, ...params: Array<any>);
+    info(ctx: RequestContext, msg:()=>string);
 
     /**
      * Log a verbose message. Verbose messages are enable by service configuration property : enableVerboseLog
      *
      * @param {any} requestContext Current requestContext
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
+     * @param {string} msg Lazy message
      *
      */
-    verbose(ctx: RequestContext, msg: string, ...params: Array<any>);
+    verbose(ctx: RequestContext, msg:()=>string);
 }
 
 /**
@@ -291,7 +289,7 @@ export class RequestContext {
     }
 
     userHasScope(handlerScope: string): boolean {
-        this.logVerbose(`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`);
+        this.logVerbose(()=>`Check scopes [${this.scopes}] for user ${this.user && this.user.name} to handler scope ${handlerScope}`);
         return this._scopePolicy.hasScope(this, handlerScope);
     }
 
@@ -323,7 +321,7 @@ export class RequestContext {
      * @param {string} [msg] Additional message
      *
      */
-    logError(error: Error, msg?: string) {
+    logError(error: Error, msg?: ()=>string) {
         this._logger.error(this, error, msg);
     }
 
@@ -334,8 +332,8 @@ export class RequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logInfo(msg: string, ...params: Array<any>) {
-        this._logger.info(this, msg, ...params);
+    logInfo(msg: ()=>string) {
+        this._logger.info(this, msg);
     }
 
     /**
@@ -346,8 +344,8 @@ export class RequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logVerbose(msg: string, ...params: Array<any>) {
-        this._logger.verbose(this, msg, ...params);
+    logVerbose(msg: ()=>string) {
+        this._logger.verbose(this, msg);
     }
 
     /**

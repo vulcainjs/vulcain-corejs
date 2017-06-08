@@ -42,14 +42,14 @@ export class ConfigurationManager
 
             tries--;
             if (tries)
-                System.log.info(null, "CONFIG: Some dynamic properties sources failed. Retry polling.");
+                System.log.info(null, ()=>"CONFIG: Some dynamic properties sources failed. Retry polling.");
         }
 
         if (!System.isDevelopment) {
             throw new Error("CONFIG: Cannot read properties from sources. Program is stopped.");
         }
         else {
-            System.log.info(null, "CONFIG: Cannot read properties from sources.");
+            System.log.info(null, ()=>"CONFIG: Cannot read properties from sources.");
         }
     }
 
@@ -89,7 +89,7 @@ export class ConfigurationManager
         }
         catch (e) {
             ok = false;
-            System.log.error(null, e, "CONFIG: Error when polling sources");
+            System.log.error(null, e, ()=>"CONFIG: Error when polling sources");
         }
 
         // Restart
@@ -112,7 +112,7 @@ export class ConfigurationManager
 
         props.values.forEach((item, key) => {
             if (!item || item.deleted) {
-                System.log.info(null, "CONFIG: Removing property value for key " + key);
+                System.log.info(null, ()=>"CONFIG: Removing property value for key " + key);
                 this.properties.Updater_removeProperty(key);
                 return;
             }
@@ -124,10 +124,10 @@ export class ConfigurationManager
 
                 prop.set(item.encrypted ? System.decrypt(item.value) : item.value);
                 let v = item.encrypted ? "********" : item.value;
-                System.log.info(null, `CONFIG: Setting property value '${v}' for key ${key}`);
+                System.log.info(null, ()=>`CONFIG: Setting property value '${v}' for key ${key}`);
             }
             catch (e) {
-                System.log.error(null, e, `CONFIG: Error on loadProperties for key ${key}`);
+                System.log.error(null, e, ()=> `CONFIG: Error on loadProperties for key ${key}`);
             }
         });
     }

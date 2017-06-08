@@ -3,6 +3,7 @@ import { EventMetadata, ConsumeEventMetadata } from './../pipeline/actions';
 import { IContainer } from './../di/resolvers';
 import {Domain} from './../schemas/schema';
 import { System } from './../configurations/globals/system';
+import * as util from 'util';
 
 export class EventHandlerFactory {
     private handlers = new Map<string, Map<string, Array<HandlerItem>>>();
@@ -66,7 +67,7 @@ export class EventHandlerFactory {
             };
 
             bySchemas.push(item);
-            System.log.info(null, "Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema);
+            System.log.info(null, ()=> util.format("Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema));
         }
     }
 

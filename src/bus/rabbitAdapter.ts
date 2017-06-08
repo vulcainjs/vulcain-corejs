@@ -29,7 +29,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
             // TODO connection error
             self.initialized = true;
-            System.log.info(null, "Open rabbitmq connexion on " + System.removePasswordFromUrl(this.address)); // TODO remove password
+            System.log.info(null, ()=>"Open rabbitmq connexion on " + System.removePasswordFromUrl(this.address)); // TODO remove password
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;
@@ -37,7 +37,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
                 });
             })
             .catch(err => {
-                System.log.error(null, err, `Unable to open rabbit connexion. Verify if virtualHost ${System.environment} exists.`);
+                System.log.error(null, err, ()=>`Unable to open rabbit connexion. Verify if virtualHost ${System.environment} exists.`);
                 resolve(self);
             });
         });

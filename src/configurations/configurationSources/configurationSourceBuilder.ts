@@ -22,7 +22,7 @@ export class ConfigurationSourceBuilder {
     public addVulcainSource() {
         if (System.vulcainServer) {
             if (!System.vulcainToken && !System.isTestEnvironnment) {
-                System.log.info(null, "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
+                System.log.info(null, ()=>"No token defined for reading configuration properties. Vulcain configuration source is ignored.");
             }
             else {
                 let uri = `http://${System.vulcainServer}/api/config.forservice`;

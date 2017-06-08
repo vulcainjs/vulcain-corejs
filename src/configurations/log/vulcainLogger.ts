@@ -1,7 +1,7 @@
 import { System } from './../globals/system';
 import { IDynamicProperty } from './../dynamicProperty';
 import * as util from 'util';
-import { RequestContext } from '../../servers/requestContext';
+import { RequestContext, Logger } from '../../servers/requestContext';
 import * as os from 'os';
 
 export type entryKind = "RR"  // receive request
@@ -28,7 +28,7 @@ interface LogEntry {
     stack?: string;
 }
 
-export class VulcainLogger {
+export class VulcainLogger implements Logger{
 
     private static _enableInfo: IDynamicProperty<boolean>;
     private _hostname: string;
@@ -52,10 +52,10 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    error(requestContext: RequestContext, error: Error, msg?: string) {
+    error(requestContext: RequestContext, error: Error, msg?: ()=>string) {
         if (!error) return;
         let entry = this.prepareEntry(requestContext);
-        entry.message = msg || "Error occured";
+        entry.message = (msg && msg()) || "Error occured";
         entry.error = error.message;
         entry.stack = (error.stack || "").replace(/[\r\n]/g, '↵');
 
@@ -71,9 +71,9 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    info(requestContext: RequestContext, msg: string, ...params: Array<any>) {
+    info(requestContext: RequestContext, msg: ()=>string) {
         let entry = this.prepareEntry(requestContext);
-        entry.message = util.format(msg, ...params);
+        entry.message = msg && msg();
         this.writeEntry(entry);
     }
 
@@ -86,9 +86,9 @@ export class VulcainLogger {
      *
      * @memberOf VulcainLogger
      */
-    verbose(requestContext: RequestContext, msg: string, ...params: Array<any>) {
+    verbose(requestContext: RequestContext, msg: ()=>string) {
         if (VulcainLogger.enableInfo || System.isDevelopment)
-            this.info(requestContext, msg, params);
+            this.info(requestContext, msg);
     }
 
     logRequestStatus(requestContext: RequestContext, kind: entryKind) {

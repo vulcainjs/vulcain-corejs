@@ -20,7 +20,7 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
 
             // No token found
             if (!token) {
-                System.log.info(ctx, "Bearer authentication: Invalid jwtToken : " + accessToken);
+                System.log.info(ctx, ()=> `Bearer authentication: Invalid jwtToken : ${accessToken}`);
                 return null;
             }
 
@@ -32,7 +32,7 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
             return token.user; // Return the current user with its scopes and tenant
         }
         catch (err) {
-            System.log.error(ctx, err, "Bearer authentication: Error with jwtToken " + accessToken);
+            System.log.error(ctx, err, ()=> `Bearer authentication: Error with jwtToken ${accessToken}`);
             return null;
         }
     }
@@ -41,14 +41,14 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
         try {
             let apiKeys = ctx.container.get<ITokenService>(DefaultServiceNames.ApiKeyService, true);
             if (!apiKeys) {
-                System.log.info(ctx, `ApiKey authentication ERROR: Apikey is not enabled. Use enableApiKeyAuthentication in application.ts.`);
+                System.log.info(ctx, ()=> `ApiKey authentication ERROR: Apikey is not enabled. Use enableApiKeyAuthentication in application.ts.`);
                 return null;
             }
             let token = await apiKeys.verifyTokenAsync({ token: accessToken, tenant: ctx.tenant });
 
             // No token found
             if (!token) {
-                System.log.info(ctx, `ApiKey authentication: Invalid apiKey ${accessToken} for tenant ${ctx.tenant}`);
+                System.log.info(ctx, ()=> `ApiKey authentication: Invalid apiKey ${accessToken} for tenant ${ctx.tenant}`);
                 return null;
             }
 
@@ -58,7 +58,7 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
             return token.user;
         }
         catch (err) {
-            System.log.error(ctx, err, `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.tenant}`);
+            System.log.error(ctx, err, ()=> `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.tenant}`);
             throw err;
         }
     }

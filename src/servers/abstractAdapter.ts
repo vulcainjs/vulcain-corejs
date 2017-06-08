@@ -269,14 +269,14 @@ export abstract class AbstractAdapter {
         try {
             // Check if handler exists
             let info = manager.getInfoHandler<ActionMetadata>(command);
-            System.log.info(ctx, `Request input   : ${JSON.stringify(command)}`);
-            System.log.info(ctx, `Request context : user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
+            System.log.info(ctx, ()=> `Request input   : ${JSON.stringify(command)}`);
+            System.log.info(ctx, ()=> `Request context : user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
             ctx.startTrace(info.verb, command.params);
 
             // Verify authorization
             if (!ctx.userHasScope(info.metadata.scope)) {
-                System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), `Current user is user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
+                System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), ()=> `Current user is user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}`);
                 return new HttpResponse({ error: { message: http.STATUS_CODES[403] } }, 403);
             }
 

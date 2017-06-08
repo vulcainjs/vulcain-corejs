@@ -12,12 +12,12 @@ export class FileConfigurationSource implements ConfigurationSource
     constructor(private path: string, private mode: ConfigurationDataType = ConfigurationDataType.Json) {
         try {
             if (!fs.existsSync(path)) {
-                System.log.info(null, "CONFIGURATIONS : File " + path + " doesn't exist.");
+                System.log.info(null, ()=>"CONFIGURATIONS : File " + path + " doesn't exist.");
                 this._disabled = true;
             }
         }
         catch (e) {
-            System.log.error(null, e, "Invalid path when reading file configuration source at " + path + ". Are you using an unmounted docker volume ?");
+            System.log.error(null, e, ()=>"Invalid path when reading file configuration source at " + path + ". Are you using an unmounted docker volume ?");
         }
     }
 
@@ -60,7 +60,7 @@ export class FileConfigurationSource implements ConfigurationSource
                         err = e;
                     }
                 }
-                System.log.error(null, err, "File configuration source - Error when reading json values");
+                System.log.error(null, err, ()=>"File configuration source - Error when reading json values");
                 resolve(false);
             });
         });
@@ -90,7 +90,7 @@ export class FileConfigurationSource implements ConfigurationSource
                             }
                         }
                         catch (err) {
-                            System.log.error(null, err, `File configuration source - Error when reading key values line ${line}`);
+                            System.log.error(null, err, ()=> `File configuration source - Error when reading key values line ${line}`);
                         }
                     }
                 });
@@ -99,7 +99,7 @@ export class FileConfigurationSource implements ConfigurationSource
 
             }
             catch (err) {
-                System.log.error(null, err, "File configuration source - Error when reading key values");
+                System.log.error(null, err, ()=>"File configuration source - Error when reading key values");
                 resolve(false);
             }
         });

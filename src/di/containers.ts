@@ -119,7 +119,7 @@ export class Container implements IContainer {
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address ;
         if ( !uri ) {
-            System.log.info(null, "no value found for rabbit address. Ignore adapter");
+            System.log.info(null, ()=>"no value found for rabbit address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("amqp://")) {
@@ -141,7 +141,7 @@ export class Container implements IContainer {
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
         if ( !uri ) {
-            System.log.info(null, "no value found for mongo address. Ignore adapter");
+            System.log.info(null, ()=>"no value found for mongo address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("mongodb://")) {
@@ -170,7 +170,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
         if (name !== "Container" && fn.name)
-            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -195,7 +195,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -223,7 +223,7 @@ export class Container implements IContainer {
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if (fn.name)
-            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -250,7 +250,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 

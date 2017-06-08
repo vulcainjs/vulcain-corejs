@@ -45,7 +45,7 @@ export class DefaultTenantPolicy {
             }
         }
         catch (e) {
-            ctx.logError(e, "TENANT pattern cannot be resolved " + pattern);
+            ctx.logError(e, ()=> "TENANT pattern cannot be resolved " + pattern);
         }
     }
 

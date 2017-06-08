@@ -42,7 +42,7 @@ export class HttpConfigurationSource implements ConfigurationSource
                     if (response.status === 200 && response.body) {
                         if (response.body.error) {
                             if (!System.isDevelopment) {
-                                System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
+                                System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
                             }
                         }
                         else {
@@ -53,13 +53,13 @@ export class HttpConfigurationSource implements ConfigurationSource
                         }
                     }
                     else {
-                        System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
+                        System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
                     }
                     resolve(values && new PollResult(self, values));
                 });
             }
             catch (e) {
-                System.log.info(null, `HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
+                System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
                 resolve(null);
             }
         } );

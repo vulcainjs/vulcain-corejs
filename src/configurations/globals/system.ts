@@ -119,7 +119,7 @@ export class System {
             fs.writeFileSync(Conventions.instance.vulcainFileName, JSON.stringify(this._vulcainConfig));
         }
         catch (e) {
-            System.log.error(null, e, "VULCAIN MANIFEST : Error when savings mock sessions.");
+            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings mock sessions.");
         }
     }
 
@@ -150,10 +150,10 @@ export class System {
         }
         catch (e) {
             System._environmentMode = "production"; // Set this first to avoid stack overflow
-            System.log.error(null, e, "VULCAIN MANIFEST : Loading error");
+            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Loading error");
         }
 
-        System.log.info(null, `Running in ${System._environmentMode} mode`);
+        System.log.info(null, ()=> `Running in ${System._environmentMode} mode`);
     }
 
     /**
@@ -246,7 +246,7 @@ export class System {
             if (env)
                 System._environment = env;
             else {
-                System.log.info(null, "Environment variable " + Conventions.instance.ENV_VULCAIN_ENV + " is not defined. Using 'dev' by default.");
+                System.log.info(null, ()=> "Environment variable " + Conventions.instance.ENV_VULCAIN_ENV + " is not defined. Using 'dev' by default.");
                 System._environment = "dev";
             }
         }

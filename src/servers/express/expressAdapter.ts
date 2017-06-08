@@ -156,7 +156,7 @@ export class ExpressAdapter extends AbstractAdapter {
      * @memberOf ExpressAdapter
      */
     setStaticRoot(urlPath: string, folderPath: string, options?) {
-        System.log.info(null, `Set static path ${urlPath} to ${folderPath}`);
+        System.log.info(null, ()=>`Set static path ${urlPath} to ${folderPath}`);
         if (!urlPath) {
             throw new Error("urlPath is required.");
         }
@@ -168,7 +168,7 @@ export class ExpressAdapter extends AbstractAdapter {
 
     start(port: number) {
         let listener = this.express.listen(port, (err) => {
-            System.log.info(null, 'Listening on port ' + port);
+            System.log.info(null, ()=>'Listening on port ' + port);
         });
 
         this.app.onServerStarted(listener, this);

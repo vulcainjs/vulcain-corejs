@@ -111,7 +111,7 @@ export class Application {
         }
         System.defaultDomainName = domainName;
 
-        System.log.info(null, "Starting application");
+        System.log.info(null, ()=>"Starting application");
 
         this._executablePath = Path.dirname(module.filename);
         this._basePath = this.findBasePath();
@@ -135,22 +135,22 @@ export class Application {
             response.append('Content-Type', 'text/event-stream;charset=UTF-8');
             response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.append('Pragma', 'no-cache');
-            System.log.info(null, "get hystrix.stream");
+            System.log.info(null, ()=>"get hystrix.stream");
 
             let subscription = hystrixStream.toObservable().subscribe(
                 function onNext(sseData) {
                     response.write('data: ' + sseData + '\n\n');
                 },
                 function onError(error) {
-                    System.log.info(null, "hystrixstream: error");
+                    System.log.info(null, ()=>"hystrixstream: error");
                 },
                 function onComplete() {
-                    System.log.info(null, "end hystrix.stream");
+                    System.log.info(null, ()=>"end hystrix.stream");
                     return response.end();
                 }
             );
             request.on("close", () => {
-                System.log.info(null, "close hystrix.stream");
+                System.log.info(null, ()=> "close hystrix.stream");
                 subscription.unsubscribe();
             });
 
@@ -253,7 +253,7 @@ export class Application {
             this.adapter.start(port);
         }
         catch (err) {
-            System.log.error(null, err, "ERROR when starting application");
+            System.log.error(null, err, ()=>"ERROR when starting application");
             process.exit(2);
         }
     }

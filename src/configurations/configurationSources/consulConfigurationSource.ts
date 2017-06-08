@@ -33,7 +33,7 @@ export class ConsulConfigurationSource implements ConfigurationSource
             this.consul = Consul({ host: consulAddress || "local-storage" });
         }
         catch (err) {
-            System.log.error(null, err,  "CONFIG: Error when using consul configuration source");
+            System.log.error(null, err,  ()=>"CONFIG: Error when using consul configuration source");
             this.consul = null;
         }
     }
@@ -74,7 +74,7 @@ export class ConsulConfigurationSource implements ConfigurationSource
         }
         catch( e )
         {
-            System.log.error(null, e, "CONFIG: Consul configuration source." );
+            System.log.error(null, e, ()=>"CONFIG: Consul configuration source." );
             this._initialized = true;
             return null;
         }
@@ -119,7 +119,7 @@ export class ConsulConfigurationSource implements ConfigurationSource
                         this._allkeys.add(k);
                     }
                     catch (e) {
-                        System.log.info(null, "CONFIG: Consul configuration source : Invalid json value for property " + k);
+                        System.log.info(null, ()=>"CONFIG: Consul configuration source : Invalid json value for property " + k);
                     }
                 }
                 if( v.ModifyIndex > max )
@@ -156,14 +156,14 @@ export class ConsulConfigurationSource implements ConfigurationSource
         // TODO modifyIndex
         watch.on( 'change', function( data, res )
         {
-                data && System.log.info(null, "CONFIG: Detecting changes on configuration properties for consul key " + key);
+                data && System.log.info(null, ()=>"CONFIG: Detecting changes on configuration properties for consul key " + key);
                 data && self.merge( key, data );
             }
         );
 
         watch.on( 'error', function( err )
             {
-                System.log.error(null, err, "CONFIG: Error when watching configurations for " + key );
+                System.log.error(null, err, ()=>"CONFIG: Error when watching configurations for " + key );
                 self.globalWatch.end();
                 self.serviceWatch && self.serviceWatch.end();
                 self._initialized = false;
