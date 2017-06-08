@@ -8,7 +8,6 @@ import { ConfigurationProperty } from '../../configurations/dependencies/annotat
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
 
-@Injectable(LifeTime.Singleton, DefaultServiceNames.TokenService)
 @ConfigurationProperty(Conventions.instance.TOKEN_ISSUER, "string")
 @ConfigurationProperty(Conventions.instance.TOKEN_EXPIRATION, "string")
 @ConfigurationProperty(Conventions.instance.VULCAIN_SECRET_KEY, "string")

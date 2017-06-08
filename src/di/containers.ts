@@ -23,6 +23,7 @@ import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
 import { MetricsWrapper } from '../metrics/metricsWrapper';
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
+import { TokenService } from '../defaults/services/tokenService';
 
 /**
  * Component container for dependency injection
@@ -65,6 +66,7 @@ export class Container implements IContainer {
             this.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
             this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
+            this.injectSingleton(TokenService, DefaultServiceNames.TokenService);
         }
     }
 
