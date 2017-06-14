@@ -237,7 +237,7 @@ export abstract class AbstractServiceCommand {
             if (!this.requestContext.user) {
                 return;
             }
-            let tokens = this.requestContext.container.get<ITokenService>("TokenService");
+            let tokens = this.requestContext.container.get<ITokenService>(DefaultServiceNames.TokenService);
             // Ensures jwtToken exists for user context propagation
             let result: any = this.requestContext.bearer = await tokens.createTokenAsync(this.requestContext.user);
             token = result.token;

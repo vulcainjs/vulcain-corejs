@@ -24,6 +24,10 @@ export class ExpressAuthentication extends AbstractExpressAuthentication {
                 return null;
             }
 
+            if(!token.user) {
+                token.user = {};
+            }
+
             token.user.tenant = token.user.tenant || token.tenantId;
             token.user.scopes = token.scopes;
             token.user.data = token.user.data || token.data;

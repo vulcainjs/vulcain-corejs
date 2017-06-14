@@ -25,6 +25,7 @@ import { MetricsWrapper } from '../metrics/metricsWrapper';
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 import { IHttpAdapterRequest } from "../servers/abstractAdapter";
 import { HttpResponse } from "../pipeline/response";
+import { TokenService } from '../defaults/services/tokenService';
 
 /**
  * Component container for dependency injection
@@ -65,6 +66,7 @@ export class Container implements IContainer {
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
             this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
+            this.injectSingleton(TokenService, DefaultServiceNames.TokenService);
         }
     }
 
