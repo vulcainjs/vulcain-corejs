@@ -14,9 +14,9 @@ export class MemoryConfigurationSource implements ConfigurationSource
         this._values.set( name, {key:name, value} );
     }
 
-    pollPropertiesAsync( timeoutInMs:number )
+    pollPropertiesAsync( timeoutInMs:number ) :Promise<PollResult>
     {
-        return new Promise((resolve) => {
+        return new Promise<PollResult>((resolve) => {
             try {
                 const values = this._values;
                 resolve(new PollResult(this, values));
