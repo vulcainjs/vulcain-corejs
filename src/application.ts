@@ -220,9 +220,7 @@ export class Application {
             await commandBus.startAsync();
 
             this.registerComponents();
-
             this.initializeServices(this.container);
-
             Preloader.instance.runPreloads(this.container, this._domain);
 
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);

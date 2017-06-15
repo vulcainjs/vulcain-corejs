@@ -44,6 +44,7 @@ export class StsTokenService implements ITokenService {
     private initializeRsaSigninKey(): Promise<string> {
         return new Promise((resolve, reject) => {
             const openIdConfigUrl = `${this.authority.value}/.well-known/openid-configuration`;
+            // TODO command
             const oidcConfig = unirest.get(openIdConfigUrl).as.json((res) => {
                 if (res.status >= 400) {
                     reject(res);
