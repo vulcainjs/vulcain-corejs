@@ -46,7 +46,7 @@ export class StsTokenService implements ITokenService {
             const openIdConfigUrl = `${this.authority.value}/.well-known/openid-configuration`;
             // TODO command
             const oidcConfig = unirest.get(openIdConfigUrl).as.json((res) => {
-                if (res.status >= 400) {
+                if (res.error || res.status >= 400) {
                     reject(res);
                 } else {
                     this.jwksConfig.jwksUri = res.body.jwks_uri;
@@ -99,7 +99,8 @@ export class StsTokenService implements ITokenService {
                         }
                     });
                 });
-            });
+            })
+            .catch(reject);
 
         });
     }
