@@ -21,7 +21,6 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { MockManager } from "../mocks/mockManager";
 import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
-import { MetricsWrapper } from '../metrics/metricsWrapper';
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 import { IHttpAdapterRequest } from "../servers/abstractAdapter";
 import { HttpResponse } from "../pipeline/response";

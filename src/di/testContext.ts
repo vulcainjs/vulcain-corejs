@@ -8,6 +8,7 @@ import { Domain } from '../schemas/schema';
 import { DefaultServiceNames } from './annotations';
 import { Preloader } from '../preloader';
 import { AbstractHandler } from '../pipeline/abstractHandlers';
+import { ConsoleMetrics } from "../metrics/consoleMetrics";
 
 export class TestContext {
     private _container: IContainer;
@@ -21,6 +22,7 @@ export class TestContext {
         this._container = new Container();
         let domain = new Domain(System.domainName, this._container);
         this._container.injectInstance(domain, DefaultServiceNames.Domain);
+        this._container.injectInstance(new ConsoleMetrics(), DefaultServiceNames.Metrics);
         Preloader.instance.runPreloads(this._container, domain);
     }
 
