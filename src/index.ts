@@ -24,7 +24,7 @@ export { ExpressAuthentication } from './servers/express/expressAuthentication';
 export { VerifyTokenParameter, ITokenService } from './defaults/services';
 export { AbstractExpressAuthentication } from './servers/express/abstractExpressAuthentication';
 export { StsTokenService } from './defaults/services/stsTokenService';
-export { ExpressStsAuthentication } from './servers/express/ExpressStsAuthentication';
+export { ExpressStsAuthentication } from './servers/express/expressStsAuthentication';
 
 // Core
 export * from './application'
