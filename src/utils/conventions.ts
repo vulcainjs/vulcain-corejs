@@ -48,6 +48,8 @@ export class Conventions {
     }
 
     static toEnvironmentVariableName(name: string) {
+        if (!name || name.toUpperCase() === name)
+            return name;
         const regex = /([A-Z])|(\.)/g;
         const subst = `_\$1`;
         let res = name.replace(regex, subst);
