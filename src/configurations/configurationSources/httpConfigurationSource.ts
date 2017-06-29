@@ -25,7 +25,7 @@ export class HttpConfigurationSource implements ConfigurationSource
     async pollPropertiesAsync(timeoutInMs:number)
     {
         let self = this;
-        return new Promise( ( resolve ) =>
+        return new Promise<PollResult>( ( resolve ) =>
         {
             let uri = this.createRequestUrl();
 

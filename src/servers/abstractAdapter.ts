@@ -268,7 +268,7 @@ export abstract class AbstractAdapter {
 
         try {
             // Check if handler exists
-            let info = manager.getInfoHandler<ActionMetadata>(command);
+            let info = manager.getInfoHandler(command);
             System.log.info(ctx, ()=> `Request input   : ${JSON.stringify(command)}`);
             System.log.info(ctx, ()=> `Request context : user=${ctx.user ? ctx.user.name : "<anonymous>"}, scopes=${ctx.user ? ctx.user.scopes : "[]"}, tenant=${ctx.tenant}`);
 
@@ -284,7 +284,8 @@ export abstract class AbstractAdapter {
             let result: HttpResponse;
             const mocks = System.getMocks(this.container);
             let params = Object.assign({}, command.params || {});
-            result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, info.metadata, info.verb, params);
+            let metadata = <ActionMetadata>info.metadata;
+            result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, metadata, info.verb, params);
             if (!mocks.enabled || result === undefined) {
                 result = await manager.runAsync(command, ctx);
             }
@@ -293,7 +294,7 @@ export abstract class AbstractAdapter {
             }
             // Response
             this.endRequest(result, ctx);
-            mocks.enabled && await mocks.saveMockValueAsync(ctx, info.metadata, info.verb, params, result);
+            mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
             return result;
         }
         catch (e) {

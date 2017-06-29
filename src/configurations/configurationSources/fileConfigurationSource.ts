@@ -72,7 +72,7 @@ export class FileConfigurationSource implements ConfigurationSource
         return new Promise((resolve) => {
             try {
                 const rl = readline.createInterface({
-                    input: fs.createReadStream(self.path, 'UTF-8')
+                    input: fs.createReadStream(self.path, { encoding: 'UTF-8' })
                 });
 
                 rl.on('line', function (line:string) {

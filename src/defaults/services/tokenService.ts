@@ -23,7 +23,7 @@ export class TokenService implements ITokenService {
         this.secretKey = System.createSharedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
-    createTokenAsync( user: UserContext ): Promise<string> {
+    createTokenAsync( user: UserContext ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
 
         return new Promise(async (resolve, reject) => {
             const payload = {

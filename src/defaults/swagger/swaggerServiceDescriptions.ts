@@ -171,7 +171,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             }
         }
 
-        return [<Parameters>parameters];
+        return [parameters];
     }
 
     /**
