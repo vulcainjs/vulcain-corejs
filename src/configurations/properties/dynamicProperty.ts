@@ -9,11 +9,13 @@ export class DynamicProperty<T> implements IDynamicProperty<T>
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
-        return this._propertyChanged;
+        if (!this._propertyChanged) {
+            this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
+        }
+        return <rx.Observable<IDynamicProperty<any>>>this._propertyChanged;
     }
 
     constructor(private propertiesManager: DynamicProperties, public name: string, private defaultValue?:T) {
-        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
     }
 
     get value():T {
@@ -33,7 +35,7 @@ export class DynamicProperty<T> implements IDynamicProperty<T>
 
     private onPropertyChanged()
     {
-        this._propertyChanged.next( this );
+        this._propertyChanged && this._propertyChanged.next( this );
         this.propertiesManager.onPropertyChanged(this, "changed");
     }
 
@@ -47,6 +49,7 @@ export class DynamicProperty<T> implements IDynamicProperty<T>
         this.disposed = true;
         this.onPropertyChanged();
         //this._propertyChanged.dispose();
-        this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
+        if (this._propertyChanged)
+            this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
     }
 }

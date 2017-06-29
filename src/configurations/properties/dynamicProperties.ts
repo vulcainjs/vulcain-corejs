@@ -31,7 +31,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
     /// Raises when a property has changed
     /// </summary>
     get propertyChanged(): rx.Observable<IDynamicProperty<any>> {
-        return this._propertyChanged;
+        return <rx.Observable<IDynamicProperty<any>>>this._propertyChanged;
     }
 
     private static _instance: DynamicProperties;
@@ -96,14 +96,14 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         let prefix = (System.serviceName + "." + System.serviceVersion);
 
         let p = System.manifest.configurations[name];
-        if( p && p !== "any")
+        if (p && p !== "any")
             return;
         let schema = "any";
-        if( typeof defaultValue === "number" || defaultValue) {
+        if (typeof defaultValue === "number" || defaultValue) {
             schema = typeof defaultValue;
         }
         System.manifest.configurations[name] = schema;
-     }
+    }
 
     /**
      /// Reset configuration and properties.
@@ -139,7 +139,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
     }
 
     onPropertyChanged(property, action: string) {
-       // System.log.info(null, "CONFIG: Property changed " + property.name);
+        // System.log.info(null, "CONFIG: Property changed " + property.name);
         this._propertyChanged.next(property);
     }
 
@@ -157,8 +157,8 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
         let prop = this._properties.get(name);
         if (!prop) {
             if (!prop) {
-                // Check if proerty exists as environment variable
-                let env = process.env[Conventions.toEnvironmentVariableName(name)];
+                // Check if property exists as environment variable (only once)
+                let env = this.getEnvironmentVariable(name);
                 // Otherwise as a docker secret
                 if (env === undefined) {
                     try {
@@ -175,6 +175,31 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
             }
         }
         return prop;
+    }
+
+    private getEnvironmentVariable(name: string) {
+        // As is
+        let env = process.env[name];
+        if (env)
+            return env;
+
+        // Replace dot
+        env = process.env[name.replace(/\./g, '_')];
+        if (env)
+            return env;
+
+        // Replace dot with uppercases
+        env = process.env[name.toUpperCase().replace(/\./g, '_')];
+        if (env)
+            return env;
+
+        // Transform camel case to upper case
+        // ex: myProperty --> MY_PROPERTY
+        const regex = /([A-Z])|(\.)/g;
+        const subst = `_\$1`;
+        let res = name.replace(regex, subst);
+        env = process.env[res.toUpperCase()];
+        return env;
     }
 
     public clear() {

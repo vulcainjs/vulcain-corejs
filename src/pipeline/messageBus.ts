@@ -17,7 +17,7 @@ export class MessageBus {
             this._events.set(domain, events);
             this.eventBus.consumeEvents(domain, this.consumeEventAsync.bind(this));
         }
-        return events;
+        return <RX.Observable<EventData>>events;
     }
 
     constructor(private manager: CommandManager, hasAsyncActions:boolean) {

@@ -12,8 +12,8 @@ export class ApiKeyService extends AbstractHandler implements ITokenService {
         super(container);
     }
 
-    createTokenAsync(user: UserContext): Promise<string> {
-        return Promise.reject<string>("Invalid method. You must use vulcain-authentication module to create token.");
+    createTokenAsync(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }> {
+        return Promise.reject("Invalid method. You must use vulcain-authentication module to create token.");
     }
 
     async verifyTokenAsync(data: VerifyTokenParameter): Promise<boolean> {

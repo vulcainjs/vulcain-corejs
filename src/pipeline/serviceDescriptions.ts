@@ -77,7 +77,7 @@ export class ServiceDescriptors {
         return this.descriptions;
     }
 
-    getHandlerInfo<T extends CommonActionMetadata>(container: IContainer, schema: string, action: string, optional?: boolean) {
+    getHandlerInfo(container: IContainer, schema: string, action: string, optional?: boolean) {
         this.createHandlersTable();
 
         let verb = action && action.toLowerCase();
@@ -105,7 +105,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, metadata: <T>item.metadata, method: item.methodName, verb: verb, kind: item.kind };
+            return { handler: handler, metadata: item.metadata, method: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
             System.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);

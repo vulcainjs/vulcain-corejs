@@ -11,6 +11,6 @@ export class VerifyTokenParameter {
 
 export interface ITokenService {
     verifyTokenAsync(data: VerifyTokenParameter): Promise<any>;
-    createTokenAsync(user: UserContext): Promise<string>;
+    createTokenAsync(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }>;
 }
 

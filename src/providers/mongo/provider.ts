@@ -43,7 +43,7 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri, keyPropertyNameBySchemas: new Map<string, string>() };
     }
 
-    initializeTenantAsync(context: RequestContext, tenant: string) {
+    initializeTenantAsync(context: RequestContext, tenant: string) : Promise<() => Promise<any>> {
         if (!tenant)
             throw new Error("tenant is required");
 
@@ -74,7 +74,7 @@ export class MongoProvider implements IProvider<any>
 
                 state._mongo = db;
 
-                resolve(() => {
+                resolve(async () => {
                     db.close();
                     state._mongo = null;
                     state.dispose = null;
@@ -233,7 +233,7 @@ export class MongoProvider implements IProvider<any>
             throw new Error("MONGODB delete: Argument is required");
         await this.ensureSchemaReadyAsync(schema);
 
-        return new Promise(async (resolve, reject) => {
+        return new Promise<boolean>(async (resolve, reject) => {
             let id;
             let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
             if (typeof old === "string")

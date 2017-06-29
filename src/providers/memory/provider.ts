@@ -54,7 +54,7 @@ export class MemoryProvider implements IProvider<any>
         }
         this.state = { schemas: new Map<string, ISchemaData>(), folder };
 
-        return Promise.resolve(() => { this.state = null; });
+        return Promise.resolve(async () => { this.state = null; });
     }
 
     private ensureSchema(schema: Schema) {
@@ -77,7 +77,7 @@ export class MemoryProvider implements IProvider<any>
         let schemaInfo = this.state.schemas.get(schema.name);
 
         if (!schemaInfo.saveToFile) return;
-        fs.writeFileSync(schemaInfo.saveToFile, JSON.stringify(schemaInfo.data), "UTF-8");
+        fs.writeFileSync(schemaInfo.saveToFile, JSON.stringify(schemaInfo.data), { encoding: "UTF-8" });
     }
 
 
@@ -162,7 +162,7 @@ export class MemoryProvider implements IProvider<any>
         let data = this.ensureSchema(schema);
 
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             try {
                 let id;
                 if (typeof old === "string")

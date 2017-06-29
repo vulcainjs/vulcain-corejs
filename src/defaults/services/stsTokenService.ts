@@ -58,7 +58,7 @@ export class StsTokenService implements ITokenService {
     }
 
     // token is created by STS so don't need this method
-    createTokenAsync( user: UserContext ): Promise<string> {
+    createTokenAsync( user: UserContext ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
 
         return new Promise(async (resolve, reject) => {
             const err: Error = {

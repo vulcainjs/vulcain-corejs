@@ -36,9 +36,9 @@ export interface EventMetadata extends CommonMetadata {
 }
 
 export enum EventNotificationMode {
+    never,
     always,
-    successOnly,
-    never
+    successOnly
 }
 
 /**
@@ -208,7 +208,7 @@ export class CommandManager implements IManager {
         if (!this._serviceDescriptors) {
             this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         }
-        let info = this._serviceDescriptors.getHandlerInfo<ActionMetadata>(container, command.schema, command.action);
+        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
         return info;
     }
 
@@ -217,7 +217,8 @@ export class CommandManager implements IManager {
         if (info.kind !== "action")
             return new BadRequestResponse("Query handler must be requested with GET.", 405);
 
-        let eventMode = info.metadata.eventMode || EventNotificationMode.successOnly;
+        let metadata = <ActionMetadata>info.metadata;
+        let eventMode = metadata.eventMode || EventNotificationMode.successOnly;
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
         try {
@@ -233,7 +234,7 @@ export class CommandManager implements IManager {
             command.userContext = ctx.user || <any>{};
 
             // Register asynchronous task
-            if (!info.metadata.async) {
+            if (!metadata.async) {
 
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
@@ -252,7 +253,7 @@ export class CommandManager implements IManager {
                     res.value = result.content;
                 }
 
-                if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
+                if (eventMode === EventNotificationMode.successOnly || eventMode === EventNotificationMode.always) {
                     this.messageBus.sendEvent(res);
                 }
 
@@ -280,7 +281,8 @@ export class CommandManager implements IManager {
         logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
 
         let info = this.getInfoHandler(command, ctx.container);
-        let eventMode = info.metadata.eventMode || EventNotificationMode.always;
+        let metadata = <ActionMetadata>info.metadata;
+        let eventMode = metadata.eventMode || EventNotificationMode.always;
 
         let res;
         try {
@@ -310,7 +312,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always) {
                 this.messageBus.sendEvent(res);
             }
-            System.log.error(ctx, e, ()=>`Error when processing async action : ${JSON.stringify(command)}`);
+            System.log.error(ctx, e, () => `Error when processing async action : ${JSON.stringify(command)}`);
         }
         finally {
             logger.logAction(ctx, "EE");
@@ -347,7 +349,7 @@ export class CommandManager implements IManager {
                     handler.event = evt;
                 }
                 catch (e) {
-                    System.log.error(ctx, e, ()=>`Unable to create handler ${info.handler.name}`);
+                    System.log.error(ctx, e, () => `Unable to create handler ${info.handler.name}`);
                 }
 
                 try {
@@ -355,7 +357,7 @@ export class CommandManager implements IManager {
                 }
                 catch (e) {
                     let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                    System.log.error(ctx, error, ()=>`Error with event handler ${info.handler.name} event : ${evt}`);
+                    System.log.error(ctx, error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
                 }
             }
         });
