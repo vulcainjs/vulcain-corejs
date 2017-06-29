@@ -118,7 +118,7 @@ export abstract class AbstractHttpCommand {
                 if (response.status >= 400) {
                     let msg = ()=> `Http request ${verb} ${url} failed with status code ${response.status}`;
                     System.log.info(this.requestContext, msg);
-                    reject(new HttpCommandError(msg, response));
+                    reject(new HttpCommandError(msg(), response));
                     return;
                 }
 
@@ -141,6 +141,6 @@ export abstract class AbstractHttpCommand {
             err = new Error(msg());
             err.error = tmp;
         }
-        return new HttpCommandError(msg, err, 500);
+        return new HttpCommandError(msg(), err, 500);
     }
 }

@@ -306,7 +306,7 @@ export abstract class AbstractServiceCommand {
                     err = new Error(msg());
                     err.error = tmp;
                 }
-                reject(new HttpCommandError(msg, err));
+                reject(new HttpCommandError(msg(), err));
             }
         });
     }
