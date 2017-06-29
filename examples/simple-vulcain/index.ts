@@ -1,7 +1,7 @@
 import { Model, ApplicationBuilder, Property, QueryHandler, ActionHandler } from 'vulcain-corejs';
 // Very simple microservice
 
-// Declare a simple customer model with default CRUD handler with anonymous access
+// Declare a simple customer model with default CRUD handler and anonymous access
 @Model()
 @QueryHandler({scope:'?'})
 @ActionHandler({scope:'?'})
