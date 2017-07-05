@@ -78,7 +78,7 @@ export class DefaultAuthorizationPolicy {
         for (let userScope of userScopes) {
             let parts = userScope.split(':');
             if (parts.length < 2) {
-                return false; // malformed
+                continue; // malformed
             }
 
             if (parts[0] !== System.domainName) {
