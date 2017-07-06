@@ -20,7 +20,7 @@ import { VulcainLogger } from '../../configurations/log/vulcainLogger';
  */
 export abstract class AbstractProviderCommand<T> {
 
-    private providerFactory: ProviderFactory;
+    protected providerFactory: ProviderFactory;
 
     protected metrics: IMetrics;
     private customTags: any;

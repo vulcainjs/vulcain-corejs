@@ -3,13 +3,14 @@ import { StatsdMetrics } from './statsdMetrics';
 import { PrometheusMetrics } from './prometheusMetrics';
 import { IContainer } from "../di/resolvers";
 import { Inject, DefaultServiceNames } from "../di/annotations";
+import { ApplicationInsightsMetrics } from "./applicationInsightsMetrics";
 
 export class MetricsWrapper implements IMetrics {
 
     private metrics: IMetrics;
 
     constructor(@Inject(DefaultServiceNames.Container) container: IContainer) {
-        this.metrics = new StatsdMetrics().initialize() || new PrometheusMetrics(container);
+        this.metrics = new ApplicationInsightsMetrics().initialize() || new StatsdMetrics().initialize() || new PrometheusMetrics(container);
     }
 
     increment(metric: string, customTags?: any, delta?: number) {
