@@ -80,12 +80,11 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     protected async allInternal(options: any) {
         let list = await this.all(options);
-        if (list) {
+        if (list && list.length > 0 && this.schema.description.hasSensibleData) {
             let result = [];
             for (let entity of list) {
                 if (entity) {
-                    if (entity && this.schema.description.hasSensibleData)
-                        entity = this.schema.decrypt(entity) || entity;
+                    entity = this.schema.decrypt(entity) || entity;
                     result.push(entity);
                 }
             }
