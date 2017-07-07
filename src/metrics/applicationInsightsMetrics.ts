@@ -7,11 +7,6 @@ const appInsights = require('applicationinsights');
 
 export class ApplicationInsightsMetrics implements IMetrics {
 
-    /**
-     * service name, service version tags
-     */
-    private staticTags: any;
-
     constructor(private token?: string) {
     }
 
@@ -22,14 +17,14 @@ export class ApplicationInsightsMetrics implements IMetrics {
                 try {
                     appInsights.setup(token)
                         .setAutoDependencyCorrelation(true)
-                        .setAutoCollectRequests(true)
+                        .setAutoCollectRequests(false)
                         .setAutoCollectPerformance(true)
                         .setAutoCollectExceptions(true)
                         .setAutoCollectDependencies(true) // mongodb, redis, mysql
                         .setAutoCollectConsole(false)
                         .start();
-                    // this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
-                    this.staticTags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
+
+                    appInsights.client.commonProperties = {service: System.serviceName, version: System.serviceVersion };
                     System.log.info(null, () => "Initialize application insights metrics adapter with initial tags : " + this.staticTags);
                     return this;
                 }
@@ -41,12 +36,6 @@ export class ApplicationInsightsMetrics implements IMetrics {
         return null;
     }
 
-    private encodeTags(tags: { [key: string]: string }): any {
-        if (!tags)
-            return "";
-        return ',' + Object.keys(tags).map(key => key + '=' + tags[key].replace(/[:|,]/g, '-')).join(',');
-    }
-
     /**
      * Increment a counter metric
      * @param metric Metric name
@@ -54,7 +43,6 @@ export class ApplicationInsightsMetrics implements IMetrics {
      * @param delta Increment value
      */
     increment(metric: string, customTags?: any, delta: number = 1) {
-        const tags = this.staticTags + this.encodeTags(customTags);
     }
 
     /**
@@ -64,7 +52,6 @@ export class ApplicationInsightsMetrics implements IMetrics {
      * @param delta Decrement value
      */
     decrement(metric: string, customTags?: any, delta: number = -1) {
-        const tags = this.staticTags + this.encodeTags(customTags);
     }
 
     /**
@@ -74,6 +61,5 @@ export class ApplicationInsightsMetrics implements IMetrics {
      * @param customTags Object containing contextuel key value tags
      */
     timing(metric: string, duration: number, customTags?: any) {
-        const tags = this.staticTags + this.encodeTags(customTags);
     }
 }
