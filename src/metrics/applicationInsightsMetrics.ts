@@ -25,11 +25,11 @@ export class ApplicationInsightsMetrics implements IMetrics {
                         .start();
 
                     appInsights.client.commonProperties = {service: System.serviceName, version: System.serviceVersion };
-                    System.log.info(null, () => "Initialize application insights metrics adapter with initial tags : " + this.staticTags);
+                    System.log.info(null, () => "Initialize application insights metrics adapter ");
                     return this;
                 }
                 catch (ex) {
-                    System.log.error(null, ex, () => "Cannot initialize application insights metrics adapter with initial tags : " + this.staticTags);
+                    System.log.error(null, ex, () => "Cannot initialize application insights metrics adapter");
                 }
             }
         }

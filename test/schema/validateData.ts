@@ -53,6 +53,11 @@ class DateIsoModel {
     date: string;
 }
 
+@Model()
+class ArrayOfModel {
+    @Property({type: SchemaStandardTypes.arrayOf, items: "enum", values: ["a", "b"]})
+    enums: string[];
+}
 
 let context = new TestContext();
 
@@ -227,4 +232,15 @@ describe("Validate data", function () {
         expect(errors.length).equals(1);
     });
 
+    // ---------------------
+    // ArrayOf enum
+/*    it('should validate array of enum', async() => {
+
+        let model: ArrayOfModel = { enums: ["a", "b"] };
+        let domain = context.rootContainer.get<Domain>("Domain");
+        let schema = domain.getSchema("ArrayOfModel");
+        let errors = await schema.validateAsync(undefined, model);
+
+        expect(errors.length).equals(0);
+    });*/
 });
