@@ -16,7 +16,7 @@ export { HttpConfigurationSource } from './configurations/configurationSources/h
 
 // Schemas
 export * from './schemas/schema'
-export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOptions, Validator } from './schemas/annotations'
+export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOptions, Validator, ISchemaTypeDefinition, SchemaTypeDefinition } from './schemas/annotations'
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
 
 // Auth

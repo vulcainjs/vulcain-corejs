@@ -4,6 +4,21 @@ import 'reflect-metadata';
 import { RequestContext } from '../servers/requestContext';
 import { Domain } from './schema';
 
+export interface ISchemaTypeDefinition {
+    validate: (val: any, ctx: RequestContext) => string;
+    bind?: (val: any) => any;
+}
+
+/**
+ * Define a new type to use with model property
+ * @param ns Namespace
+ */
+export function SchemaTypeDefinition(ns="") {
+    return function (target: any) {
+        Preloader.instance.registerType(target, (container, domain: Domain) => domain.addType(target.name, new target(), ns));
+    };
+}
+
 export interface ModelOptions {
     name?: string;
     extends?: string;

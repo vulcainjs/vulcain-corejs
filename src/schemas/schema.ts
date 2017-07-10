@@ -307,17 +307,15 @@ export class Domain {
         types[name] = validator;
     }
 
-    addType(name: string, type: string, info: any, ns: string = "") {
-        if (!name || !type) { throw new Error("Invalid argument"); }
-        let subType = this._findType(type);
-        if (!subType) { throw new Error("Unknow type " + type); }
+    addType(name: string, type: any, ns: string = "") {
+        if (!name) { throw new Error("Invalid argument"); }
 
         let types = this.types.get(ns);
         if (!types) {
             types = {};
             this.types.set(ns, types);
         }
-        types[name] = SchemaBuilder.clone(subType, info);
+        types[name] = type;
     }
 
     _findType(name: string) {

@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {Model, Property, Reference, Validator} from "../../dist/schemas/annotations";
+import {Model, Property, Reference, Validator, SchemaTypeDefinition, ISchemaTypeDefinition} from "../../dist/schemas/annotations";
 import {Domain} from "../../dist/schemas/schema";
 import 'mocha';
 import { SchemaStandardTypes } from "../../dist/schemas/standards";
@@ -53,9 +53,33 @@ class DateIsoModel {
     date: string;
 }
 
+@SchemaTypeDefinition()
+export class ArrayOfEnum implements ISchemaTypeDefinition {
+    // Overrided properties
+    $values: any[];
+
+    // Type properties
+    messages: [
+        "Invalid value '{$value}' for '{$propertyName}', all values must be one of [{$values}].",
+        "Invalid value '{$value}' for '{$propertyName}', value must be an array."
+    ];
+
+    validate(val) {
+        if (!this.$values) return "You must define array item type with the 'items' property.";
+        if (!Array.isArray(val)) return this.messages[1];
+        let error = false;
+        val.forEach(e => {
+            if (this.$values.indexOf(val) === -1) error = true;
+        });
+        if (error) return this.messages[0];
+    }
+
+    // bind(val: any): any {}
+}
+
 @Model()
 class ArrayOfModel {
-    @Property({type: SchemaStandardTypes.arrayOf, items: "enum", values: ["a", "b"]})
+    @Property({type: "ArrayOfEnum", items: "string", values: ["a", "b"]})
     enums: string[];
 }
 
@@ -234,7 +258,7 @@ describe("Validate data", function () {
 
     // ---------------------
     // ArrayOf enum
-/*    it('should validate array of enum', async() => {
+    it('should validate array of enum', async() => {
 
         let model: ArrayOfModel = { enums: ["a", "b"] };
         let domain = context.rootContainer.get<Domain>("Domain");
@@ -242,5 +266,5 @@ describe("Validate data", function () {
         let errors = await schema.validateAsync(undefined, model);
 
         expect(errors.length).equals(0);
-    });*/
+    });
 });
