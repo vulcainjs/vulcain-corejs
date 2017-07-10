@@ -15,7 +15,9 @@ export interface ISchemaTypeDefinition {
  */
 export function SchemaTypeDefinition(ns="") {
     return function (target: any) {
-        Preloader.instance.registerType(target, (container, domain: Domain) => domain.addType(target.name, new target(), ns));
+        Preloader.instance.registerType(target, (container, domain: Domain) => {
+            domain.addType(target.name, new target.prototype.constructor(), ns);
+        });
     };
 }
 

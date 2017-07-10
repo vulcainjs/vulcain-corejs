@@ -125,7 +125,7 @@ export class SchemaBuilder {
 
     // Copy all schema property names from 'from'
     static clone(schema, from, clone?): any {
-        clone = clone || {};
+        clone = clone || Object.create(Object.getPrototypeOf( schema));
         for (let key of Object.keys(schema)) {
             if (key && key[0] === "$") {
                 let pname = key.substr(1);
@@ -135,7 +135,6 @@ export class SchemaBuilder {
                 clone[key] = schema[key];
             }
         }
-
         if (from.custom) {
             clone = SchemaBuilder.clone(schema, from.custom, clone);
         }
