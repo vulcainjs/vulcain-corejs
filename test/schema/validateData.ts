@@ -58,24 +58,17 @@ export class ArrayOfEnum implements ISchemaTypeDefinition {
     // Overrided properties
     $values: any[];
 
-    // Type properties
-    messages: string[];
-    
-    // Initialize properties
-    constructor() {
-        this.messages = [
-            "Invalid value '{$value}' for '{$propertyName}', all values must be one of [{$values}].",
-            "Invalid value '{$value}' for '{$propertyName}', value must be an array."
-        ];
-    }
     validate(val) {
         if (!this.$values) return "You must define array item type with the 'items' property.";
-        if (!Array.isArray(val)) return this.messages[1];
+        if (!Array.isArray(val)) return "Invalid value '{$value}' for '{$propertyName}', value must be an array.";
         let error = false;
-        val.forEach(e => {
-            if (this.$values.indexOf(val) === -1) error = true;
-        });
-        if (error) return this.messages[0];
+        for(let e of val) {
+            if (this.$values.indexOf(val) === -1) {
+                error = true;
+                break;
+            }
+        }
+        if (error) return "Invalid value '{$value}' for '{$propertyName}', all values must be one of [{$values}].";
     }
 
     // bind(val: any): any {}
