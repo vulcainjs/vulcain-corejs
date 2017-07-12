@@ -4,6 +4,11 @@ import 'reflect-metadata';
 import { RequestContext } from '../servers/requestContext';
 import { Domain } from './schema';
 
+export interface SchemaTypeDefinitionOptions {
+    name?: string;
+    ns?: string;
+}
+
 export interface ISchemaTypeDefinition {
     validate: (val: any, ctx: RequestContext) => string;
     bind?: (val: any) => any;
@@ -11,12 +16,13 @@ export interface ISchemaTypeDefinition {
 
 /**
  * Define a new type to use with model property
+ * @param name Type name (default to class name)
  * @param ns Namespace
  */
-export function SchemaTypeDefinition(ns="") {
+export function SchemaTypeDefinition(options?: SchemaTypeDefinitionOptions) {
     return function (target: any) {
         Preloader.instance.registerType(target, (container, domain: Domain) => {
-            domain.addType(target.name, new target.prototype.constructor(), ns);
+            domain.addType((options && options.name) || target.name, new target.prototype.constructor(), (options && options.ns) || "");
         });
     };
 }

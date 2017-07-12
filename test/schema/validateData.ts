@@ -73,9 +73,12 @@ export class ArrayOfEnum implements ISchemaTypeDefinition {
         if (!this.$values) return "You must define array item enumeration values with the 'values' property.";
         if (!Array.isArray(val)) return this.messages[1];
         let error = false;
-        val.forEach(e => {
-            if (this.$values.indexOf(val) === -1) error = true;
-        });
+        for(let e of val) {
+            if (this.$values.indexOf(val) === -1) {
+                error = true;
+                break;
+            }
+        }
         if (error) return this.messages[0];
     }
 
