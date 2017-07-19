@@ -231,7 +231,7 @@ export class CommandManager implements IManager {
             command.correlationId = ctx.correlationId;
             command.startedAt = System.nowAsString();
             command.service = this._serviceId;
-            command.userContext = ctx.user || <any>{};
+            command.userContext = ctx.user || <any>{tenant: ctx.tenant};
 
             // Register asynchronous task
             if (!metadata.async) {
@@ -276,6 +276,9 @@ export class CommandManager implements IManager {
 
     async consumeTaskAsync(command: ActionData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest);
+        ctx.user = command.userContext;
+        ctx.tenant = (command.userContext && command.userContext.tenant) || System.defaultTenant;
+
         ctx.correlationId = command.correlationId || RequestContext.createCorrelationId();
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
@@ -286,8 +289,6 @@ export class CommandManager implements IManager {
 
         let res;
         try {
-            ctx.user = command.userContext;
-            ctx.tenant = command.userContext.tenant;
             info.handler.requestContext = ctx;
             info.handler.command = command;
             let result = await info.handler[info.method](command.params);
@@ -340,24 +341,31 @@ export class CommandManager implements IManager {
             for (let info of handlers) {
                 let handler;
                 let ctx = new RequestContext(this.container, Pipeline.EventNotification);
-                ctx.correlationId = evt.correlationId || RequestContext.createCorrelationId();
-
                 try {
-                    ctx.user = evt.userContext || <any>{};
-                    handler = ctx.container.resolve(info.handler);
-                    handler.requestContext = ctx;
-                    handler.event = evt;
-                }
-                catch (e) {
-                    System.log.error(ctx, e, () => `Unable to create handler ${info.handler.name}`);
-                }
+                    ctx.correlationId = evt.correlationId || RequestContext.createCorrelationId();
 
-                try {
-                    handler[info.methodName](evt.value);
+                    try {
+                        ctx.user = evt.userContext || <any>{};
+                        handler = ctx.container.resolve(info.handler);
+                        handler.requestContext = ctx;
+                        handler.event = evt;
+                    }
+                    catch (e) {
+                        System.log.error(ctx, e, () => `Unable to create handler ${info.handler.name}`);
+                        continue;
+                    }
+
+                    try {
+                        handler[info.methodName](evt.value);
+                        this.sendCustomEvent(ctx);
+                    }
+                    catch (e) {
+                        let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
+                        System.log.error(ctx, error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
+                    }
                 }
-                catch (e) {
-                    let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                    System.log.error(ctx, error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
+                finally {
+                    ctx.dispose();
                 }
             }
         });
