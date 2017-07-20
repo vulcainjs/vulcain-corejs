@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.1.142",
+  "version": "1.1.143",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "scripts": {

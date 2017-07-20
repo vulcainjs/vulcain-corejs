@@ -146,10 +146,10 @@ export class CommandManager implements IManager {
                 domain: System.domainName,
                 action: event.action,
                 schema: event.schema,
-                correlationId: null,
-                params: event.params
+                correlationId: null
             };
             let res = this.createResponse(ctx, command);
+            res.value = event.params;
             this.messageBus.sendEvent(res);
         });
         (<any>ctx)._customEvents = null;
