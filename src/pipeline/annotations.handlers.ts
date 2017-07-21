@@ -8,7 +8,6 @@ import { IContainer } from './../di/resolvers';
 import { System } from '../configurations/globals/system';
 import { DefaultActionHandler, DefaultQueryHandler } from "../defaults/crudHandlers";
 
-//const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
 const symMetadata = Symbol.for("handler:metadata");
 
@@ -21,7 +20,7 @@ function getMetadata(key, target) {
             Object.keys(tmp).forEach(p => {
                 let pv = tmp[p];
                 // Do not override action
-                if (Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
+                if (!pv.action || Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
                     metadata[p] = Object.assign({}, pv); // clone
                 }
             });
@@ -102,9 +101,8 @@ export function QueryHandler(metadata: QueryMetadata) {
  */
 export function EventHandler(metadata?: EventMetadata) {
     return function (target: Function) {
-        let actions = getMetadata(symActions, target);
-
         Preloader.instance.registerHandler(target, (container, domain) => {
+            let actions = getMetadata(symActions, target);
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
