@@ -238,6 +238,16 @@ export class CommandManager implements IManager {
 
                 info.handler.requestContext = ctx;
                 info.handler.command = command;
+                /** // Inject runAsyncTask in the current context
+                (<any>ctx)._runAsyncTask = (action, schema, params) => {
+                    let task = <ActionData>{ action, schema, params };
+                    task.correlationId = ctx.correlationId;
+                    task.startedAt = System.nowAsString();
+                    task.service = this._serviceId;
+                    task.userContext = task.userContext || command.userContext;
+                    this.messageBus.pushTask(task);
+                    };
+                **/
                 let result: HttpResponse = await info.handler[info.method](command.params);
 
                 command.status = "Success";
@@ -330,13 +340,26 @@ export class CommandManager implements IManager {
         }
     }
 
-    bindEventHandler(metadata: ConsumeEventMetadata) {
+    /**
+     *
+     */
+    private bindEventHandler(metadata: ConsumeEventMetadata) {
+        // Subscribe to events for a domain, a schema and an action
+        // Get event stream for a domain
         let events = this.messageBus.getEventsQueue(metadata.subscribeToDomain || this.domain.name);
-        events = events.filter((e) => (metadata.subscribeToSchema === "*" || e.schema === metadata.subscribeToSchema));
+        // Filtered by schema
+        if (metadata.subscribeToSchema !== '*') {
+            events = events.filter( e => e.schema === metadata.subscribeToSchema);
+        }
+        // Filtered by action
+        if (metadata.subscribeToAction !== '*') {
+            events = events.filter( e => e.action === metadata.subscribeToAction);
+        }
+        // And by custom filter
         if (metadata.filter)
             events = metadata.filter(events);
 
-        events.subscribe((evt: EventData) => {
+        events.subscribe(async (evt: EventData) => {
             let handlers = CommandManager.eventHandlersFactory.getFilteredHandlers(evt.domain, evt.schema, evt.action);
             for (let info of handlers) {
                 let handler;
@@ -356,7 +379,7 @@ export class CommandManager implements IManager {
                     }
 
                     try {
-                        handler[info.methodName](evt.value);
+                        await handler[info.methodName](evt.value);
                         this.sendCustomEvent(ctx);
                     }
                     catch (e) {

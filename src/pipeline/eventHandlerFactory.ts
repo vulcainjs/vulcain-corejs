@@ -18,8 +18,11 @@ export class EventHandlerFactory {
         }
     }
 
+    /**
+     * Register event handler methods
+     */
     register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: EventMetadata) {
-        let domainName = domain.name;
+        let domainName = handlerMetadata.subscribeToDomain || domain.name;
         handlerMetadata = handlerMetadata || {};
 
         if (handlerMetadata.schema) {

@@ -22,7 +22,7 @@ export class MessageBus {
 
     constructor(private manager: CommandManager, hasAsyncActions:boolean) {
         this.commandBus = manager.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter);
-        if (this.commandBus && hasAsyncActions) // Register for async tasks only if necessary
+        if ( this.commandBus && hasAsyncActions ) // Register for async tasks only if necessary
         {
             this.commandBus.consumeTask(manager.domain.name, manager.serviceId, manager.consumeTaskAsync.bind(manager));
         }
@@ -46,11 +46,12 @@ export class MessageBus {
     pushTask(command: ActionData) {
         command.status = "Pending";
         command.taskId = RequestContext.createCorrelationId();
-        this.commandBus.publishTask(command.domain, this.manager.serviceId, command);
+        this.commandBus && this.commandBus.publishTask(command.domain, this.manager.serviceId, command);
     }
 
-    sendEvent(response: ActionResponse<any>) {
-        delete response.inputSchema;
-        this.eventBus.sendEvent(response.domain, response);
+    sendEvent(event: ActionResponse<any>) {
+        event.inputSchema = null;
+        (<any>event).eventId = RequestContext.createCorrelationId();
+        this.eventBus.sendEvent(event.domain, event);
     }
 }
