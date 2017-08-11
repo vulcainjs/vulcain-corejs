@@ -13,8 +13,9 @@ export abstract class AbstractHttpCommand {
     protected customTags: any;
     protected metrics: IMetrics;
     public requestContext: RequestContext;
-    private static METRICS_NAME = "external_call";
+    private logger: VulcainLogger;
 
+    private static METRICS_NAME = "external_call";
 
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
@@ -47,9 +48,10 @@ export abstract class AbstractHttpCommand {
         this.customTags = { uri: uri };
 
         if (emitLog) {
-            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
-            this.requestContext.setCommand(`Call external api: ${uri}`);
+            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            // Begin Command trace
+            this.logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+            this.requestContext.traceCommand(`Call external api: ${uri}`);
         }
     }
 
@@ -57,8 +59,9 @@ export abstract class AbstractHttpCommand {
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
+
+        // End Command trace
+        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     runAsync(...args): Promise<any> {

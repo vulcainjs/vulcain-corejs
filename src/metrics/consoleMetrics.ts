@@ -23,10 +23,6 @@ export class ConsoleMetrics implements IMetrics {
         this.log(`METRICS: incr    ${metric + this.tags + customTags} : ${delta||1}`);
     }
 
-    decrement(metric:string, customTags?: any, delta?:number) {
-        this.log(`METRICS: decr    ${metric + this.tags + customTags} : ${delta||-1}`);
-    }
-
     timing(metric:string, duration:number, customTags?: string) {
         this.log(`METRICS: timing  ${metric + this.tags + customTags} : ${duration}ms`);
     }

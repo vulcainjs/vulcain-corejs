@@ -16,9 +16,7 @@ export class MetricsWrapper implements IMetrics {
     increment(metric: string, customTags?: any, delta?: number) {
         this.metrics.increment(metric, customTags, delta);
     }
-    decrement(metric: string, customTags?: any, delta?: number) {
-        this.metrics.decrement(metric, customTags, delta);
-    }
+
     timing(metric: string, duration: number, customTags?: any) {
         this.metrics.timing(metric, duration, customTags);
     }

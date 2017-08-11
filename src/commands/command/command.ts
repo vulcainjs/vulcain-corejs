@@ -106,7 +106,7 @@ export class HystrixCommand {
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
 
-                        (<any>this.command).onCommandCompleted && (<any>this.command).onCommandCompleted(duration, true);
+                        this.command.onCommandCompleted && this.command.onCommandCompleted(duration, true);
 
                         // Update cache
                         // TODO
@@ -140,7 +140,7 @@ export class HystrixCommand {
         finally {
             if (start >= 0) {
                 let duration = ActualTime.getCurrentTime() - start;
-                (<any>this.command).onCommandCompleted && (<any>this.command).onCommandCompleted(duration, false);
+                this.command.onCommandCompleted && this.command.onCommandCompleted(duration, false);
                 this.recordTotalExecutionTime(duration);
             }
             this.metrics.decrementExecutionCount();

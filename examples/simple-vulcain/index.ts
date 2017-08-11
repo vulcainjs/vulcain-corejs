@@ -3,7 +3,7 @@ import { Model, ApplicationBuilder, Property, QueryHandler, ActionHandler } from
 
 // Declare a simple customer model with default CRUD handler and anonymous access
 @Model()
-@QueryHandler({scope:'?'})
+@QueryHandler({scope:'?'}) // Anonymous access
 @ActionHandler({scope:'?'})
 class Customer {
     @Property({type:'string', required: true, isKey: true})

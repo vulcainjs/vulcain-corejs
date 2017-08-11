@@ -46,15 +46,6 @@ export class ApplicationInsightsMetrics implements IMetrics {
     }
 
     /**
-     * Decrement a counter metric
-     * @param metric Metric name
-     * @param customTags Object containing contextuel key value tags
-     * @param delta Decrement value
-     */
-    decrement(metric: string, customTags?: any, delta: number = -1) {
-    }
-
-    /**
      * Track a timing value
      * @param metric Metric name
      * @param duration duration is ms

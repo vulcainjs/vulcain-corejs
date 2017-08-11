@@ -2,5 +2,6 @@
 {
     "editor.renderWhitespace": "boundary",
     "files.trimTrailingWhitespace": true,
+    "lcov.path": "coverage/lcov.info",
     "tsimporter.filesToExclude": [".dist/**", "./test/**"]
 }

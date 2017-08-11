@@ -68,7 +68,7 @@ gulp.task("compile-test", ['compile-ts'], function () {
 gulp.task("istanbul:hook", ['compile-test'], function () {
     return gulp.src(['./dist/**/*.js'])
     // Covering files
-        .pipe(istanbul({includeUntested:true}))
+        .pipe(istanbul({ includeUntested: true }))
         // Force `require` to return covered files
         .pipe(istanbul.hookRequire());
 });

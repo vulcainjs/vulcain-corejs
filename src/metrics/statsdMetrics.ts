@@ -45,11 +45,6 @@ export class StatsdMetrics implements IMetrics {
         this.statsd && this.statsd.increment(metric.toLowerCase() + tags, delta);
     }
 
-    decrement(metric: string, customTags?: any, delta?: number) {
-        const tags = this.tags + this.encodeTags(customTags);
-        this.statsd && this.statsd.decrement(metric.toLowerCase() + tags, delta);
-    }
-
     timing(metric: string, duration: number, customTags?: any) {
         const tags = this.tags + this.encodeTags(customTags);
         this.statsd && this.statsd.timing(metric.toLowerCase() + tags, duration);

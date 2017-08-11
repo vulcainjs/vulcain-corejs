@@ -19,7 +19,7 @@ const {HttpLogger} = require('zipkin-transport-http');
 export interface IRequestTracer {
     startTrace(ctx: RequestContext, verb: string, params): any;
     endTrace(tracer, result);
-    setCommand(tracer, verb: string);
+    traceCommand(tracer, verb: string);
 }
 
 /**
@@ -52,8 +52,8 @@ export class ZipkinInstrumentation implements IRequestTracer{
         return this.tracer && new ZipkinTrace(this.tracer, ctx, verb, params);
     }
 
-    setCommand(tracer, verb: string) {
-        tracer && tracer.setCommand(verb);
+    traceCommand(tracer, verb: string) {
+        tracer && tracer.traceCommand(verb);
     }
 
     endTrace(tracer, result) {

@@ -32,6 +32,7 @@ export abstract class AbstractServiceCommand {
     private overrideTenant: string;
     protected metrics: IMetrics;
     private customTags: any;
+    private logger: VulcainLogger;
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
@@ -92,9 +93,9 @@ export abstract class AbstractServiceCommand {
         this.customTags = { targetServiceName: targetServiceName, targetServiceVersion: targetServiceVersion };
 
         if (emitLog) {
-            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
-            this.requestContext.setCommand(`Call service ${targetServiceName} version ${targetServiceVersion}`);
+            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            this.logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
+            this.requestContext.traceCommand(`Call service ${targetServiceName} version ${targetServiceVersion}`);
         }
     }
 
@@ -102,8 +103,7 @@ export abstract class AbstractServiceCommand {
         this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
+        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     /**

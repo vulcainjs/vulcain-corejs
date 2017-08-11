@@ -6,13 +6,13 @@
         {
             "taskName": "compile-ts",
             "isBuildCommand": true,
-            "isWatching": false,
+            "isBackground": false,
             "problemMatcher": "$tsc"
         },
         {
             "taskName": "test",
             "isTestCommand": true,
-            "isWatching": false,
+            "isBackground": false,
             "problemMatcher": "$tsc"
         },
         {

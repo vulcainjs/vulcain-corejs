@@ -273,6 +273,6 @@ describe("Validate data", function () {
         let schema = domain.getSchema("ArrayOfModel");
         let errors = await schema.validateAsync(undefined, model);
 
-        expect(errors.length).equals(0);
+        expect(errors.length).equals(1);
     });
 });

@@ -274,8 +274,8 @@ export class RequestContext {
     endTrace(result) {
         this.tracerInfo && this.tracer.endTrace(this.tracerInfo, result);
     }
-    setCommand(verb: string) {
-        this.tracerInfo && this.tracer.setCommand(this.tracerInfo, verb);
+    traceCommand(verb: string) {
+        this.tracerInfo && this.tracer.traceCommand(this.tracerInfo, verb);
     }
 
     /**

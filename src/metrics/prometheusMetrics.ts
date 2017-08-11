@@ -33,14 +33,10 @@ export class PrometheusMetrics implements IMetrics {
 
         let counter:Prometheus.Gauge = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
-            counter = new Prometheus.Gauge(metric, metric, Object.keys(labels) );
+            counter = new Prometheus.Gauge({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
 
         counter.inc(labels, delta);
-    }
-
-    decrement(metric: string, customTags?: any, delta=1) {
-        this.increment(metric, customTags, delta * -1);
     }
 
     timing(metric: string, duration: number, customTags?: any) {
@@ -48,7 +44,7 @@ export class PrometheusMetrics implements IMetrics {
         let labels = Object.assign(this.tags, customTags);
         let counter:Prometheus.Summary = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
-            counter = new Prometheus.Summary(metric, metric, Object.keys(labels) );
+            counter = new Prometheus.Summary({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
 
         counter.observe(labels, duration);

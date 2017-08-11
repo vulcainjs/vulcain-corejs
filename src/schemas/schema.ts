@@ -340,7 +340,7 @@ export class Domain {
     obfuscate(entity, schema: Schema) {
         let visitor = {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
-            visitProperty(val, prop) { if (prop.sensible) { delete this.current[prop.name]; } }
+            visitProperty(val, prop) { if (prop.sensible) { this.current[prop.name] = undefined; } }
         };
         let v = new SchemaVisitor(this, visitor);
         v.visit(schema.description, entity);

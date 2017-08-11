@@ -27,16 +27,6 @@ export interface IMetrics {
     increment(metric: string, customTags?: any, delta?: number);
 
     /**
-     * Decrement a gauge
-     *
-     * @param {string} metric metric name
-     * @param {number} [delta] default -1
-     *      *
-     * @memberOf IMetrics
-     */
-    decrement(metric: string, customTags?: any, delta?: number);
-
-    /**
      * Set a duration
      *
      * @param {string} metric metric name

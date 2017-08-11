@@ -21,7 +21,7 @@ import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 export abstract class AbstractProviderCommand<T> {
 
     protected providerFactory: ProviderFactory;
-
+    private logger: VulcainLogger;
     protected metrics: IMetrics;
     private customTags: any;
 
@@ -85,8 +85,8 @@ export abstract class AbstractProviderCommand<T> {
         this.customTags = { address: address, schema: schema, tenant: (tenant || this.requestContext.tenant) };
 
         if (emitLog) {
-            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
+            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            this.logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
         }
     }
 
@@ -96,8 +96,7 @@ export abstract class AbstractProviderCommand<T> {
             if (!success)
                 this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         }
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, 'EC', 'Database', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
+        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Database', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
     }
 
     /**

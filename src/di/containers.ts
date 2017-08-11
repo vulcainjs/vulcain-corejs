@@ -37,6 +37,7 @@ export class Container implements IContainer {
     private customEndpoints: {verb:string, path:string, handler:(req:IHttpAdapterRequest)=>HttpResponse}[] = [];
     private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
+    private disposed = false;
 
     /**
      * Creates an instance of Container.
@@ -89,6 +90,7 @@ export class Container implements IContainer {
         this.resolvers.clear();
         this.customEndpoints = null;
         this.parent = null;
+        this.disposed = true;
     }
 
     /**
@@ -284,7 +286,7 @@ export class Container implements IContainer {
 
     /**
      *
-     * Instanciate a component and resolve all of its dependencies
+     * Instanciate a component and resolve all its dependencies
      * @param fn Component constructor
      * @param args List of optional arguments
      * @returns {null}
@@ -297,6 +299,9 @@ export class Container implements IContainer {
 
     private _resolve(parentContainer: Container, resolver: IResolver, name?: string, optional?: boolean) {
 
+        if (this.disposed) {
+            throw new Error("Can not resolved component from a disposed container.");
+        }
         let instance = resolver && resolver.resolve(this, name, parentContainer);
 
         if (!instance && !optional)
