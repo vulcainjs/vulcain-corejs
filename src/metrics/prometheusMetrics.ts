@@ -28,7 +28,7 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     increment(metric: string, customTags?: any, delta = 1) {
-        metric = 'vulcain' + metric;
+        metric = 'vulcain_' + metric;
         let labels = Object.assign(this.tags, customTags);
 
         let counter:Prometheus.Gauge = (<any>Prometheus.register).getSingleMetric(metric);
@@ -40,7 +40,7 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     timing(metric: string, duration: number, customTags?: any) {
-        metric = 'vulcain' + metric;
+        metric = 'vulcain_' + metric;
         let labels = Object.assign(this.tags, customTags);
         let counter:Prometheus.Summary = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
