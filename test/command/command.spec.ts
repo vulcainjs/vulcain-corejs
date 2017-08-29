@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import './commands';
 import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeError';
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
-import { TestContext } from '../../dist/di/testContext';
+import { TestContext } from '../../dist/pipeline/testContext';
 
 let context = new TestContext();
 

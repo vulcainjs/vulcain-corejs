@@ -96,9 +96,11 @@ export class RequestContext implements IRequestContext {
     constructor(container: IContainer, public pipeline: Pipeline, data?: any /*HttpRequest|EventData|AsyncTaskData*/) {
         this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
-        if (!data)
+        if (!data) {
+            this.requestData = <any>{};
             return;
-
+        }
+        
         if (data.headers) {
             this.request = data;
         }

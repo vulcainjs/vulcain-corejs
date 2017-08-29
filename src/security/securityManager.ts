@@ -47,7 +47,7 @@ export interface UserContext {
      * @type {string}
      * @memberOf UserContext
      */
-    tenant: string;        
+    tenant: string;
 
     scopes: string[];
 }
@@ -66,11 +66,11 @@ export interface UserToken extends UserContext {
 export abstract class SecurityManager implements UserContext {
     private static EmptyScopes: string[] = [];
     private strategies: { name: string, verify: (ctx: RequestContext, token: string) => Promise<UserToken> }[] = [];
-    
+
     addOrReplaceStrategy(name: string, verify: (ctx: RequestContext, token: string) => Promise<UserToken>) {
         this.strategies.push({ name, verify });
     }
-    
+
     /**
      * User display name
      *
@@ -102,11 +102,11 @@ export abstract class SecurityManager implements UserContext {
     get scopes(): Array<string> {
         return this._isAnonymous || !this._scopes ? SecurityManager.EmptyScopes : this._scopes;
     }
-    
+
     private _scopes: string[];
     private _isAnonymous: boolean;
     private _tenant?: string;
-    // For context propagation   
+    // For context propagation
     bearer: string;
 
     /**
@@ -119,7 +119,7 @@ export abstract class SecurityManager implements UserContext {
     }
 
     constructor(private _scopePolicy: IAuthorizationPolicy) { }
-    
+
     setTenant(tenantOrCtx: string | UserContext) {
         if (typeof tenantOrCtx === "string") {
             this._tenant = tenantOrCtx;
@@ -138,7 +138,7 @@ export abstract class SecurityManager implements UserContext {
     async process(ctx: RequestContext) {
 
         let authorization = <string>ctx.request.headers['authorization'];
-        
+
         // Perhaps in cookies
         if (!authorization)
             authorization = this.findInCookie(ctx);
@@ -147,7 +147,7 @@ export abstract class SecurityManager implements UserContext {
             // Anonymous
             this.name = "Anonymous";
             this._isAnonymous = true;
-            ctx.logInfo(() => `No authentication context: User access is anonymous `);            
+            ctx.logInfo(() => `No authentication context: User access is anonymous `);
             return;
         }
 
@@ -229,30 +229,30 @@ export abstract class SecurityManager implements UserContext {
             return null;
 
         let pairs = cookies.split(pairSplitRegExp);
-          
+
         for (let i = 0; i < pairs.length; i++) {
             let pair = pairs[i];
             let eq_idx = pair.indexOf('=');
-          
+
             // skip things that don't look like key=value
             if (eq_idx < 0) {
                 continue;
             }
-          
+
             let key = pair.substr(0, eq_idx).trim();
             if (key !== "authorization")
                 continue;
 
             let val = pair.substr(++eq_idx, pair.length).trim();
-          
+
             // quoted values
             if ('"' == val[0]) {
                 val = val.slice(1, -1);
             }
-          
-            return tryDecode(val);              
+
+            return tryDecode(val);
         }
-          
+
         return null;
     }
 }

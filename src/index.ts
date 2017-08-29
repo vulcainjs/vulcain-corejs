@@ -62,7 +62,7 @@ export { ProviderFactory } from './providers/providerFactory';
 export { IContainer, IInjectionNotification } from './di/resolvers';
 //export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
-// TODO export { TestContext } from './di/testContext';
+export { TestContext } from './pipeline/testContext';
 
 // Errors
 export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError, NotFoundError } from './pipeline/errors/applicationRequestError';

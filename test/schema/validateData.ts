@@ -3,7 +3,7 @@ import { Model, Property, Reference, Validator, SchemaTypeDefinition, ISchemaTyp
 import { Domain } from "../../dist/schemas/schema";
 import 'mocha';
 import { SchemaStandardTypes } from "../../dist/schemas/standards";
-import { TestContext } from '../../dist/di/testContext';
+import { TestContext } from '../../dist/pipeline/testContext';
 
 @Model()
 class BaseModel {

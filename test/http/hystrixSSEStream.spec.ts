@@ -4,7 +4,7 @@ import { CommandProperties } from "../../dist/commands/commandProperties";
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
 import { AbstractCommand } from '../../dist/commands/abstractCommand';
 import { Command } from '../../dist/commands/commandFactory';
-import { TestContext } from '../../dist/di/testContext';
+import { TestContext } from '../../dist/pipeline/testContext';
 
 @Command()
 export class HystrixSSECommand1 extends AbstractCommand<any> {

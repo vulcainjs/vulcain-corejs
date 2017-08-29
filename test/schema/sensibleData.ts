@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Model, Property, Reference } from '../../dist/schemas/annotations';
 import { Domain } from '../../dist/schemas/schema';
-import { TestContext } from '../../dist/di/testContext';
+import { TestContext } from '../../dist/pipeline/testContext';
 
 @Model()
 class SimpleModel {
