@@ -112,7 +112,7 @@ export function HttpDependency(uri: string) {
  * @returns
  */
 export function ConfigurationProperty(propertyName: string, schema: string) {
-    return (target: Function) => {
+    return (target, propertyKey: string) => {
         if (!propertyName)
             throw new Error("Invalid property propertyName");
 

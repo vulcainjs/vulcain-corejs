@@ -1,7 +1,8 @@
 import * as amqp from 'amqplib';
-import {EventData, ActionData} from '../pipeline/actions';
 import { System } from './../configurations/globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
+import { EventData } from "../pipeline/handlers/messageBus";
+import { RequestData } from "../pipeline/common";
 
 export /**
  * RabbitAdapter
@@ -107,7 +108,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    publishTask(domain:string, serviceId:string, command:ActionData) {
+    publishTask(domain:string, serviceId:string, command:RequestData) {
         if (!this.channel)
             return;
         domain = domain.toLowerCase();

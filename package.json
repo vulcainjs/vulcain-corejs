@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "1.1.146",
+  "version": "2.0.0",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "scripts": {
@@ -21,7 +21,6 @@
   "devDependencies": {
     "@types/amqplib": "^0.5.4",
     "@types/chai": "^4.0.2",
-    "@types/express": "^4.0.34",
     "@types/fast-stats": "0.0.29",
     "@types/jsonwebtoken": "^7.2.0",
     "@types/mocha": "^2.2.40",
@@ -45,12 +44,9 @@
     "typescript": "^2.4.2"
   },
   "dependencies": {
+    "Router": "^2.1.0",
     "amqplib": "^0.5.1",
     "applicationinsights": "^0.21.0",
-    "body-parser": "^1.17.1",
-    "cookie-parser": "^1.4.3",
-    "cors": "^2.8.4",
-    "express": "^4.15.2",
     "fast-stats": "0.0.3",
     "jsonwebtoken": "^7.2.1",
     "jwks-rsa": "^1.1.1",

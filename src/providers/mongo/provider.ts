@@ -1,13 +1,14 @@
 import { DefaultServiceNames } from './../../di/annotations';
-import { Logger, RequestContext } from './../../servers/requestContext';
 import { IProvider, ListOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoClient } from 'mongodb';
 import { Inject } from '../../di/annotations';
-import { ApplicationRequestError } from '../../errors/applicationRequestError';
 import { System } from '../../configurations/globals/system';
 import * as URL from 'url';
 import * as Path from 'path';
+import { Logger } from "../../configurations/log/logger";
+import { RequestContext } from "../../pipeline/requestContext";
+import { ApplicationRequestError } from "../../pipeline/errors/applicationRequestError";
 
 /**
  * Default mongo provider
@@ -270,7 +271,7 @@ export class MongoProvider implements IProvider<any>
 
     private normalizeErrors(id: string, err) {
         if (!err || !err.errors) return err;
-        let error = new ApplicationRequestError("Mongo error - " + (err.message || ""), []);
+        let error = new ApplicationRequestError("Mongo error - " + (err.message || ""));
         if (err.errors) {
             for (let e in err.errors) {
                 if (!err.errors.hasOwnProperty(e)) continue;

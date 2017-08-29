@@ -1,4 +1,5 @@
-import { RequestContext } from './../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
+
 export class Scope {
     private cache = new Map<string, any>();
 

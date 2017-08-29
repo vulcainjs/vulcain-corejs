@@ -3,9 +3,8 @@ import { DefaultServiceNames } from '../di/annotations';
 import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';
 import { IContainer } from '../di/resolvers';
-import { HandlerItem } from '../pipeline/serviceDescriptions';
 import { System } from '../configurations/globals/system';
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
 
 interface PoolItem {
     provider?: IProvider<any>;
@@ -49,7 +48,7 @@ export class ProviderFactory {
     }
 
     async getProviderAsync(context: RequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
-        tenant = tenant || context.tenant;
+        tenant = tenant || context.security.tenant;
         let poolKey = providerName + "!" + tenant;
         let provider = this.getFromPool(poolKey);
         if (provider) {

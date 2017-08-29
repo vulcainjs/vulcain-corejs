@@ -1,6 +1,6 @@
 
 import {Schema} from "../schemas/schema";
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
 
 export interface ListOptions {
     /**

@@ -2,7 +2,7 @@ import { System } from './../configurations/globals/system';
 import { IMetrics, MetricsConstant } from './metrics';
 import * as Prometheus from 'prom-client';
 import { IContainer } from "../di/resolvers";
-import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
 
 export class PrometheusMetrics implements IMetrics {
@@ -11,9 +11,10 @@ export class PrometheusMetrics implements IMetrics {
 
     constructor(container: IContainer) {
         this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
-        container.registerEndpoint( '/metrics', (req: IHttpAdapterRequest) => {
+
+        container.registerEndpoint( '/metrics', (req: HttpRequest) => {
             let res = new HttpResponse(Prometheus.register.metrics());
-            res.contentType = (<any>Prometheus.Registry).contentType;
+            res.contentType = (<any>Prometheus.Registry).contentType || "text/plain; version=0.0.4";
             return res;
         });
     }

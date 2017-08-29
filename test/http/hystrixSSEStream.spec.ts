@@ -1,9 +1,9 @@
 import { HystrixSSEStream } from "../../dist/commands/http/hystrixSSEStream";
-import { CommandFactory } from '../../dist/commands/command/commandFactory';
-import { CommandProperties } from "../../dist/commands/command/commandProperties";
+import { CommandFactory } from '../../dist/commands/commandFactory';
+import { CommandProperties } from "../../dist/commands/commandProperties";
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
-import { AbstractCommand } from '../../dist/commands/command/abstractCommand';
-import { Command } from '../../dist/commands/command/commandFactory';
+import { AbstractCommand } from '../../dist/commands/abstractCommand';
+import { Command } from '../../dist/commands/commandFactory';
 import { TestContext } from '../../dist/di/testContext';
 
 @Command()

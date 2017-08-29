@@ -1,8 +1,8 @@
 import { Preloader } from '../preloader';
 import { IContainer } from '../di/resolvers';
 import 'reflect-metadata';
-import { RequestContext } from '../servers/requestContext';
 import { Domain } from './schema';
+import { RequestContext } from "../pipeline/requestContext";
 
 export interface SchemaTypeDefinitionOptions {
     name?: string;

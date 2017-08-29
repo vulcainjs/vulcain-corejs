@@ -4,8 +4,8 @@ import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
 import { SchemaBuilder } from '../../schemas/schemaBuilder';
-import { RequestContext } from '../../servers/requestContext';
 import { Conventions } from '../../utils/conventions';
+import { RequestContext } from "../../pipeline/requestContext";
 
 interface AstNode {
     op: string;

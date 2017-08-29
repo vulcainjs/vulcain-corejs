@@ -6,7 +6,7 @@ import { SchemaVisitor } from './visitor';
 import { ModelPropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
 import { System } from './../configurations/globals/system';
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
 
 export interface ErrorMessage {
     message: string;

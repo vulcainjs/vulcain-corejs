@@ -4,9 +4,12 @@
  * @export
  * @class HttpResponse
  */
-export class HttpResponse {
-    static readonly VulcainContentType = "application/vulcain";
+import { ApplicationRequestError } from "./errors/applicationRequestError";
+import { RequestContext } from "./requestContext";
+import { System } from "./../configurations/globals/system";
+import { ErrorResponse } from "./handlers/common";
 
+export class HttpResponse {
     /**
      * Http code (default is 200)
      *
@@ -44,21 +47,27 @@ export class HttpResponse {
      */
     public encoding: string;
 
-    static createFromResponse(data): HttpResponse {
-        let res = new HttpResponse(data.content, data.statusCode);
+  /*  static createFromResponse(data): HttpVulcainResponse {
+        let res = new HttpVulcainResponse(data.content, data.statusCode);
         res.encoding = data.encoding;
         res.contentType = data.contentType;
         res.headers = data.headers;
         return res;
     }
-
-    constructor(content?, statusCode=200) {
+*/
+    static createFromError(err: ApplicationRequestError): HttpResponse {
+        let res = new HttpResponse(JSON.stringify({message: err.message, errors: err.errors}), err.statusCode|| 500);
+        return res;
+    }
+    
+    constructor(content?, statusCode = 200) {
         this.headers = {};
         this.statusCode = statusCode;
-        this.content = content;
+ 
+       this.content = content;
     }
 
-        /**
+    /**
      * Add a custom header value to the response
      *
      * @param {string} name
@@ -79,20 +88,23 @@ export class HttpRedirectResponse extends HttpResponse {
     }
 }
 
-export class BadRequestResponse extends HttpResponse {
-    constructor(content, status=400) {
-        super(content, status);
-        if (typeof content === "string") {
-            this.content = {
-                error: { message: content }
-            };
-        }
-    }
-}
+export class VulcainResponse {
+    tenant: string;
+    domain: string;
+    action: string;
+    schema: string;
+    error?: ErrorResponse;
+    value?: any;
+    correlationId: string;
 
-export class VulcainResponse extends HttpResponse {
-    constructor(content) {
-        super(content);
-        this.contentType = HttpResponse.VulcainContentType;
+    static create(ctx: RequestContext): VulcainResponse {
+        return {
+            tenant: ctx.security.tenant,
+            domain: System.domainName,
+            action: ctx.requestData.action,
+            schema: ctx.requestData.schema,
+            correlationId: ctx.correlationId,
+            value: ctx.response
+        };
     }
 }

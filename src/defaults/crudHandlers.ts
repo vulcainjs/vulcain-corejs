@@ -1,10 +1,10 @@
-import { Action, Query} from '../pipeline/annotations';
-import {AbstractActionHandler, AbstractQueryHandler} from '../pipeline/abstractHandlers';
-import {ICommand} from '../commands/command/abstractCommand';
 import {IContainer} from '../di/resolvers';
 import {Inject} from '../di/annotations';
-import {Command} from '../commands/command/commandFactory';
-import { AbstractProviderCommand } from '../commands/command/abstractProviderCommand';
+import { AbstractProviderCommand } from "../commands/abstractProviderCommand";
+import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handlers/abstractHandlers";
+import { Action, Query } from "../pipeline/handlers/annotations";
+import { ICommand } from "../commands/abstractCommand";
+import { Command } from "../commands/commandFactory";
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
@@ -16,7 +16,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
-        this.setMetricsTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.tenant);
+        this.setMetricsTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
         return this[action + "Internal"](data);
     }
 
@@ -144,7 +144,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     @Query({ action: "all", description: "Get all entities" })
     async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
-        let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || 0, page: page || this.query && this.query.page || 0, query:query || {} };
+        let options = { maxByPage: maxByPage || this.requestContext.requestData.maxByPage || 0, page: page || this.requestContext.requestData.page || 0, query:query || {} };
         let cmd = await this.getDefaultCommandAsync();
         return <Promise<Array<T>>>cmd.runAsync( "all", options);
     }

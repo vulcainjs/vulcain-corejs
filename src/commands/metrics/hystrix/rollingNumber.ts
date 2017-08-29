@@ -1,5 +1,5 @@
-import ActualTime from "../../../utils/actualTime";
 import Bucket from "./counterBucket";
+import ActualTime from "../../../utils/actualTime";
 
 export class RollingNumber {
     private windowLength: number;

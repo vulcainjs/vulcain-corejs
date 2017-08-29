@@ -1,12 +1,10 @@
-import { CommonRequestData } from '../pipeline/common';
 import { IMockManager } from "./imockManager";
-import { RequestContext } from '../servers/requestContext';
-import { ActionMetadata } from '../pipeline/actions';
-import { HttpResponse } from '../pipeline/response';
 import { Conventions } from '../utils/conventions';
 import { System } from '../configurations/globals/system';
-import { VulcainHeaderNames } from '../servers/abstractAdapter';
 import { IDynamicProperty } from '../configurations/dynamicProperty';
+import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
+import { ActionMetadata } from "../pipeline/handlers/actions";
+import { HttpResponse } from "../pipeline/response";
 
 export class MockManager implements IMockManager {
     private mocks;
@@ -106,7 +104,7 @@ export class MockManager implements IMockManager {
         return this.getMockResultAsync(mock, data);
     }
 
-    private async getMockResultAsync(mock, data) {
+    private async getMockResultAsync(mock, data): Promise<HttpResponse> {
         if (!mock) {
             return;
         }
@@ -121,7 +119,7 @@ export class MockManager implements IMockManager {
                 if (item.latency) {
                     await this.sleep(item.latency);
                 }
-                return item.output; // result
+                return <HttpResponse>item.output; // result
             }
         }
         return;
@@ -174,22 +172,22 @@ export class MockManager implements IMockManager {
         return null;
     }
 
-    async tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any): Promise<HttpResponse> {
-        const setting = this.useMockProperty.value || ctx.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK];
+    async tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any) {
+        const setting = this.useMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK];
         const session = this.splitAndTestSession(setting);
         if (!session) {
             return undefined;
         }
 
         let result = await this.getMockResultAsync(await this.readMockSessions(session, verb), params);
-        if (result && result.content) {
-            result.content.correlationId = ctx.correlationId;
-        }
-        return HttpResponse.createFromResponse(result);
+       // if (result && result.content) {
+       //     result.content.correlationId = ctx.correlationId;
+       // }
+        return result;
     }
 
     saveMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
-        const setting = this.registerMockProperty.value || ctx.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK];
+        const setting = this.registerMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK];
         const session = this.splitAndTestSession(setting);
         if (!session) {
             return undefined;

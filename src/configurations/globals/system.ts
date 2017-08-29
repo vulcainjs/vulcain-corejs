@@ -6,10 +6,11 @@ import * as fs from 'fs';
 import { VulcainManifest } from './../dependencies/annotations';
 import { Conventions } from './../../utils/conventions';
 import { IDynamicProperty } from '../dynamicProperty';
-import { IMockManager, DummyMockManager } from '../../mocks/imockManager';
 import { DefaultServiceNames } from '../../di/annotations';
 import { DynamicProperties } from '../properties/dynamicProperties';
 import { IContainer } from '../../di/resolvers';
+import { IMockManager, DummyMockManager } from "../../mocks/imockManager";
+
 
 /**
  * Static class providing service helper methods
@@ -31,7 +32,6 @@ export class System {
     private static _environmentMode: "local" | "test" | "production";
     private static _manifest: VulcainManifest;
     private static _mocksManager: IMockManager;
-
     static defaultDomainName: string;
 
     /**
@@ -97,8 +97,8 @@ export class System {
     static get defaultTenant() {
         return process.env[Conventions.instance.ENV_VULCAIN_TENANT] || 'vulcain';
     }
-
-    static getMocks(container: IContainer) {
+    
+    static getMocksManager(container: IContainer) {
         if (!System._mocksManager) {
             if (System.isTestEnvironnment) {
                 let manager:any = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
@@ -320,6 +320,10 @@ export class System {
                 return null;
         }
         return System._serviceVersion;
+    }
+
+    static get fullServiceName() {
+        return this.serviceName + "." + this.serviceVersion;
     }
 
     /**

@@ -1,10 +1,10 @@
 import { LifeTime } from '../di/annotations';
-import { Query } from '../pipeline/annotations';
-import { QueryHandler } from '../pipeline/annotations.handlers';
 import { System } from './../configurations/globals/system';
 import { VulcainManifest } from './../configurations/dependencies/annotations';
-import { RequestContext } from '../servers/requestContext';
-import { ForbiddenRequestError } from '../errors/applicationRequestError';
+import { QueryHandler } from "../pipeline/handlers/annotations.handlers";
+import { Query } from "../pipeline/handlers/annotations";
+import { RequestContext } from "../pipeline/requestContext";
+import { ForbiddenRequestError } from "../pipeline/errors/applicationRequestError";
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class DependencyExplorer {

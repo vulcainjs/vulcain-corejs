@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
 import { System } from '../configurations/globals/system';
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
 
 /**
  * List of default service names
@@ -66,9 +67,9 @@ export interface IScopedComponent {
     /**
      * Current request context (scope)
      *
-     * @type {RequestContext}
+     * @type {IRequestContext}
      */
-    requestContext: RequestContext;
+    requestContext: IRequestContext;
 }
 
 /**

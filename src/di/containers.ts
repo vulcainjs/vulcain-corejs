@@ -2,29 +2,28 @@ import 'reflect-metadata';
 import { Preloader } from '../preloader';
 import { Scope } from './scope';
 import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver, IContainer, BusUsage } from './resolvers';
-import { RabbitAdapter } from '../bus/rabbitAdapter';
-import { MemoryProvider } from "../providers/memory/provider";
-import { MongoProvider } from "../providers/mongo/provider";
-import { ProviderFactory } from '../providers/providerFactory';
-import { Domain } from '../schemas/schema';
 import { LifeTime, DefaultServiceNames } from './annotations';
 import { Files } from '../utils/files';
 import { Conventions } from '../utils/conventions';
-import { RequestContext } from './../servers/requestContext';
-import { ServiceDescriptors } from './../pipeline/serviceDescriptions';
 import { VulcainLogger } from './../configurations/log/vulcainLogger';
 import { System } from './../configurations/globals/system';
 import { ConsoleMetrics } from '../metrics/consoleMetrics';
-import { DefaultAuthorizationPolicy } from '../servers/policy/defaultAuthorizationPolicy';
-import { DefaultTenantPolicy } from '../servers/policy/defaultTenantPolicy';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
-import { MockManager } from "../mocks/mockManager";
-import { ZipkinInstrumentation } from '../metrics/zipkinInstrumentation';
 import { ServiceResolver } from '../configurations/globals/serviceResolver';
-import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
-import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { RequestContext } from "../pipeline/requestContext";
+import { DefaultAuthorizationPolicy } from "../security/authorizationPolicy";
+import { HttpRequest } from "../pipeline/vulcainPipeline";
+import { TokenService } from "../security/services/tokenService";
+import { MemoryProvider } from "../providers/memory/provider";
+import { DefaultTenantPolicy } from "../pipeline/policies/defaultTenantPolicy";
+import { ProviderFactory } from "../providers/providerFactory";
+import { MetricsFactory } from "../metrics/metrics";
+import { ServiceDescriptors } from "../pipeline/handlers/serviceDescriptions";
+import { MockManager } from "../mocks/mockManager";
+import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";
-import { TokenService } from '../defaults/services/tokenService';
+import { TracerFactory } from "../metrics/tracers/index";
+import { ScopesDescriptor } from "../defaults/scopeDescriptors";
 
 /**
  * Component container for dependency injection
@@ -34,7 +33,6 @@ import { TokenService } from '../defaults/services/tokenService';
  * @implements {IContainer}
  */
 export class Container implements IContainer {
-    private customEndpoints: {verb:string, path:string, handler:(req:IHttpAdapterRequest)=>HttpResponse}[] = [];
     private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
     public scope: Scope;
     private disposed = false;
@@ -58,15 +56,18 @@ export class Container implements IContainer {
 
         if (!parent) {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
-            this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
+            this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
+            this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
+            //this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
-            this.injectSingleton(DefaultAuthorizationPolicy, DefaultServiceNames.AuthorizationPolicy);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
-            this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
             this.injectSingleton(TokenService, DefaultServiceNames.TokenService);
+            this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
+            this.injectInstance(TracerFactory.create(this), DefaultServiceNames.RequestTracer);
+            this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
         }
     }
 
@@ -88,7 +89,6 @@ export class Container implements IContainer {
     dispose() {
         this.scope.dispose();
         this.resolvers.clear();
-        this.customEndpoints = null;
         this.parent = null;
         this.disposed = true;
     }
@@ -105,14 +105,6 @@ export class Container implements IContainer {
         return this;
     }
 
-    registerEndpoint(path: string, handler: (req:IHttpAdapterRequest)=>HttpResponse, httpVerb="get") {
-        this.customEndpoints.push({path, handler, verb: httpVerb});
-    }
-
-    getCustomEndpoints():{verb:string, path:string, handler: (req:IHttpAdapterRequest)=>HttpResponse}[] {
-        return this.customEndpoints;
-    }
-
     /**
      *
      *
@@ -120,15 +112,15 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
-        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address ;
-        if ( !uri ) {
-            System.log.info(null, ()=>"no value found for rabbit address. Ignore adapter");
+        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address;
+        if (!uri) {
+            System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("amqp://")) {
             uri = "amqp://" + uri;
         }
-        let bus = new RabbitAdapter(uri);
+        let bus;// = new RabbitAdapter(uri);
         if (usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if (usage === BusUsage.all || usage === BusUsage.commandOnly)
@@ -143,8 +135,8 @@ export class Container implements IContainer {
      */
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
-        if ( !uri ) {
-            System.log.info(null, ()=>"no value found for mongo address. Ignore adapter");
+        if (!uri) {
+            System.log.info(null, () => "no value found for mongo address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("mongodb://")) {
@@ -170,10 +162,13 @@ export class Container implements IContainer {
      * @returns {Container}
      */
     injectInstance(fn, name: string) {
+        if (!fn)
+            return;
+
         if (!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
         if (name !== "Container" && fn.name)
-            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -186,6 +181,8 @@ export class Container implements IContainer {
     injectSingleton(fn, ...args);
     injectSingleton(fn, name?: string, ...args);
     injectSingleton(fn, nameOrArray: string | Array<any>, ...args) {
+        if (!fn)
+            return;
         let name: string;
         if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
@@ -198,7 +195,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -211,6 +208,8 @@ export class Container implements IContainer {
     injectTransient(fn, ...args);
     injectTransient(fn, name?: string, ...args);
     injectTransient(fn, nameOrArray: string | Array<any>, ...args) {
+        if (!fn)
+            return;
         let name: string;
         if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
@@ -226,7 +225,7 @@ export class Container implements IContainer {
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if (fn.name)
-            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -239,6 +238,8 @@ export class Container implements IContainer {
     injectScoped(fn, ...args);
     injectScoped(fn, name?: string, ...args);
     injectScoped(fn, nameOrArray: string | Array<any>, ...args) {
+        if (!fn)
+            return;
         let name: string;
         if (Array.isArray(nameOrArray)) {
             args = <Array<any>>nameOrArray;
@@ -253,7 +254,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, ()=>"INFO: Register instance component " + name + " as " + fn.name);
+            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -340,6 +341,17 @@ export class Container implements IContainer {
         let component = this._resolve(res && res.container, resolver, name, optional);
         return <T>component;
     }
+
+    private customEndpoints: { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] = [];
+
+    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse) {
+        this.customEndpoints.push({ path, handler, verb: "get" });
+    }
+
+    getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] {
+        return this.customEndpoints;
+    }
+
 }
 
 /**

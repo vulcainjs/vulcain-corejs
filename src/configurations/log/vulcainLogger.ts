@@ -1,10 +1,12 @@
 import { System } from './../globals/system';
 import { IDynamicProperty } from './../dynamicProperty';
 import * as util from 'util';
-import { RequestContext, Logger } from '../../servers/requestContext';
 import * as os from 'os';
+import { Logger } from "./logger";
+import { IRequestContext } from "../../pipeline/common";
+import { RequestContext } from "../../pipeline/requestContext";
 
-export type entryKind = "RR"  // receive request
+export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
     | "BC"      // begin command
     | "EC"      // end command
@@ -22,7 +24,7 @@ interface LogEntry {
     source: string; // container
     message?: string;
     timestamp: number;
-    kind: entryKind;
+    kind: EntryKind;
     action: string;
     error?: string;
     stack?: string;
@@ -52,7 +54,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    error(requestContext: RequestContext, error: Error, msg?: ()=>string) {
+    error(requestContext: IRequestContext, error: Error, msg?: ()=>string) {
         if (!error) return;
         let entry = this.prepareEntry(requestContext);
         entry.message = (msg && msg()) || "Error occured";
@@ -71,7 +73,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    info(requestContext: RequestContext, msg: ()=>string) {
+    info(requestContext: IRequestContext, msg: ()=>string) {
         let entry = this.prepareEntry(requestContext);
         entry.message = msg && msg();
         this.writeEntry(entry);
@@ -86,18 +88,18 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    verbose(requestContext: RequestContext, msg: ()=>string) {
+    verbose(requestContext: IRequestContext, msg: ()=>string) {
         if (VulcainLogger.enableInfo || System.isDevelopment)
             this.info(requestContext, msg);
     }
 
-    logRequestStatus(requestContext: RequestContext, kind: entryKind) {
+    logRequestStatus(requestContext: IRequestContext, kind: EntryKind) {
         let entry = this.prepareEntry(requestContext);
         entry.kind = kind;
         this.writeEntry(entry);
     }
 
-    logAction(requestContext: RequestContext, kind: entryKind, action?: string, message?: string) {
+    logAction(requestContext: IRequestContext, kind: EntryKind, action?: string, message?: string) {
         let entry = this.prepareEntry(requestContext);
         entry.kind = kind;
         entry.action = action;
@@ -105,16 +107,17 @@ export class VulcainLogger implements Logger{
         this.writeEntry(entry);
     }
 
-    private prepareEntry(requestContext: RequestContext) {
+    private prepareEntry(requestContext: IRequestContext) {
+        const ctx = <RequestContext>requestContext;
         return <LogEntry>{
             service: System.serviceName,
             version: System.serviceVersion,
             kind: "Log",
             source: this._hostname,
-            timestamp: (requestContext && requestContext.now) || Date.now() * 1000,
+            timestamp: (ctx && ctx.metrics && ctx.metrics.now()) || Date.now() * 1000,
             correlationId: (requestContext && requestContext.correlationId) || undefined,
-            parentId: (requestContext && requestContext.parentId) || undefined,
-            traceId: (requestContext && requestContext.traceId) || undefined
+            //parentId: (requestContext && requestContext.parentId) || undefined,
+            //traceId: (requestContext && requestContext.traceId) || undefined
         };
     }
 
@@ -124,7 +127,7 @@ export class VulcainLogger implements Logger{
             util.log(`${entry.message} - ${JSON.stringify(entry)}`);
         }
         else {
-            console.log("%j", entry);
+            util.log( JSON.stringify(entry));
         }
     }
 }

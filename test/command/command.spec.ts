@@ -1,11 +1,11 @@
-import { CircuitBreakerFactory } from "../../dist/commands/command/circuitBreaker";
-import { CommandFactory } from '../../dist/commands/command/commandFactory';
-import { CommandProperties } from "../../dist/commands/command/commandProperties";
+import { CircuitBreakerFactory } from "../../dist/commands/circuitBreaker";
+import { CommandFactory } from '../../dist/commands/commandFactory';
+import { CommandProperties } from "../../dist/commands/commandProperties";
 import { ICommandMetrics, CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import './commands';
-import { CommandRuntimeError } from '../../dist/errors/commandRuntimeError';
+import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeError';
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
 import { TestContext } from '../../dist/di/testContext';
 

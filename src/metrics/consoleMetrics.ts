@@ -1,6 +1,5 @@
 import { System } from '../configurations/globals/system';
 import { IMetrics } from './metrics';
-import { IHttpAdapterRequest } from '../servers/abstractAdapter';
 
 /**
  * Metrics adapter for testing

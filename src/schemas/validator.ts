@@ -1,6 +1,6 @@
 import { Domain, SchemaDescription, ErrorMessage } from './schema';
 import { IContainer } from '../di/resolvers';
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
 
 export class Validator {
 

@@ -1,6 +1,6 @@
 import { Container } from './containers';
 import { LifeTime } from './annotations';
-import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
 
 export enum BusUsage {
@@ -10,8 +10,8 @@ export enum BusUsage {
 }
 
 export interface IContainer {
-    registerEndpoint(path: string, handler: Function, httpVerb?:string);
-    getCustomEndpoints():{verb:string, path:string, handler: (req:IHttpAdapterRequest)=>HttpResponse}[];
+    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
+    getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
 
     injectInstance(fn, name: string): IContainer;
     injectSingleton(fn, ...args): IContainer;

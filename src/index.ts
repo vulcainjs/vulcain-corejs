@@ -1,5 +1,4 @@
 import './preloader'; // First
-import { IRequestTracer } from './metrics/zipkinInstrumentation';
 import { IServiceResolver } from './configurations/globals/serviceResolver';
 
 // Configurations
@@ -20,11 +19,9 @@ export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOpt
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
 
 // Auth
-export { ExpressAuthentication } from './servers/express/expressAuthentication';
-export { VerifyTokenParameter, ITokenService } from './defaults/services';
-export { AbstractExpressAuthentication } from './servers/express/abstractExpressAuthentication';
-export { StsTokenService } from './defaults/services/stsTokenService';
-export { ExpressStsAuthentication } from './servers/express/expressStsAuthentication';
+export {SecurityManager, VerifyTokenParameter, ITokenService} from './security/securityManager'
+export { StsTokenService } from './security/services/stsTokenService';
+export { StsAuthentication } from './security/stsAuthentications';
 
 // Core
 export * from './application'
@@ -32,21 +29,23 @@ export { Conventions } from './utils/conventions';
 export { IMetrics } from './metrics/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
-export { IRequestTracer } from './metrics/zipkinInstrumentation';
+export { IRequestTracer } from './metrics/tracers/index';
 
 // Pipeline
-export * from './pipeline/annotations';
-export { QueryHandler, ActionHandler, EventHandler } from './pipeline/annotations.handlers';
-export { EventNotificationMode, ActionMetadata, ActionData, ActionHandlerMetadata, ActionResponse, ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/actions';
-export { QueryData, QueryActionMetadata, QueryMetadata, QueryResponse } from './pipeline/query';
-export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/abstractHandlers';
-export { ValidationError } from './pipeline/common';
+export * from './pipeline/handlers/annotations';
+export { QueryHandler, ActionHandler, EventHandler } from './pipeline/handlers/annotations.handlers';
+export { ActionMetadata, ActionHandlerMetadata } from './pipeline/handlers/actions';
+export { EventNotificationMode,  ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/handlers/messageBus';
+export { QueryActionMetadata, QueryMetadata } from './pipeline/handlers/query';
+export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
+export { RequestData, IRequestContext, Pipeline } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
-export { ScopesDescriptor, ScopeDescription } from './pipeline/scopeDescriptors';
+export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
+export { ValidationError } from './pipeline/errors/validationError';
 
-export { AbstractAdapter, IHttpAdapterRequest } from './servers/abstractAdapter';
-export { RequestContext, Pipeline, UserContext, Logger } from './servers/requestContext'
-export { ExpressAdapter } from './servers/express/expressAdapter';
+export { HttpRequest } from './pipeline/vulcainPipeline';
+export { Logger } from './configurations/log/logger'
+export { UserContext, } from './security/securityManager'
 export { DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand } from './defaults/crudHandlers';
 
 // Bus adapter
@@ -63,22 +62,22 @@ export { ProviderFactory } from './providers/providerFactory';
 export { IContainer, IInjectionNotification } from './di/resolvers';
 //export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
-export { TestContext } from './di/testContext';
+// TODO export { TestContext } from './di/testContext';
 
 // Errors
-export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError } from './errors/applicationRequestError';
-export { BadRequestError } from './errors/badRequestError';
-export { CommandRuntimeError } from './errors/commandRuntimeError';
-export { RuntimeError } from './errors/runtimeError';
-export { HttpCommandError } from './errors/httpCommandError';
+export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError, NotFoundError } from './pipeline/errors/applicationRequestError';
+export { BadRequestError } from './pipeline/errors/badRequestError';
+export { CommandRuntimeError } from './pipeline/errors/commandRuntimeError';
+export { RuntimeError } from './pipeline/errors/runtimeError';
+export { HttpCommandError } from './commands/abstractServiceCommand';
 
 // Commands
-export { Command, CommandFactory } from './commands/command/commandFactory';
-export { EventType, FailureType, ExecutionResult } from './commands/command/executionResult';
-export { AbstractCommand, ICommand } from './commands/command/abstractCommand';
+export { Command, CommandFactory } from './commands/commandFactory';
+export { EventType, FailureType, ExecutionResult } from './commands/executionResult';
+export { AbstractCommand, ICommand } from './commands/abstractCommand';
 export { HystrixSSEStream } from './commands/http/hystrixSSEStream';
-export { IHttpCommandRequest, IHttpCommandResponse } from './commands/command/types';
-export { AbstractServiceCommand } from './commands/command/abstractServiceCommand';
-export { AbstractHttpCommand } from './commands/command/abstractHttpCommand';
-export { AbstractProviderCommand } from './commands/command/abstractProviderCommand';
-export { IHasFallbackCommand } from './commands/command/command';
+export { IHttpCommandRequest, IHttpCommandResponse } from './commands/types';
+export { AbstractServiceCommand } from './commands/abstractServiceCommand';
+export { AbstractHttpCommand } from './commands/abstractHttpCommand';
+export { AbstractProviderCommand } from './commands/abstractProviderCommand';
+export { IHasFallbackCommand } from './commands/command';

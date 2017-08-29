@@ -1,5 +1,7 @@
-import { IHttpAdapterRequest } from '../servers/abstractAdapter';
-
+import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
+import { StatsdMetrics } from './statsdMetrics';
+import { PrometheusMetrics } from './prometheusMetrics';
+import { IContainer } from '../di/resolvers';
 export class MetricsConstant {
     static duration = "_duration";
     static failure = "_failure";
@@ -35,4 +37,12 @@ export interface IMetrics {
      * @memberOf IMetrics
      */
     timing(metric: string, duration: number, customTags?: any);
+}
+
+export class MetricsFactory {
+    static create(container: IContainer) {
+        return new ApplicationInsightsMetrics().initialize() || 
+               new StatsdMetrics().initialize() || 
+               new PrometheusMetrics(container);  
+    }
 }
