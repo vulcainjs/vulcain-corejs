@@ -19,7 +19,7 @@ export class SchemasDescriptor {
             throw new ForbiddenRequestError();
 
         let domain: any = ctx.container.get(DefaultServiceNames.Domain);
-        let name = ctx.requestData.params;
+        let name = ctx.requestData.params.id;
         if (name) {
             let schema = domain.getSchema(name, true);
             if (!schema)

@@ -6,7 +6,6 @@ import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { VulcainLogger } from '../configurations/log/vulcainLogger';
 import { IServiceResolver } from '../configurations/globals/serviceResolver';
 import * as types from './types';
-import * as os from 'os';
 import 'reflect-metadata';
 const rest = require('unirest');
 import * as URL from 'url';
@@ -266,7 +265,6 @@ export abstract class AbstractServiceCommand {
         }
 
         request.header("Authorization", "Bearer " + token);
-
     }
 
     /**
@@ -282,21 +280,9 @@ export abstract class AbstractServiceCommand {
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
-        // Propagate context TODO
-        request.header(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.requestContext.correlationId);
-        //request.header(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.requestContext.traceId);
-        request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
-        request.header(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
-        request.header(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
-        request.header(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
-        if (this.requestContext.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
-            request.header(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.requestContext.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
-        }
-        if (this.requestContext.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
-            request.header(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.requestContext.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
-        }
-
+        let ctx = this.requestContext as RequestContext;
         await this.setUserContextAsync(request);
+        ctx.injectTraceHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 

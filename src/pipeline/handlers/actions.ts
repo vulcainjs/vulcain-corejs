@@ -2,6 +2,7 @@ import { MessageBus, EventNotificationMode, ConsumeEventMetadata, EventData } fr
 import { IContainer } from '../../di/resolvers';
 import { Domain } from '../../schemas/schema';
 import { DefaultServiceNames } from '../../di/annotations';
+import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 import { HandlerFactory, CommonMetadata, ErrorResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import * as os from 'os';
 import * as RX from 'rxjs';
@@ -9,7 +10,6 @@ import { EventHandlerFactory } from './eventHandlerFactory';
 import { Conventions } from '../../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from '../../configurations/globals/system';
-import { VulcainLogger } from '../../configurations/log/vulcainLogger';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
@@ -151,16 +151,19 @@ export class CommandManager implements IManager {
         return info;
     }
 
-    private createEvent(ctx: RequestContext, status: "Error"| "Pending"| "Success", response, error?): EventData {
-        let event: EventData = Object.assign({}, ctx.getRequestDataObject(), {
-            service: System.fullServiceName,
+    private createEvent(ctx: RequestContext, status: "Error"| "Pending"| "Success", result, error?): EventData {
+        let event: EventData = {
+            correlationId: ctx.requestData.correlationId,
+            action: ctx.requestData.action,
+            schema: ctx.requestData.schema,
+            source: System.fullServiceName,
             startedAt: System.nowAsString(),
-            value: response && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, response),
+            value: result && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
             userContext: ctx.security.getUserContext(),
-            status: status
-        });
-
+            status: status,
+            domain: this._domain.name
+        };
         return event;
     }
 
@@ -237,7 +240,7 @@ export class CommandManager implements IManager {
 
     async processAsyncTaskAsync(command: AsyncTaskData) {
         let ctx = new RequestContext(this.container, Pipeline.HttpRequest, command);
-        ctx.setSecurityManager(command.userContext);
+        ctx.setSecurityManager(command.userContext); // TODO metrics
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
         logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
@@ -312,7 +315,7 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.EventNotification, evt);
                 try {
                     try {
-                        ctx.setSecurityManager(evt.userContext);
+                        ctx.setSecurityManager(evt.userContext);// TODO + metrics
                         handler = ctx.container.resolve(info.handler);
                         handler.requestContext = ctx;
                         handler.event = evt;

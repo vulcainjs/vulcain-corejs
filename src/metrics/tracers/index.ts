@@ -6,12 +6,13 @@ import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
 
 export interface IRequestTracer {
+    injectTraceHeaders(headers: (name: string | any, value?: string) => any);
     endTrace(tracer, result);
     traceCommand(tracer, verb: string);
 }
 
 export interface IRequestTracerFactory {
-    startTrace(ctx: IRequestContext): IRequestTracer;    
+    startTrace(ctx: IRequestContext): IRequestTracer;
 }
 
 export class TracerFactory {

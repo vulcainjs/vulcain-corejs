@@ -11,10 +11,12 @@ import { UserContext } from "../../security/securityManager";
 export interface EventData extends RequestData {
     value?: any;
     // Source service name
-    service: string; 
+    source: string;
     error: string;
     userContext: UserContext;
+    startedAt: string;
     completedAt?: string;
+    status: string;
 }
 
 export interface ConsumeEventMetadata {

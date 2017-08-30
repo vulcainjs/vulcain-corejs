@@ -4,12 +4,14 @@ import * as Prometheus from 'prom-client';
 import { IContainer } from "../di/resolvers";
 import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
+import { DefaultServiceNames } from '../di/annotations';
+import { VulcainLogger } from '../configurations/log/vulcainLogger';
 
 export class PrometheusMetrics implements IMetrics {
     private tags: any;
     private static Empty = {};
 
-    constructor(container: IContainer) {
+    constructor(private container: IContainer) {
         this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
 
         container.registerEndpoint( '/metrics', (req: HttpRequest) => {
@@ -36,8 +38,13 @@ export class PrometheusMetrics implements IMetrics {
         if (!counter) {
             counter = new Prometheus.Gauge({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
-
-        counter.inc(labels, delta);
+        try {
+            counter.inc(labels, delta);
+        }
+        catch (e) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.error(null, e, ()=>"Promotheus metrics")
+        }
     }
 
     timing(metric: string, duration: number, customTags?: any) {
@@ -47,7 +54,12 @@ export class PrometheusMetrics implements IMetrics {
         if (!counter) {
             counter = new Prometheus.Summary({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
-
-        counter.observe(labels, duration);
+        try {
+            counter.observe(labels, duration);
+        }
+        catch (e) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.error(null, e, ()=>"Promotheus metrics")
+        }
     }
 }

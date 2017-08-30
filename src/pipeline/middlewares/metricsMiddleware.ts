@@ -10,7 +10,7 @@ export interface CommandMetrics {
     now: ()=>number;
 }
 
-interface Metrics extends CommandMetrics {
+export interface Metrics extends CommandMetrics {
     traceId: string;
     startTick: [number, number];
     parentId: string;
@@ -19,68 +19,66 @@ interface Metrics extends CommandMetrics {
 }
 
 export class MetricsMiddleware extends VulcainMiddleware {
-    
-    private startRequest(logger: VulcainLogger, ctx: RequestContext) {
+
+    private startRequest(ctx: RequestContext) {
         const tracerFactory = ctx.container.get<IRequestTracerFactory>(DefaultServiceNames.RequestTracer, true, LifeTime.Singleton);
-                
+
         let metricsInfo: Metrics = {
             traceId: this.randomTraceId(),
             startTime: Date.now() * 1000,
             startTick: process.hrtime(),
-            parentId: <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID],
+            parentId: <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID],//TODO
             tracer: tracerFactory && tracerFactory.startTrace(ctx),
-            traceCommand: (verb: string) => metricsInfo.tracer && metricsInfo.tracer.traceCommand(metricsInfo, verb),    
+            traceCommand: (verb: string) => metricsInfo.tracer && metricsInfo.tracer.traceCommand(metricsInfo, verb),
             now: () => metricsInfo.startTime + this.durationInMicroseconds(metricsInfo)
         };
-        
+
         ctx.metrics = metricsInfo;
         return metricsInfo;
     }
 
     private endRequest(logger: VulcainLogger,ctx: RequestContext, metricsInfo: Metrics, e?: Error) {
         let metrics = ctx.container.get<IMetrics>(DefaultServiceNames.Metrics);
-        
+
         let hasError = false;
         let prefix: string;
-        
+
         let value = ctx.response && ctx.response.content;
         hasError = !!e || !ctx.response || ctx.response.statusCode && ctx.response.statusCode >= 400 || !value;
-                
+
         if (ctx.requestData.schema) {
             prefix = ctx.requestData.schema.toLowerCase() + "_" + ctx.requestData.action.toLowerCase();
         }
         else if (ctx.requestData.action) {
             prefix = ctx.requestData.action.toLowerCase();
         }
-        
+
         const duration = this.durationInMicroseconds(metricsInfo);
-                
+
         // Duration
         prefix && metrics.timing(prefix + MetricsConstant.duration, duration);
         metrics.timing(MetricsConstant.allRequestsDuration, duration);
-                
+
         // Failure
         if (hasError) {
             prefix && metrics.increment(prefix + MetricsConstant.failure);
             metrics.increment(MetricsConstant.allRequestsFailure);
         }
-                
+
         // Always remove userContext
         if (value) {
             value.userContext = undefined;
         }
-                        
+
         e && logger.error(ctx, e);
-                                
+
         metricsInfo.tracer && metricsInfo.tracer.endTrace(metricsInfo.tracer, ctx.response);
     }
 
     async invoke(ctx: RequestContext) {
-        let metricsInfo: Metrics;
+        let metricsInfo = this.startRequest(ctx);
+
         let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        
-        metricsInfo = this.startRequest(logger, ctx);
-    
         try {
             // Call next middleware
             let res = await super.invoke(ctx);
@@ -92,7 +90,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
             throw e;
         }
     }
-    
+
     /**
      * current duration in microseconds
      *

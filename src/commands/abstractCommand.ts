@@ -64,11 +64,13 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
         this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
-    protected setMetricsTags(args: { [key: string] : string }) {
+    protected setMetricsTags(args: { [key: string] : string }, emitLog?:boolean) {
         this.customTags = args;
-
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
+        if (emitLog) {
+            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
+            logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
+            this.requestContext.metrics.traceCommand(`Execute command ${this.constructor.name} with parameters ${args}`);
+        }
     }
 
     onCommandCompleted(duration: number, success: boolean) {

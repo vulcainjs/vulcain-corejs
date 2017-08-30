@@ -21,36 +21,40 @@ export class HandlersMiddleware extends VulcainMiddleware {
         let command = ctx.requestData;
         let manager = (ctx.request.verb === "GET" ? this.queryManager : this.actionManager);
 
-            // Check if handler exists
-            let info = manager.getInfoHandler(command);
-            System.log.info(ctx, () => `Request input   : ${JSON.stringify(command)}`);
-            System.log.info(ctx, () => `Request context : user=${ctx.security.name}, scopes=${ctx.security.scopes}, tenant=${ctx.security.tenant}`);
+        // Check if handler exists
+        let info = manager.getInfoHandler(command);
 
-            // Verify authorization
-            if (!ctx.security.userHasScope(info.metadata.scope)) {
-                System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.security.name}, scopes=${ctx.security.scopes}`);
-                throw new UnauthorizedRequestError();
-            }
+        // Ensure schema name (casing) is valid
+        ctx.requestData.schema = info.metadata.schema || ctx.requestData.schema;
 
-            // Process handler
-            let result: HttpResponse;
-            const mocks = System.getMocksManager(ctx.container);
-            let params = Object.assign({}, command.params || {});
-            let metadata = <ActionMetadata>info.metadata;
-            result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, metadata, info.verb, params);
+        System.log.info(ctx, () => `Request input   : ${JSON.stringify(command)}`);
+        System.log.info(ctx, () => `Request context : user=${ctx.security.name}, scopes=${ctx.security.scopes}, tenant=${ctx.security.tenant}`);
 
-            if (!mocks.enabled || result === undefined) {
-                result = await manager.runAsync(command, ctx);
-            }
+        // Verify authorization
+        if (!ctx.security.userHasScope(info.metadata.scope)) {
+            System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.security.name}, scopes=${ctx.security.scopes}`);
+            throw new UnauthorizedRequestError();
+        }
+
+        // Process handler
+        let result: HttpResponse;
+        const mocks = System.getMocksManager(ctx.container);
+        let params = Object.assign({}, command.params || {});
+        let metadata = <ActionMetadata>info.metadata;
+        result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, metadata, info.verb, params);
+
+        if (!mocks.enabled || result === undefined) {
+            result = await manager.runAsync(command, ctx);
+        }
         // TODO
-            if (result && command.correlationId) {
-                result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
-            }
+        if (result && command.correlationId) {
+            result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
+        }
 
-            ctx.response = result;
+        ctx.response = result;
 
-            //this.endRequest(result, ctx);
-            mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
+        //this.endRequest(result, ctx);
+        mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
         return super.invoke(ctx);
     }
 }

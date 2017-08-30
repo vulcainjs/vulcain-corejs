@@ -41,6 +41,7 @@ export abstract class AbstractHttpCommand {
     protected setMetricsTags(uri: string, emitLog = true) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
+        uri = System.removePasswordFromUrl(uri);
         let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
         if (!exists) {
             System.manifest.dependencies.externals.push({ uri });
@@ -50,12 +51,12 @@ export abstract class AbstractHttpCommand {
         if (emitLog) {
             this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             // Begin Command trace
-            this.logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${System.removePasswordFromUrl(uri)}`);
+            this.logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${uri}`);
             this.requestContext.metrics.traceCommand(`Call external api: ${uri}`);
         }
     }
 
-    onCommandCompleted(duration: number, success: boolean) {
+    onCommandCompleted(duration: number, success: boolean) { // TODO
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
         if (!success)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);

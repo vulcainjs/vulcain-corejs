@@ -132,7 +132,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
 
         // If there is an id and no params, params is the id
         if (!ctx.requestData.params) {
-            ctx.requestData.params = id;
+            ctx.requestData.params = id || {};
         }
         else if(id) {
             ctx.requestData.params.id = id;

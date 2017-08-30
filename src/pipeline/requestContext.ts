@@ -5,7 +5,7 @@ import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
 import { Logger } from "../configurations/log/logger";
-import { CommandMetrics } from "./middlewares/metricsMiddleware";
+import { Metrics } from "./middlewares/metricsMiddleware";
 import { HttpRequest } from "./vulcainPipeline";
 import { ApplicationRequestError } from "./errors/applicationRequestError";
 import { DefaultAuthentication } from "../security/defaultAuthentication";
@@ -14,7 +14,9 @@ import { CommandFactory } from "../commands/commandFactory";
 import { HttpResponse } from "./response";
 import { EventData } from "./handlers/messageBus";
 import { AsyncTaskData } from "./handlers/actions";
+import { System } from '../configurations/globals/system';
 const guid = require('uuid');
+import * as os from 'os';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -36,9 +38,8 @@ export class RequestContext implements IRequestContext {
     hostName: string;
     requestData: RequestData;
     response: HttpResponse;
-    metrics: CommandMetrics;
+    metrics: Metrics;
     request: HttpRequest;
-
     private _securityManager: SecurityManager;
     private _logger: Logger;
 
@@ -100,7 +101,7 @@ export class RequestContext implements IRequestContext {
             this.requestData = <any>{};
             return;
         }
-        
+
         if (data.headers) {
             this.request = data;
         }
@@ -182,6 +183,22 @@ export class RequestContext implements IRequestContext {
      */
     get publicPath() {
         return this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH];
+    }
+
+    injectTraceHeaders(headers: (name: string|any, value?: string) => any) {
+        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.correlationId);
+        //header(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.requestContext.traceId);
+        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
+        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
+        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
+        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
+        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
+        }
+        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
+        }
+        this.metrics && this.metrics.tracer.injectTraceHeaders(headers);
     }
 
     dispose() {

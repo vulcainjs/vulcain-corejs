@@ -140,4 +140,8 @@ class ZipkinTrace implements IRequestTracer {
     private stringToBoolean(str) {
         return str === '1';
     }
+
+    injectTraceHeaders(headers: (name: string | any, value?: string) => any) {
+        
+    }
 }
