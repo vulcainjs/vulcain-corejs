@@ -107,7 +107,7 @@ export class Application {
         System.log.info(null, ()=>"Starting application");
 
         this._vulcainExecutablePath = Path.dirname(module.filename);
-        this._basePath = Path.join(this._vulcainExecutablePath, "../../..");
+        this._basePath = Files.findApplicationPath();
 
         // Ensure initializing this first
         const test = System.isDevelopment;

@@ -1,6 +1,7 @@
 import { System } from './../globals/system';
 import * as fs from 'fs';
 import * as Path from 'path';
+import { Files } from "../../utils/files";
 
 export interface ServiceDependencyInfo {
     service: string;
@@ -49,15 +50,18 @@ export class VulcainManifest {
 
     private *retrievePackage() {
         try {
-            let basePath = Path.join(Path.dirname(module.filename), "../../..");
-            let json = fs.readFileSync(Path.join(basePath, "package.json"), "utf8");
+            let basePath = Files.findApplicationPath();
+            let json = fs.readFileSync(Path.join(basePath, "../package.json"), "utf8");
             let pkg = JSON.parse(json);
             let dependencies = pkg.dependencies;
 
             for (let packageName of Object.keys(dependencies)) {
-                json = fs.readFileSync(Path.join(basePath, 'node_modules', packageName, "package.json"), "utf8");
-                pkg = JSON.parse(json);
-                yield { name: packageName, version: pkg.version };
+                try {
+                    json = fs.readFileSync(Path.join(basePath, 'node_modules', packageName, "package.json"), "utf8");
+                    pkg = JSON.parse(json);
+                }
+                catch(e) {/*ignore*/}
+                yield { name: packageName, version: (pkg && pkg.version) || "???" };
             }
         }
         catch (e) {
