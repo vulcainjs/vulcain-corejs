@@ -30,7 +30,9 @@ import { LocalAdapter } from "./bus/localAdapter";
  * @class Application
  */
 export class Application {
-    private _executablePath: string;
+    private _vulcainExecutablePath: string;
+    private _basePath: string;
+
     private _container: IContainer;
     private _domain: Domain;
     /**
@@ -40,8 +42,6 @@ export class Application {
      * @memberOf Application
      */
     public enableHystrixStream: boolean;
-
-    private _basePath: string;
 
     /**
      * Enable api key authentication
@@ -69,14 +69,6 @@ export class Application {
         return this._domain;
     }
 
-    private findBasePath() {
-        let parent = module.parent;
-        while (parent.parent) {
-            parent = parent.parent;
-        }
-        return Path.dirname(parent.filename);
-    }
-
     /**
      * Create new application
      * @param path Files base path for components discovery
@@ -92,8 +84,8 @@ export class Application {
 
         System.log.info(null, () => "Starting application");
 
-        this._executablePath = Path.dirname(module.filename);
-        this._basePath = this.findBasePath();
+        this._vulcainExecutablePath = Path.dirname(module.filename);
+        this._basePath = Files.findApplicationPath();
 
         // Ensure initializing this first
         const test = System.isDevelopment;
@@ -180,9 +172,9 @@ export class Application {
     }
 
     private registerComponents() {
-        this.registerRecursive(Path.join(this._executablePath, "defaults/models"));
-        this.registerRecursive(Path.join(this._executablePath, "defaults/handlers"));
-        this.registerRecursive(Path.join(this._executablePath, "defaults/services"));
+        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/models"));
+        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/handlers"));
+        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/services"));
 
         let path = Conventions.instance.defaultApplicationFolder;
         this.registerRecursive(Path.join(this._basePath, path));

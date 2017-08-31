@@ -4,6 +4,17 @@ import { System } from './../configurations/globals/system';
 
 export class Files
 {
+    static findApplicationPath() {
+        let parent = module.parent;
+        while (parent.parent) {
+            if (fs.existsSync(Path.join(Path.dirname(parent.filename), 'startup.js')) &&
+                fs.existsSync(Path.join(Path.dirname(parent.filename), 'index.js')))
+                break;
+            parent = parent.parent;
+        }
+        return Path.dirname(parent.filename);
+    }
+
     static traverse( dir:string, callback?:( n, v )=>void, filter?:(fileName)=>boolean )
     {
         if(!filter)
