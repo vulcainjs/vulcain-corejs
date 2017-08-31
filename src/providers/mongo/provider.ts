@@ -47,15 +47,15 @@ export class MongoProvider implements IProvider<any>
         if (!tenant)
             throw new Error("tenant is required");
 
-        // Insert tenant in connexion string
-        let url = this.state.uri;
-        let parts = url.split('?');
-        if (parts[0][parts[0].length - 1] === "/")
-            parts[0] += tenant;
+        // Insert tenant into connexion string
+        let url = URL.parse(this.state.uri);
+        // If no database is provide just use the tenant as database name
+        if( !url.pathname || url.pathname === "/")
+            url.pathname = tenant;
         else
-            parts[0] += "/" + tenant;
-        url = parts.join('?');
-        this.state.uri = url;
+            // else suffix the database name with the tenant
+            url.pathname += "_" + tenant;
+        this.state.uri = URL.format(url);
 
         this.ctx.logVerbose(()=>`MONGODB: Creating provider ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
 
