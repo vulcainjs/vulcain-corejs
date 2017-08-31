@@ -49,13 +49,13 @@ export class VulcainManifest {
 
     private *retrievePackage() {
         try {
-            let basePath = Path.dirname(require.main.filename);
-            let json = fs.readFileSync(Path.join(basePath, "..", "package.json"), "utf8");
+            let basePath = Path.join(Path.dirname(module.filename), "../../..");
+            let json = fs.readFileSync(Path.join(basePath, "package.json"), "utf8");
             let pkg = JSON.parse(json);
             let dependencies = pkg.dependencies;
 
             for (let packageName of Object.keys(dependencies)) {
-                json = fs.readFileSync(Path.join(basePath, "..", 'node_modules', packageName, "package.json"), "utf8");
+                json = fs.readFileSync(Path.join(basePath, 'node_modules', packageName, "package.json"), "utf8");
                 pkg = JSON.parse(json);
                 yield { name: packageName, version: pkg.version };
             }
