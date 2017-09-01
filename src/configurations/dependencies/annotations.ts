@@ -37,8 +37,10 @@ export class VulcainManifest {
         packages: { name: string, version: string }[]
     };
     configurations: { [name: string]: string };
+    domain: string;
 
-    constructor(public serviceName: string, serviceVersion: string) {
+    constructor(public serviceName: string, public serviceVersion: string) {
+        this.domain = System.domainName;
         this.dependencies = {
             services: [],
             externals: [],

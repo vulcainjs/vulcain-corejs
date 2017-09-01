@@ -34,9 +34,9 @@ export class PrometheusMetrics implements IMetrics {
         metric = 'vulcain_' + metric;
         let labels = Object.assign(this.tags, customTags);
 
-        let counter:Prometheus.Gauge = (<any>Prometheus.register).getSingleMetric(metric);
+        let counter:Prometheus.Counter = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
-            counter = new Prometheus.Gauge({ name: metric, help: metric, labelNames: Object.keys(labels) });
+            counter = new Prometheus.Counter({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
         try {
             counter.inc(labels, delta);
@@ -50,9 +50,9 @@ export class PrometheusMetrics implements IMetrics {
     timing(metric: string, duration: number, customTags?: any) {
         metric = 'vulcain_' + metric;
         let labels = Object.assign(this.tags, customTags);
-        let counter:Prometheus.Summary = (<any>Prometheus.register).getSingleMetric(metric);
+        let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
-            counter = new Prometheus.Summary({ name: metric, help: metric, labelNames: Object.keys(labels) });
+            counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels) });
         }
         try {
             counter.observe(labels, duration);

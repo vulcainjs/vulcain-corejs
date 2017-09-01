@@ -66,7 +66,8 @@ export class VulcainServer {
         }
 
         this.router.get('/health', (req, res) => {
-            res.status(200).end();
+            res.statusCode = 200;
+            res.end();
         });
     }
 

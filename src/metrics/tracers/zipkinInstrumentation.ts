@@ -141,7 +141,15 @@ class ZipkinTrace implements IRequestTracer {
         return str === '1';
     }
 
-    injectTraceHeaders(headers: (name: string | any, value?: string) => any) {
-        
+    injectTraceHeaders(tracer, headers: (name: string | any, value?: string) => any) {
+        headers[Header.TraceId] = tracer.traceId;
+        headers[Header.SpanId] = tracer.spanId;
+
+        tracer._parentId.ifPresent(psid => {
+          headers[Header.ParentSpanId] = psid;
+        });
+        tracer.sampled.ifPresent(sampled => {
+          headers[Header.Sampled] = sampled ? '1' : '0';
+        });
     }
 }

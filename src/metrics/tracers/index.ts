@@ -6,7 +6,7 @@ import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
 
 export interface IRequestTracer {
-    injectTraceHeaders(headers: (name: string | any, value?: string) => any);
+    injectTraceHeaders(tracer, headers: (name: string | any, value?: string) => any);
     endTrace(tracer, result);
     traceCommand(tracer, verb: string);
 }
