@@ -97,7 +97,8 @@ export class VulcainServer {
                 return;
             }
 
-            resp.writeHead(404);
+            resp.statusCode = 404;
+            resp.end();
         });
 
         srv.listen(port, (err) => {
@@ -123,7 +124,7 @@ export class VulcainServer {
 
     private sendResponse(resp: http.ServerResponse, response: HttpResponse) {
         if (!response) {
-            resp.end();
+            resp.end(); // TODO try to encapsulate all end responses into setImmediate
             return;
         }
 

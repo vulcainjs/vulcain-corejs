@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "2.0.0",
+  "version": "2.0.0-beta1",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "scripts": {
@@ -27,12 +27,12 @@
     "@types/mongodb": "^2.2.9",
     "@types/sinon": "^2.3.3",
     "@types/statsd-client": "^0.1.30",
-    "chai": "^4.1.0",
+    "chai": "^4.1.2",
     "fs-extra": "^4.0.1",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
     "gulp-istanbul": "^1.1.2",
-    "gulp-mocha": "^3.0.1",
+    "gulp-mocha": "^4.3.1",
     "gulp-sourcemaps": "^2.4.1",
     "gulp-tslint": "^8.1.1",
     "gulp-typedoc": "^2.0.0",
@@ -41,7 +41,7 @@
     "sinon": "^3.2.0",
     "tslint": "^5.5.0",
     "typedoc": "^0.8.0",
-    "typescript": "^2.4.2"
+    "typescript": "^2.5.2"
   },
   "dependencies": {
     "amqplib": "^0.5.1",
