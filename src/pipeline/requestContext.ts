@@ -132,8 +132,8 @@ export class RequestContext implements IRequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommandAsync<T = ICommand>(name: string, schema?: string) {
-        return <T><any>CommandFactory.getAsync(name, this, schema);
+    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
+        return CommandFactory.getAsync<T>(name, this, schema);
     }
 
     /**

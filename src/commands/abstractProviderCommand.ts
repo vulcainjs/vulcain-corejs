@@ -16,7 +16,7 @@ import { RequestContext } from "../pipeline/requestContext";
  * @export
  * @abstract
  * @class AbstractCommand
- * @template T
+ * @template T schema
  */
 export abstract class AbstractProviderCommand<T> {
 
@@ -106,7 +106,7 @@ export abstract class AbstractProviderCommand<T> {
      * @param {any} args
      * @returns {Promise<T>}
      */
-    abstract runAsync(...args): Promise<T>;
+    abstract runAsync(...args);
 
     // Must be defined in command
     // protected fallbackAsync(err, ...args)

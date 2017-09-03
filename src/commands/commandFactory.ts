@@ -50,9 +50,9 @@ interface CommandCache {
 
 export class CommandFactory {
 
-    static async getAsync(commandKey: string, container: IContainer): Promise<ICommand>;
-    static async getAsync(commandKey: string, context: IRequestContext, schema?: string): Promise<ICommand>;
-    static async getAsync(commandKey: string, contextOrContainer: IRequestContext|IContainer, schema?: string): Promise<ICommand> {
+    static async getAsync<T>(commandKey: string, container: IContainer): Promise<T>;
+    static async getAsync<T>(commandKey: string, context: IRequestContext, schema?: string): Promise<T>;
+    static async getAsync<T>(commandKey: string, contextOrContainer: IRequestContext|IContainer, schema?: string): Promise<T> {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
             let container: IContainer;
@@ -67,7 +67,7 @@ export class CommandFactory {
             let resolvedCommand = container.resolve(cache.command);
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, context, container);
             await cmd.setSchemaOnCommandAsync(schema);
-            return cmd;
+            return <T><any>cmd;
         }
     }
 
