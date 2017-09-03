@@ -41,6 +41,10 @@ export function Model(options?: ModelOptions) {
     return function (target: Function) {
         options = options || {};
         options.name = options.name || target.name;
+        if (!options.extends) {
+            let ext = Object.getPrototypeOf(target).name;
+            if (ext) options.extends = ext;
+        }
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, options, target);
         Preloader.instance.registerModel(target, (container, domain: Domain) => domain.addSchemaDescription(target, options.name));

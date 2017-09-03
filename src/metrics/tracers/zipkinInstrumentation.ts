@@ -103,7 +103,7 @@ class ZipkinTrace implements IRequestTracer {
     }
 
     private readHeader(ctx: RequestContext, header: string) {
-        const val = ctx.request.headers[header];
+        const val = ctx.request.headers[header.toLowerCase()];
         if (val) {
             return new Some(val);
         } else {
@@ -112,7 +112,7 @@ class ZipkinTrace implements IRequestTracer {
     }
 
     private containsRequiredHeaders(ctx: RequestContext) {
-        return ctx.request.headers[Header.TraceId] !== undefined && ctx.request.headers[Header.SpanId] !== undefined;
+        return ctx.request.headers[Header.TraceId.toLowerCase()] !== undefined && ctx.request.headers[Header.SpanId.toLowerCase()] !== undefined;
     }
 
     endTrace(result) {
@@ -142,14 +142,17 @@ class ZipkinTrace implements IRequestTracer {
     }
 
     injectTraceHeaders(tracer, headers: (name: string | any, value?: string) => any) {
-        headers[Header.TraceId] = tracer.traceId;
-        headers[Header.SpanId] = tracer.spanId;
+        if (!tracer) return;
+
+        tracer = tracer.id;
+        headers(Header.TraceId, tracer.traceId);
+        headers(Header.SpanId, tracer.spanId);
 
         tracer._parentId.ifPresent(psid => {
-          headers[Header.ParentSpanId] = psid;
+          headers(Header.ParentSpanId, psid);
         });
         tracer.sampled.ifPresent(sampled => {
-          headers[Header.Sampled] = sampled ? '1' : '0';
+          headers(Header.Sampled, sampled ? '1' : '0');
         });
     }
 }
