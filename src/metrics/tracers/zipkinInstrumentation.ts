@@ -143,16 +143,20 @@ class ZipkinTrace implements IRequestTracer {
 
     injectTraceHeaders(tracer, headers: (name: string | any, value?: string) => any) {
         if (!tracer) return;
+        tracer.scoped(() => {
+            tracer.setId(tracer.createChildId());
+            const traceId = tracer.id;
+            // this.traceId = traceId;
+            tracer = tracer.id;
+            headers(Header.TraceId, tracer.traceId);
+            headers(Header.SpanId, tracer.spanId);
 
-        tracer = tracer.id;
-        headers(Header.TraceId, tracer.traceId);
-        headers(Header.SpanId, tracer.spanId);
-
-        tracer._parentId.ifPresent(psid => {
-          headers(Header.ParentSpanId, psid);
-        });
-        tracer.sampled.ifPresent(sampled => {
-          headers(Header.Sampled, sampled ? '1' : '0');
+            tracer._parentId.ifPresent(psid => {
+                headers(Header.ParentSpanId, psid);
+            });
+            tracer.sampled.ifPresent(sampled => {
+                headers(Header.Sampled, sampled ? '1' : '0');
+            });
         });
     }
 }

@@ -129,6 +129,9 @@ export class VulcainServer {
         }
 
         try {
+            if( System.isTestEnvironnment)
+                resp.setHeader('Access-Control-Allow-Origin', '*'); // CORS
+
             if (response.headers) {
                 for (const k of Object.keys(response.headers)) {
                     resp.setHeader(k, response.headers[k]);

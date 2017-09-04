@@ -39,11 +39,13 @@ export abstract class AbstractHandler implements IScopedComponent {
     }
 
     /**
-     * Create a new command
-     * @param commandName
+     * Create a new command instance.
+     * 
+     * @param commandName Command name
+     * @param schema Schema to use for the command provider (default = schema defined for the handler)
      */
-    createCommandAsync<T = ICommand>(commandName: string) {
-        return <T><any>this._requestContext.getCommandAsync(commandName, this.metadata && this.metadata.schema);
+    createCommandAsync<T = ICommand>(commandName: string, schema?: string) {
+        return <T><any>this._requestContext.getCommandAsync(commandName, schema || (this.metadata && this.metadata.schema));
     }
 }
 
