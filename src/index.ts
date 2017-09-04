@@ -29,7 +29,7 @@ export { Conventions } from './utils/conventions';
 export { IMetrics } from './metrics/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
-export { IRequestTracer } from './metrics/tracers/index';
+export { IRequestTracker } from './metrics/trackers/index';
 
 // Pipeline
 export * from './pipeline/handlers/annotations';

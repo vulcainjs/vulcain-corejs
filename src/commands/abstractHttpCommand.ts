@@ -14,6 +14,7 @@ export abstract class AbstractHttpCommand {
     protected metrics: IMetrics;
     public requestContext: RequestContext;
     private logger: VulcainLogger;
+    private commandTracker: any;
 
     private static METRICS_NAME = "external_call";
 
@@ -52,7 +53,7 @@ export abstract class AbstractHttpCommand {
             this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             // Begin Command trace
             this.logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${uri}`);
-            this.requestContext.metrics.traceCommand(`Call external api: ${uri}`);
+            this.commandTracker= this.requestContext.metrics.startCommand(`Call external api: ${uri}`);
         }
     }
 
@@ -63,6 +64,7 @@ export abstract class AbstractHttpCommand {
 
         // End Command trace
         this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
+        this.requestContext.metrics.finishCommand(this.commandTracker, success);
     }
 
     runAsync(...args): Promise<any> {

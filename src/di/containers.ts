@@ -22,7 +22,7 @@ import { ServiceDescriptors } from "../pipeline/handlers/serviceDescriptions";
 import { MockManager } from "../mocks/mockManager";
 import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";
-import { TracerFactory } from "../metrics/tracers/index";
+import { TrackerFactory } from "../metrics/trackers/index";
 import { ScopesDescriptor } from "../defaults/scopeDescriptors";
 
 /**
@@ -66,7 +66,7 @@ export class Container implements IContainer {
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
             this.injectSingleton(TokenService, DefaultServiceNames.TokenService);
             this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
-            this.injectInstance(TracerFactory.create(this), DefaultServiceNames.RequestTracer);
+            this.injectInstance(TrackerFactory.create(this), DefaultServiceNames.RequestTracker);
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
         }
     }

@@ -81,8 +81,8 @@ export interface IRequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommandAsync<T = ICommand>(name: string, schema?: string);
-
+    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T>
+    
     /**
      * Log an error
      *

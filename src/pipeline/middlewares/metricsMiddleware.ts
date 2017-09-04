@@ -2,11 +2,12 @@ import { RequestContext, VulcainHeaderNames } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
 import { DefaultServiceNames, LifeTime } from "../../di/annotations";
 import { VulcainLogger } from "../../configurations/log/vulcainLogger";
-import { IRequestTracer, IRequestTracerFactory } from "../../metrics/tracers/index";
+import { IRequestTracker, IRequestTrackerFactory } from "../../metrics/trackers/index";
 import { MetricsConstant, IMetrics } from "../../metrics/metrics";
 
 export interface CommandMetrics {
-    traceCommand: (verb: string) => void;
+    startCommand: (command: string, target?: string) => any;
+    finishCommand: (id, status) => void;
     now: ()=>number;
 }
 
@@ -14,22 +15,23 @@ export interface Metrics extends CommandMetrics {
     traceId: string;
     startTick: [number, number];
     parentId: string;
-    tracer: IRequestTracer;
+    tracer: IRequestTracker;
     startTime: number;
 }
 
 export class MetricsMiddleware extends VulcainMiddleware {
 
     private startRequest(ctx: RequestContext) {
-        const tracerFactory = ctx.container.get<IRequestTracerFactory>(DefaultServiceNames.RequestTracer, true, LifeTime.Singleton);
+        const trackerFactory = ctx.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true, LifeTime.Singleton);
 
         let metricsInfo: Metrics = {
             traceId: this.randomTraceId(),
             startTime: Date.now() * 1000,
             startTick: process.hrtime(),
             parentId: <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID],//TODO
-            tracer: tracerFactory && tracerFactory.startTrace(ctx),
-            traceCommand: (verb: string) => metricsInfo.tracer && metricsInfo.tracer.traceCommand(metricsInfo, verb),
+            tracer: trackerFactory && trackerFactory.startSpan(ctx),
+            startCommand: (command: string, target?) => metricsInfo.tracer && metricsInfo.tracer.startCommand(command, target),
+            finishCommand: (id, status) => metricsInfo.tracer && metricsInfo.tracer.finishCommand(id, status),
             now: () => metricsInfo.startTime + this.durationInMicroseconds(metricsInfo)
         };
 
@@ -72,7 +74,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
 
         e && logger.error(ctx, e);
 
-        metricsInfo.tracer && metricsInfo.tracer.endTrace(metricsInfo.tracer, ctx.response);
+        metricsInfo.tracer && metricsInfo.tracer.finish(ctx.response);
     }
 
     async invoke(ctx: RequestContext) {

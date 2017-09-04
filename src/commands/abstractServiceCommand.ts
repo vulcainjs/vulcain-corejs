@@ -52,6 +52,7 @@ export abstract class AbstractServiceCommand {
     protected metrics: IMetrics;
     private customTags: any;
     private logger: VulcainLogger;
+    private commandTracker: any;
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
@@ -114,7 +115,7 @@ export abstract class AbstractServiceCommand {
         if (emitLog) {
             this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
             this.logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
-            this.requestContext.metrics.traceCommand(`Call service ${targetServiceName} version ${targetServiceVersion}`);
+            this.commandTracker = this.requestContext.metrics.startCommand("Call service", `${targetServiceName}-${targetServiceVersion}`);
         }
     }
 
@@ -123,6 +124,7 @@ export abstract class AbstractServiceCommand {
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
+        this.requestContext.metrics.finishCommand(this.commandTracker, success);
     }
 
     /**
@@ -233,13 +235,13 @@ export abstract class AbstractServiceCommand {
     protected async sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResult> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
         const mocks=System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, command);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
         if (result !== undefined) {
             System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
         let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', verb, args);
-        let res = <any>this.sendRequestAsync("post", url, (req) => req.json(command));
+        let res = <any>this.sendRequestAsync("post", url, (req) => req.json(data));
         return res;
     }
 
@@ -282,7 +284,7 @@ export abstract class AbstractServiceCommand {
 
         let ctx = this.requestContext as RequestContext;
         await this.setUserContextAsync(request);
-        ctx.injectTraceHeaders(request.header);
+        ctx.injectTraceHeaders(this.commandTracker, request.header);
 
         prepareRequest && prepareRequest(request);
 
@@ -291,7 +293,18 @@ export abstract class AbstractServiceCommand {
             try {
                 request.end((response: types.IHttpCommandResponse) => {
                     if (response.error || response.status !== 200) {
-                        let err = new Error(response.error ? response.error.message : response.body);
+                        let err;
+                        if (response.body) {
+                            if (typeof response.body === "object") {
+                                err = new ApplicationRequestError(response.body.message, response.status, response.body.errors);
+                            }
+                            else {
+                                err = new ApplicationRequestError(response.body, response.status);
+                            }
+                        }
+                        else {
+                            err = new ApplicationRequestError((response.error && response.error.message) || "Unknow error", response.status);
+                        }
                         System.log.error(this.requestContext, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;

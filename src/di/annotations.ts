@@ -32,7 +32,7 @@ export class DefaultServiceNames {
     static Metrics = "Metrics";
     static ApiKeyService = "ApiKeyService";
     static MockManager = "MockManager";
-    static RequestTracer = "RequestTracer";
+    static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
 }
 

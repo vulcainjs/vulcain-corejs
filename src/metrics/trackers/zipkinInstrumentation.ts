@@ -1,7 +1,7 @@
 import { System } from '../../configurations/globals/system';
 import { Conventions } from '../../utils/conventions';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
-import { IRequestTracer, IRequestTracerFactory } from './index';
+import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 const {
     Annotation,
@@ -14,7 +14,7 @@ const {HttpLogger} = require('zipkin-transport-http');
 /**
  * Needs a property named : zipkinAgent
  */
-export class ZipkinInstrumentation implements IRequestTracerFactory {
+export class ZipkinInstrumentation implements IRequestTrackerFactory {
 
     static create() {
         let zipkinAddress = DynamicConfiguration.getPropertyValue<string>("zipkinAgent");
@@ -40,12 +40,12 @@ export class ZipkinInstrumentation implements IRequestTracerFactory {
     constructor(private tracer) {
     }
 
-    startTrace(ctx: RequestContext): IRequestTracer {
-        return new ZipkinTrace(this.tracer, ctx, ctx.request.verb, ctx.requestData.params);
+    startSpan(ctx: RequestContext): IRequestTracker {
+        return new ZipkinRequestTracker(this.tracer, ctx, ctx.request.verb, ctx.requestData.params);
     }
 }
 
-class ZipkinTrace implements IRequestTracer {
+class ZipkinRequestTracker implements IRequestTracker {
     private id;
 
     constructor(private tracer, ctx: RequestContext, verb: string, params) {
@@ -98,8 +98,25 @@ class ZipkinTrace implements IRequestTracer {
         });
     }
 
-    traceCommand(verb: string) {
-        this.tracer.recordBinary("verb", verb);
+    startCommand(command: string, target?) {
+        let id;
+        this.tracer.scoped(() => {
+            id = this.tracer.createChildId();
+            this.tracer.setId(id);
+            this.tracer.recordRpc(command);
+            this.tracer.recordServiceName(target);
+            this.tracer.recordAnnotation(new Annotation.ClientSend());
+        });
+        return id;
+    }
+
+    finishCommand(id, status) {
+        this.tracer.scoped(() => {
+            this.tracer.setId(id);
+            this.tracer.recordAnnotation(new Annotation.ClientRecv());
+           // this.tracer.recordBinary("command", command);
+        });
+        return id;
     }
 
     private readHeader(ctx: RequestContext, header: string) {
@@ -115,7 +132,7 @@ class ZipkinTrace implements IRequestTracer {
         return ctx.request.headers[Header.TraceId.toLowerCase()] !== undefined && ctx.request.headers[Header.SpanId.toLowerCase()] !== undefined;
     }
 
-    endTrace(result) {
+    finish(result) {
         try {
             this.tracer.scoped(() => {
                 this.tracer.setId(this.id);
@@ -141,13 +158,10 @@ class ZipkinTrace implements IRequestTracer {
         return str === '1';
     }
 
-    injectTraceHeaders(tracer, headers: (name: string | any, value?: string) => any) {
-        if (!tracer) return;
-        tracer.scoped(() => {
-            tracer.setId(tracer.createChildId());
-            const traceId = tracer.id;
-            // this.traceId = traceId;
-            tracer = tracer.id;
+    injectTraceHeaders(id, headers: (name: string | any, value?: string) => any) {
+        this.tracer.scoped(() => {
+            this.tracer.setId(id);
+            const tracer = this.tracer.id;
             headers(Header.TraceId, tracer.traceId);
             headers(Header.SpanId, tracer.spanId);
 
