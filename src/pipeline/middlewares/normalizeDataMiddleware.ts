@@ -31,14 +31,13 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         }
 
         let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        let action = `${ctx.requestData.schema}.${ctx.requestData.action}`;
+        let action = ctx.requestData.vulcainVerb;
         logger.logAction(ctx, "RR", action, "params: " + JSON.stringify(ctx.requestData.params));
 
-        try
-        {
+        try {
             await super.invoke(ctx);
             if (!ctx.response) {
-                ctx.response = new HttpResponse();
+                ctx.response = new HttpResponse({});
             }
 
             let trace = Object.assign({}, ctx.response && ctx.response.content);
@@ -53,6 +52,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             logger.logAction(ctx, "ER", action, `End request status: ${(e.statusCode)} value: ${e.message}`);
             ctx.response = HttpResponse.createFromError(e);
         }
+
+        // Inject request context in response
+        ctx.response.content.meta = ctx.response.content.meta || {};
+        ctx.response.content.meta.correlationId = ctx.correlationId;
     }
 
     private populateData(ctx: RequestContext) {
@@ -63,7 +66,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         const url = ctx.request.url;
         const body = ctx.request.body;
 
-        ctx.requestData = <any>{ page: 0, maxByPage: 100 };
+        ctx.requestData = <any>{  };
         ctx.requestData.body = (typeof body === "object") ? body : JSON.parse(body);
 
         // Try to get schema and action from path
@@ -112,6 +115,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         ctx.requestData.action = action || !body && "all";
         ctx.requestData.schema = schema;
 
+        if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {
+            ctx.requestData.page = 0;
+            ctx.requestData.maxByPage = 100;
+        }
         // Normalize option values
         Object.keys(url.query).forEach(name => {
             try {
@@ -137,5 +144,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         else if(id) {
             ctx.requestData.params.id = id;
         }
+        ctx.requestData.vulcainVerb = `${ctx.requestData.schema}.${ctx.requestData.action}`;
     }
 }

@@ -38,10 +38,10 @@ export class VulcainServer {
 
     private init() {
         if (this.enableHystrixStream) {
-            this.router.get(Conventions.instance.defaultHystrixPath, (request, response) => {
-                response.addHeader('Content-Type', 'text/event-stream;charset=UTF-8');
-                response.addHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
-                response.addHeader('Pragma', 'no-cache');
+            this.router.get(Conventions.instance.defaultHystrixPath, (request, response: http.ServerResponse) => {
+                response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
+                response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
+                response.setHeader('Pragma', 'no-cache');
                 System.log.info(null, () => "get hystrix.stream");
 
                 let subscription = hystrixStream.toObservable().subscribe(

@@ -57,6 +57,7 @@ export { IProvider, ListOptions } from './providers/provider'
 export * from './providers/memory/provider'
 export * from './providers/mongo/provider'
 export { ProviderFactory } from './providers/providerFactory';
+export { ITaskManager } from './providers/taskManager';
 
 // Containers
 export { IContainer, IInjectionNotification } from './di/resolvers';

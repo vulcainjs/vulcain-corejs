@@ -14,7 +14,7 @@ export class DefaultServiceNames {
     static TokenService = "TokenService";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";
-
+    static TaskManager = "TaskManager";
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static SwaggerServiceDescriptor = "SwaggerServiceDescriptor";

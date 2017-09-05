@@ -82,7 +82,7 @@ export interface IRequestContext {
      * @returns {ICommand} A command
      */
     getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T>
-    
+
     /**
      * Log an error
      *
@@ -113,6 +113,7 @@ export interface IRequestContext {
 }
 
 export interface RequestData {
+    vulcainVerb: string;
     correlationId: string;
     action: string;
     domain: string;

@@ -10,7 +10,8 @@ export enum BusUsage {
 }
 
 export interface IContainer {
-    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
+    
+    registerEndpoint(route: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
     getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
 
     injectInstance(fn, name: string): IContainer;

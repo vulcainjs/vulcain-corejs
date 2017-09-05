@@ -114,8 +114,8 @@ export abstract class AbstractServiceCommand {
 
         if (emitLog) {
             this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            this.logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}`);
-            this.commandTracker = this.requestContext.metrics.startCommand("Call service", `${targetServiceName}-${targetServiceVersion}`);
+            this.logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}, ${this.requestContext.requestData.vulcainVerb}`);
+            this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(this.requestContext.requestData.vulcainVerb, `${targetServiceName}-${targetServiceVersion}`);
         }
     }
 
@@ -124,7 +124,7 @@ export abstract class AbstractServiceCommand {
         if (!success)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
-        this.requestContext.metrics.finishCommand(this.commandTracker, success);
+        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, !success);
     }
 
     /**

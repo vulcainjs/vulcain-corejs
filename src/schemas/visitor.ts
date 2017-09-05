@@ -38,8 +38,8 @@ export class SchemaVisitor {
                 let refValue = entity[ref];
                 if (relationshipSchema && refValue) {
                     let item = relationshipSchema.item;
-                    if (item === "any" && refValue && refValue.__schema) {
-                        item = refValue.__schema;
+                    if (item === "any" && refValue && refValue.$schema) {
+                        item = refValue.$schema;
                     }
                     let elemSchema = item && this.domain.findSchemaDescription(item);
                     if (!elemSchema) {

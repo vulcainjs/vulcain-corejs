@@ -41,7 +41,7 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     }
 
     startSpan(ctx: RequestContext): IRequestTracker {
-        return new ZipkinRequestTracker(this.tracer, ctx, ctx.request.verb, ctx.requestData.params);
+        return new ZipkinRequestTracker(this.tracer, ctx, ctx.requestData.vulcainVerb, ctx.requestData.params);
     }
 }
 
@@ -87,6 +87,7 @@ class ZipkinRequestTracker implements IRequestTracker {
             this.id = tracer.id;
 
             tracer.recordServiceName(System.serviceName + "-" + System.serviceVersion);
+            this.tracer.recordBinary("correlationId", ctx.correlationId);
             tracer.recordRpc(verb);
             tracer.recordBinary('arguments', JSON.stringify(params));
             tracer.recordAnnotation(new Annotation.ServerRecv());
@@ -100,6 +101,7 @@ class ZipkinRequestTracker implements IRequestTracker {
 
     startCommand(command: string, target?) {
         let id;
+        this.tracer.setId(this.id);
         this.tracer.scoped(() => {
             id = this.tracer.createChildId();
             this.tracer.setId(id);
@@ -110,11 +112,13 @@ class ZipkinRequestTracker implements IRequestTracker {
         return id;
     }
 
-    finishCommand(id, status) {
+    finishCommand(id, error) {
+        this.tracer.setId(this.id);
         this.tracer.scoped(() => {
             this.tracer.setId(id);
             this.tracer.recordAnnotation(new Annotation.ClientRecv());
-           // this.tracer.recordBinary("command", command);
+            if(error)
+                this.tracer.recordBinary("error", "Command error");
         });
         return id;
     }

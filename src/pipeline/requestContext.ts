@@ -61,6 +61,7 @@ export class RequestContext implements IRequestContext {
 
     getRequestDataObject() {
         return {
+            vulcainVerb: this.requestData.vulcainVerb,
             correlationId: this.correlationId,
             action: this.requestData.action,
             domain: this.requestData.domain,
@@ -107,6 +108,7 @@ export class RequestContext implements IRequestContext {
         }
         else {
             this.requestData = {
+                vulcainVerb: `${data.schema}.${data.action}`,
                 action: data.action,
                 schema: data.schema,
                 correlationId: data.correlationId,

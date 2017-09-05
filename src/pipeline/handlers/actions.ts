@@ -17,12 +17,14 @@ import { UserContext } from "../../security/securityManager";
 import { HttpResponse } from "../response";
 import { ApplicationRequestError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
+import { ITaskManager } from "../../providers/taskManager";
 
 export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending";
     taskId?: string;
     startedAt?: string;
     userContext?: UserContext;
+    completedAt?: string;
 }
 
 export interface ActionResult {
@@ -153,6 +155,7 @@ export class CommandManager implements IManager {
 
     private createEvent(ctx: RequestContext, status: "Error"| "Pending"| "Success", result, error?): EventData {
         let event: EventData = {
+            vulcainVerb: `${ctx.requestData.schema}.${ctx.requestData.action}`,
             correlationId: ctx.requestData.correlationId,
             action: ctx.requestData.action,
             schema: ctx.requestData.schema,
@@ -224,11 +227,18 @@ export class CommandManager implements IManager {
                     status: "Pending"
                 });
 
-                let res = Object.assign({}, pendingTask);
                 pendingTask.userContext = ctx.security.getUserContext();
                 this.messageBus.pushTask(pendingTask);
-                res.taskId = pendingTask.taskId;
-                res.params = undefined;
+                let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
+                if (taskManager)
+                    await taskManager.registerTaskAsync(pendingTask);
+
+                let res = {
+                    meta: {
+                        taskId: pendingTask.taskId,
+                        status: "Pending"
+                    }
+                };
                 return new HttpResponse(res);
             }
         }
@@ -264,6 +274,7 @@ export class CommandManager implements IManager {
                 this.messageBus.sendEvent(event);
             }
             this.sendCustomEvent(ctx);
+            command.status = "Success";
         }
         catch (e) {
             if (eventMode === EventNotificationMode.always) {
@@ -273,8 +284,14 @@ export class CommandManager implements IManager {
                 this.messageBus.sendEvent(event);
             }
             System.log.error(ctx, e, () => `Error when processing async action : ${JSON.stringify(command)}`);
+            command.status = "Error";
         }
         finally {
+            command.completedAt = System.nowAsString();
+            let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
+            if (taskManager)
+                await taskManager.updateTaskAsync(command);
+
             logger.logAction(ctx, "EE");
             ctx.dispose();
         }

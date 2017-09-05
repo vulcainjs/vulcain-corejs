@@ -59,16 +59,16 @@ export class HandlerFactory {
             if (Array.isArray(result)) {
                 let outputSchema;
                 result.forEach(v => {
-                    if (v.__schema) {
-                        if (!outputSchema || outputSchema.name !== v.__schema)
-                            outputSchema = domain.getSchema(v.__schema);
+                    if (v.$schema) {
+                        if (!outputSchema || outputSchema.name !== v.$schema)
+                            outputSchema = domain.getSchema(v.$schema);
                         if (outputSchema && outputSchema.description.hasSensibleData)
                             domain.obfuscate(v, outputSchema);
                     }
                 });
             }
-            else if (result.__schema) {
-                let outputSchema = domain.getSchema(result.__schema);
+            else if (result.$schema) {
+                let outputSchema = domain.getSchema(result.$schema);
                 if (outputSchema && outputSchema.description.hasSensibleData)
                     domain.obfuscate(result, outputSchema);
             }
