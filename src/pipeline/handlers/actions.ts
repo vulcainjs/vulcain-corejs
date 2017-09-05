@@ -153,7 +153,7 @@ export class CommandManager implements IManager {
         return info;
     }
 
-    private createEvent(ctx: RequestContext, status: "Error"| "Pending"| "Success", result, error?): EventData {
+    private createEvent(ctx: RequestContext, status: "Error" | "Pending" | "Success", result, error?): EventData {
         let event: EventData = {
             vulcainVerb: `${ctx.requestData.schema}.${ctx.requestData.action}`,
             correlationId: ctx.requestData.correlationId,
@@ -182,7 +182,7 @@ export class CommandManager implements IManager {
         try {
             let errors = await this.validateRequestData(ctx, info, command);
             if (errors && errors.length > 0) {
-                throw new BadRequestError( "Validation errors", errors);
+                throw new BadRequestError("Validation errors", errors);
             }
 
             command.schema = command.schema || <string>info.metadata.schema;
@@ -207,7 +207,6 @@ export class CommandManager implements IManager {
                 if (!(result instanceof HttpResponse)) {
                     let res: ActionResult = {
                         value: result,
-                        status: "Success"
                     };
                     result = new HttpResponse(res);
                 }
@@ -315,11 +314,11 @@ export class CommandManager implements IManager {
         let events = this.messageBus.getEventsQueue(metadata.subscribeToDomain || this.domain.name);
         // Filtered by schema
         if (metadata.subscribeToSchema !== '*') {
-            events = events.filter( e => e.schema === metadata.subscribeToSchema);
+            events = events.filter(e => e.schema === metadata.subscribeToSchema);
         }
         // Filtered by action
         if (metadata.subscribeToAction !== '*') {
-            events = events.filter( e => e.action === metadata.subscribeToAction);
+            events = events.filter(e => e.action === metadata.subscribeToAction);
         }
         // And by custom filter
         if (metadata.filter)

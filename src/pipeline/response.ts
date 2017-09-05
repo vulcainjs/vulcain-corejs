@@ -56,14 +56,14 @@ export class HttpResponse {
     }
 */
     static createFromError(err: ApplicationRequestError): HttpResponse {
-        let res = new HttpResponse(JSON.stringify({message: err.message, errors: err.errors}), err.statusCode|| 500);
+        let res = new HttpResponse({ error: { message: err.message, errors: err.errors }}, err.statusCode|| 500);
         return res;
     }
-    
+
     constructor(content?, statusCode = 200) {
         this.headers = {};
         this.statusCode = statusCode;
- 
+
        this.content = content;
     }
 
