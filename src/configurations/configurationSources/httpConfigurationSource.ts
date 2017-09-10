@@ -1,9 +1,9 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 const rest = require('unirest');
 const moment = require('moment');
 
-export class HttpConfigurationSource implements ConfigurationSource
+export class HttpConfigurationSource implements IRemoteConfigurationSource
 {
     protected lastUpdate: string;
 

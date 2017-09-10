@@ -1,5 +1,5 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, ConfigurationDataType } from './configurationSource';
+import { IConfigurationSource, ConfigurationDataType } from './configurationSource';
 import { ConfigurationManager } from './configurationManager';
 import { VulcainConfigurationSource } from './vulcainConfigurationSource';
 import { FileConfigurationSource } from './fileConfigurationSource';
@@ -8,13 +8,13 @@ import { FileConfigurationSource } from './fileConfigurationSource';
  * Helper for adding configuration source providing by DynamicConfiguration.init
  */
 export class ConfigurationSourceBuilder {
-    private _sources: Array<ConfigurationSource>;
+    private _sources: Array<IConfigurationSource>;
 
     constructor(private _configurationManager: ConfigurationManager) {
         this._sources = [];
     }
 
-    public addSource(source: ConfigurationSource) {
+    public addSource(source: IConfigurationSource) {
         this._sources.push(source);
         return this;
     }

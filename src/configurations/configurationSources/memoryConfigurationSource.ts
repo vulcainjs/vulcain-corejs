@@ -1,6 +1,6 @@
-import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 
-export class MemoryConfigurationSource implements ConfigurationSource
+export class MemoryConfigurationSource implements IRemoteConfigurationSource
 {
     private _values = new Map<string, ConfigurationItem>();
 
