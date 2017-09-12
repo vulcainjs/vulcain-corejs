@@ -1,13 +1,15 @@
-import { System } from './../globals/system';
-import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, DataSource, ConfigurationItem } from "../abstractions";
+import { AbstractRemoteSource } from "./abstractRemoteSource";
+import { System } from "../../globals/system";
+
 const rest = require('unirest');
 const moment = require('moment');
 
-export class HttpConfigurationSource implements IRemoteConfigurationSource
-{
+export class HttpConfigurationSource extends AbstractRemoteSource {
     protected lastUpdate: string;
 
     constructor(protected uri: string) {
+        super();
     }
 
     protected prepareRequest(request) {
@@ -22,11 +24,9 @@ export class HttpConfigurationSource implements IRemoteConfigurationSource
         return uri;
     }
 
-    async pollPropertiesAsync(timeoutInMs:number)
-    {
+    async pollPropertiesAsync(timeoutInMs: number) {
         let self = this;
-        return new Promise<PollResult>( ( resolve ) =>
-        {
+        return new Promise<DataSource>((resolve) => {
             let uri = this.createRequestUrl();
 
             try {
@@ -42,7 +42,7 @@ export class HttpConfigurationSource implements IRemoteConfigurationSource
                     if (response.status === 200 && response.body) {
                         if (response.body.error) {
                             if (!System.isDevelopment) {
-                                System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
+                                System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
                             }
                         }
                         else {
@@ -50,18 +50,19 @@ export class HttpConfigurationSource implements IRemoteConfigurationSource
                             let data = response.body;
                             data.value && data.value.forEach(cfg => values.set(cfg.key, cfg));
                             self.lastUpdate = moment.utc().format();
+                            this.mergeChanges(values);
                         }
                     }
                     else {
-                        System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
+                        System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
                     }
-                    resolve(values && new PollResult(self, values));
+                    resolve(values && new DataSource(values));
                 });
             }
             catch (e) {
-                System.log.info(null, ()=>`HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
+                System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
                 resolve(null);
             }
-        } );
+        });
     }
 }

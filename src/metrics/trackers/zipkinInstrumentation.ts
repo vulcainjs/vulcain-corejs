@@ -1,4 +1,4 @@
-import { System } from '../../configurations/globals/system';
+import { System } from '../../globals/system';
 import { Conventions } from '../../utils/conventions';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from './index';

@@ -1,7 +1,7 @@
 import { System } from './system';
 import * as crypto from 'crypto';
-import { Conventions } from '../../utils/conventions';
-import { IDynamicProperty } from '../../configurations/dynamicProperty';
+import { Conventions } from '../utils/conventions';
+import { IDynamicProperty } from '../configurations/abstractions';
 
 export class CryptoHelper {
 

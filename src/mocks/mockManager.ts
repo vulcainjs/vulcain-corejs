@@ -1,7 +1,7 @@
 import { IMockManager } from "./imockManager";
 import { Conventions } from '../utils/conventions';
-import { System } from '../configurations/globals/system';
-import { IDynamicProperty } from '../configurations/dynamicProperty';
+import { System } from '../globals/system';
+import { IDynamicProperty } from '../configurations/abstractions';
 import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
 import { ActionMetadata } from "../pipeline/handlers/actions";
 import { HttpResponse } from "../pipeline/response";

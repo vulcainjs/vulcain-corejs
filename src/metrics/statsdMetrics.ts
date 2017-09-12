@@ -1,6 +1,6 @@
 import { Conventions } from '../utils/conventions';
 import * as Statsd from "statsd-client";
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { IMetrics, MetricsConstant } from './metrics';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 

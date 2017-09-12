@@ -1,5 +1,5 @@
 import * as amqp from 'amqplib';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 import { EventData } from "../pipeline/handlers/messageBus";
 import { RequestData } from "../pipeline/common";

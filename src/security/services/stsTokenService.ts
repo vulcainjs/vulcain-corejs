@@ -1,8 +1,8 @@
 import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
-import { System } from '../../configurations/globals/system';
-import { IDynamicProperty } from '../../configurations/dynamicProperty';
-import { ConfigurationProperty } from '../../configurations/dependencies/annotations';
+import { System } from '../../globals/system';
+import { IDynamicProperty } from '../../configurations/abstractions';
+import { ConfigurationProperty } from '../../dependencies/annotations';
 import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
 
 const jwt = require('jsonwebtoken');
@@ -11,7 +11,7 @@ const ms = require('ms');
 const unirest = require('unirest');
 
 export class StsTokenService implements ITokenService {
-    
+
     @ConfigurationProperty(Conventions.instance.TOKEN_STS_AUTHORITY, "string")
     private authority: IDynamicProperty<string>;
     private readonly openidConfig: string = '/.well-known/openid-configuration';

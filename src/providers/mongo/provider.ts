@@ -3,10 +3,10 @@ import { IProvider, ListOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoClient } from 'mongodb';
 import { Inject } from '../../di/annotations';
-import { System } from '../../configurations/globals/system';
+import { System } from '../../globals/system';
 import * as URL from 'url';
 import * as Path from 'path';
-import { Logger } from "../../configurations/log/logger";
+import { Logger } from "../../log/logger";
 import { RequestContext } from "../../pipeline/requestContext";
 import { ApplicationRequestError } from "../../pipeline/errors/applicationRequestError";
 

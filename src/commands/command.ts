@@ -4,7 +4,7 @@ import ActualTime from "../utils/actualTime";
 import { AbstractCommand } from './abstractCommand';
 import { SemaphoreFactory, Semaphore } from './semaphore';
 import { EventType, FailureType, ExecutionResult } from './executionResult';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { IContainer } from '../di/resolvers';
 import { ICommandMetrics, CommandMetricsFactory } from "./metrics/commandMetricsFactory";
 import { TimeoutError } from "../pipeline/errors/timeoutError";

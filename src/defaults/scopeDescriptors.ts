@@ -1,6 +1,6 @@
 
 import { Injectable, DefaultServiceNames, LifeTime } from "../di/annotations";
-import { System } from "../configurations/globals/system";
+import { System } from "../globals/system";
 
 export class ScopeDescription {
     name: string;

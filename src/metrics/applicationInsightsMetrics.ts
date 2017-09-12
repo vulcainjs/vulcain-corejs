@@ -1,7 +1,7 @@
 import { IMetrics } from "./metrics";
 import { Inject, DefaultServiceNames } from "../di/annotations";
 import { IContainer } from "../di/resolvers";
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 const appInsights = require('applicationinsights');
 

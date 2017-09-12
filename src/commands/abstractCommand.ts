@@ -3,7 +3,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { IContainer, IInjectionNotification } from '../di/resolvers';
 import { Inject } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
-import { VulcainLogger } from '../configurations/log/vulcainLogger';
+import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
 
 /**

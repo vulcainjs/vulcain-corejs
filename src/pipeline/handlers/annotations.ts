@@ -5,7 +5,7 @@ import { QueryMetadata, QueryActionMetadata } from './query';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { DefaultServiceNames } from '../../di/annotations';
 import { IContainer } from '../../di/resolvers';
-import { System } from '../../configurations/globals/system';
+import { System } from '../../globals/system';
 import { DefaultActionHandler, DefaultQueryHandler } from "../../defaults/crudHandlers";
 import { ConsumeEventMetadata } from "./messageBus";
 

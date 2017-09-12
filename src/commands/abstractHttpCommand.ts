@@ -3,8 +3,8 @@ import * as types from './types';
 import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
-import { System } from '../configurations/globals/system';
-import { VulcainLogger } from '../configurations/log/vulcainLogger';
+import { System } from '../globals/system';
+import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
 import { RequestContext } from "../pipeline/requestContext";
 

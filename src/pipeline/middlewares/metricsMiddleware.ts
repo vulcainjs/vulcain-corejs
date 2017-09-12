@@ -1,7 +1,7 @@
 import { RequestContext, VulcainHeaderNames } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
 import { DefaultServiceNames, LifeTime } from "../../di/annotations";
-import { VulcainLogger } from "../../configurations/log/vulcainLogger";
+import { VulcainLogger } from "../../log/vulcainLogger";
 import { IRequestTracker, IRequestTrackerFactory } from "../../metrics/trackers/index";
 import { MetricsConstant, IMetrics } from "../../metrics/metrics";
 

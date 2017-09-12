@@ -1,5 +1,5 @@
-import { System } from '../configurations/globals/system';
-import { ConfigurationManager } from '../configurations/configurationSources/configurationManager';
+import { System } from '../globals/system';
+import { ConfigurationManager } from '../configurations/configurationManager';
 import { Domain } from '../schemas/schema';
 import { Preloader } from '../preloader';
 import { ConsoleMetrics } from "../metrics/consoleMetrics";

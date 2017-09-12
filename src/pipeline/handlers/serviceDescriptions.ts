@@ -6,7 +6,7 @@ import { IContainer } from '../../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata } from './common';
 import { QueryActionMetadata } from './query';
 import { RuntimeError } from './../errors/runtimeError';
-import { System } from '../../configurations/globals/system';
+import { System } from '../../globals/system';
 import * as Path from 'path';
 import { BadRequestError } from '../errors/badRequestError';
 import { ApplicationRequestError } from '../errors/applicationRequestError';

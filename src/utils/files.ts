@@ -1,6 +1,6 @@
 import * as Path from 'path';
 import * as fs from 'fs';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 
 export class Files
 {

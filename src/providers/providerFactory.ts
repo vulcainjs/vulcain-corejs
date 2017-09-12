@@ -3,7 +3,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';
 import { IContainer } from '../di/resolvers';
-import { System } from '../configurations/globals/system';
+import { System } from '../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 
 interface PoolItem {

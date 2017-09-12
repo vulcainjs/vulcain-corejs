@@ -1,6 +1,6 @@
 import { RequestContext, VulcainHeaderNames } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
-import { System } from "../../configurations/globals/system";
+import { System } from "../../globals/system";
 import { ActionMetadata, CommandManager } from "../handlers/actions";
 import { IContainer } from "../../di/resolvers";
 import { UnauthorizedRequestError } from "../errors/applicationRequestError";

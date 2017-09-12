@@ -4,7 +4,7 @@ import { SecurityManager, UserContext } from '../security/securityManager';
 import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
-import { Logger } from "../configurations/log/logger";
+import { Logger } from "../log/logger";
 import { Metrics } from "./middlewares/metricsMiddleware";
 import { HttpRequest } from "./vulcainPipeline";
 import { ApplicationRequestError } from "./errors/applicationRequestError";
@@ -14,7 +14,7 @@ import { CommandFactory } from "../commands/commandFactory";
 import { HttpResponse } from "./response";
 import { EventData } from "./handlers/messageBus";
 import { AsyncTaskData } from "./handlers/actions";
-import { System } from '../configurations/globals/system';
+import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
 

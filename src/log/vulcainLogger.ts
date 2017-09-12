@@ -1,10 +1,10 @@
 import { System } from './../globals/system';
-import { IDynamicProperty } from './../dynamicProperty';
+import { IDynamicProperty } from '../configurations/abstractions';
 import * as util from 'util';
 import * as os from 'os';
 import { Logger } from "./logger";
-import { IRequestContext } from "../../pipeline/common";
-import { RequestContext } from "../../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
+import { RequestContext } from "../pipeline/requestContext";
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log

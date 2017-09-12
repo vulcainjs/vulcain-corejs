@@ -1,14 +1,14 @@
 import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
-import { System } from '../../configurations/globals/system';
-import { IDynamicProperty } from '../../configurations/dynamicProperty';
-import { ConfigurationProperty } from '../../configurations/dependencies/annotations';
+import { System } from '../../globals/system';
+import { IDynamicProperty } from '../../configurations/abstractions';
+import { ConfigurationProperty } from '../../dependencies/annotations';
 import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
 
 export class TokenService implements ITokenService {
-    
+
     @ConfigurationProperty(Conventions.instance.TOKEN_ISSUER, "string")
     private issuer: IDynamicProperty<string>;
     @ConfigurationProperty(Conventions.instance.VULCAIN_SECRET_KEY, "string")

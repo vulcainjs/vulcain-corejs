@@ -1,11 +1,11 @@
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { IMetrics, MetricsConstant } from './metrics';
 import * as Prometheus from 'prom-client';
 import { IContainer } from "../di/resolvers";
 import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
 import { DefaultServiceNames } from '../di/annotations';
-import { VulcainLogger } from '../configurations/log/vulcainLogger';
+import { VulcainLogger } from '../log/vulcainLogger';
 
 export class PrometheusMetrics implements IMetrics {
     private tags: any;

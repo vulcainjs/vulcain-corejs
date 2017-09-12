@@ -1,8 +1,6 @@
-import {DynamicProperties as DP} from './properties/dynamicProperties';
-import {IDynamicProperty} from './dynamicProperty';
-import { ConfigurationSourceBuilder } from './configurationSources/configurationSourceBuilder';
-import { Conventions } from '../utils/conventions';
-import { System } from './globals/system';
+import { IDynamicProperty } from "./abstractions";
+import { ConfigurationManager } from "./configurationManager";
+import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
 
 /**
  *
@@ -19,108 +17,86 @@ import { System } from './globals/system';
 * let i2:number = DynamicConfiguration.getOrDefaultProperty("prop1", 1);
 * </code>
 */
-export class DynamicConfiguration
-{
+export class DynamicConfiguration {
+    private static _configuration: ConfigurationManager;
+
     /**
      * subscribe on a property changed
      */
-     static onPropertyChanged<T>( handler: (e:IDynamicProperty<T>)=>void, propertyName?:string)
-     {
-         if( propertyName) {
-             let prop = DP.instance.getProperty(propertyName);
-             if(!prop) throw new Error("Property not found : " + propertyName);
-             prop.propertyChanged.subscribe(handler);
-         }
-         else
-            DP.instance.propertyChanged.subscribe(handler);
-     }
-
-     /**
-      * Create a chained property
-      *
-      */
-     static asChainedProperty<T>(defaultValue:T, name:string, ...fallbackPropertyNames:Array<string>) : IDynamicProperty<T>
-     {
-         return DP.factory.asChainedProperty<T>(defaultValue, name, fallbackPropertyNames);
-     }
-
-     /**
-      * Create a new property
-      */
-     static asProperty<T>(value:T, name?:string) : IDynamicProperty<T>
-     {
-         let prop = DP.factory.asProperty<T>( value, name);
-         return prop;
-     }
-
-     /**
-      * Get a property value by name
-      *
-      * @static
-      * @template T
-      * @param {string} name
-      * @returns
-      *
-      * @memberOf DynamicConfiguration
-      */
-     static getPropertyValue<T>(name:string) {
-         let p = DynamicConfiguration.getProperty(name);
-         return p && <T>p.value;
-     }
-
-     /**
-      * Get a dynamic property
-      */
-     static getProperty<T>(name:string) : IDynamicProperty<T> {
-         let prop = DP.instance.getProperty(name);
-         return prop;
-     }
-
-     /**
-      * Get or create a dynamic property
-      * defaultValue can be a value or a factory
-      */
-     static getOrCreateProperty<T>( name:string, defaultValue: T ) : IDynamicProperty<T> {
-        let prop = this.getProperty<T>( name );
-        if( prop )
-            return prop;
-
-        return  DP.factory.asProperty<T>( defaultValue, name, true);
-
-     }
-
-     /**
-      * Update a property value or create a new one if not exists
-      */
-     static setOrCreateProperty<T>( name:string, defaultValue: T ) : IDynamicProperty<T> {
-
-        let prop = this.getProperty<T>( name );
-        if( !prop )
-        {
-            prop = DP.factory.asProperty<T>( defaultValue, name, true);
+    public static onPropertyChanged<T>(handler: (e: IDynamicProperty<T>) => void, propertyName?: string) {
+        if (propertyName) {
+            let prop = DynamicConfiguration._configuration.getProperty(propertyName);
+            if (!prop) throw new Error("Property not found : " + propertyName);
+            prop.propertyChanged.subscribe(handler);
         }
         else
-        {
-            prop.set(defaultValue);
+            DynamicConfiguration._configuration.propertyChanged.subscribe(handler);
+    }
+
+    /**
+     * Create a new property
+     */
+    public static asProperty<T>(value: T, name?: string, dontCheck = false): IDynamicProperty<T> {
+        if (!dontCheck && name && DynamicConfiguration._configuration.getProperty(name)) {
+            throw new Error("Duplicate property name");
         }
+
+        let p = DynamicConfiguration._configuration.createDynamicProperty(name, value);
+        return p;
+    }
+
+    public static asChainedProperty<T>(defaultValue: T, name: string, ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
+        let properties = [name].concat(...fallbackPropertyNames).filter(n => !!n);
+        let p = DynamicConfiguration._configuration.createChainedDynamicProperty(properties, defaultValue);
+        return p;
+    }
+
+    /**
+     * Get a property value by name
+     *
+     * @static
+     * @template T
+     * @param {string} name
+     * @returns
+     *
+     * @memberOf DynamicConfiguration
+     */
+    static getPropertyValue<T>(name: string) {
+        let p = this.getProperty<T>(name);
+        return p && <T>p.value;
+    }
+
+    /**
+     * Get a dynamic property
+     */
+    static getProperty<T>(name: string): IDynamicProperty<T> {
+        let prop = DynamicConfiguration._configuration.getProperty<T>(name);
         return prop;
-     }
+    }
 
-     /**
-      * Init polling informations. This function can be call only once before any use of a dynamic property.
-      */
-     static init( pollingIntervalInSeconds?:number, sourceTimeoutInMs?:number ): ConfigurationSourceBuilder {
-         return DP.init(pollingIntervalInSeconds, sourceTimeoutInMs);
-     }
+    /**
+     * Get or create a dynamic property
+     * defaultValue can be a value or a factory
+     */
+    static getOrCreateProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
+        let prop = this.getProperty<T>(name);
+        if (prop)
+            return prop;
 
-     static reset( pollingIntervalInSeconds?:number, sourceTimeoutInMs?:number ) {
-         return DP.instance.reset(pollingIntervalInSeconds, sourceTimeoutInMs);
-     }
+        return DynamicConfiguration.asProperty<T>(defaultValue, name, true);
+    }
 
-     /**
-      * Get the underlying dynamic properties manager instance
-      */
-     static get instance() {
-         return DP.instance;
-     }
+    /// <summary>
+    /// Initialise dynamic properties configuration. Can be call only once and before any call to DynamicProperties.instance.
+    /// </summary>
+    /// <param name="pollingIntervalInSeconds">Polling interval in seconds (default 60)</param>
+    /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>
+    /// <returns>ConfigurationSourceBuilder</returns>
+    public static init(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
+        if (DynamicConfiguration._configuration)
+            DynamicConfiguration._configuration.reset();
+
+        DynamicConfiguration._configuration = new ConfigurationManager(pollingIntervalInSeconds || 60, sourceTimeoutInMs || 1000);
+        return new ConfigurationSourceBuilder(DynamicConfiguration._configuration);
+    }
 }
