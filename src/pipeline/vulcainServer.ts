@@ -15,7 +15,7 @@ import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware
 import { MetricsMiddleware } from "./middlewares/metricsMiddleware";
 import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
 import { HttpResponse } from "./response";
-import Router = require('Router');
+import Router = require('router');
 
 export class VulcainServer {
     private queryManager;
