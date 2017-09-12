@@ -28,7 +28,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         descriptions.host = this.requestContext.hostName;
         descriptions.basePath = Conventions.instance.defaultUrlprefix;
 
-        descriptions.definitions['_BadRequestError'] = this.createResponseDefinition({ error: { message: { type: 'string' } } });
+        descriptions.definitions['_errorResponse'] = this.createResponseDefinition({ error: { message: { type: 'string' }, errors: {} } });
 
         return descriptions;
     }
@@ -108,16 +108,17 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         return paths;
     }
 
-    createResponseDefinition(payload: any): any {
+    createResponseDefinition(payload?: any): any {
         let res = {
             type: 'object',
             properties: {
                 meta: {
-                    correlationId: { type: 'string' },
+                    correlationId: { type: 'string' }
                 }
             }
         };
-        res.properties = Object.assign(res.properties, payload);
+        if( payload)
+            res.properties = Object.assign(res.properties, payload);
         return res;
     }
 
@@ -126,22 +127,22 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         operationObject.responses = {};
 
-        operationObject.responses['400'] = { description: 'Invalid input', schema: { $ref: '#/definitions/_BadRequestError' } };
+        operationObject.responses['400'] = { description: 'Invalid input', schema: { $ref: '#/definitions/_errorResponse' } };
 
         if (service.scope !== '?') {
             operationObject.responses['401'] = { description: 'Not authentified' };
             operationObject.responses['403'] = { description: 'Not authorized' };
         }
 
-        operationObject.responses['500'] = { description: 'Handler exception', schema: { $ref: '#/definitions/_BadRequestError' } };
+        operationObject.responses['500'] = { description: 'Handler exception', schema: { $ref: '#/definitions/_errorResponse' } };
 
         if (service.async) {
-            operationObject.responses['200'] = { description: 'Processing task', schema: { $ref: '#/definitions/_BadRequestError' } };
+            operationObject.responses['200'] = { description: 'Processing task', schema:this.createResponseDefinition({ meta: { status: {type:"string"}, taskId: {type:"string"}} })  };
         }
         else {
-            operationObject.responses['200'] = { description: 'Successful operation', schema: this.createResponseDefinition({ value: {} }) };
-
+            operationObject.responses['200'] = { description: 'Successful operation', schema: this.createResponseDefinition() };
             if (service.outputSchema) {
+                operationObject.responses['200'].schema.properties.value = {};
                 this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema, service.outputType);
             }
         }
@@ -186,37 +187,39 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         let currentDef: DefinitionsObject = {};
         schemas.forEach((schema: SchemaDescription) => {
 
-            let jsonSchema = {
-                properties: {}
-            };
-
-            schema.properties.forEach((property: PropertyDescription) => {
-                jsonSchema.properties[property.name] = {
-                    type: property.type
-                };
-
-                if (property.reference === 'one' || property.reference === 'many') {
-                    this.setReferenceDefinition(jsonSchema.properties[property.name], property.type, property.reference);
-                }
-
-                if (property.description) {
-                    jsonSchema.properties[property.name].description = property.description;
-                }
-
-                if (property.required) {
-                    jsonSchema.properties[property.name].required = property.required;
-                }
-
-            });
-
             currentDef[schema.name] = {
                 type: SwaggerServiceDescriptor.defaultDefinitionType,
-                properties: jsonSchema.properties
+                properties: this.createDefinition(schema)
             };
         });
         return currentDef;
     }
 
+    private createDefinition(schema: SchemaDescription) {
+        let jsonSchema = {
+            properties: {}
+        };
+
+        schema.properties.forEach((property: PropertyDescription) => {
+            jsonSchema.properties[property.name] = {
+                type: property.type
+            };
+
+            if (property.reference === 'one' || property.reference === 'many') {
+                this.setReferenceDefinition(jsonSchema.properties[property.name], property.type, property.reference);
+            }
+
+            if (property.description) {
+                jsonSchema.properties[property.name].description = property.description;
+            }
+
+            if (property.required) {
+                jsonSchema.properties[property.name].required = property.required;
+            }
+
+        });
+        return jsonSchema.properties;
+    }
 
     private setReferenceDefinition(desc, definitionName, propertyReference = 'one') {
 
