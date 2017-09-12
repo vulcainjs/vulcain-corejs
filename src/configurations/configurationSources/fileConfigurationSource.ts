@@ -1,9 +1,9 @@
-import { ConfigurationSource, PollResult, ConfigurationDataType, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, ConfigurationDataType, ConfigurationItem } from './configurationSource';
 import { System } from './../globals/system';
 import * as fs from 'fs';
 import * as readline from 'readline';
 
-export class FileConfigurationSource implements ConfigurationSource
+export class FileConfigurationSource implements IRemoteConfigurationSource
 {
     private _values=new Map<string,ConfigurationItem>();
     private _lastAccess: number;

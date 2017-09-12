@@ -5,7 +5,7 @@ import { PropertiesFactory } from './propertiesFactory';
 import { DynamicProperty } from './dynamicProperty';
 import { IDynamicProperty } from '../dynamicProperty';
 import { ConfigurationSourceBuilder } from "../configurationSources/configurationSourceBuilder";
-import { ConfigurationSource } from "../configurationSources/configurationSource";
+import { IRemoteConfigurationSource } from "../configurationSources/configurationSource";
 import * as rx from 'rxjs';
 import { Conventions } from '../../utils/conventions';
 import * as fs from 'fs';
@@ -144,7 +144,7 @@ export class DynamicProperties implements DynamicPropertiesUpdater {
     }
 
     // for tests only
-    startPollingAsync(source?: ConfigurationSource) {
+    startPollingAsync(source?: IRemoteConfigurationSource) {
         return this._configurationManager.startAsync(source && [source], false);
     }
 

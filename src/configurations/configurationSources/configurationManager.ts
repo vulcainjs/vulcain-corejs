@@ -1,11 +1,11 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, PollResult } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, IConfigurationSource, ILocalConfigurationSource } from './configurationSource';
 import {DynamicProperty} from '../properties/dynamicProperty';
 import {DynamicProperties} from "../properties/dynamicProperties";
 
 export class ConfigurationManager
 {
-    private _sources:Array<ConfigurationSource> = [];
+    private _sources:Array<IRemoteConfigurationSource> = [];
     private disposed:boolean;
     private _polling:boolean;
 
@@ -21,12 +21,21 @@ export class ConfigurationManager
      * @param sources List of sources
      * @returns {Promise<T>}
      */
-    async startAsync( sources?:Array<ConfigurationSource>, pollSources=true )
+    async startAsync( sources?:Array<IConfigurationSource>, pollSources=true )
     {
         if (sources) {
-            sources.forEach(source => {
-                if (this._sources.indexOf(source) < 0)
-                    this._sources.push(source);
+            sources.forEach(async source => {
+                // Local properties has loaded first (less priority)
+                if ((<ILocalConfigurationSource>source).readPropertiesAsync) {
+                    let res = await (<ILocalConfigurationSource>source).readPropertiesAsync();
+                    this.loadProperties(res);
+                }
+                else {
+                    let s = source as IRemoteConfigurationSource;
+                    if (this._sources.indexOf(s) < 0) {
+                        this._sources.push(s);
+                    }
+                }
             });
         }
 
@@ -83,7 +92,7 @@ export class ConfigurationManager
                 if (!res) {
                     ok = false;
                 }
-                else if (res.values && res.values.size > 0)
+                else
                     this.loadProperties(res);
             });
         }
@@ -98,7 +107,7 @@ export class ConfigurationManager
 
         return ok;
     }
-
+    
     private repeatPolling() {
         setTimeout(this.pollingAsync.bind(this), this.pollingIntervalInSeconds * 1000);
     }

@@ -21,22 +21,28 @@ export class PollResult
     /// </summary>
     public values: Map<string,ConfigurationItem>;
 
-    public source: ConfigurationSource;
+    public source: IRemoteConfigurationSource;
 
-    public constructor(source:ConfigurationSource, values?:Map<string,ConfigurationItem>)
+    public constructor(source:IRemoteConfigurationSource, values?:Map<string,ConfigurationItem>)
     {
         this.source = source;
         this.values = values;
     }
 }
 
+export interface IConfigurationSource { }
+
 /// <summary>
-/// The definition of configuration source that brings dynamic changes to the configuration via polling.
+/// The definition of remote configuration source that brings dynamic changes to the configuration via polling.
 /// </summary>
-export interface ConfigurationSource
+export interface IRemoteConfigurationSource extends IConfigurationSource
 {
     /// <summary>
     /// Poll the configuration source to get the latest content.
     /// </summary>
     pollPropertiesAsync(timeoutInMs:number):Promise<PollResult> ;
+}
+
+export interface ILocalConfigurationSource extends IConfigurationSource {
+    readPropertiesAsync(): Promise<PollResult>;
 }

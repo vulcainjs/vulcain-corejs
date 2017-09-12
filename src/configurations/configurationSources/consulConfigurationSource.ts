@@ -1,8 +1,8 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 const Consul = require('consul');
 
-export class ConsulConfigurationSource implements ConfigurationSource
+export class ConsulConfigurationSource implements IRemoteConfigurationSource
 {
     // Local cache
     private _changes = new Map<string, ConfigurationItem>();

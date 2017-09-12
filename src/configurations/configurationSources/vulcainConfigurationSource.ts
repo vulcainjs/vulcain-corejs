@@ -1,5 +1,5 @@
 import { System } from './../globals/system';
-import { ConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
+import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 import { HttpConfigurationSource } from './httpConfigurationSource';
 const rest = require('unirest');
 const moment = require('moment');
