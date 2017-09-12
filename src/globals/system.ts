@@ -376,6 +376,19 @@ export class System {
         return System.crypto.decrypt(value);
     }
 
+    private static registerPropertyAsDependency(name: string, defaultValue) {
+        let prefix = (System.serviceName + "." + System.serviceVersion);
+
+        let p = System.manifest.configurations[name];
+        if (p && p !== "any")
+            return;
+        let schema = "any";
+        if (typeof defaultValue === "number" || defaultValue) {
+            schema = typeof defaultValue;
+        }
+        System.manifest.configurations[name] = schema;
+    }
+
     /**
      * create a shared property
      * @param name
@@ -383,7 +396,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
-        DynamicConfiguration.registerPropertyAsDependency(name, defaultValue);
+        System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -398,7 +411,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
-        DynamicConfiguration.registerPropertyAsDependency(name, defaultValue);
+        System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
