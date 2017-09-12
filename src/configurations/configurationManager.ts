@@ -3,7 +3,7 @@ import { IDynamicProperty, ConfigurationItem, IConfigurationSource, IRemoteConfi
 import { DynamicProperty } from './properties/dynamicProperty';
 import { PrioritizedSourceValue } from './properties/PrioritizedSourceValue';
 import { ChainedDynamicProperty } from './properties/chainedPropertyValue';
-import { FileConfigurationSource, ConfigurationDataType } from './index';
+import { FileConfigurationSource, ConfigurationDataType } from './sources/fileConfigurationSource';
 import { System } from '../globals/system';
 
 export class ConfigurationManager {
