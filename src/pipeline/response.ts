@@ -6,7 +6,7 @@
  */
 import { ApplicationRequestError } from "./errors/applicationRequestError";
 import { RequestContext } from "./requestContext";
-import { System } from "./../configurations/globals/system";
+import { System } from "./../globals/system";
 import { ErrorResponse } from "./handlers/common";
 
 export class HttpResponse {

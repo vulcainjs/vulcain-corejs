@@ -1,8 +1,8 @@
-import { System } from './../globals/system';
-import { IConfigurationSource, ConfigurationDataType } from './configurationSource';
 import { ConfigurationManager } from './configurationManager';
-import { VulcainConfigurationSource } from './vulcainConfigurationSource';
-import { FileConfigurationSource } from './fileConfigurationSource';
+import { IConfigurationSource, IRemoteConfigurationSource } from './abstractions';
+import { ConfigurationDataType, FileConfigurationSource } from './sources/fileConfigurationSource';
+import { VulcainConfigurationSource } from './sources/vulcainConfigurationSource';
+const System = require('../System');
 
 /**
  * Helper for adding configuration source providing by DynamicConfiguration.init
@@ -14,7 +14,7 @@ export class ConfigurationSourceBuilder {
         this._sources = [];
     }
 
-    public addSource(source: IConfigurationSource) {
+    public addSource(source: IRemoteConfigurationSource) {
         this._sources.push(source);
         return this;
     }
@@ -22,7 +22,7 @@ export class ConfigurationSourceBuilder {
     public addVulcainSource() {
         if (System.vulcainServer) {
             if (!System.vulcainToken && !System.isTestEnvironnment) {
-                System.log.info(null, ()=>"No token defined for reading configuration properties. Vulcain configuration source is ignored.");
+                System.log.info(null, () => "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
             }
             else {
                 let uri = `http://${System.vulcainServer}/api/config.forservice`;
@@ -46,7 +46,7 @@ export class ConfigurationSourceBuilder {
     }*/
 
     public addFileSource(path: string, mode: ConfigurationDataType = ConfigurationDataType.Json) {
-        this.addSource(new FileConfigurationSource(path, mode));
+        this._sources.push(new FileConfigurationSource(path, mode));
         return this;
     }
 

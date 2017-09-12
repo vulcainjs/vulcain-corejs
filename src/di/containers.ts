@@ -5,11 +5,11 @@ import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolve
 import { LifeTime, DefaultServiceNames } from './annotations';
 import { Files } from '../utils/files';
 import { Conventions } from '../utils/conventions';
-import { VulcainLogger } from './../configurations/log/vulcainLogger';
-import { System } from './../configurations/globals/system';
+import { VulcainLogger } from './../log/vulcainLogger';
+import { System } from './../globals/system';
 import { ConsoleMetrics } from '../metrics/consoleMetrics';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
-import { ServiceResolver } from '../configurations/globals/serviceResolver';
+import { ServiceResolver } from '../globals/serviceResolver';
 import { RequestContext } from "../pipeline/requestContext";
 import { DefaultAuthorizationPolicy } from "../security/authorizationPolicy";
 import { HttpRequest } from "../pipeline/vulcainPipeline";

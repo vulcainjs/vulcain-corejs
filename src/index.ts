@@ -1,17 +1,18 @@
 import './preloader'; // First
-import { IServiceResolver } from './configurations/globals/serviceResolver';
 
 // Configurations
-export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './configurations/dependencies/annotations';
+export { AbstractRemoteSource } from './configurations/sources/abstractRemoteSource';
+export { FileConfigurationSource, ConfigurationDataType } from './configurations/sources/fileConfigurationSource';
+export { MemoryConfigurationSource } from './configurations/sources/memoryConfigurationSource';
+export { HttpConfigurationSource } from './configurations/sources/httpConfigurationSource';
+export { ILocalConfigurationSource, DataSource, IDynamicProperty, IRemoteConfigurationSource } from './configurations/abstractions';
+export { ConfigurationSourceBuilder } from './configurations/configurationSourceBuilder';
 export { DynamicConfiguration } from './configurations/dynamicConfiguration';
-export { IDynamicProperty } from './configurations/dynamicProperty';
-export { MemoryConfigurationSource } from './configurations/configurationSources/memoryConfigurationSource';
-export { FileConfigurationSource } from './configurations/configurationSources/fileConfigurationSource';
-export { ConfigurationDataType } from './configurations/configurationSources/configurationSource';
-export { VulcainLogger } from './configurations/log/vulcainLogger';
-export { System } from './configurations/globals/system';
-export { IServiceResolver } from './configurations/globals/serviceResolver';
-export { HttpConfigurationSource } from './configurations/configurationSources/httpConfigurationSource';
+
+export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './dependencies/annotations';
+export { VulcainLogger } from './log/vulcainLogger';
+export { System } from './globals/system';
+export { IServiceResolver } from './globals/serviceResolver';
 
 // Schemas
 export * from './schemas/schema'
@@ -44,7 +45,7 @@ export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors'
 export { ValidationError } from './pipeline/errors/validationError';
 
 export { HttpRequest } from './pipeline/vulcainPipeline';
-export { Logger } from './configurations/log/logger'
+export { Logger } from './log/logger'
 export { UserContext, } from './security/securityManager'
 export { DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand } from './defaults/crudHandlers';
 

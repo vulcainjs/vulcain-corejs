@@ -1,4 +1,4 @@
-import { System } from '../../configurations/globals/system';
+import { System } from '../../globals/system';
 import { RequestContext, VulcainHeaderNames } from "../../pipeline/requestContext";
 
 export interface ITenantPolicy {

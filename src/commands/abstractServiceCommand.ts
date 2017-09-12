@@ -1,10 +1,10 @@
 import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { DynamicConfiguration } from './../configurations/dynamicConfiguration';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
-import { VulcainLogger } from '../configurations/log/vulcainLogger';
-import { IServiceResolver } from '../configurations/globals/serviceResolver';
+import { VulcainLogger } from '../log/vulcainLogger';
+import { IServiceResolver } from '../globals/serviceResolver';
 import * as types from './types';
 import 'reflect-metadata';
 const rest = require('unirest');

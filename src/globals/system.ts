@@ -1,16 +1,14 @@
 import { CryptoHelper } from './crypto';
-import { DynamicConfiguration } from './../dynamicConfiguration';
 import { VulcainLogger } from './../log/vulcainLogger';
 import * as moment from 'moment';
 import * as fs from 'fs';
 import { VulcainManifest } from './../dependencies/annotations';
-import { Conventions } from './../../utils/conventions';
-import { IDynamicProperty } from '../dynamicProperty';
-import { DefaultServiceNames } from '../../di/annotations';
-import { DynamicProperties } from '../properties/dynamicProperties';
-import { IContainer } from '../../di/resolvers';
-import { IMockManager, DummyMockManager } from "../../mocks/imockManager";
-
+import { Conventions } from '../utils/conventions';
+import { DefaultServiceNames } from '../di/annotations';
+import { IContainer } from '../di/resolvers';
+import { IMockManager, DummyMockManager } from "../mocks/imockManager";
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
+import { IDynamicProperty } from '../configurations/abstractions';
 
 /**
  * Static class providing service helper methods
@@ -97,7 +95,7 @@ export class System {
     static get defaultTenant() {
         return process.env[Conventions.instance.ENV_VULCAIN_TENANT] || 'vulcain';
     }
-    
+
     static getMocksManager(container: IContainer) {
         if (!System._mocksManager) {
             if (System.isTestEnvironnment) {
@@ -385,7 +383,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
-        DynamicProperties.registerPropertyAsDependency(name, defaultValue);
+        DynamicConfiguration.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,
@@ -400,7 +398,7 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
-        DynamicProperties.registerPropertyAsDependency(name, defaultValue);
+        DynamicConfiguration.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
             defaultValue,

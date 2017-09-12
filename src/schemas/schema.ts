@@ -5,7 +5,7 @@ import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
 import { ModelPropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 
 export interface ErrorMessage {

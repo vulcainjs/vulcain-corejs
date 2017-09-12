@@ -6,8 +6,8 @@ import { Domain } from '../schemas/schema';
 import { Inject } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
-import { System } from '../configurations/globals/system';
-import { VulcainLogger } from '../configurations/log/vulcainLogger';
+import { System } from '../globals/system';
+import { VulcainLogger } from '../log/vulcainLogger';
 import { RequestContext } from "../pipeline/requestContext";
 
 /**

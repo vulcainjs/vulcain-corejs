@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
-import { System } from '../configurations/globals/system';
+import { System } from '../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 import { IRequestContext } from "../pipeline/common";
 

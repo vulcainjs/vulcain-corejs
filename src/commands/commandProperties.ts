@@ -1,7 +1,7 @@
 import { CommandConfiguration } from './commandFactory';
 import { Conventions } from './../utils/conventions';
-import { IDynamicProperty } from './../configurations/dynamicProperty';
-import { System } from '../configurations/globals/system';
+import { System } from '../globals/system';
+import { IDynamicProperty } from '../configurations/abstractions';
 
 let HystrixPropertiesNames = {
     HYSTRIX_HEALTH_SNAPSHOT_IN_MS: "hystrix.health.snapshot.validityInMilliseconds",

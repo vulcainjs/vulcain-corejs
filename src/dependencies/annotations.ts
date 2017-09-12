@@ -1,7 +1,7 @@
 import { System } from './../globals/system';
 import * as fs from 'fs';
 import * as Path from 'path';
-import { Files } from "../../utils/files";
+import { Files } from "../utils/files";
 
 export interface ServiceDependencyInfo {
     service: string;

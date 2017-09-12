@@ -2,7 +2,7 @@ import { RequestContext } from "./requestContext";
 import url = require('url');
 import { IContainer } from "../di/resolvers";
 import { Pipeline } from "./common";
-import { VulcainLogger } from "../configurations/log/vulcainLogger";
+import { VulcainLogger } from "../log/vulcainLogger";
 import { DefaultServiceNames } from "../di/annotations";
 import { ApplicationRequestError } from "./errors/applicationRequestError";
 import { HttpResponse, VulcainResponse } from "./response";

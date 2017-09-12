@@ -1,16 +1,16 @@
 import { SecurityManager, ITokenService } from "./securityManager";
-import { ConfigurationProperty } from "../configurations/dependencies/annotations";
+import { ConfigurationProperty } from "../dependencies/annotations";
 import { Conventions } from "../utils/conventions";
-import { IDynamicProperty } from "../configurations/dynamicProperty";
+import { IDynamicProperty } from "../configurations/abstractions";
 import { Inject, DefaultServiceNames } from "../di/annotations";
 import { IAuthorizationPolicy } from "./authorizationPolicy";
-import { System } from "../configurations/globals/system";
+import { System } from "../globals/system";
 import { RequestContext } from "../pipeline/requestContext";
 
 const unirest = require('unirest');
 
 export class StsAuthentication extends SecurityManager {
-    
+
     @ConfigurationProperty(Conventions.instance.TOKEN_STS_AUTHORITY, "string")
     private authority: IDynamicProperty<string>;
     private userInfoEndpoint: string;

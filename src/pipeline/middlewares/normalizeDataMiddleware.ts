@@ -3,7 +3,7 @@ import { VulcainMiddleware } from "../vulcainPipeline";
 import { BadRequestError } from "../errors/badRequestError";
 import { Conventions } from "../../utils/conventions";
 import { DefaultServiceNames } from "../../di/annotations";
-import { VulcainLogger } from "../../configurations/log/vulcainLogger";
+import { VulcainLogger } from "../../log/vulcainLogger";
 import { ApplicationRequestError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
 
@@ -76,7 +76,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                 schemaAction = schemaAction.substr(0, schemaAction.length - 1);
 
             // Path can contain an id (/schema.action/id)
-            var pos = schemaAction && schemaAction.indexOf('/') || -1;
+            let pos = schemaAction && schemaAction.indexOf('/') || -1;
             if (pos >= 0) {
                 id = schemaAction.substr(pos + 1);
                 schemaAction = schemaAction.substr(0, pos);

@@ -1,6 +1,6 @@
 import { RequestContext } from "../pipeline/requestContext";
 import { DefaultServiceNames, Inject } from "../di/annotations";
-import { System } from "../configurations/globals/system";
+import { System } from "../globals/system";
 import { SecurityManager, ITokenService } from "./securityManager";
 import { IAuthorizationPolicy } from "./authorizationPolicy";
 import { UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";

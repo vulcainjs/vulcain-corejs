@@ -14,13 +14,13 @@ import './defaults/schemasDescriptor'; // Don't remove (auto register)
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)
-import { System } from './configurations/globals/system';
 import { LifeTime } from "./di/annotations";
 import { ApiKeyService } from "./security/services/apiKeyService";
 import { ServiceDescriptors } from "./pipeline/handlers/serviceDescriptions";
 import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
 import { LocalAdapter } from "./bus/localAdapter";
+import { System } from './globals/system';
 
 /**
  * Application base class

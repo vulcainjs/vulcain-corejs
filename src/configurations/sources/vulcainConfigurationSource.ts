@@ -1,11 +1,10 @@
-import { System } from './../globals/system';
-import { IRemoteConfigurationSource, PollResult, ConfigurationItem } from './configurationSource';
 import { HttpConfigurationSource } from './httpConfigurationSource';
+const System = require('../../System');
+import { DataSource } from '../abstractions';
 const rest = require('unirest');
 const moment = require('moment');
 
-export class VulcainConfigurationSource extends HttpConfigurationSource
-{
+export class VulcainConfigurationSource extends HttpConfigurationSource {
     private token: string;
 
     constructor(uri: string, private options) {
@@ -23,10 +22,9 @@ export class VulcainConfigurationSource extends HttpConfigurationSource
         return this.uri + "?$query=" + JSON.stringify(this.options);;
     }
 
-    pollPropertiesAsync(timeoutInMs:number)
-    {
+    pollPropertiesAsync(timeoutInMs: number) {
         if (!System.vulcainToken && !System.isTestEnvironnment) {
-            return Promise.resolve(new PollResult(this, null));
+            return Promise.resolve(new DataSource(null));
         }
 
         return super.pollPropertiesAsync(timeoutInMs);

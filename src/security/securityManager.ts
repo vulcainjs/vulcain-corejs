@@ -1,8 +1,8 @@
 import { IAuthorizationPolicy } from './authorizationPolicy';
-import { System } from "../configurations/globals/system";
+import { System } from "../globals/system";
 import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationRequestError, UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";
-import { VulcainLogger } from "../configurations/log/vulcainLogger";
+import { VulcainLogger } from "../log/vulcainLogger";
 import { DefaultServiceNames, Inject } from "../di/annotations";
 import { Model, Property } from '../schemas/annotations';
 
@@ -230,8 +230,7 @@ export abstract class SecurityManager implements UserContext {
 
         let pairs = cookies.split(pairSplitRegExp);
 
-        for (let i = 0; i < pairs.length; i++) {
-            let pair = pairs[i];
+        for (let pair of pairs) {
             let eq_idx = pair.indexOf('=');
 
             // skip things that don't look like key=value
@@ -246,7 +245,7 @@ export abstract class SecurityManager implements UserContext {
             let val = pair.substr(++eq_idx, pair.length).trim();
 
             // quoted values
-            if ('"' == val[0]) {
+            if ('"' === val[0]) {
                 val = val.slice(1, -1);
             }
 

@@ -1,5 +1,5 @@
 import { SecurityManager } from './securityManager';
-import { System } from "../configurations/globals/system";
+import { System } from "../globals/system";
 
 export interface IAuthorizationPolicy {
     /**
