@@ -36,7 +36,7 @@ export interface IActionBusAdapter {
      *
      * @memberOf IActionBusAdapter
      */
-    consumeTask(domain: string, serviceId: string, handler: Function);
+    consumeTask(domain: string, serviceId: string, handler:  (event: RequestData) => void);
 }
 
 /**
@@ -48,5 +48,5 @@ export interface IActionBusAdapter {
 export interface IEventBusAdapter {
     startAsync();
     sendEvent(domain: string, event: EventData);
-    consumeEvents(domain: string, handler: Function);
+    consumeEvents(domain: string, handler: (event: EventData) => void);
 }

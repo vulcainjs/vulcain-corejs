@@ -4,8 +4,8 @@ import { RequestData } from "../pipeline/common";
 
 export
 class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
-    private eventHandler: Function;
-    private commandHandler: Function;
+    private eventHandler: (event: EventData) => void;
+    private commandHandler:  (event: RequestData) => void;
 
     startAsync() {
         return Promise.resolve(this);
@@ -19,7 +19,7 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         }, (1));
     }
 
-    consumeEvents(domain: string, handler: Function) {
+    consumeEvents(domain: string, handler: (event: EventData) => void) {
         this.eventHandler = handler;
     }
 
@@ -31,7 +31,7 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         }, (1));
     }
 
-    consumeTask(domain: string, serviceId: string, handler: Function) {
+    consumeTask(domain: string, serviceId: string, handler: (event: RequestData) => void) {
         this.commandHandler = handler;
     }
 }
