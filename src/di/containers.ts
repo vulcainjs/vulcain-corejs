@@ -24,6 +24,7 @@ import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";
 import { TrackerFactory } from "../metrics/trackers/index";
 import { ScopesDescriptor } from "../defaults/scopeDescriptors";
+import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 
 /**
  * Component container for dependency injection
@@ -68,6 +69,7 @@ export class Container implements IContainer {
             this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
             this.injectInstance(TrackerFactory.create(this), DefaultServiceNames.RequestTracker);
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
+            this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
         }
     }
 

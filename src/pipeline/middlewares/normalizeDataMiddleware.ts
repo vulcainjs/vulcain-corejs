@@ -105,6 +105,14 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                 schema = ctx.requestData.body.schema || schema;
             }
         }
+        else {
+            url.query && Object.keys(url.query).forEach(k => {
+                if (k[0] !== "$") {
+                    ctx.requestData.params = ctx.requestData.params || {};
+                    ctx.requestData.params[k] = url.query[k];
+                }
+            });
+        }
 
         // Or can be forced in the url query
         if (url.query.$action)

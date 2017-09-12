@@ -7,6 +7,9 @@ import { Query } from "../pipeline/handlers/annotations";
 import { RequestContext } from "../pipeline/requestContext";
 import { ForbiddenRequestError } from "../pipeline/errors/applicationRequestError";
 import { ServiceDescriptors, ServiceDescription } from "../pipeline/handlers/serviceDescriptions";
+import { SwaggerServiceDescriptor } from './swagger/swaggerServiceDescriptions';
+import { SwaggerApiDefinition } from './swagger/swaggerApiDefinition';
+import { HttpResponse } from '../index';
 
 
 @Model()
@@ -32,16 +35,12 @@ export class ServiceExplorer {
         let result: ServiceDescription = await descriptors.getDescriptions();
         result.alternateAddress = (<any>this).requestContext.hostName;
 
-        // TODO        
         if (model.format === 'swagger') {
-            /*
             let descriptors = this.container.get<SwaggerServiceDescriptor>(DefaultServiceNames.SwaggerServiceDescriptor);
             let swaggerResult: SwaggerApiDefinition = await descriptors.getDescriptionsAsync(result);
             let response = new HttpResponse();
             response.content = swaggerResult;
             return response;
-            */
-
         } else {
             return result;
         }
