@@ -6,6 +6,7 @@ import { DefaultServiceNames } from "../../di/annotations";
 import { VulcainLogger } from "../../log/vulcainLogger";
 import { ApplicationRequestError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
+import { System } from "../../globals/system";
 
 /**
  * Populate requestData property with action or query context
@@ -54,6 +55,9 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         }
 
         // Inject request context in response
+        if( System.isTestEnvironnment)
+            ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
+
         ctx.response.content.meta = ctx.response.content.meta || {};
         ctx.response.content.meta.correlationId = ctx.correlationId;
     }

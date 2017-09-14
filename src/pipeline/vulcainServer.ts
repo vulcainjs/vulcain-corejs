@@ -17,17 +17,114 @@ import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
 import { HttpResponse } from "./response";
 import Router = require('router');
 
+export class HttpAdapter {
+    private srv: http.Server;
+    private router: Router;
+
+    /**
+     *
+     */
+    constructor(private container: IContainer, private vulcainPipe: (container: IContainer, request: HttpRequest) => Promise<HttpResponse>) {
+        this.router = Router();
+    }
+
+    startAsync(port: number, callback: (err)=>void) {
+        this.srv.listen(port,callback);
+
+        this.srv = http.createServer((req, resp) => {
+            // Actions and query
+            // POST/GET /api/...
+            if (req.url.startsWith(Conventions.instance.defaultUrlprefix) && (req.method === "GET" || req.method === "POST")) {
+                this.processVulcainRequest(req, resp);
+                return;
+            }
+
+            // Custom request
+            if (req.method === "GET") {
+                this.router(req, resp, () => { resp.statusCode = 404; resp.end(); });
+                return;
+            }
+
+            resp.statusCode = 404;
+            resp.end();
+        });
+    }
+
+    private processVulcainRequest( req: http.IncomingMessage, resp: http.ServerResponse) {
+        let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
+        try {
+
+            let body = [];
+            req.on('data', (chunk) => {
+                body.push(chunk);
+            }).on('end', async () => {
+                request.body = req.method === "POST" && Buffer.concat(body).toString();
+                let result = await this.vulcainPipe(this.container, request);
+                this.sendResponse(resp, result);
+            });
+        }
+        finally {
+        }
+    }
+
+    private sendResponse(resp: http.ServerResponse, response: HttpResponse) {
+        if (!response) {
+            resp.end(); // TODO try to encapsulate all end responses into setImmediate
+            return;
+        }
+
+        try {
+            if (response.headers) {
+                for (const k of Object.keys(response.headers)) {
+                    resp.setHeader(k, response.headers[k]);
+                }
+            }
+
+            resp.statusCode = response.statusCode || 200;
+            resp.setHeader('Content-Type', response.contentType || "application/json");
+
+            if (response.content) {
+                if (response.encoding) {
+                    resp.end(response.content, response.encoding);
+                }
+                else {
+                    let str = typeof response.content === "string" ? response.content : JSON.stringify(response.content)
+                    resp.end(str, "utf8");
+                }
+            }
+            else {
+                resp.end();
+            }
+        }
+        catch (e) {
+            console.log(e);
+            try {
+                resp.end();
+            }
+            catch (e) { }
+        }
+    }
+
+
+    registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse) {
+        this.router[verb](path, (req: http.IncomingMessage, res: http.ServerResponse) => {
+            let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
+            let result = handler(request);
+            this.sendResponse(res, result);
+        });
+    }
+}
+
 export class VulcainServer {
     private queryManager;
     private metrics: IMetrics;
     private pipe: VulcainPipeline;
-    private router: Router;
+    private adapter: HttpAdapter;
 
     constructor(protected domainName: string, protected container: IContainer, private enableHystrixStream=false) {
-        this.router = Router();
-
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
 
+        this.adapter
         this.pipe = new VulcainPipeline([
             new NormalizeDataMiddleware(),
             new MetricsMiddleware(),
@@ -75,18 +172,14 @@ export class VulcainServer {
         this.init();
 
         this.container.getCustomEndpoints().forEach(e => {
-            this.router[e.verb](e.path, (req: http.IncomingMessage, res: http.ServerResponse) => {
-                let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
-                let result = e.handler(request);
-                this.sendResponse(res, result);
-            });
+
         });
 
         let srv = http.createServer((req, resp) => {
-            let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
             // Actions and query
             // POST/GET /api/...
             if (req.url.startsWith(Conventions.instance.defaultUrlprefix) && (req.method === "GET" || req.method === "POST")) {
+                let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
                 this.processVulcainRequest(request, req, resp);
                 return;
             }
@@ -106,60 +199,7 @@ export class VulcainServer {
         });
     }
 
-    processVulcainRequest(request: HttpRequest, req: http.IncomingMessage, resp: http.ServerResponse) {
-        try {
 
-            let body = [];
-            req.on('data', (chunk) => {
-                body.push(chunk);
-            }).on('end', async () => {
-                request.body = req.method === "POST" && Buffer.concat(body).toString();
-                let result = await this.pipe.process(this.container, request);
-                this.sendResponse(resp, result);
-            });
-        }
-        finally {
-        }
-    }
 
-    private sendResponse(resp: http.ServerResponse, response: HttpResponse) {
-        if (!response) {
-            resp.end(); // TODO try to encapsulate all end responses into setImmediate
-            return;
-        }
 
-        try {
-            if( System.isTestEnvironnment)
-                resp.setHeader('Access-Control-Allow-Origin', '*'); // CORS
-
-            if (response.headers) {
-                for (const k of Object.keys(response.headers)) {
-                    resp.setHeader(k, response.headers[k]);
-                }
-            }
-
-            resp.statusCode = response.statusCode || 200;
-            resp.setHeader('Content-Type', response.contentType || "application/json");
-
-            if (response.content) {
-                if (response.encoding) {
-                    resp.end(response.content, response.encoding);
-                }
-                else {
-                    let str = typeof response.content === "string" ? response.content : JSON.stringify(response.content)
-                    resp.end(str, "utf8");
-                }
-            }
-            else {
-                resp.end();
-            }
-        }
-        catch (e) {
-            console.log(e);
-            try {
-                resp.end();
-            }
-            catch (e) { }
-        }
-    }
 }
