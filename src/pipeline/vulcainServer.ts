@@ -17,14 +17,22 @@ import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
 import { HttpResponse } from "./response";
 import Router = require('router');
 
-export class HttpAdapter {
+export interface IServerAdapter {
+    init(container: IContainer, pipeline: VulcainPipeline);
+    startAsync(port: number, callback: (err) => void);
+    registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse);
+    registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void);
+}
+
+export class HttpAdapter implements IServerAdapter {
     private srv: http.Server;
     private router: Router;
-
+    private container: IContainer;
+    private vulcainPipe: VulcainPipeline;
     /**
      *
      */
-    constructor(private container: IContainer, private vulcainPipe: (container: IContainer, request: HttpRequest) => Promise<HttpResponse>) {
+    init( container: IContainer,  vulcainPipe: VulcainPipeline) {
         this.router = Router();
     }
 
@@ -59,7 +67,7 @@ export class HttpAdapter {
                 body.push(chunk);
             }).on('end', async () => {
                 request.body = req.method === "POST" && Buffer.concat(body).toString();
-                let result = await this.vulcainPipe(this.container, request);
+                let result = await this.vulcainPipe.process(this.container, request);
                 this.sendResponse(resp, result);
             });
         }
@@ -105,7 +113,6 @@ export class HttpAdapter {
         }
     }
 
-
     registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse) {
         this.router[verb](path, (req: http.IncomingMessage, res: http.ServerResponse) => {
             let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
@@ -113,29 +120,32 @@ export class HttpAdapter {
             this.sendResponse(res, result);
         });
     }
+
+    registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void) {
+        this.router[verb](path, handler);
+    }
 }
 
 export class VulcainServer {
-    private queryManager;
     private metrics: IMetrics;
-    private pipe: VulcainPipeline;
-    private adapter: HttpAdapter;
+    private adapter: IServerAdapter;
 
     constructor(protected domainName: string, protected container: IContainer, private enableHystrixStream=false) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
 
-        this.adapter
-        this.pipe = new VulcainPipeline([
-            new NormalizeDataMiddleware(),
-            new MetricsMiddleware(),
-            new AuthenticationMiddleware(),
-            new HandlersMiddleware(container)
-        ]);
+        this.adapter = this.container.get<IServerAdapter>(DefaultServiceNames.ServerAdapter, true) || new HttpAdapter();
+        this.adapter.init(container,
+            new VulcainPipeline([
+                new NormalizeDataMiddleware(),
+                new MetricsMiddleware(),
+                new AuthenticationMiddleware(),
+                new HandlersMiddleware(container)
+            ]));
     }
 
-    private init() {
+    public start(port: number) {
         if (this.enableHystrixStream) {
-            this.router.get(Conventions.instance.defaultHystrixPath, (request, response: http.ServerResponse) => {
+            this.adapter.registerNativeRoute("get", Conventions.instance.defaultHystrixPath, (request, response) => {
                 response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
                 response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
                 response.setHeader('Pragma', 'no-cache');
@@ -157,49 +167,13 @@ export class VulcainServer {
                     System.log.info(null, () => "close hystrix.stream");
                     subscription.unsubscribe();
                 });
-
-                return subscription;
             });
         }
 
-        this.router.get('/health', (req, res) => {
-            res.statusCode = 200;
-            res.end();
-        });
-    }
-
-    public start(port: number) {
-        this.init();
+        this.adapter.registerRoute('get', '/health', (req) => null);
 
         this.container.getCustomEndpoints().forEach(e => {
-
-        });
-
-        let srv = http.createServer((req, resp) => {
-            // Actions and query
-            // POST/GET /api/...
-            if (req.url.startsWith(Conventions.instance.defaultUrlprefix) && (req.method === "GET" || req.method === "POST")) {
-                let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
-                this.processVulcainRequest(request, req, resp);
-                return;
-            }
-
-            // Custom request
-            if (req.method === "GET") {
-                this.router(req, resp, () => { resp.statusCode = 404; resp.end(); });
-                return;
-            }
-
-            resp.statusCode = 404;
-            resp.end();
-        });
-
-        srv.listen(port, (err) => {
-            console.log("Server started...");
+            this.adapter.registerRoute(e.verb, e.path, e.handler);
         });
     }
-
-
-
-
 }

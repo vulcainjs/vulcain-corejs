@@ -31,6 +31,7 @@ export { IMetrics } from './metrics/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
 export { IRequestTracker } from './metrics/trackers/index';
+import { IServerAdapter } from './pipeline/vulcainServer';
 
 // Pipeline
 export * from './pipeline/handlers/annotations';
