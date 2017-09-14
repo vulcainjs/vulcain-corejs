@@ -22,7 +22,6 @@ export class DynamicProperty<T> implements IDynamicProperty<T> {
         }
         else {
             this.val = this.manager.get(name, this.defaultValue);
-            this._propertyChanged && this._propertyChanged.next(this);
         }
     }
 
@@ -30,26 +29,37 @@ export class DynamicProperty<T> implements IDynamicProperty<T> {
         return !this.removed ? this.val : undefined;
     }
 
+    set(val: T) {
+        if (this.val !== val) {
+            this.val = val;
+            this.onPropertyChanged();
+        }
+    }
+
     updateValue(item: ConfigurationItem) {
         if (item.deleted) {
             this.removed = true;
             System.log.info(null, () => `CONFIG: Removing property value for key ${this.name}`);
-            this._propertyChanged && this._propertyChanged.next(this);
-            return true;
+            this.onPropertyChanged();
+            return;
         }
 
         if (this.val !== item.value) {
             this.val = item.encrypted ? System.decrypt(item.value) : item.value;
             let v = item.encrypted ? "********" : item.value;
             System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${this.name}`);
-            this._propertyChanged && this._propertyChanged.next(this);
-            return true;
+            this.onPropertyChanged();
+            return;
         }
-        return false;
+    }
+
+    private onPropertyChanged() {
+        this._propertyChanged && this._propertyChanged.next(this);
+        this.manager.onPropertyChanged(this);
     }
 
     public dispose() {
-        this._propertyChanged && this._propertyChanged.next(this);
+        this.onPropertyChanged();
         //this._propertyChanged.dispose();
         this._propertyChanged = null;
     }

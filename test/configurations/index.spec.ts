@@ -1,14 +1,13 @@
-import { DynamicProperties } from '../../dist/configurations/properties/dynamicProperties';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
-import { MemoryConfigurationSource } from '../../dist/configurations/configurationSources/memoryConfigurationSource';
+import { MemoryConfigurationSource } from '../../dist/configurations/sources/memoryConfigurationSource';
 import { DynamicProperty } from '../../src/configurations/properties/dynamicProperty';
 
 describe('DynamicConfiguration', function () {
 
     beforeEach(function () {
-        DynamicConfiguration.instance.reset(1);
+        DynamicConfiguration.manager.reset(1);
     });
 
     it('should have default values', function () {
@@ -42,8 +41,8 @@ describe('DynamicConfiguration', function () {
     it('should raise changed event', () => {
 
         let cx = 0;
-        DynamicProperties.instance.reset();
-        DynamicProperties.instance.propertyChanged
+        DynamicConfiguration.manager.reset();
+        DynamicConfiguration.manager.propertyChanged
             .filter( p => p.name === "test")
             .subscribe((property) => {
                 cx += property.value;
@@ -89,18 +88,18 @@ describe('DynamicConfiguration', function () {
     it('should refresh new values', async function () {
 
         let source = new MemoryConfigurationSource();
-        await DynamicConfiguration.instance.startPollingAsync(source);
+        await DynamicConfiguration.manager.startPollingAsync(source);
 
-        let prop = DynamicConfiguration.instance.getProperty("test");
+        let prop = DynamicConfiguration.getProperty("test");
         expect(prop).to.be.undefined;
 
         source.set("test", 10);
-        prop = DynamicConfiguration.instance.getProperty("test");
+        prop = DynamicConfiguration.getProperty("test");
         expect(prop).to.be.undefined;
 
-        await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+        await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
-        prop = DynamicConfiguration.instance.getProperty("test");
+        prop = DynamicConfiguration.getProperty("test");
         expect(prop).not.to.be.undefined;
         expect(10).to.equal(prop.value);
     });
@@ -108,23 +107,23 @@ describe('DynamicConfiguration', function () {
     it('should refresh new chained values', async function () {
 
             let source = new MemoryConfigurationSource();
-            await DynamicConfiguration.instance.startPollingAsync(source);
+            await DynamicConfiguration.manager.startPollingAsync(source);
 
             let chained = DynamicConfiguration.asChainedProperty(30, "test10", "test20");
             expect(30).to.equal(DynamicConfiguration.asChainedProperty(30, "test10", "test20").value);
 
             source.set("test20", 20);
-            await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+            await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
             expect(20).to.equal(chained.value);
 
             source.set("test10", 10);
-            await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+            await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
             expect(10).to.equal(chained.value);
 
             source.set("test10", 11);
-            await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+            await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
             expect(11).to.equal(chained.value);
     });
@@ -132,21 +131,21 @@ describe('DynamicConfiguration', function () {
     it('should have memory source', async function () {
 
             let source1 = new MemoryConfigurationSource();
-            await DynamicConfiguration.instance.startPollingAsync(source1);
+            await DynamicConfiguration.manager.startPollingAsync(source1);
 
             let source2 = new MemoryConfigurationSource();
-            await DynamicConfiguration.instance.startPollingAsync(source2);
+            await DynamicConfiguration.manager.startPollingAsync(source2);
 
             let prop = DynamicConfiguration.getOrCreateProperty("test30", 0);
             expect(0).to.equal(prop.value);
 
             source1.set("test30", 10);
-            await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+            await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
             expect(10).to.equal(prop.value);
 
             source2.set("test30", 20);
-            await DynamicConfiguration.instance.startPollingAsync(); // Force polling
+            await DynamicConfiguration.manager.startPollingAsync(); // Force polling
 
             expect(20).to.equal(prop.value);
     });

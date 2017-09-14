@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { MockManager } from '../../dist/mocks/mockManager';
-import { System } from '../../dist/configurations/globals/system';
+import { System } from '../../dist/globals/system';
 
 let mockDefinitions = {
     services: {

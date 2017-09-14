@@ -2,7 +2,7 @@ import { ConfigurationManager } from './configurationManager';
 import { IConfigurationSource, IRemoteConfigurationSource } from './abstractions';
 import { ConfigurationDataType, FileConfigurationSource } from './sources/fileConfigurationSource';
 import { VulcainConfigurationSource } from './sources/vulcainConfigurationSource';
-const System = require('../System');
+import { System } from '../globals/system';
 
 /**
  * Helper for adding configuration source providing by DynamicConfiguration.init
@@ -51,6 +51,6 @@ export class ConfigurationSourceBuilder {
     }
 
     public startPollingAsync() {
-        return this._configurationManager.startAsync(this._sources);
+        return this._configurationManager.startPollingAsync(this._sources);
     }
 }

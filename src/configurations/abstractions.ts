@@ -33,4 +33,5 @@ export interface IDynamicProperty<T> {
     name: string;
     value: T;
     propertyChanged: rx.Observable<IDynamicProperty<T>>;
+    set(val: T): void;
 }

@@ -18,36 +18,39 @@ import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
 * </code>
 */
 export class DynamicConfiguration {
-    private static _configuration: ConfigurationManager;
+/**
+ * For test only - Do not use directly
+ */
+    static manager: ConfigurationManager;
 
     /**
      * subscribe on a property changed
      */
     public static onPropertyChanged<T>(handler: (e: IDynamicProperty<T>) => void, propertyName?: string) {
         if (propertyName) {
-            let prop = DynamicConfiguration._configuration.getProperty(propertyName);
+            let prop = DynamicConfiguration.manager.getProperty(propertyName);
             if (!prop) throw new Error("Property not found : " + propertyName);
             prop.propertyChanged.subscribe(handler);
         }
         else
-            DynamicConfiguration._configuration.propertyChanged.subscribe(handler);
+            DynamicConfiguration.manager.propertyChanged.subscribe(handler);
     }
 
     /**
      * Create a new property
      */
     public static asProperty<T>(value: T, name?: string, dontCheck = false): IDynamicProperty<T> {
-        if (!dontCheck && name && DynamicConfiguration._configuration.getProperty(name)) {
+        if (!dontCheck && name && DynamicConfiguration.manager.getProperty(name)) {
             throw new Error("Duplicate property name");
         }
 
-        let p = DynamicConfiguration._configuration.createDynamicProperty(name, value);
+        let p = DynamicConfiguration.manager.createDynamicProperty(name, value);
         return p;
     }
 
     public static asChainedProperty<T>(defaultValue: T, name: string, ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
         let properties = [name].concat(...fallbackPropertyNames).filter(n => !!n);
-        let p = DynamicConfiguration._configuration.createChainedDynamicProperty(properties, defaultValue);
+        let p = DynamicConfiguration.manager.createChainedDynamicProperty(properties, defaultValue);
         return p;
     }
 
@@ -70,7 +73,7 @@ export class DynamicConfiguration {
      * Get a dynamic property
      */
     static getProperty<T>(name: string): IDynamicProperty<T> {
-        let prop = DynamicConfiguration._configuration.getProperty<T>(name);
+        let prop = DynamicConfiguration.manager.getProperty<T>(name);
         return prop;
     }
 
@@ -93,10 +96,10 @@ export class DynamicConfiguration {
     /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>
     /// <returns>ConfigurationSourceBuilder</returns>
     public static init(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
-        if (DynamicConfiguration._configuration)
-            DynamicConfiguration._configuration.reset();
+        if (DynamicConfiguration.manager)
+            DynamicConfiguration.manager.reset();
 
-        DynamicConfiguration._configuration = new ConfigurationManager(pollingIntervalInSeconds || 60, sourceTimeoutInMs || 1000);
-        return new ConfigurationSourceBuilder(DynamicConfiguration._configuration);
+        DynamicConfiguration.manager = new ConfigurationManager(pollingIntervalInSeconds || 60, sourceTimeoutInMs || 1000);
+        return new ConfigurationSourceBuilder(DynamicConfiguration.manager);
     }
 }

@@ -26,6 +26,9 @@ export class ConfigurationManager {
     }
 
     get(name: string, defaultValue) {
+        if (!this._values) {
+            this._values = new PrioritizedSourceValue();
+        }
         let val = this._values.get(name);
         return val === undefined ? defaultValue : val;
     }
@@ -51,9 +54,11 @@ export class ConfigurationManager {
  * @param sources List of sources
  * @returns {Promise<T>}
  */
-    async startAsync(sources: Array<IConfigurationSource> = [], pollSources = true) {
+    async startPollingAsync(sources: IConfigurationSource | Array<IConfigurationSource> = [], pollSources = true) {
         let localSources: Array<IConfigurationSource> = [];
-
+        if (!Array.isArray(sources)) {
+            sources = [sources];
+        }
         sources.push(new FileConfigurationSource(".vulcain", ConfigurationDataType.VulcainConfig));
 
         for(let source of sources) {
@@ -145,11 +150,13 @@ export class ConfigurationManager {
         data.values && data.values.forEach(d => {
             let dp = this._dynamicProperties.get(d.key);
             if (dp) {
-                if (dp.updateValue(d)) {
-                    this._propertyChanged && this._propertyChanged.next(dp);
-                }
+                dp.updateValue(d);
             }
         });
+    }
+
+    onPropertyChanged(dp: IDynamicProperty<any>) {
+        this._propertyChanged && this._propertyChanged.next(dp);
     }
 
     private repeatPolling() {

@@ -31,10 +31,10 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T> {
 
     reset(dp: IDynamicProperty<T>) {
         if (this._fallbackProperties.indexOf(dp.name) < 0)
-            return;    
-        
+            return;
+
         // Find first property value in the chain
-        let tmp = undefined;
+        let tmp = this.defaultValue;
         for (let propertyName of this._fallbackProperties) {
             let dp = this.manager.getProperty(propertyName);
             if (!dp) {
@@ -46,9 +46,13 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T> {
             }
         }
 
-        if (this.val !== tmp) {
-            this.val = tmp;
-            this._propertyChanged && this._propertyChanged.next(this);
+        this.set(tmp);
+    }
+
+    set(val: T) {
+        if (this.val !== val) {
+            this.val = val;
+            this.onPropertyChanged();
         }
     }
 
@@ -57,7 +61,12 @@ export class ChainedDynamicProperty<T> implements IDynamicProperty<T> {
     }
 
     public dispose() {
-        this._propertyChanged && this._propertyChanged.next(this);
+        this.onPropertyChanged();
         this._propertyChanged = null;
+    }
+
+    private onPropertyChanged() {
+        this._propertyChanged && this._propertyChanged.next(this);
+        this.manager.onPropertyChanged(this);
     }
 }

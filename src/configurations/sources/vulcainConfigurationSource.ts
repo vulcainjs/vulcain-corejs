@@ -1,6 +1,6 @@
 import { HttpConfigurationSource } from './httpConfigurationSource';
-const System = require('../../System');
 import { DataSource } from '../abstractions';
+import { System } from '../../globals/system';
 const rest = require('unirest');
 const moment = require('moment');
 
