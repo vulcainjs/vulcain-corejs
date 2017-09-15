@@ -17,8 +17,14 @@ export class ExpressStsAuthentication extends AbstractExpressAuthentication {
     constructor() {
         super();
         this.authority = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
+        System.log.info(null, () => `using ${this.authority.value} as STS authority`);
 
         this.addOrReplaceStrategy('bearer', this.bearerAuthentication.bind(this));
+
+        this.ensureUserInfoEndpointLoaded()
+            .catch(err => {
+                System.log.error(null, err, () => 'Error getting STS user info endpoint');
+            });
     }
 
     private ensureUserInfoEndpointLoaded() {
@@ -28,7 +34,9 @@ export class ExpressStsAuthentication extends AbstractExpressAuthentication {
             } else {
                 const openIdConfigUrl = `${this.authority.value}/.well-known/openid-configuration`;
                 unirest.get(openIdConfigUrl).as.json(res => {
-                    if (res.status >= 400) {
+                    if (res.error) {
+                        reject(res.error);
+                    } else if (res.status >= 400) {
                         reject(res);
                     } else {
                         this.userInfoEndpoint = res.body.userinfo_endpoint;
@@ -40,7 +48,10 @@ export class ExpressStsAuthentication extends AbstractExpressAuthentication {
     }
 
     private async getUserInfoAsync(accessToken: string) {
-        await this.ensureUserInfoEndpointLoaded();
+        await this.ensureUserInfoEndpointLoaded()
+            .catch(err => {
+                System.log.error(null, err, () => 'Error getting STS user info endpoint');
+            });
 
         return new Promise<any>((resolve, reject) => {
             unirest.get(this.userInfoEndpoint).headers({ authorization: `Bearer ${accessToken}`}).as.json(res => {
@@ -67,7 +78,10 @@ export class ExpressStsAuthentication extends AbstractExpressAuthentication {
 
             // get user info from STS
             let user = await this.getUserInfoAsync(accessToken);
-            user.scopes = token.scope;
+            user.scopes = [
+                ...token.scope,
+                ...token.role
+            ];
 
             System.log.info(ctx, ()=> JSON.stringify( user ));
 
