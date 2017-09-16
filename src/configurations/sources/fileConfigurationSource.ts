@@ -1,4 +1,4 @@
-import { ILocalConfigurationSource, ConfigurationItem } from '../abstractions';
+import { ILocalConfigurationSource, ConfigurationItem, DataSource } from '../abstractions';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { System } from '../../globals/system';
@@ -26,7 +26,9 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
     }
 
     get(name: string) {
-        return this._values.get(name);
+        let item = this._values.get(name);
+        if (item) return item.value;
+        return undefined;
     }
 
     protected readJsonValues(vulcainConfig: boolean) {
@@ -100,7 +102,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
     }
 
     protected updateValue(name: string, value, encrypted: boolean) {
-        this._values.set(name,  encrypted ? System.decrypt(value) : value);
+        this._values.set(name, { value: encrypted ? System.decrypt(value) : value, encrypted, key: name });
         let v = encrypted ? "********" : value;
         System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${name}`);
     }
@@ -109,7 +111,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
         if (this._disabled)
             return;
 
-        return new Promise<void>((resolve) => {
+        return new Promise<DataSource>((resolve) => {
             try {
                 fs.stat(this.path, async (err, stats) => {
                     if (!err) {
@@ -118,7 +120,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
                         else
                             await this.readJsonValues(this.mode === ConfigurationDataType.VulcainConfig);
                     }
-                    resolve();
+                    resolve(new DataSource(this._values.values()));
                 });
             }
             catch (ex) {

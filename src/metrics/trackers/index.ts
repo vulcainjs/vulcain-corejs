@@ -10,6 +10,7 @@ export interface IRequestTracker {
     finish(result);
     startCommand(command: string, target?: string): any;
     finishCommand(span, status);
+    trackError(error, id?);
 }
 
 export interface IRequestTrackerFactory {

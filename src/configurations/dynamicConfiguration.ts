@@ -21,7 +21,7 @@ export class DynamicConfiguration {
 /**
  * For test only - Do not use directly
  */
-    static manager: ConfigurationManager;
+    static manager: ConfigurationManager = new ConfigurationManager();
 
     /**
      * subscribe on a property changed
@@ -71,7 +71,10 @@ export class DynamicConfiguration {
      */
     static getPropertyValue<T>(name: string) {
         let p = this.getProperty<T>(name);
-        return p && <T>p.value;
+        if (!p) {
+            p = this.manager.createDynamicProperty<T>(name);
+        }
+        return p.value;
     }
 
     /**
@@ -90,10 +93,10 @@ export class DynamicConfiguration {
     /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>
     /// <returns>ConfigurationSourceBuilder</returns>
     public static init(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
-        if (DynamicConfiguration.manager)
-            DynamicConfiguration.manager.reset();
-
-        DynamicConfiguration.manager = new ConfigurationManager(pollingIntervalInSeconds || 60, sourceTimeoutInMs || 1000);
+        if(pollingIntervalInSeconds)
+            DynamicConfiguration.manager.pollingIntervalInSeconds = pollingIntervalInSeconds;
+        if(sourceTimeoutInMs)
+            DynamicConfiguration.manager.sourceTimeoutInMs = sourceTimeoutInMs;
         return new ConfigurationSourceBuilder(DynamicConfiguration.manager);
     }
 }

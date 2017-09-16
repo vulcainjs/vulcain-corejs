@@ -25,8 +25,8 @@ export class ConfigurationManager {
     }
 
     constructor(
-        public pollingIntervalInSeconds: number,
-        public sourceTimeoutInMs: number) {
+        public pollingIntervalInSeconds: number = 60,
+        public sourceTimeoutInMs: number = 1500) {
     }
 
     get(name: string) {
@@ -74,7 +74,7 @@ export class ConfigurationManager {
         }
         sources.push(new FileConfigurationSource(".vulcain", ConfigurationDataType.VulcainConfig));
 
-        for(let source of sources) {
+        for (let source of sources) {
             // Local properties has loaded first (less priority)
             if ((<ILocalConfigurationSource>source).readPropertiesAsync) {
                 localSources.push(source);
@@ -178,7 +178,9 @@ export class ConfigurationManager {
     }
 
     onPropertiesChanged(data: DataSource) {
-        data.values && data.values.forEach(d => {
+        if (!data.values)
+            return;
+        for (let d of data.values) {
             let dp = this._dynamicProperties.get(d.key);
             if (!dp) {
                 dp = this.createDynamicProperty(d.key);
@@ -186,7 +188,7 @@ export class ConfigurationManager {
             else if (dp.updateValue) {
                 dp.updateValue(d);
             }
-        });
+        }
     }
 
     onPropertyChanged(dp: IDynamicProperty<any>) {
@@ -206,6 +208,11 @@ export class ConfigurationManager {
  /// <param name="sourceTimeoutInMs"></param>
  */
     public reset(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
+        if (pollingIntervalInSeconds)
+            this.pollingIntervalInSeconds = pollingIntervalInSeconds;
+        if (sourceTimeoutInMs)
+            this.sourceTimeoutInMs = sourceTimeoutInMs;
+
         //this._propertyChanged.dispose();
         this._propertyChanged = null;
 

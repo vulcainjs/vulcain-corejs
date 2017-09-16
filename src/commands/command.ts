@@ -63,6 +63,7 @@ export class HystrixCommand {
         // Execution
         this.metrics.incrementExecutionCount();
         let start = ActualTime.getCurrentTime();
+        let hasError = false;
 
         try {
             if (this.circuitBreaker.allowRequest()) {
@@ -110,7 +111,7 @@ export class HystrixCommand {
 
                         // Update cache
                         // TODO
-                        start = -1;
+                        hasError = true;
                         return result;
                     }
                     finally {
@@ -128,7 +129,7 @@ export class HystrixCommand {
             }
             else // circuit breaker open
             {
-                start = -1;
+                hasError = true;
                 this.metrics.markShortCircuited();
                 return await this.getFallbackOrThrowException(
                     EventType.SHORT_CIRCUITED,
@@ -138,9 +139,9 @@ export class HystrixCommand {
             }
         }
         finally {
-            if (start >= 0) {
-                let duration = ActualTime.getCurrentTime() - start;
-                this.command.onCommandCompleted && this.command.onCommandCompleted(duration, false);
+            let duration = ActualTime.getCurrentTime() - start;
+            this.command.onCommandCompleted && this.command.onCommandCompleted(duration, false);
+            if (!hasError) {
                 this.recordTotalExecutionTime(duration);
             }
             this.metrics.decrementExecutionCount();

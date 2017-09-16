@@ -11,3 +11,6 @@ deploy:
   on:
     branch: master
   tag: next
+branches:
+  only:
+  - master

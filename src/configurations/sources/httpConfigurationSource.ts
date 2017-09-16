@@ -56,7 +56,7 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
                     else {
                         System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
                     }
-                    resolve(values && new DataSource(Array.from(values.values())));
+                    resolve(values && new DataSource(values.values()));
                 });
             }
             catch (e) {

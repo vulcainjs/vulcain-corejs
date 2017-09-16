@@ -112,13 +112,22 @@ class ZipkinRequestTracker implements IRequestTracker {
         return id;
     }
 
+    trackError(error, id?) {
+        this.tracer.setId(this.id);
+        this.tracer.scoped(() => {
+            id && this.tracer.setId(id);
+            this.tracer.recordBinary("error", error.message || error);
+        });
+        return id;
+    }
+
     finishCommand(id, error) {
         this.tracer.setId(this.id);
         this.tracer.scoped(() => {
             this.tracer.setId(id);
             this.tracer.recordAnnotation(new Annotation.ClientRecv());
             if(error)
-                this.tracer.recordBinary("error", "Command error");
+                this.tracer.recordBinary("error", error.message || error);
         });
         return id;
     }

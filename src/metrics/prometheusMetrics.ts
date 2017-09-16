@@ -32,7 +32,7 @@ export class PrometheusMetrics implements IMetrics {
 
     increment(metric: string, customTags?: any, delta = 1) {
         metric = 'vulcain_' + metric;
-        let labels = Object.assign(this.tags, customTags);
+        let labels = Object.assign({}, this.tags, customTags);
 
         let counter:Prometheus.Counter = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
@@ -49,7 +49,7 @@ export class PrometheusMetrics implements IMetrics {
 
     timing(metric: string, duration: number, customTags?: any) {
         metric = 'vulcain_' + metric;
-        let labels = Object.assign(this.tags, customTags);
+        let labels = Object.assign({}, this.tags, customTags);
         let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
             counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels) });

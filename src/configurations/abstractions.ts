@@ -5,7 +5,7 @@ export interface IConfigurationSource {
 }
 
 export interface ILocalConfigurationSource extends IConfigurationSource {
-    readPropertiesAsync(timeout?: number): Promise<void>;
+    readPropertiesAsync(timeout?: number): Promise<DataSource>;
 }
 
 export interface IRemoteConfigurationSource extends IConfigurationSource {
@@ -26,7 +26,7 @@ export interface ConfigurationItem {
 /// </summary>
 export class DataSource {
 
-    public constructor(public values?: ConfigurationItem[]) {
+    public constructor(public values?: IterableIterator<ConfigurationItem>) {
     }
 }
 

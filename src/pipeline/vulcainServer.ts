@@ -39,7 +39,6 @@ export class HttpAdapter implements IServerAdapter {
     }
 
     startAsync(port: number, callback: (err)=>void) {
-        this.srv.listen(port,callback);
 
         this.srv = http.createServer((req, resp) => {
             // Actions and query
@@ -58,6 +57,8 @@ export class HttpAdapter implements IServerAdapter {
             resp.statusCode = 404;
             resp.end();
         });
+
+        this.srv.listen(port, callback);
     }
 
     private processVulcainRequest( req: http.IncomingMessage, resp: http.ServerResponse) {
@@ -142,6 +143,7 @@ export class VulcainServer {
                 new AuthenticationMiddleware(),
                 new HandlersMiddleware(container)
             ]));
+        this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter); // Override current adapter
     }
 
     public start(port: number) {
@@ -176,5 +178,7 @@ export class VulcainServer {
         this.container.getCustomEndpoints().forEach(e => {
             this.adapter.registerRoute(e.verb, e.path, e.handler);
         });
+
+        this.adapter.startAsync(port, (err) => System.log.info(null, () => 'Listening on port ' + port));
     }
 }

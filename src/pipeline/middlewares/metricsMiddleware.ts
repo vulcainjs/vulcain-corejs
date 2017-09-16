@@ -8,6 +8,7 @@ import { MetricsConstant, IMetrics } from "../../metrics/metrics";
 export interface CommandMetrics {
     startCommand: (command: string, target?: string) => any;
     finishCommand: (id, status) => void;
+    trackError: (error, id?) => void;
     now: ()=>number;
 }
 
@@ -32,6 +33,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
             tracer: trackerFactory && trackerFactory.startSpan(ctx),
             startCommand: (command: string, target?) => metricsInfo.tracer && metricsInfo.tracer.startCommand(command, target),
             finishCommand: (id, status) => metricsInfo.tracer && metricsInfo.tracer.finishCommand(id, status),
+            trackError: (error, id?) => metricsInfo.tracer && metricsInfo.tracer.trackError(error, id),
             now: () => metricsInfo.startTime + this.durationInMicroseconds(metricsInfo)
         };
 

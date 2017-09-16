@@ -2,9 +2,9 @@ import { ILocalConfigurationSource, ConfigurationItem, IRemoteConfigurationSourc
 
 
 export class MemoryConfigurationSource implements ILocalConfigurationSource {
-    protected _values = new Map<string, any>();
-    readPropertiesAsync(timeout?: number): Promise<void> {
-        return Promise.resolve();
+    protected _values = new Map<string, ConfigurationItem>();
+    readPropertiesAsync(timeout?: number): Promise<DataSource> {
+        return Promise.resolve( new DataSource(this._values.values()));
     }
 
     /// <summary>
@@ -13,20 +13,17 @@ export class MemoryConfigurationSource implements ILocalConfigurationSource {
     /// <param name="name">Property name</param>
     /// <param name="value">Property value</param>
     set(name: string, value: any) {
-        this._values.set(name, value);
+        this._values.set(name, { value, key: name });
     }
 
     get(name: string) {
-        return this._values.get(name);
+        let v = this._values.get(name);
+        return v && v.value;
     }
 }
 
 export class MockConfigurationSource extends MemoryConfigurationSource implements IRemoteConfigurationSource {
     pollPropertiesAsync(timeout?: number): Promise<DataSource> {
-        let list = [];
-        for (let [key, value] of this._values) {
-            list.push( {key, value} )
-        }
-        return Promise.resolve(new DataSource(list));
+        return this.readPropertiesAsync();
     }
 }
