@@ -27,6 +27,7 @@ export class StsTokenService implements ITokenService {
 
     constructor() {
         this.authority = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
+        System.log.info(null, () => `using ${this.authority.value} as STS authority`);
         this.initializeRsaSigninKey();
     }
 
@@ -35,7 +36,7 @@ export class StsTokenService implements ITokenService {
             if (this.jwksClient) {
                 resolve(true);
             } else {
-                return this.initializeRsaSigninKey();
+                this.initializeRsaSigninKey().then(_ => resolve(true), rej => reject(rej));
             }
         });
     }
@@ -45,7 +46,9 @@ export class StsTokenService implements ITokenService {
             const openIdConfigUrl = `${this.authority.value}/.well-known/openid-configuration`;
             // TODO command
             const oidcConfig = unirest.get(openIdConfigUrl).as.json((res) => {
-                if (res.error || res.status >= 400) {
+                if (res.error) {
+                    reject(res.error);
+                } else if (res.status >= 400) {
                     reject(res);
                 } else {
                     this.jwksConfig.jwksUri = res.body.jwks_uri;
@@ -87,6 +90,7 @@ export class StsTokenService implements ITokenService {
                 this.jwksClient.getSigningKey(decodedToken.header.kid, (err, key) => {
                     if (err) {
                         reject({ error: err, message: `Unable to resolve RSA public key from kid: ${decodedToken.header.kid}` });
+                        return;
                     }
                     const signingKey = key.publicKey || key.rsaPublicKey;
 

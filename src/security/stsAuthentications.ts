@@ -18,6 +18,7 @@ export class StsAuthentication extends SecurityManager {
     constructor( @Inject(DefaultServiceNames.AuthorizationPolicy) scopePolicy: IAuthorizationPolicy) {
         super(scopePolicy);
         this.authority = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
+        System.log.info(null, () => `using ${this.authority.value} as STS authority`);
 
         this.addOrReplaceStrategy('bearer', this.verify.bind(this));
     }
@@ -29,7 +30,9 @@ export class StsAuthentication extends SecurityManager {
             } else {
                 const openIdConfigUrl = `${this.authority.value}/.well-known/openid-configuration`;
                 unirest.get(openIdConfigUrl).as.json(res => {
-                    if (res.status >= 400) {
+                    if (res.error) {
+                        reject(res.error);
+                    } else if (res.status >= 400) {
                         reject(res);
                     } else {
                         this.userInfoEndpoint = res.body.userinfo_endpoint;
@@ -41,7 +44,10 @@ export class StsAuthentication extends SecurityManager {
     }
 
     private async getUserInfoAsync(accessToken: string) {
-        await this.ensureUserInfoEndpointLoaded();
+        await this.ensureUserInfoEndpointLoaded()
+            .catch(err => {
+                System.log.error(null, err, () => 'Error getting STS user info endpoint');
+            });
 
         return new Promise<any>((resolve, reject) => {
             unirest.get(this.userInfoEndpoint).headers({ authorization: `Bearer ${accessToken}` }).as.json(res => {
@@ -58,7 +64,7 @@ export class StsAuthentication extends SecurityManager {
     private async verify(ctx: RequestContext, accessToken: string) {
         try {
             let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
-            let token = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.security.tenant });
+            let token:any = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.security.tenant });
 
             // No token found
             if (!token) {
@@ -68,7 +74,10 @@ export class StsAuthentication extends SecurityManager {
 
             // get user info from STS
             let user = await this.getUserInfoAsync(accessToken);
-            user.scopes = token.scopes;
+            user.scopes = [
+                ...token.scope,
+                ...token.role
+            ];
 
             System.log.info(ctx, () => JSON.stringify(user));
 
