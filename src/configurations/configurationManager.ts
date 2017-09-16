@@ -1,17 +1,21 @@
 import * as rx from 'rxjs';
 import { IDynamicProperty, ConfigurationItem, IConfigurationSource, IRemoteConfigurationSource, ILocalConfigurationSource, DataSource } from './abstractions';
 import { DynamicProperty } from './properties/dynamicProperty';
-import { PrioritizedSourceValue } from './properties/PrioritizedSourceValue';
+import { PrioritizedSourceValue } from './sources/PrioritizedSourceValue';
 import { ChainedDynamicProperty } from './properties/chainedPropertyValue';
 import { FileConfigurationSource, ConfigurationDataType } from './sources/fileConfigurationSource';
 import { System } from '../globals/system';
+import { MockConfigurationSource } from './sources/memoryConfigurationSource';
 
 export class ConfigurationManager {
-    private _remoteSources: Array<IRemoteConfigurationSource> = [];
-    private _values: IConfigurationSource;
+    private _values: PrioritizedSourceValue;
     private _dynamicProperties = new Map<string, DynamicProperty<any>>();
     private disposed: boolean;
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<any>>;
+
+    get properties() {
+        return this._dynamicProperties;
+    }
 
     get propertyChanged(): rx.Observable<IDynamicProperty<any>> {
         if (!this._propertyChanged) {
@@ -25,23 +29,30 @@ export class ConfigurationManager {
         public sourceTimeoutInMs: number) {
     }
 
-    get(name: string, defaultValue) {
+    get(name: string) {
         if (!this._values) {
             this._values = new PrioritizedSourceValue();
         }
         let val = this._values.get(name);
-        return val === undefined ? defaultValue : val;
+        return val;
     }
 
     createDynamicProperty<T>(name: string, defaultValue?: T) {
         let dp = new DynamicProperty<T>(this, name, defaultValue);
-        if(name)
-            this._dynamicProperties.set(name, dp);
+        if (name) {
+            dp.set(this.get(name));
+        }
+
         return dp;
     }
 
-    createChainedDynamicProperty<T>( properties: Array<string>, defaultValue?: T) {
-        let dp = new ChainedDynamicProperty<T>(this, properties, defaultValue);
+    createChainedDynamicProperty<T>(name: string, properties: Array<string>, defaultValue?: T) {
+        properties = properties && properties.filter(n => !!n); // remove null property
+        if (!properties || properties.length === 0)
+            return this.createDynamicProperty(name, defaultValue);
+
+        let dp = new ChainedDynamicProperty<T>(this, name, properties, defaultValue);
+        dp.set(this.get(name));
         return dp;
     }
 
@@ -56,6 +67,8 @@ export class ConfigurationManager {
  */
     async startPollingAsync(sources: IConfigurationSource | Array<IConfigurationSource> = [], pollSources = true) {
         let localSources: Array<IConfigurationSource> = [];
+        let remoteSources: Array<IRemoteConfigurationSource> = [];
+
         if (!Array.isArray(sources)) {
             sources = [sources];
         }
@@ -69,13 +82,13 @@ export class ConfigurationManager {
             }
             else {
                 let s = source as IRemoteConfigurationSource;
-                if (this._remoteSources.indexOf(s) < 0) {
-                    this._remoteSources.push(s);
+                if (remoteSources.indexOf(s) < 0) {
+                    remoteSources.push(s);
                 }
             }
         }
 
-        this._values = new PrioritizedSourceValue(localSources, this._remoteSources);
+        this._values = new PrioritizedSourceValue(localSources, remoteSources);
 
         // Run initialization
         let tries = 2;
@@ -101,6 +114,24 @@ export class ConfigurationManager {
     }
 
     /**
+     * for test only
+     */
+    async forcePollingAsync(src?: IRemoteConfigurationSource, reset?: boolean) {
+        if (reset)
+            this._values = null;
+
+        if (src) {
+            if (!this._values) {
+                this._values = new PrioritizedSourceValue([], [src]);
+            }
+            else {
+                this._values.remoteSources.push(src);
+            }
+        }
+        await this.pollingAsync(3000, false);
+    }
+
+    /**
      * Pull properties for all sources
      *
      * @private
@@ -113,7 +144,7 @@ export class ConfigurationManager {
         let ok = true;
 
         try {
-            let list = this._remoteSources;
+            let list = this._values.remoteSources;
             if (this.disposed || !list) return;
 
             let promises: Promise<DataSource>[] = [];
@@ -149,7 +180,10 @@ export class ConfigurationManager {
     onPropertiesChanged(data: DataSource) {
         data.values && data.values.forEach(d => {
             let dp = this._dynamicProperties.get(d.key);
-            if (dp) {
+            if (!dp) {
+                dp = this.createDynamicProperty(d.key);
+            }
+            else if (dp.updateValue) {
                 dp.updateValue(d);
             }
         });
@@ -160,7 +194,7 @@ export class ConfigurationManager {
     }
 
     private repeatPolling() {
-        if (!this.disposed && this._remoteSources.length > 0)
+        if (!this.disposed && this._values.remoteSources.length > 0)
             setTimeout(this.pollingAsync.bind(this), this.pollingIntervalInSeconds * 1000);
     }
 

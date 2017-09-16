@@ -39,18 +39,23 @@ export class DynamicConfiguration {
     /**
      * Create a new property
      */
-    public static asProperty<T>(value: T, name?: string, dontCheck = false): IDynamicProperty<T> {
-        if (!dontCheck && name && DynamicConfiguration.manager.getProperty(name)) {
-            throw new Error("Duplicate property name");
+    public static asProperty<T>(name: string, value: T): IDynamicProperty<T> {
+        let p = DynamicConfiguration.manager.getProperty<T>(name);
+        if (p) {
+            throw new Error("Duplicate property " + name);
         }
 
-        let p = DynamicConfiguration.manager.createDynamicProperty(name, value);
+        p = DynamicConfiguration.manager.createDynamicProperty(name, value);
         return p;
     }
 
-    public static asChainedProperty<T>(defaultValue: T, name: string, ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
-        let properties = [name].concat(...fallbackPropertyNames).filter(n => !!n);
-        let p = DynamicConfiguration.manager.createChainedDynamicProperty(properties, defaultValue);
+    public static asChainedProperty<T>(name: string, defaultValue: T,  ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
+        let p = DynamicConfiguration.manager.getProperty<T>(name);
+        if (p) {
+            throw new Error("Duplicate property " + name);
+        }
+
+        p = DynamicConfiguration.manager.createChainedDynamicProperty(name, fallbackPropertyNames, defaultValue);
         return p;
     }
 
@@ -77,17 +82,6 @@ export class DynamicConfiguration {
         return prop;
     }
 
-    /**
-     * Get or create a dynamic property
-     * defaultValue can be a value or a factory
-     */
-    static getOrCreateProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
-        let prop = this.getProperty<T>(name);
-        if (prop)
-            return prop;
-
-        return DynamicConfiguration.asProperty<T>(defaultValue, name, true);
-    }
 
     /// <summary>
     /// Initialise dynamic properties configuration. Can be call only once and before any call to DynamicProperties.instance.

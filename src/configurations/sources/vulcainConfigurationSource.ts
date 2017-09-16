@@ -24,7 +24,7 @@ export class VulcainConfigurationSource extends HttpConfigurationSource {
 
     pollPropertiesAsync(timeoutInMs: number) {
         if (!System.vulcainToken && !System.isTestEnvironnment) {
-            return Promise.resolve(new DataSource(null));
+            return Promise.resolve(null);
         }
 
         return super.pollPropertiesAsync(timeoutInMs);

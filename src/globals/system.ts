@@ -399,8 +399,8 @@ export class System {
         System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
-            defaultValue,
             name,
+            defaultValue,
             System.domainName && System.domainName + "." + name);
     }
 
@@ -414,8 +414,8 @@ export class System {
         System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
-            defaultValue,
             name,
+            defaultValue,
             System.serviceName + "." + System.serviceVersion + "." + name,
             System.serviceName + "." + name,
             System.domainName + "." + name);

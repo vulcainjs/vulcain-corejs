@@ -25,7 +25,8 @@ export interface ConfigurationItem {
 /// This class represents a result from a poll of configuration source
 /// </summary>
 export class DataSource {
-    public constructor(public values?: Map<string, ConfigurationItem>) {
+
+    public constructor(public values?: ConfigurationItem[]) {
     }
 }
 

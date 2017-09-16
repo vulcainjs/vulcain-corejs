@@ -14,6 +14,9 @@ export abstract class AbstractRemoteSource implements IRemoteConfigurationSource
         changes && changes.forEach(item => {
             if (!item.deleted)
                 this._values.set(item.key, item.value);
+            else
+                this._values.delete(item.key);
         });
     }
 }
+

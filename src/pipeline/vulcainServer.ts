@@ -32,7 +32,9 @@ export class HttpAdapter implements IServerAdapter {
     /**
      *
      */
-    init( container: IContainer,  vulcainPipe: VulcainPipeline) {
+    init(container: IContainer, vulcainPipeline: VulcainPipeline) {
+        this.container = container;
+        this.vulcainPipe = vulcainPipeline;
         this.router = Router();
     }
 
@@ -61,7 +63,6 @@ export class HttpAdapter implements IServerAdapter {
     private processVulcainRequest( req: http.IncomingMessage, resp: http.ServerResponse) {
         let request: HttpRequest = { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
         try {
-
             let body = [];
             req.on('data', (chunk) => {
                 body.push(chunk);

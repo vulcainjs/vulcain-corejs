@@ -1,8 +1,8 @@
-import { ILocalConfigurationSource, ConfigurationItem } from "../abstractions";
+import { ILocalConfigurationSource, ConfigurationItem, IRemoteConfigurationSource, DataSource } from "../abstractions";
 
 
 export class MemoryConfigurationSource implements ILocalConfigurationSource {
-    private _values = new Map<string, any>();
+    protected _values = new Map<string, any>();
     readPropertiesAsync(timeout?: number): Promise<void> {
         return Promise.resolve();
     }
@@ -18,5 +18,15 @@ export class MemoryConfigurationSource implements ILocalConfigurationSource {
 
     get(name: string) {
         return this._values.get(name);
+    }
+}
+
+export class MockConfigurationSource extends MemoryConfigurationSource implements IRemoteConfigurationSource {
+    pollPropertiesAsync(timeout?: number): Promise<DataSource> {
+        let list = [];
+        for (let [key, value] of this._values) {
+            list.push( {key, value} )
+        }
+        return Promise.resolve(new DataSource(list));
     }
 }

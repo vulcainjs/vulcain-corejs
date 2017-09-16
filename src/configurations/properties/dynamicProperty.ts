@@ -3,11 +3,22 @@ import { ConfigurationManager } from "../configurationManager";
 import * as rx from 'rxjs';
 import { System } from "../../globals/system";
 
-export class DynamicProperty<T> implements IDynamicProperty<T> {
-    private val: T;
-    private removed: boolean;
+export interface IUpdatableProperty { // Internal interface
+    updateValue(val: ConfigurationItem);
+}
+
+export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProperty {
+    protected val: T;
+    protected removed: boolean;
+    private notifying: boolean;
 
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
+
+    constructor(protected manager: ConfigurationManager, public name: string, protected defaultValue: T) {
+        manager.properties.set(name, this);
+        if(defaultValue !== undefined)
+            this.onPropertyChanged();
+    }
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
         if (!this._propertyChanged) {
@@ -16,17 +27,8 @@ export class DynamicProperty<T> implements IDynamicProperty<T> {
         return <rx.Observable<IDynamicProperty<T>>>this._propertyChanged;
     }
 
-    constructor(private manager: ConfigurationManager, public name: string, private defaultValue) {
-        if (!name) {
-            this.val = defaultValue;
-        }
-        else {
-            this.val = this.manager.get(name, this.defaultValue);
-        }
-    }
-
     get value() {
-        return !this.removed ? this.val : undefined;
+        return !this.removed ? (this.val||this.defaultValue) : undefined;
     }
 
     set(val: T) {
@@ -53,9 +55,18 @@ export class DynamicProperty<T> implements IDynamicProperty<T> {
         }
     }
 
-    private onPropertyChanged() {
-        this._propertyChanged && this._propertyChanged.next(this);
-        this.manager.onPropertyChanged(this);
+    protected onPropertyChanged() {
+        if (!this.name || this.notifying)
+            return;
+        
+        this.notifying = true;
+        try {
+            this._propertyChanged && this._propertyChanged.next(this);
+            this.manager.onPropertyChanged(this);
+        }
+        finally {
+            this.notifying = false;
+        }
     }
 
     public dispose() {

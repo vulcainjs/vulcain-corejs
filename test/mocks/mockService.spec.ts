@@ -36,11 +36,11 @@ let mockDefinitions = {
     }
 };
 
+let manager = new MockManager();
 describe('Mock service', function () {
 
     it('should do nothing if no match', async () => {
 
-        let manager = new MockManager();
         manager.initialize(mockDefinitions);
 
         expect(await manager.applyMockServiceAsync("service1", "1.0", "Customer.delete", {})).to.be.undefined;
@@ -52,7 +52,6 @@ describe('Mock service', function () {
 
     it('should return value if match', async () => {
 
-        let manager = new MockManager();
         manager.initialize(mockDefinitions);
 
         expect(await manager.applyMockServiceAsync("service1", "3.0", "Customer.create", {})).to.be.equals(1);
