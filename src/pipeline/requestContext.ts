@@ -35,7 +35,6 @@ export class VulcainHeaderNames {
 export class RequestContext implements IRequestContext {
     container: IContainer;
     locale: string;
-    hostName: string;
     requestData: RequestData;
     response: HttpResponse;
     metrics: Metrics;
@@ -170,6 +169,11 @@ export class RequestContext implements IRequestContext {
      */
     logVerbose(msg: ()=>string) {
         this._logger.verbose(this, msg);
+    }
+
+    get hostName() {
+        let host = <string>this.request.headers['X-Forwarded-Host'];
+        return host || <string>this.request.headers["Host"];
     }
 
     static createUniqueId() {

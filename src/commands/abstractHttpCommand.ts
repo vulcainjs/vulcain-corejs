@@ -57,14 +57,14 @@ export abstract class AbstractHttpCommand {
         }
     }
 
-    onCommandCompleted(duration: number, success: boolean) { // TODO
+    onCommandCompleted(duration: number, error?: Error) { // TODO
         this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (!success)
+        if (error)
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
 
         // End Command trace
-        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, !success);
+        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
+        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
     }
 
     runAsync(...args): Promise<any> {

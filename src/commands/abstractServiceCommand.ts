@@ -119,12 +119,12 @@ export abstract class AbstractServiceCommand {
         }
     }
 
-    onCommandCompleted(duration: number, success: boolean) {
+    onCommandCompleted(duration: number, error?: Error) {
         this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (!success)
+        if (error)
             this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, !success);
+        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
+        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
     }
 
     /**

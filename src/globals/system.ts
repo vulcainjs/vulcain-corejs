@@ -396,6 +396,10 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
+        let p = DynamicConfiguration.getProperty<T>(name);
+        if (p)
+            return p;
+
         System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(
@@ -411,6 +415,9 @@ export class System {
      * @returns {IDynamicProperty<T>}
      */
     public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
+        let p = DynamicConfiguration.getProperty<T>(name);
+        if (p)
+            return p;
         System.registerPropertyAsDependency(name, defaultValue);
 
         return DynamicConfiguration.asChainedProperty<T>(

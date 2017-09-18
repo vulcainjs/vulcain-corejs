@@ -74,16 +74,16 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
         }
     }
 
-    onCommandCompleted(duration: number, success: boolean) {
+    onCommandCompleted(duration: number, error?: Error) {
         if (!this.customTags) {
             throw new Error("setMetricTags must be called at the beginning of runAsync.");
         }
         this.metrics.timing(AbstractCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (!success)
+        if (error)
             this.metrics.increment(AbstractCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${success ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, !success);
+        logger.logAction(this.requestContext, "EC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
+        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
     }
 
     /**

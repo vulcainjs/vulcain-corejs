@@ -9,7 +9,7 @@ export interface IRequestTracker {
     injectTraceHeaders(span, headers: (name: string | any, value?: string) => any);
     finish(result);
     startCommand(command: string, target?: string): any;
-    finishCommand(span, status);
+    finishCommand(span, error);
     trackError(error, id?);
 }
 

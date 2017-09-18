@@ -130,7 +130,7 @@ export class HttpAdapter implements IServerAdapter {
 
 export class VulcainServer {
     private metrics: IMetrics;
-    private adapter: IServerAdapter;
+    public adapter: IServerAdapter;
 
     constructor(protected domainName: string, protected container: IContainer, private enableHystrixStream=false) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);

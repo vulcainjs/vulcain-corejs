@@ -7,7 +7,7 @@ import { MetricsConstant, IMetrics } from "../../metrics/metrics";
 
 export interface CommandMetrics {
     startCommand: (command: string, target?: string) => any;
-    finishCommand: (id, status) => void;
+    finishCommand: (id, error) => void;
     trackError: (error, id?) => void;
     now: ()=>number;
 }
@@ -32,7 +32,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
             parentId: <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID],//TODO
             tracer: trackerFactory && trackerFactory.startSpan(ctx),
             startCommand: (command: string, target?) => metricsInfo.tracer && metricsInfo.tracer.startCommand(command, target),
-            finishCommand: (id, status) => metricsInfo.tracer && metricsInfo.tracer.finishCommand(id, status),
+            finishCommand: (id, error?) => metricsInfo.tracer && metricsInfo.tracer.finishCommand(id, error),
             trackError: (error, id?) => metricsInfo.tracer && metricsInfo.tracer.trackError(error, id),
             now: () => metricsInfo.startTime + this.durationInMicroseconds(metricsInfo)
         };
@@ -48,7 +48,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
         let prefix: string;
 
         let value = ctx.response && ctx.response.content;
-        hasError = !!e || !ctx.response || ctx.response.statusCode && ctx.response.statusCode >= 400 || !value;
+        hasError = !!e || !ctx.response || ctx.response.statusCode && ctx.response.statusCode >= 400;// || !value;
 
         if (ctx.requestData.schema) {
             prefix = ctx.requestData.schema.toLowerCase() + "_" + ctx.requestData.action.toLowerCase();
@@ -70,7 +70,7 @@ export class MetricsMiddleware extends VulcainMiddleware {
         }
 
         // Always remove userContext
-        if (value) {
+        if (typeof(value) === "object") {
             value.userContext = undefined;
         }
 

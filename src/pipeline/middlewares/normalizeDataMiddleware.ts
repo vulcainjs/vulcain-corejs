@@ -41,10 +41,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                 ctx.response = new HttpResponse({});
             }
 
-            let trace = Object.assign({}, ctx.response && ctx.response.content);
+            //let trace = Object.assign({}, ctx.response && ctx.response.content);
             // Remove result value for trace
-            trace.value = undefined;
-            logger.logAction(ctx, "ER", action, `End request status: ${(ctx.response && ctx.response.statusCode) || 200} value: ${trace && JSON.stringify(trace)}`);
+            //trace.value = undefined;
+            logger.logAction(ctx, "ER", action, `End request status: ${(ctx.response && ctx.response.statusCode) || 200}`);// value: ${trace && JSON.stringify(trace)}`);
         }
         catch (e) {
             if (!(e instanceof ApplicationRequestError)) {
@@ -59,8 +59,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         if( System.isTestEnvironnment)
             ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
 
-        ctx.response.content.meta = ctx.response.content.meta || {};
-        ctx.response.content.meta.correlationId = ctx.correlationId;
+        if (typeof (ctx.response.content) === "object") {
+            ctx.response.content.meta = ctx.response.content.meta || {};
+            ctx.response.content.meta.correlationId = ctx.correlationId;
+        }
     }
 
     private populateData(ctx: RequestContext) {

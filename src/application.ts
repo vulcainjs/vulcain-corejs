@@ -105,7 +105,7 @@ export class Application {
      *
      * @memberOf Application
      */
-    protected defineScopes(scopes: ScopesDescriptor) {
+    protected defineScopeDescriptions(scopes: ScopesDescriptor) {
 
     }
 
@@ -116,15 +116,6 @@ export class Application {
      * @param {IContainer} container
      */
     protected initializeDefaultServices(container: IContainer) {
-    }
-
-    /**
-     * Override this method to add your custom services
-     *
-     * @protected
-     * @param {IContainer} container
-     */
-    protected initializeServices(container: IContainer) {
     }
 
     /**
@@ -154,10 +145,9 @@ export class Application {
 
             this.registerComponents();
             Preloader.instance.runPreloads(this.container, this._domain);
-            this.initializeServices(this.container);
 
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
-            this.defineScopes(scopes);
+            this.defineScopeDescriptions(scopes);
 
             let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.createHandlersTable();
@@ -172,9 +162,7 @@ export class Application {
     }
 
     private registerComponents() {
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/models"));
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/handlers"));
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/services"));
+        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults"));
 
         let path = Conventions.instance.defaultApplicationFolder;
         this.registerRecursive(Path.join(this._basePath, path));
