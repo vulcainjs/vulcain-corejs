@@ -18,14 +18,14 @@ export class Span {
     startTick: [number, number];
     startTime: number;
     duration: number;
-    private error: string;
+    private error: Error;
 
     get now() {
         return this.startTime + this.durationInMicroseconds();
     }
 
-    private constructor(private container: IContainer, private kind: SpanKind, traceId: string, parentId?: string) {
-        this._logger = container.get<Logger>(DefaultServiceNames.Logger);
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, traceId: string, parentId?: string) {
+        this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
@@ -35,11 +35,11 @@ export class Span {
     }
 
     static createRootSpan(ctx: RequestContext) {
-        return new Span(ctx.container, SpanKind.Request, ctx.correlationId, ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]);
+        return new Span(ctx, SpanKind.Request, System.fullServiceName, ctx.correlationId, ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]);
     }
 
-    static createCommandSpan(parent: Span) {
-        return new Span(parent.container, SpanKind.Command, parent.traceId, parent.spanId);
+    createCommandSpan(commandName: string) {
+        return new Span(this.context, SpanKind.Command, commandName,  this.traceId, this.spanId);
     }
 
     injectHeaders(headers: (name: string | any, value?: string)=>any) {
@@ -47,11 +47,9 @@ export class Span {
        // headers(Header.SpanId, tracer.spanId);
     }
 
-    close(error?) {
-        if (error)
-            this.error = error.message || error;
+    close() {
         this.duration = this.durationInMicroseconds();
-        this.container = null;
+        this.context = null;
         this._logger = null;
     }
 
@@ -62,8 +60,9 @@ export class Span {
      * @param {string} [msg] Additional message
      *
      */
-    logError(ctx: RequestContext, error: Error, msg?: () => string) {
-        this._logger.error(ctx, error, msg);
+    logError(error: Error, msg?: () => string) {
+        if (!this.error) this.error = error; // Catch first error
+        this._logger.error(this.context, error, msg);
     }
 
     /**
@@ -73,8 +72,8 @@ export class Span {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logInfo(ctx: RequestContext, msg: () => string) {
-        this._logger.info(ctx, msg);
+    logInfo(msg: () => string) {
+        this._logger.info(this.context, msg);
     }
 
     /**
@@ -85,10 +84,10 @@ export class Span {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logVerbose(ctx: RequestContext, msg: () => string) {
-        this._logger.verbose(ctx, msg);
+    logVerbose(msg: () => string) {
+        this._logger.verbose(this.context, msg);
     }
-    
+
     private durationInMicroseconds() {
         const hrtime = process.hrtime(this.startTick);
         const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);

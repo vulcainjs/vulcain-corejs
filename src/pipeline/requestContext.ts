@@ -51,6 +51,10 @@ export class RequestContext implements IRequestContext {
         this.security.bearer = token;
     }
 
+    createCommandSpan(parent?: Span) {
+        return Span.createCommandSpan(parent || this.rootSpan);
+    }
+
     get correlationId(): string {
         let id = this.requestData.correlationId;
         if (id) {
@@ -146,7 +150,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logError(error: Error, msg?: ()=>string) {
-        this.rootSpan.logError(this, error, msg);
+        this.rootSpan.logError(error, msg);
     }
 
     /**
@@ -157,7 +161,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logInfo(msg: ()=>string) {
-        this.rootSpan.logInfo(this, msg);
+        this.rootSpan.logInfo(msg);
     }
 
     /**
@@ -169,7 +173,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logVerbose(msg: ()=>string) {
-        this.rootSpan.logVerbose(this, msg);
+        this.rootSpan.logVerbose(msg);
     }
 
     get hostName() {

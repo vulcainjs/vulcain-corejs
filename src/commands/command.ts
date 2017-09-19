@@ -10,6 +10,8 @@ import { ICommandMetrics, CommandMetricsFactory } from "./metrics/commandMetrics
 import { TimeoutError } from "../pipeline/errors/timeoutError";
 import { CommandRuntimeError } from "../pipeline/errors/commandRuntimeError";
 import { BadRequestError } from "../pipeline/errors/badRequestError";
+import { RequestContext } from '../pipeline/requestContext';
+import { Span } from '../trace/span';
 
 export interface CommandInfo {
     commandKey: string;
@@ -29,12 +31,13 @@ export class HystrixCommand {
     public status: ExecutionResult = new ExecutionResult();
     private running: boolean;
     private _arguments;
-    private metrics: ICommandMetrics;
+    private hystrixMetrics: ICommandMetrics;
+    private span: Span;
 
-    constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context, container: IContainer) {
+    constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context: RequestContext, container: IContainer) {
         command.requestContext = context;
         command.container = container;
-        this.metrics = CommandMetricsFactory.getOrCreate(properties);
+        this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
     }
 
     get circuitBreaker() {
@@ -61,8 +64,10 @@ export class HystrixCommand {
         // Get form Cache
 
         // Execution
-        this.metrics.incrementExecutionCount();
+        this.hystrixMetrics.incrementExecutionCount();
         let start = ActualTime.getCurrentTime();
+
+        this.span = this.context.createCommandSpan(this.getCommandName());
 
         try {
             if (this.circuitBreaker.allowRequest()) {
@@ -73,6 +78,7 @@ export class HystrixCommand {
                             let executing = true;
 
                             let promises = [];
+                            // Initialize command span
                             promises.push((<any>this.command).runAsync.apply(this.command, this._arguments));
                             if (this.properties.executionTimeoutInMilliseconds.value > 0) {
                                 promises.push(
@@ -88,10 +94,9 @@ export class HystrixCommand {
                         }
                         catch (e) {
                             let duration = ActualTime.getCurrentTime() - start;
-                            this.command.onCommandCompleted && this.command.onCommandCompleted(duration, e);
                             // timeout
                             if (e instanceof TimeoutError) {
-                                this.metrics.markTimeout();
+                                this.hystrixMetrics.markTimeout();
                                 return await this.getFallbackOrThrowException(EventType.TIMEOUT, FailureType.TIMEOUT, "timed-out", e);
                             }
                             else // application error
@@ -102,12 +107,10 @@ export class HystrixCommand {
 
                         // Execution complete correctly
                         let duration = ActualTime.getCurrentTime() - start;
-                        this.metrics.markSuccess();
-                        this.metrics.addExecutionTime(duration);
+                        this.hystrixMetrics.markSuccess();
+                        this.hystrixMetrics.addExecutionTime(duration);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
-
-                        this.command.onCommandCompleted && this.command.onCommandCompleted(duration);
 
                         // Update cache
                         // TODO
@@ -122,7 +125,7 @@ export class HystrixCommand {
                     let duration = ActualTime.getCurrentTime() - start;
                     this.command.onCommandCompleted && this.command.onCommandCompleted(duration, new Error("Hystrix semaphore error"));
 
-                    this.metrics.markRejected();
+                    this.hystrixMetrics.markRejected();
                     return await this.getFallbackOrThrowException(
                         EventType.SEMAPHORE_REJECTED,
                         FailureType.REJECTED_SEMAPHORE_EXECUTION,
@@ -136,7 +139,7 @@ export class HystrixCommand {
                 this.command.onCommandCompleted && this.command.onCommandCompleted(duration, new Error("Hystrix circuit breaker error"));
 
                 start = -1;
-                this.metrics.markShortCircuited();
+                this.hystrixMetrics.markShortCircuited();
                 return await this.getFallbackOrThrowException(
                     EventType.SHORT_CIRCUITED,
                     FailureType.SHORTCIRCUIT,
@@ -145,17 +148,19 @@ export class HystrixCommand {
             }
         }
         finally {
+            this.span.close();
             let duration = ActualTime.getCurrentTime() - start;
             if (start >= 0) {
                 this.recordTotalExecutionTime(duration);
             }
-            this.metrics.decrementExecutionCount();
+            this.hystrixMetrics.decrementExecutionCount();
             this.status.isExecutionComplete = true;
         }
     }
 
     private async getFallbackOrThrowException(eventType: EventType, failureType: FailureType, message: string, error: Error): Promise<any> {
-        this.logInfo(()=> error.message || error.toString());
+        this.span.logError(error);
+
         try {
             if (this.isUnrecoverable(error)) {
                 this.logInfo(()=>"Unrecoverable error for command so will throw CommandRuntimeError and not apply fallback " + error);
@@ -168,32 +173,34 @@ export class HystrixCommand {
                 throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
+                let fallbackSpan = this.span.createCommandSpan(this.getCommandName() + " Fallback");
                 try {
                     this.logInfo(()=>"Use fallback for command");
                     let result = await fallback.apply(this.command, this._arguments);
-                    this.metrics.markFallbackSuccess();
+                    this.hystrixMetrics.markFallbackSuccess();
                     this.status.addEvent(EventType.FALLBACK_SUCCESS);
                     return result;
                 }
                 catch (e) {
                     this.logInfo(()=>"Fallback failed " + e);
-                    this.metrics.markFallbackFailure();
+                    this.hystrixMetrics.markFallbackFailure();
                     this.status.addEvent(EventType.FALLBACK_FAILURE);
                     throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " and fallback failed.", e);
                 }
                 finally {
                     this.semaphore.releaseFallback();
+                    fallbackSpan.close();
                 }
             }
             else {
                 this.logInfo(()=>"Command fallback rejection.");
-                this.metrics.markFallbackRejection();
+                this.hystrixMetrics.markFallbackRejection();
                 this.status.addEvent(EventType.FALLBACK_REJECTION);
                 throw new CommandRuntimeError(FailureType.REJECTED_SEMAPHORE_FALLBACK, this.getCommandName(), this.getLogMessagePrefix() + " fallback execution rejected.");
             }
         }
         catch (e) {
-            this.metrics.markExceptionThrown();
+            this.hystrixMetrics.markExceptionThrown();
             throw e;
         }
     }
@@ -202,12 +209,13 @@ export class HystrixCommand {
         e = e || new Error("Unknow error");
 
         if (e instanceof BadRequestError) {
-            this.metrics.markBadRequest(ms);
+            this.hystrixMetrics.markBadRequest(ms);
+            this.span.logError(e);
             throw e;
         }
 
         this.logInfo(()=>`Error executing command ${e.stack} Proceeding to fallback logic...`);
-        this.metrics.markFailure();
+        this.hystrixMetrics.markFailure();
         this.status.failedExecutionException = e;
         return this.getFallbackOrThrowException(EventType.FAILURE, FailureType.COMMAND_EXCEPTION, "failed", e);
     }
@@ -233,7 +241,7 @@ export class HystrixCommand {
     ///
     protected recordTotalExecutionTime(duration) {
         // the total execution time for the user thread including queuing, thread scheduling, run() execution
-        this.metrics.addExecutionTime(duration);
+        this.hystrixMetrics.addExecutionTime(duration);
 
         /*
          * We record the executionTime for command execution.

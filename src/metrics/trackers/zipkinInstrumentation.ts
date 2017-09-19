@@ -87,7 +87,7 @@ class ZipkinRequestTracker implements IRequestTracker {
             this.id = tracer.id;
 
             tracer.recordServiceName(System.serviceName + "-" + System.serviceVersion);
-            this.tracer.recordBinary("correlationId", ctx.correlationId);
+            tracer.recordBinary("correlationId", ctx.correlationId);
             tracer.recordRpc(verb);
             tracer.recordBinary('arguments', JSON.stringify(params));
             tracer.recordAnnotation(new Annotation.ServerRecv());

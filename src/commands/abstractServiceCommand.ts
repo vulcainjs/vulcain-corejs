@@ -15,6 +15,7 @@ import { ApplicationRequestError } from "../pipeline/errors/applicationRequestEr
 import { ITokenService } from "../security/securityManager";
 import { QueryResult } from "../pipeline/handlers/query";
 import { ActionResult } from "../pipeline/handlers/actions";
+import { Span } from '../trace/span';
 
 
 export class HttpCommandError extends ApplicationRequestError {
@@ -49,13 +50,13 @@ export class HttpCommandError extends ApplicationRequestError {
 export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
     private overrideTenant: string;
-    protected metrics: IMetrics;
     private customTags: any;
     private logger: VulcainLogger;
     private commandTracker: any;
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
+    protected tracer: Span;
 
     /**
      *
@@ -73,7 +74,6 @@ export abstract class AbstractServiceCommand {
      * @param {any} providerFactory
      */
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 
