@@ -17,6 +17,7 @@ import { AsyncTaskData } from "./handlers/actions";
 import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
+import { Span } from '../trace/span';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -40,7 +41,7 @@ export class RequestContext implements IRequestContext {
     metrics: Metrics;
     request: HttpRequest;
     private _securityManager: SecurityManager;
-    private _logger: Logger;
+    private rootSpan: Span;
 
     getBearerToken() {
         return this.security.bearer;
@@ -95,7 +96,6 @@ export class RequestContext implements IRequestContext {
      * @param {Pipeline} pipeline
      */
     constructor(container: IContainer, public pipeline: Pipeline, data?: any /*HttpRequest|EventData|AsyncTaskData*/) {
-        this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
         if (!data) {
             this.requestData = <any>{};
@@ -105,7 +105,7 @@ export class RequestContext implements IRequestContext {
         if (data.headers) {
             this.request = data;
         }
-        else {
+        else { // for test or async task
             this.requestData = {
                 vulcainVerb: `${data.schema}.${data.action}`,
                 action: data.action,
@@ -119,10 +119,11 @@ export class RequestContext implements IRequestContext {
                 body: data.body
             }
         }
+        this.rootSpan = Span.createRootSpan(this);
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {
-        throw new Error("Method not implemented.");
+        throw new Error("Method not implemented."); // TODO
     }
 
   /**
@@ -145,7 +146,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logError(error: Error, msg?: ()=>string) {
-        this._logger.error(this, error, msg);
+        this.rootSpan.logError(this, error, msg);
     }
 
     /**
@@ -156,7 +157,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logInfo(msg: ()=>string) {
-        this._logger.info(this, msg);
+        this.rootSpan.logInfo(this, msg);
     }
 
     /**
@@ -168,7 +169,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logVerbose(msg: ()=>string) {
-        this._logger.verbose(this, msg);
+        this.rootSpan.logVerbose(this, msg);
     }
 
     get hostName() {
