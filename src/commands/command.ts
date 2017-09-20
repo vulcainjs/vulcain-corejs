@@ -1,6 +1,5 @@
 import { CommandProperties } from './commandProperties';
 import { CircuitBreakerFactory } from "./circuitBreaker";
-import ActualTime from "../utils/actualTime";
 import { AbstractCommand } from './abstractCommand';
 import { SemaphoreFactory, Semaphore } from './semaphore';
 import { EventType, FailureType, ExecutionResult } from './executionResult';
@@ -33,6 +32,7 @@ export class HystrixCommand {
     private _arguments;
     private hystrixMetrics: ICommandMetrics;
     private span: Span;
+    private schemaName: string;
 
     constructor(private properties: CommandProperties, private command: AbstractCommand<any>, private context: RequestContext, container: IContainer) {
         command.requestContext = context;
@@ -49,8 +49,9 @@ export class HystrixCommand {
     }
 
     async setSchemaOnCommandAsync(schema: string) {
-        if (schema && (<any>this.command).setSchemaAsync)
-            await (<any>this.command).setSchemaAsync(schema);
+        if (schema && (<any>this.command).setSchemaAsync) {
+            this.schemaName = await (<any>this.command).setSchemaAsync(schema);
+        }
     }
 
     async runAsync<T>(...args): Promise<T> {
@@ -64,11 +65,9 @@ export class HystrixCommand {
         // Get form Cache
 
         // Execution
-        this.hystrixMetrics.incrementExecutionCount();
-        let start = ActualTime.getCurrentTime();
-
         this.span = this.context.createCommandSpan(this.getCommandName());
-
+        this.hystrixMetrics.incrementExecutionCount();
+        let recordTotalTime = true;
         try {
             if (this.circuitBreaker.allowRequest()) {
                 if (this.semaphore.canExecuteCommand()) {
@@ -93,7 +92,6 @@ export class HystrixCommand {
                             executing = false; // avoid timeout rejection
                         }
                         catch (e) {
-                            let duration = ActualTime.getCurrentTime() - start;
                             // timeout
                             if (e instanceof TimeoutError) {
                                 this.hystrixMetrics.markTimeout();
@@ -101,20 +99,19 @@ export class HystrixCommand {
                             }
                             else // application error
                             {
-                                return await this.onExecutionError(duration, e);
+                                return await this.onExecutionError(e);
                             }
                         }
 
                         // Execution complete correctly
-                        let duration = ActualTime.getCurrentTime() - start;
                         this.hystrixMetrics.markSuccess();
-                        this.hystrixMetrics.addExecutionTime(duration);
+                        this.hystrixMetrics.addExecutionTime(this.span.durationInMs);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
 
                         // Update cache
                         // TODO
-                        start = -1;
+                        recordTotalTime = false;
                         return result;
                     }
                     finally {
@@ -122,9 +119,6 @@ export class HystrixCommand {
                     }
                 }
                 else {
-                    let duration = ActualTime.getCurrentTime() - start;
-                    this.command.onCommandCompleted && this.command.onCommandCompleted(duration, new Error("Hystrix semaphore error"));
-
                     this.hystrixMetrics.markRejected();
                     return await this.getFallbackOrThrowException(
                         EventType.SEMAPHORE_REJECTED,
@@ -135,10 +129,7 @@ export class HystrixCommand {
             }
             else // circuit breaker open
             {
-                let duration = ActualTime.getCurrentTime() - start;
-                this.command.onCommandCompleted && this.command.onCommandCompleted(duration, new Error("Hystrix circuit breaker error"));
-
-                start = -1;
+                recordTotalTime = false;
                 this.hystrixMetrics.markShortCircuited();
                 return await this.getFallbackOrThrowException(
                     EventType.SHORT_CIRCUITED,
@@ -149,9 +140,8 @@ export class HystrixCommand {
         }
         finally {
             this.span.close();
-            let duration = ActualTime.getCurrentTime() - start;
-            if (start >= 0) {
-                this.recordTotalExecutionTime(duration);
+            if (recordTotalTime) {
+                this.recordTotalExecutionTime(this.span.durationInMs);
             }
             this.hystrixMetrics.decrementExecutionCount();
             this.status.isExecutionComplete = true;
@@ -205,11 +195,11 @@ export class HystrixCommand {
         }
     }
 
-    private onExecutionError(ms: number, e: Error): Promise<any> {
+    private onExecutionError(e: Error): Promise<any> {
         e = e || new Error("Unknow error");
 
         if (e instanceof BadRequestError) {
-            this.hystrixMetrics.markBadRequest(ms);
+            this.hystrixMetrics.markBadRequest(this.span.durationInMs);
             this.span.logError(e);
             throw e;
         }
@@ -233,7 +223,10 @@ export class HystrixCommand {
     }
 
     private getCommandName() {
-        return Object.getPrototypeOf(this.command).constructor.name || this.properties.commandName;
+        let name = Object.getPrototypeOf(this.command).constructor.name || this.properties.commandName;
+        if (this.schemaName)
+            return name + "." + this.schemaName;
+        return name;
     }
 
     ///

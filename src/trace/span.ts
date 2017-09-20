@@ -4,7 +4,10 @@ import { IContainer } from '../di/resolvers';
 import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
 
-export enum SpanKind {
+export enum SpanKind {    addTags(arg0: any): any {
+        throw new Error("Method not implemented.");
+    }
+
     Request,
     Command
 }
@@ -14,15 +17,10 @@ export class Span {
     public traceId: string;
     public parentId: string;
     public spanId: string;
-    public tags: { [name: string]: string } = {};
-    startTick: [number, number];
-    startTime: number;
-    duration: number;
+    private tags: { [name: string]: string } = {};
+    private startTick: [number, number];
+    private startTime: number;
     private error: Error;
-
-    get now() {
-        return this.startTime + this.durationInMicroseconds();
-    }
 
     private constructor(private context: RequestContext, private kind: SpanKind, private name: string, traceId: string, parentId?: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
@@ -48,9 +46,21 @@ export class Span {
     }
 
     close() {
-        this.duration = this.durationInMicroseconds();
+        let duration = this.durationInMicroseconds;
         this.context = null;
         this._logger = null;
+    }
+
+    setAction(name: string) {
+        this.name = this.name + "." + name;
+    }
+
+    addTag(name: string, value: string) {
+        this.tags[name] = value;
+    }
+
+    addTags(tags) {
+        this.tags[name] = Object.assign(this.tags[name] || {}, tags);
     }
 
     /**
@@ -88,7 +98,15 @@ export class Span {
         this._logger.verbose(this.context, msg);
     }
 
-    private durationInMicroseconds() {
+    get now() {
+        return this.startTime + this.durationInMicroseconds;
+    }
+
+    get durationInMs() {
+        return this.durationInMicroseconds / 1000;
+    }
+
+    private get durationInMicroseconds() {
         const hrtime = process.hrtime(this.startTick);
         const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
         return elapsedMicros;

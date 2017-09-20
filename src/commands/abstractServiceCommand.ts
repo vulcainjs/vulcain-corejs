@@ -50,9 +50,9 @@ export class HttpCommandError extends ApplicationRequestError {
 export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
     private overrideTenant: string;
-    private customTags: any;
-    private logger: VulcainLogger;
-    private commandTracker: any;
+    private serviceName: string;
+    private serviceVersion: string;
+    private resolvedServiceName: string;
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
@@ -74,7 +74,13 @@ export abstract class AbstractServiceCommand {
      * @param {any} providerFactory
      */
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        this.initializeMetricsInfo();
+        let dep = this.constructor["$dependency:service"];
+        if (!dep) {
+            throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).constructor.name);
+        }
+        System.manifest.registerService(dep.targetServiceName, dep.targetServiceVersion);
+        this.serviceName = dep.serviceName;
+        this.serviceVersion = dep.serviceVersion;
     }
 
     /**
@@ -96,60 +102,26 @@ export abstract class AbstractServiceCommand {
         this.overrideTenant = tenant;
     }
 
-    protected initializeMetricsInfo() {
-        let dep = this.constructor["$dependency:service"];
-        if (!dep) {
-            throw new Error("ServiceDependency annotation is required on command " + Object.getPrototypeOf(this).constructor.name);
-        }
-        this.setMetricsTags(dep.targetServiceName, dep.targetServiceVersion, false);
+    protected setMetricTags(targetServiceName: string, targetServiceVersion: string) {
+        this.tracer.addTags({ targetServiceName: targetServiceName, targetServiceVersion: targetServiceVersion });
     }
 
-    protected setMetricsTags(targetServiceName: string, targetServiceVersion: string, emitLog = true) {
-
-        let exists = System.manifest.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
-        if (!exists) {
-            System.manifest.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
+    async getServiceName() {
+        if (!this.resolvedServiceName) {
+            this.resolvedServiceName = await this.createServiceName();
         }
-        this.customTags = { targetServiceName: targetServiceName, targetServiceVersion: targetServiceVersion };
-
-        if (emitLog) {
-            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            this.logger.logAction(this.requestContext, "BC", "Service", `Command: ${Object.getPrototypeOf(this).constructor.name} Calling service ${targetServiceName}, version: ${targetServiceVersion}, ${this.requestContext.requestData.vulcainVerb}`);
-            this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(this.requestContext.requestData.vulcainVerb, `${targetServiceName}-${targetServiceVersion}`);
-        }
+        return this.resolvedServiceName;
     }
 
-    onCommandCompleted(duration: number, error?: Error) {
-        this.metrics.timing(AbstractServiceCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (error)
-            this.metrics.increment(AbstractServiceCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Service', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
-    }
+    private async createServiceName() {
 
-    /**
-     *
-     *
-     * @private
-     * @param {string} serviceName
-     * @param {number} version
-     * @returns
-     */
-    protected async createServiceName(serviceName: string, version: string) {
-        if (!serviceName)
-            throw new Error("You must provide a service name");
-        if (!version || !version.match(/[0-9]+\.[0-9]+/))
-            throw new Error("Invalid version number. Must be on the form major.minor");
-
-        this.setMetricsTags(serviceName, version);
-
-        let alias = System.resolveAlias(serviceName, version);
+        let alias = System.resolveAlias(this.serviceName, this.serviceVersion);
         if (alias)
             return alias;
 
         if (System.isDevelopment) {
             try {
-                let deps = System.manifest.dependencies.services.find(svc => svc.service === serviceName && svc.version === version);
+                let deps = System.manifest.dependencies.services.find(svc => svc.service === this.serviceName && svc.version === this.serviceVersion);
                 if (deps && deps.discoveryAddress) {
                     const url = URL.parse(deps.discoveryAddress);
                     return url.host;
@@ -158,34 +130,26 @@ export abstract class AbstractServiceCommand {
             catch (e) {/*ignore*/ }
         }
 
-        return await this.serviceResolver.resolveAsync(serviceName, version);
+        return await this.serviceResolver.resolveAsync(this.serviceName, this.serviceVersion);
     }
 
     /**
      * get a domain element
-     * @param serviceName - full service name
-     * @param version - version of the service
      * @param id - Element id
      * @param schema - optional element schema
-     * @returns A vulcain request response
-     *
-     * @protected
-     * @template T
-     * @param {string} serviceName
-     * @param {number} version
-     * @param {string} id
-     * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequestAsync<T>(serviceName: string, version: string, id: string, args?, schema?: string): Promise<QueryResult> {
+    protected async getRequestAsync<T>(id: string, args?, schema?: string): Promise<QueryResult> {
         const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, schema ? schema + ".get" : "get", { id });
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(this.serviceName, this.serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for ${this.serviceName}`);
             return result;
         }
 
-        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', schema, 'get', id, args);
+        let service = await this.getServiceName();
+        let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
+        this.tracer.setAction("get");
         let res = this.sendRequestAsync("get", url);
         return res;
     }
@@ -195,8 +159,6 @@ export abstract class AbstractServiceCommand {
      *
      * @protected
      * @template T
-     * @param {string} serviceName
-     * @param {number} version
      * @param {string} action
      * @param {*} [query]
      * @param {number} [page]
@@ -204,19 +166,21 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQueryAsync<T>(serviceName: string, version: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResult> {
+    protected async getQueryAsync<T>(verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResult> {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
         data.$query = query && JSON.stringify(query);
         const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(this.serviceName, this.serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${this.serviceName}`);
             return result;
         }
 
-        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}/api/${verb}`, args, data);
+        let service = await this.getServiceName();
+        let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
+        this.tracer.setAction("Query");
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -226,21 +190,22 @@ export abstract class AbstractServiceCommand {
      *
      *
      * @protected
-     * @param {string} serviceName
-     * @param {number} version
      * @param {string} action
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected async sendActionAsync<T>(serviceName: string, version: string, verb: string, data: any, args?): Promise<ActionResult> {
+    protected async sendActionAsync<T>(verb: string, data: any, args?): Promise<ActionResult> {
         let command = { params: data, correlationId: this.requestContext.correlationId };
         const mocks=System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, version, verb, data);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(this.serviceName, this.serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${this.serviceName}`);
             return result;
         }
-        let url = System.createUrl(`http://${await this.createServiceName(serviceName, version)}`, 'api', verb, args);
+
+        let service = await this.getServiceName();
+        let url = System.createUrl(`http://${service}`, 'api', verb, args);
+        this.tracer.setAction(verb);
         let res = <any>this.sendRequestAsync("post", url, (req) => req.json(data));
         return res;
     }
@@ -284,7 +249,8 @@ export abstract class AbstractServiceCommand {
 
         let ctx = this.requestContext as RequestContext;
         await this.setUserContextAsync(request);
-        ctx.injectTraceHeaders(this.commandTracker, request.header);
+
+        this.tracer.injectHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 
@@ -333,21 +299,21 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(kind: string, serviceName: string, version: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
+    protected async exec(kind: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.sendActionAsync(serviceName, version, verb, data, args);
+                let response = await this.sendActionAsync(verb, data, args);
                 return response.value;
             }
             case 'query': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.getQueryAsync(serviceName, version, verb, data, args, page, maxByPage);
+                let response = await this.getQueryAsync(verb, data, args, page, maxByPage);
                 return response.value;
             }
             case 'get': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
-                let response = await this.getRequestAsync(serviceName, version, data, args);
+                let response = await this.getRequestAsync(data, args);
                 return response.value;
             }
         }

@@ -5,6 +5,7 @@ import { Inject } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
+import { Span } from '../trace/span';
 
 /**
  * command
@@ -18,6 +19,10 @@ export interface ICommand {
      * @param args
      */
     runAsync<T>(...args): Promise<T>;
+}
+
+export interface IInternalCommand {
+    span: Span;
 }
 
 /**
@@ -72,18 +77,6 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
             logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
             this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(`Execute command ${this.constructor.name} with parameters ${args}`);
         }
-    }
-
-    onCommandCompleted(duration: number, error?: Error) {
-        if (!this.customTags) {
-            throw new Error("setMetricTags must be called at the beginning of runAsync.");
-        }
-        this.metrics.timing(AbstractCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (error)
-            this.metrics.increment(AbstractCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
     }
 
     /**
