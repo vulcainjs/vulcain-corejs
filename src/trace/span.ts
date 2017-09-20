@@ -20,10 +20,6 @@ export class Span {
     startTime: number;
     private error: Error;
 
-    get now() {
-        return this.startTime + this.durationInMicroseconds();
-    }
-
     private constructor(private context: RequestContext, private kind: SpanKind, private name: string, traceId: string, parentId?: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
@@ -63,8 +59,7 @@ export class Span {
             this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
 
         // End Command trace
-        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
+        this._logger && this._logger.logAction(this.context, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
     }
 
     private endRequest() {
@@ -83,7 +78,7 @@ export class Span {
             prefix = this.context.requestData.action.toLowerCase();
         }
 
-        const duration = this.durationInMicroseconds();
+        const duration = this.durationInMicroseconds;
 
         // Duration
         prefix && metrics.timing(prefix + MetricsConstant.duration, duration);
@@ -100,7 +95,19 @@ export class Span {
             value.userContext = undefined;
         }
 
-//        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
+        //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
+    }
+
+    setAction(name: string) {
+        this.name = this.name + "." + name;
+    }
+
+    addTag(name: string, value: string) {
+        this.tags[name] = value;
+    }
+
+    addTags(tags) {
+        this.tags[name] = Object.assign(this.tags[name] || {}, tags);
     }
 
     /**
@@ -138,7 +145,15 @@ export class Span {
         this._logger.verbose(this.context, msg);
     }
 
-    private durationInMicroseconds() {
+    get now() {
+        return this.startTime + this.durationInMicroseconds;
+    }
+
+    get durationInMs() {
+        return this.durationInMicroseconds / 1000;
+    }
+
+    private get durationInMicroseconds() {
         const hrtime = process.hrtime(this.startTick);
         const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
         return elapsedMicros;

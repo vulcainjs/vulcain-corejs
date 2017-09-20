@@ -7,26 +7,23 @@ import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
 import { RequestContext } from "../pipeline/requestContext";
+import { Span } from '../trace/span';
 
 
 export abstract class AbstractHttpCommand {
-    protected customTags: any;
-    protected metrics: IMetrics;
     public requestContext: RequestContext;
-    private logger: VulcainLogger;
     private commandTracker: any;
-
+    protected tracer: Span;
     private static METRICS_NAME = "external_call";
 
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
         this.initializeMetricsInfo();
     }
 
     protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricsTags(dep.uri, false);
+            this.setMetricTags(dep.uri);
         }
     }
 
@@ -39,7 +36,7 @@ export abstract class AbstractHttpCommand {
      * @memberOf AbstractHttpCommand
      */
 
-    protected setMetricsTags(uri: string, emitLog = true) {
+    protected setMetricTags(verb: string, uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         uri = System.removePasswordFromUrl(uri);
@@ -47,24 +44,7 @@ export abstract class AbstractHttpCommand {
         if (!exists) {
             System.manifest.dependencies.externals.push({ uri });
         }
-        this.customTags = { uri: uri };
-
-        if (emitLog) {
-            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            // Begin Command trace
-            this.logger.logAction(this.requestContext, "BC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} - Request ${uri}`);
-            this.commandTracker= this.requestContext.metrics && this.requestContext.metrics.startCommand(`Call external api: ${uri}`);
-        }
-    }
-
-    onCommandCompleted(duration: number, error?: Error) { // TODO
-        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (error)
-            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-
-        // End Command trace
-        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
+        this.tracer.addTags({ uri: uri, verb: verb });
     }
 
     runAsync(...args): Promise<any> {
@@ -105,7 +85,7 @@ export abstract class AbstractHttpCommand {
      */
     protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
-        this.setMetricsTags(url);
+        this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttpAsync(url, verb);

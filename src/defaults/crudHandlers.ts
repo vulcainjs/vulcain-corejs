@@ -16,7 +16,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
-        this.setMetricsTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
         return this[action + "Internal"](data);
     }
 
@@ -34,6 +34,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
+        this.tracer.setAction()
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
