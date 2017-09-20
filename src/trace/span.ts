@@ -3,6 +3,7 @@ import { System } from "../globals/system";
 import { IContainer } from '../di/resolvers';
 import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
+import { MetricsConstant, IMetrics } from "./../metrics/metrics";
 
 export enum SpanKind {
     Request,
@@ -17,7 +18,6 @@ export class Span {
     public tags: { [name: string]: string } = {};
     startTick: [number, number];
     startTime: number;
-    duration: number;
     private error: Error;
 
     get now() {
@@ -48,9 +48,59 @@ export class Span {
     }
 
     close() {
-        this.duration = this.durationInMicroseconds();
+        if (this.kind === SpanKind.Request)
+            this.endRequest();
+        else
+            this.endCommand();
         this.context = null;
         this._logger = null;
+    }
+
+    endCommand()
+    {
+        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
+        if (error)
+            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
+
+        // End Command trace
+        this.logger && this.logger.logAction(this.requestContext, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
+        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
+    }
+
+    private endRequest() {
+        let metrics = this.context.container.get<IMetrics>(DefaultServiceNames.Metrics);
+
+        let hasError = false;
+        let prefix: string;
+
+        let value = this.context.response && this.context.response.content;
+        hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
+
+        if (this.context.requestData.schema) {
+            prefix = this.context.requestData.schema.toLowerCase() + "_" + this.context.requestData.action.toLowerCase();
+        }
+        else if (this.context.requestData.action) {
+            prefix = this.context.requestData.action.toLowerCase();
+        }
+
+        const duration = this.durationInMicroseconds();
+
+        // Duration
+        prefix && metrics.timing(prefix + MetricsConstant.duration, duration);
+        metrics.timing(MetricsConstant.allRequestsDuration, duration);
+
+        // Failure
+        if (hasError) {
+            prefix && metrics.increment(prefix + MetricsConstant.failure);
+            metrics.increment(MetricsConstant.allRequestsFailure);
+        }
+
+        // Always remove userContext
+        if (typeof (value) === "object") {
+            value.userContext = undefined;
+        }
+
+//        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
     }
 
     /**
