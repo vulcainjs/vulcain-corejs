@@ -12,18 +12,13 @@ import { Span } from '../trace/span';
 
 export abstract class AbstractHttpCommand {
     public requestContext: RequestContext;
-    private commandTracker: any;
     protected tracer: Span;
     private static METRICS_NAME = "external_call";
 
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        this.initializeMetricsInfo();
-    }
-
-    protected initializeMetricsInfo() {
         let dep = this.constructor["$dependency:external"];
         if (dep) {
-            this.setMetricTags(dep.uri);
+            this.setMetricTags(null, dep.uri);
         }
     }
 
@@ -40,11 +35,10 @@ export abstract class AbstractHttpCommand {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
         uri = System.removePasswordFromUrl(uri);
-        let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
-        if (!exists) {
-            System.manifest.dependencies.externals.push({ uri });
-        }
-        this.tracer.addTags({ uri: uri, verb: verb });
+        System.manifest.registerExternal(uri);
+        
+        if(uri && verb)
+            this.tracer.addTags({ uri: uri, verb: verb });
     }
 
     runAsync(...args): Promise<any> {

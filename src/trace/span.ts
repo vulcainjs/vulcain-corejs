@@ -54,12 +54,14 @@ export class Span {
 
     endCommand()
     {
-        this.metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (error)
-            this.metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
+        let metrics = this.context.container.get<IMetrics>(DefaultServiceNames.Metrics);
+
+        metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
+        if (this.error)
+            metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.tags);
 
         // End Command trace
-        this._logger && this._logger.logAction(this.context, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
+        this._logger && this._logger.logAction(this.context, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${this.error ? 'success' : 'error'}`);
     }
 
     private endRequest() {

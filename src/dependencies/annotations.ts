@@ -50,6 +50,13 @@ export class VulcainManifest {
         this.configurations = {};
     }
 
+    registerExternal(uri: string) {
+        let exists = this.dependencies.externals.find(ex => ex.uri === uri);
+        if (!exists) {
+            this.dependencies.externals.push({ uri });
+        }
+    }
+
     registerProvider(address: string, schema: string) {
         let exists = this.dependencies.databases.find(db => db.address === address && db.schema === schema);
         if (!exists) {
