@@ -52,6 +52,7 @@ export let standards = {
             }
         }
     },
+    "any": {},
     "string": {
         message: "Property '{$propertyName}' must be a string.",
         validate: function (val) {
