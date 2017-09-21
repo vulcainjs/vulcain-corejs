@@ -90,7 +90,7 @@ export class Validator {
         if (!val) {
             if (schema.required) {
                 return [{
-                    message: this.__formatMessage("Reference '{$propertyName}' is required.", formatContext, schema),
+                    message: this.__formatMessage(`Reference '{$propertyName}' is required on schema ${schema.name}.`, formatContext, schema),
                     id: formatContext.id,
                     property: formatContext.propertyName
                 }];
@@ -147,7 +147,7 @@ export class Validator {
 
         if (val === undefined || val === null) {
             if (schema.required) {
-                return this.__formatMessage("Property '{$propertyName}' is required.", formatContext, schema);
+                return this.__formatMessage(`Property '{$propertyName}' is required on schema ${schema.name}`, formatContext, schema);
             }
             return null;
         }
