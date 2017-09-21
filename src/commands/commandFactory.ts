@@ -65,7 +65,7 @@ export class CommandFactory {
                 container = <IContainer>contextOrContainer;
             }
             let resolvedCommand = container.resolve(cache.command);
-            let cmd = new HystrixCommand(cache.properties, resolvedCommand, context, container);
+            let cmd = new HystrixCommand(cache.properties, resolvedCommand, <RequestContext>context, container);
             await cmd.setSchemaOnCommandAsync(schema);
             return <T><any>cmd;
         }

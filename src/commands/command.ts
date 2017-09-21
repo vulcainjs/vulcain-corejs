@@ -139,7 +139,7 @@ export class HystrixCommand {
             }
         }
         finally {
-            this.span.close();
+            this.span.dispose();
             if (recordTotalTime) {
                 this.recordTotalExecutionTime(this.span.durationInMs);
             }
@@ -179,7 +179,7 @@ export class HystrixCommand {
                 }
                 finally {
                     this.semaphore.releaseFallback();
-                    fallbackSpan.close();
+                    fallbackSpan.dispose();
                 }
             }
             else {

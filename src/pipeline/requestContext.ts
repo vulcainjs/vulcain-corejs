@@ -222,7 +222,7 @@ export class RequestContext implements IRequestContext {
         if (this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
             headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
         }
-        this.metrics && this.metrics.tracer && this.metrics.tracer.injectTraceHeaders(commandTracker, headers);
+    //    this.metrics && this.metrics.tracer && this.metrics.tracer.injectTraceHeaders(commandTracker, headers);
     }
 
     dispose() {

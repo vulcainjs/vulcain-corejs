@@ -36,7 +36,7 @@ export abstract class AbstractHttpCommand {
             throw new Error("Metrics tags must have an uri property.");
         uri = System.removePasswordFromUrl(uri);
         System.manifest.registerExternal(uri);
-        
+
         if(uri && verb)
             this.tracer.addTags({ uri: uri, verb: verb });
     }

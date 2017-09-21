@@ -35,10 +35,7 @@ export interface IInternalCommand {
  */
 export abstract class AbstractCommand<T> implements IInjectionNotification {
 
-    protected metrics: IMetrics;
-    protected customTags: any;
-    private static METRICS_NAME = "custom_command";
-    private commandTracker: any;
+    protected tracer: Span;
 
     /**
      *
@@ -67,16 +64,10 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     }
 
     onInjectionCompleted() {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
-    protected setMetricsTags(args: { [key: string] : string }, emitLog?:boolean) {
-        this.customTags = args;
-        if (emitLog) {
-            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
-            this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(`Execute command ${this.constructor.name} with parameters ${args}`);
-        }
+    protected setMetricsTags(args: { [key: string] : string }) {
+        this.tracer.addTags(args);
     }
 
     /**

@@ -25,7 +25,7 @@ export abstract class AbstractHandler implements IScopedComponent {
     get requestContext(): IRequestContext {
         if (!this._requestContext) {
             this._requestContext = <RequestContext>this.container.get(DefaultServiceNames.RequestContext, true)
-                || new RequestContext(this.container, Pipeline.InProcess); // TODO init metrics...
+                || new RequestContext(this.container, Pipeline.HttpRequest); // TODO init metrics...
         }
         return this._requestContext;
     }
@@ -40,7 +40,7 @@ export abstract class AbstractHandler implements IScopedComponent {
 
     /**
      * Create a new command instance.
-     * 
+     *
      * @param commandName Command name
      * @param schema Schema to use for the command provider (default = schema defined for the handler)
      */

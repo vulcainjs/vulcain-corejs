@@ -159,8 +159,7 @@ export class Span {
         }
 
         let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
-        this.tracker = trackerFactory.startSpan(this.id, this.name, this.tags);
-
+        this.tracker = trackerFactory.startSpan(this.id, this.name, this.kind, this.tags);
     }
 
     addTag(name: string, value: string) {

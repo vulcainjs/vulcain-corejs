@@ -40,15 +40,15 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(id: SpanId, name: string, tags): IRequestTracker {
-        return new ZipkinRequestTracker(this.recorder, id, name, tags);
+    startSpan(id: SpanId, name: string, kind: SpanKind,  tags): IRequestTracker {
+        return new ZipkinRequestTracker(this.recorder, id, kind, name, tags);
     }
 }
 
 class ZipkinRequestTracker implements IRequestTracker {
-    private tracer: Tracer;
+    private tracer;
 
-    constructor(recorder, spanId: SpanId, kind: SpanKind, name: string, tags) {
+    constructor(recorder, spanId: SpanId, private kind: SpanKind, name: string, tags) {
 
         this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
 
@@ -64,13 +64,13 @@ class ZipkinRequestTracker implements IRequestTracker {
         this.tracer.recordServiceName(name);
         //tracer.recordRpc(verb);
         if (kind == SpanKind.Command)
-        this.tracer.recordAnnotation(new Annotation.ClientSend());
+            this.tracer.recordAnnotation(new Annotation.ClientSend());
         else if (kind == SpanKind.Event)
-        this.tracer.recordAnnotation(new Annotation.ServerRecv());
+            this.tracer.recordAnnotation(new Annotation.ServerRecv());
         else if (kind == SpanKind.Task)
-        this.tracer.recordAnnotation(new Annotation.ServerRecv());
+            this.tracer.recordAnnotation(new Annotation.ServerRecv());
         else if (kind == SpanKind.Request)
-        this.tracer.recordAnnotation(new Annotation.ServerRecv());
+            this.tracer.recordAnnotation(new Annotation.ServerRecv());
 
         this.setTags(tags);
     }
@@ -81,91 +81,21 @@ class ZipkinRequestTracker implements IRequestTracker {
         });
     }
 
-    startCommand(command: string, target?) {
-        let id;
-        this.tracer.setId(this.id);
-        this.tracer.scoped(() => {
-            id = this.tracer.createChildId();
-            this.tracer.setId(id);
-            this.tracer.recordRpc(command);
-            this.tracer.recordServiceName(target);
-            this.tracer.recordAnnotation(new Annotation.ClientSend());
-        });
-        return id;
-    }
-
     trackError(error, tags) {
-        this.tracer.setId(this.id);
-        this.tracer.scoped(() => {
-            id && this.tracer.setId(id);
-            this.tracer.recordBinary("error", error.message || error);
-        });
-        return id;
+        this.tracer.recordBinary("error", error.message || error);
+        this.setTags(tags);
     }
 
-    finishCommand(id, error) {
-        this.tracer.setId(this.id);
-        this.tracer.scoped(() => {
-            this.tracer.setId(id);
-            this.tracer.recordAnnotation(new Annotation.ClientRecv());
-            if(error)
-                this.tracer.recordBinary("error", error.message || error);
-        });
-        return id;
-    }
+    dispose() {
+        if (this.kind == SpanKind.Command)
+            this.tracer.recordAnnotation(new Annotation.ClientSend());
+        else if (this.kind == SpanKind.Event)
+            this.tracer.recordAnnotation(new Annotation.ServerSend());
+        else if (this.kind == SpanKind.Task)
+            this.tracer.recordAnnotation(new Annotation.ServerSend());
+        else if (this.kind == SpanKind.Request)
+            this.tracer.recordAnnotation(new Annotation.ServerSend());
 
-    private readHeader(ctx: RequestContext, header: string) {
-        const val = ctx.request.headers[header.toLowerCase()];
-        if (val) {
-            return new Some(val);
-        } else {
-            return None;
-        }
-    }
-
-    private containsRequiredHeaders(ctx: RequestContext) {
-        return ctx.request.headers[Header.TraceId.toLowerCase()] !== undefined && ctx.request.headers[Header.SpanId.toLowerCase()] !== undefined;
-    }
-
-    finish(result) {
-        try {
-            this.tracer.scoped(() => {
-                this.tracer.setId(this.id);
-                if (result.error)
-                    this.tracer.recordBinary('error', result.error);
-                this.tracer.recordAnnotation(new Annotation.ServerSend());
-            });
-        }
-        catch (e) {
-            // eat
-        }
-    }
-
-    private stringToIntOption(str) {
-        try {
-            return new Some(parseInt(str));
-        } catch (err) {
-            return None;
-        }
-    }
-
-    private stringToBoolean(str) {
-        return str === '1';
-    }
-
-    injectTraceHeaders(id, headers: (name: string | any, value?: string) => any) {
-        this.tracer.scoped(() => {
-            this.tracer.setId(id);
-            const tracer = this.tracer.id;
-            headers(Header.TraceId, tracer.traceId);
-            headers(Header.SpanId, tracer.spanId);
-
-            tracer._parentId.ifPresent(psid => {
-                headers(Header.ParentSpanId, psid);
-            });
-            tracer.sampled.ifPresent(sampled => {
-                headers(Header.Sampled, sampled ? '1' : '0');
-            });
-        });
+        this.tracer = null;
     }
 }
