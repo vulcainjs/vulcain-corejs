@@ -6,6 +6,6 @@ export interface Logger {
     info(requestContext: IRequestContext, msg: () => string);
     verbose(requestContext: IRequestContext, msg: () => string);
     logRequestStatus(requestContext: IRequestContext, kind: EntryKind);
-    logAction(requestContext: IRequestContext, kind: EntryKind, action?: string, message?: string);
+    logAction(requestContext: IRequestContext, kind: EntryKind, message?: string);
 
 }

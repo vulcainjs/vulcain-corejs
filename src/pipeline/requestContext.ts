@@ -1,11 +1,10 @@
-import { IRequestContext, Pipeline, RequestData } from './common';
+import { IRequestContext, Pipeline, RequestData, ICustomEvent } from './common';
 import { IContainer } from '../di/resolvers';
 import { SecurityManager, UserContext } from '../security/securityManager';
 import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
 import { Logger } from "../log/logger";
-import { Metrics } from "./middlewares/metricsMiddleware";
 import { HttpRequest } from "./vulcainPipeline";
 import { ApplicationRequestError } from "./errors/applicationRequestError";
 import { DefaultAuthentication } from "../security/defaultAuthentication";
@@ -38,10 +37,14 @@ export class RequestContext implements IRequestContext {
     locale: string;
     requestData: RequestData;
     response: HttpResponse;
-    metrics: Metrics;
     request: HttpRequest;
     private _securityManager: SecurityManager;
     private rootSpan: Span;
+    private _customEvents: Array<ICustomEvent>;
+
+    setAction(action: string) {
+        this.rootSpan.setAction(action);
+    }
 
     getBearerToken() {
         return this.security.bearer;
@@ -51,8 +54,8 @@ export class RequestContext implements IRequestContext {
         this.security.bearer = token;
     }
 
-    createCommandSpan(parent?: Span) {
-        return Span.createCommandSpan(parent || this.rootSpan);
+    createCommandSpan(commandName: string, parent?: Span) {
+        return (parent||this.rootSpan).createCommandSpan(commandName);
     }
 
     get correlationId(): string {
@@ -61,6 +64,10 @@ export class RequestContext implements IRequestContext {
             return id;
         }
         return this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
+    }
+
+    get now() {
+        return this.rootSpan.now;
     }
 
     getRequestDataObject() {
@@ -127,7 +134,13 @@ export class RequestContext implements IRequestContext {
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {
-        throw new Error("Method not implemented."); // TODO
+        if (!action) {
+            throw new Error("Action is required for custom event.");
+        }
+        if (!this._customEvents) {
+            this._customEvents = [];
+        }
+        this._customEvents.push({ action, schema, params });
     }
 
   /**
@@ -213,6 +226,7 @@ export class RequestContext implements IRequestContext {
     }
 
     dispose() {
+        this.rootSpan.dispose();
         this.container.dispose();
     }
 }

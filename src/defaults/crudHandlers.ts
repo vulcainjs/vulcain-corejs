@@ -9,11 +9,6 @@ import { Command } from "../commands/commandFactory";
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
-    initializeMetricsInfo() {
-        // do nothing
-        // since this command is generic, settings are made on every request
-    }
-
     // Execute command
     runAsync(action: string, data) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
@@ -21,6 +16,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     create(entity: any) {
+        this.tracer.setAction("create");
         return this.provider.createAsync(this.schema, entity);
     }
 
@@ -34,7 +30,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
-        this.tracer.setAction()
+        this.tracer.setAction("update");
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
@@ -53,6 +49,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     protected deleteInternal(entity: any) {
+        this.tracer.setAction("delete");
         return this.delete(entity);
     }
 
@@ -62,6 +59,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async get(id: any) {
+        this.tracer.setAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
@@ -76,6 +74,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     all(options: any) {
+        this.tracer.setAction("getAll");
         return this.provider.getAllAsync(this.schema, options);
     }
 

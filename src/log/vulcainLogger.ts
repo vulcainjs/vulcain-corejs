@@ -8,9 +8,12 @@ import { RequestContext } from "../pipeline/requestContext";
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
+    | "RR"      // Receive request
+    | "ER"      // end request
+    | "RT"      // Receive task
+    | "ET"      // End task
     | "BC"      // begin command
     | "EC"      // end command
-    | "ER"      // end request
     | "RE"      // Receive event
     | "EE"      // end event
     ;
@@ -25,7 +28,6 @@ interface LogEntry {
     message?: string;
     timestamp: number;
     kind: EntryKind;
-    action: string;
     error?: string;
     stack?: string;
 }
@@ -99,10 +101,9 @@ export class VulcainLogger implements Logger{
         this.writeEntry(entry);
     }
 
-    logAction(requestContext: IRequestContext, kind: EntryKind, action?: string, message?: string) {
+    logAction(requestContext: IRequestContext, kind: EntryKind, message?: string) {
         let entry = this.prepareEntry(requestContext);
         entry.kind = kind;
-        entry.action = action;
         entry.message = message;
         this.writeEntry(entry);
     }
@@ -114,7 +115,7 @@ export class VulcainLogger implements Logger{
             version: System.serviceVersion,
             kind: "Log",
             source: this._hostname,
-            timestamp: (ctx && ctx.metrics && ctx.metrics.now()) || Date.now() * 1000,
+            timestamp: (ctx && ctx.now) || Date.now() * 1000,
             correlationId: (requestContext && requestContext.correlationId) || undefined,
             //parentId: (requestContext && requestContext.parentId) || undefined,
             //traceId: (requestContext && requestContext.traceId) || undefined

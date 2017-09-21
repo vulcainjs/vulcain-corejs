@@ -3,47 +3,94 @@ import { System } from "../globals/system";
 import { IContainer } from '../di/resolvers';
 import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
-import { MetricsConstant, IMetrics } from "./../metrics/metrics";
+import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics";
+import { Pipeline } from './../pipeline/common';
+import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
+import { EntryKind } from "../log/vulcainLogger";
 
 export enum SpanKind {
     Request,
-    Command
+    Command,
+    Task,
+    Event
+}
+
+export class SpanId {
+    public traceId: string;
+    public parentId: string;
+    public spanId?: string;
 }
 
 export class Span {
     private _logger: Logger;
-    public traceId: string;
-    public parentId: string;
-    public spanId: string;
     public tags: { [name: string]: string } = {};
-    startTick: [number, number];
-    startTime: number;
+    private startTick: [number, number];
+    private startTime: number;
     private error: Error;
+    private metrics: IMetrics;
+    private id: SpanId;
+    private tracker: IRequestTracker;
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, traceId: string, parentId?: string) {
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, id: SpanId ) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
-        this.spanId = this.randomTraceId();
-        this.parentId = parentId;
-        this.traceId = traceId;
+        this.id = id;
+        this.id.spanId = this.randomTraceId();
+
+        this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
+
+        this.convertKind();
+
+        if (this.kind == SpanKind.Command) {
+            this.logAction("BC", `Command: ${this.name}`);
+        }
+        else if (this.kind == SpanKind.Request) {
+            this.logAction("RR", `Request: ${this.name}`);
+        }
+        else if (this.kind == SpanKind.Task) {
+            this.logAction("RT", `Async task: ${this.name}`);
+        }
+        else if (this.kind == SpanKind.Event) {
+            this.logAction("RE", `Event: ${this.name}`);
+        }
+    }
+
+    private convertKind() {
+        if (this.kind == SpanKind.Command)
+            return;
+
+        if (this.context.pipeline == Pipeline.AsyncTask) {
+            this.kind = SpanKind.Task;
+        }
+        else if (this.context.pipeline == Pipeline.Event) {
+            this.kind = SpanKind.Event;
+        }
     }
 
     static createRootSpan(ctx: RequestContext) {
-        return new Span(ctx, SpanKind.Request, System.fullServiceName, ctx.correlationId, ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]);
+        let id: SpanId = {
+            traceId: ctx.correlationId,
+            parentId: ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]
+        }
+        return new Span(ctx, SpanKind.Request, System.fullServiceName, id);
     }
 
     createCommandSpan(commandName: string) {
-        return new Span(this.context, SpanKind.Command, commandName,  this.traceId, this.spanId);
+        let id: SpanId = {
+            parentId: this.id.spanId,
+            traceId: this.id.traceId
+        };
+        return new Span(this.context, SpanKind.Command, commandName, this.id);
     }
 
     injectHeaders(headers: (name: string | any, value?: string)=>any) {
-        headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.parentId);
+        headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.id.spanId);
        // headers(Header.SpanId, tracer.spanId);
     }
 
-    close() {
+    dispose() {
         if (this.kind === SpanKind.Request)
             this.endRequest();
         else
@@ -54,21 +101,17 @@ export class Span {
 
     endCommand()
     {
-        let metrics = this.context.container.get<IMetrics>(DefaultServiceNames.Metrics);
-
-        metrics.timing(AbstractHttpCommand.METRICS_NAME + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
+        this.metrics.timing(this.name + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
         if (this.error)
-            metrics.increment(AbstractHttpCommand.METRICS_NAME + MetricsConstant.failure, this.tags);
+            this.metrics.increment(this.name + MetricsConstant.failure, this.tags);
 
         // End Command trace
-        this._logger && this._logger.logAction(this.context, "EC", "Http", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${this.error ? 'success' : 'error'}`);
+        this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
     }
 
     private endRequest() {
-        let metrics = this.context.container.get<IMetrics>(DefaultServiceNames.Metrics);
-
         let hasError = false;
-        let prefix: string;
+        let prefix: string = "";
 
         let value = this.context.response && this.context.response.content;
         hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
@@ -83,33 +126,57 @@ export class Span {
         const duration = this.durationInMicroseconds;
 
         // Duration
-        prefix && metrics.timing(prefix + MetricsConstant.duration, duration);
-        metrics.timing(MetricsConstant.allRequestsDuration, duration);
+        this.metrics.timing(prefix + MetricsConstant.duration, duration);
+        this.metrics.timing(MetricsConstant.allRequestsDuration, duration);
 
         // Failure
         if (hasError) {
-            prefix && metrics.increment(prefix + MetricsConstant.failure);
-            metrics.increment(MetricsConstant.allRequestsFailure);
+            this.metrics.increment(prefix + MetricsConstant.failure);
+            this.metrics.increment(MetricsConstant.allRequestsFailure);
         }
 
         // Always remove userContext
         if (typeof (value) === "object") {
             value.userContext = undefined;
         }
+        if (this.kind == SpanKind.Request) {
+            this.logAction("ER", `End request status: ${this.context.response.statusCode || 200}`);
+        }
+        else if (this.kind == SpanKind.Task) {
+            this.logAction("ET", `Async task: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
+        }
+        else if (this.kind == SpanKind.Event) {
+            this.logAction("EE", `Event ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
+        }
 
         //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
     }
 
-    setAction(name: string) {
+    setAction(name: string, tags?: any) {
         this.name = this.name + "." + name;
+        if (tags) {
+            this.addTags(tags);
+        }
+
+        let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
+        this.tracker = trackerFactory.startSpan(this.id, this.name, this.tags);
+
     }
 
     addTag(name: string, value: string) {
-        this.tags[name] = value;
+        if(name && value)
+            this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
     }
 
     addTags(tags) {
-        this.tags[name] = Object.assign(this.tags[name] || {}, tags);
+        if (!tags)
+            return;
+        Object.keys(tags)
+            .forEach(key => this.addTag(key, tags[key]));
+    }
+
+    private logAction(action: EntryKind, message: string) {
+        this._logger.logAction(this.context, action, message);
     }
 
     /**
@@ -121,6 +188,7 @@ export class Span {
      */
     logError(error: Error, msg?: () => string) {
         if (!this.error) this.error = error; // Catch first error
+        this.tracker.trackError(error, this.tags);
         this._logger.error(this.context, error, msg);
     }
 

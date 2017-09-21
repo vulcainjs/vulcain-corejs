@@ -2,11 +2,10 @@ import { SecurityManager, UserContext } from '../security/securityManager';
 import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
-import { CommandMetrics } from "./middlewares/metricsMiddleware";
 
 export enum Pipeline {
-    EventNotification,
-    InProcess,
+    Event,
+    AsyncTask,
     HttpRequest,
     Test
 }
@@ -62,7 +61,6 @@ export interface IRequestContext {
 
     requestData: RequestData;
     request?: HttpRequest;
-    metrics: CommandMetrics;
 
     /**
      * Send custom event from current service

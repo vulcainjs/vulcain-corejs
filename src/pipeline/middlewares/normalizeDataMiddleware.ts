@@ -31,27 +31,16 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             return;
         }
 
-        let logger = ctx.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        let action = ctx.requestData.vulcainVerb;
-        logger.logAction(ctx, "RR", action, "params: " + JSON.stringify(ctx.requestData.params));
-
-        try {
+         try {
             await super.invoke(ctx);
             if (!ctx.response) {
                 ctx.response = new HttpResponse({});
             }
-
-            //let trace = Object.assign({}, ctx.response && ctx.response.content);
-            // Remove result value for trace
-            //trace.value = undefined;
-            logger.logAction(ctx, "ER", action, `End request status: ${(ctx.response && ctx.response.statusCode) || 200}`);// value: ${trace && JSON.stringify(trace)}`);
         }
         catch (e) {
             if (!(e instanceof ApplicationRequestError)) {
                 e = new ApplicationRequestError(e.message, 500);
             }
-            ctx.metrics.trackError(e);
-            logger.logAction(ctx, "ER", action, `End request status: ${(e.statusCode)} value: ${e.message}`);
             ctx.response = HttpResponse.createFromError(e);
         }
 
@@ -160,5 +149,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             ctx.requestData.params.id = id;
         }
         ctx.requestData.vulcainVerb = `${ctx.requestData.schema}.${ctx.requestData.action}`;
+        ctx.setAction(ctx.requestData.vulcainVerb);
     }
 }

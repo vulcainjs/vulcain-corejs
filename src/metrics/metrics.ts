@@ -2,6 +2,7 @@ import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
 import { StatsdMetrics } from './statsdMetrics';
 import { PrometheusMetrics } from './prometheusMetrics';
 import { IContainer } from '../di/resolvers';
+import { DefaultServiceNames } from "./../di/annotations";
 
 export class MetricsConstant {
     static duration = "_duration";
@@ -42,7 +43,8 @@ export interface IMetrics {
 
 export class MetricsFactory {
     static create(container: IContainer) {
-        return new ApplicationInsightsMetrics().initialize() ||
+        return container.get<IMetrics>(DefaultServiceNames.Metrics, true)  ||
+               new ApplicationInsightsMetrics().initialize() ||
                new StatsdMetrics().initialize() ||
                new PrometheusMetrics(container);
     }
