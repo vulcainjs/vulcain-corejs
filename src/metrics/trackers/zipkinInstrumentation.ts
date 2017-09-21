@@ -40,36 +40,37 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(id: SpanId, name: string, kind: SpanKind,  tags): IRequestTracker {
-        return new ZipkinRequestTracker(this.recorder, id, kind, name, tags);
+    startSpan(id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker {
+        return new ZipkinRequestTracker(this.recorder, id, kind, name, action, tags);
     }
 }
 
 class ZipkinRequestTracker implements IRequestTracker {
     private tracer;
 
-    constructor(recorder, spanId: SpanId, private kind: SpanKind, name: string, tags) {
+    constructor(recorder, spanId: SpanId, private kind: SpanKind, name: string, action: string, tags) {
 
         this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
 
         const id = new TraceId({
-            traceId: spanId.traceId,
+            traceId: new Some(spanId.traceId),
             spanId: spanId.spanId,
-            parentId: spanId.parentId,
+            parentId: spanId.parentId ? spanId.parentId : None,
             Sampled: None,
             Flags: 0
         });
-        this.tracer.setId(id);
 
+        this.tracer.setId(id);
+        this.tracer.recordRpc(action);
         this.tracer.recordServiceName(name);
-        //tracer.recordRpc(verb);
-        if (kind == SpanKind.Command)
+
+        if (kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientSend());
-        else if (kind == SpanKind.Event)
+        else if (kind === SpanKind.Event)
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
-        else if (kind == SpanKind.Task)
+        else if (kind === SpanKind.Task)
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
-        else if (kind == SpanKind.Request)
+        else if (kind === SpanKind.Request)
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
 
         this.setTags(tags);
@@ -87,13 +88,13 @@ class ZipkinRequestTracker implements IRequestTracker {
     }
 
     dispose() {
-        if (this.kind == SpanKind.Command)
+        if (this.kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientSend());
-        else if (this.kind == SpanKind.Event)
+        else if (this.kind === SpanKind.Event)
             this.tracer.recordAnnotation(new Annotation.ServerSend());
-        else if (this.kind == SpanKind.Task)
+        else if (this.kind === SpanKind.Task)
             this.tracer.recordAnnotation(new Annotation.ServerSend());
-        else if (this.kind == SpanKind.Request)
+        else if (this.kind === SpanKind.Request)
             this.tracer.recordAnnotation(new Annotation.ServerSend());
 
         this.tracer = null;

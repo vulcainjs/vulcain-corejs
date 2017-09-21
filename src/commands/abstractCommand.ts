@@ -21,10 +21,6 @@ export interface ICommand {
     runAsync<T>(...args): Promise<T>;
 }
 
-export interface IInternalCommand {
-    span: Span;
-}
-
 /**
  *
  *

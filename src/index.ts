@@ -68,7 +68,7 @@ export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } f
 export { TestContext } from './pipeline/testContext';
 
 // Errors
-export { ApplicationRequestError, ForbiddenRequestError, UnauthorizedRequestError, NotFoundError } from './pipeline/errors/applicationRequestError';
+export { ApplicationError, ForbiddenRequestError, UnauthorizedRequestError, NotFoundError } from './pipeline/errors/applicationRequestError';
 export { BadRequestError } from './pipeline/errors/badRequestError';
 export { CommandRuntimeError } from './pipeline/errors/commandRuntimeError';
 export { RuntimeError } from './pipeline/errors/runtimeError';

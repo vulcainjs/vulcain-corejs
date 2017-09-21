@@ -6,7 +6,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
 import { Logger } from "../log/logger";
 import { HttpRequest } from "./vulcainPipeline";
-import { ApplicationRequestError } from "./errors/applicationRequestError";
+import { ApplicationError } from "./errors/applicationRequestError";
 import { DefaultAuthentication } from "../security/defaultAuthentication";
 import { ICommand } from "../commands/abstractCommand";
 import { CommandFactory } from "../commands/commandFactory";

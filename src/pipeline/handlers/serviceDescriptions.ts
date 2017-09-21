@@ -9,7 +9,7 @@ import { RuntimeError } from './../errors/runtimeError';
 import { System } from '../../globals/system';
 import * as Path from 'path';
 import { BadRequestError } from '../errors/badRequestError';
-import { ApplicationRequestError } from '../errors/applicationRequestError';
+import { ApplicationError } from '../errors/applicationRequestError';
 import { AbstractHandler } from "./abstractHandlers";
 import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
 
@@ -100,7 +100,7 @@ export class ServiceDescriptors {
             if (optional)
                 return null;
             else
-                throw new ApplicationRequestError(`no handler method founded for action ${action}, schema ${schema}`, 405);
+                throw new ApplicationError(`no handler method founded for action ${action}, schema ${schema}`, 405);
         }
 
         try {

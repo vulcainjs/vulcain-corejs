@@ -27,7 +27,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         // Ensure schema name (casing) is valid
         ctx.requestData.schema = info.metadata.schema || ctx.requestData.schema;
 
-        System.log.info(ctx, () => `Request input   : ${JSON.stringify(command)}`);
+        System.log.info(ctx, () => `Request input   : ${JSON.stringify(command.params)}`);
         System.log.info(ctx, () => `Request context : user=${ctx.security.name}, scopes=${ctx.security.scopes}, tenant=${ctx.security.tenant}`);
 
         // Verify authorization

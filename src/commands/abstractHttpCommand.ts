@@ -79,6 +79,7 @@ export abstract class AbstractHttpCommand {
      */
     protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
+        this.tracer.setAction(verb);
         this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);

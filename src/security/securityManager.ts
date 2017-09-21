@@ -1,7 +1,7 @@
 import { IAuthorizationPolicy } from './authorizationPolicy';
 import { System } from "../globals/system";
 import { RequestContext } from "../pipeline/requestContext";
-import { ApplicationRequestError, UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";
+import { ApplicationError, UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";
 import { VulcainLogger } from "../log/vulcainLogger";
 import { DefaultServiceNames, Inject } from "../di/annotations";
 import { Model, Property } from '../schemas/annotations';
@@ -161,7 +161,7 @@ export abstract class SecurityManager implements UserContext {
             for (let strategy of this.strategies) {
                 if (!scheme || scheme.substr(0, strategy.name.length).toLowerCase() !== strategy.name)
                     continue;
-                if (!token) { throw new ApplicationRequestError("Invalid authorization header."); }
+                if (!token) { throw new ApplicationError("Invalid authorization header."); }
 
                 let userContext = await strategy.verify(ctx, token);
                 if (userContext) {

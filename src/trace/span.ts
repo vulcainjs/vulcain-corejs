@@ -16,7 +16,7 @@ export enum SpanKind {
 }
 
 export class SpanId {
-    public traceId: string;
+    public traceId?: string;
     public parentId: string;
     public spanId?: string;
 }
@@ -30,6 +30,7 @@ export class Span {
     private metrics: IMetrics;
     private id: SpanId;
     private tracker: IRequestTracker;
+    private action: string;
 
     private constructor(private context: RequestContext, private kind: SpanKind, private name: string, id: SpanId ) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
@@ -42,36 +43,51 @@ export class Span {
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.convertKind();
+    }
 
-        if (this.kind == SpanKind.Command) {
-            this.logAction("BC", `Command: ${this.name}`);
+    setAction(name: string, tags?: any) {
+        this.action = name;
+        this.ensuresInitialized();
+        if (tags) {
+            this.addTags(tags);
         }
-        else if (this.kind == SpanKind.Request) {
-            this.logAction("RR", `Request: ${this.name}`);
-        }
-        else if (this.kind == SpanKind.Task) {
-            this.logAction("RT", `Async task: ${this.name}`);
-        }
-        else if (this.kind == SpanKind.Event) {
-            this.logAction("RE", `Event: ${this.name}`);
+    }
+
+    private ensuresInitialized() {
+        if (!this.tracker) {
+            let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
+            this.id.traceId = this.context.correlationId;
+            this.tracker = trackerFactory.startSpan(this.id, this.name, this.kind, this.action, this.tags);
+
+            if (this.kind === SpanKind.Command) {
+                this.logAction("BC", `Command: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Request) {
+                this.logAction("RR", `Request: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Task) {
+                this.logAction("RT", `Async task: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Event) {
+                this.logAction("RE", `Event: ${this.name}`);
+            }
         }
     }
 
     private convertKind() {
-        if (this.kind == SpanKind.Command)
+        if (this.kind === SpanKind.Command)
             return;
 
-        if (this.context.pipeline == Pipeline.AsyncTask) {
+        if (this.context.pipeline === Pipeline.AsyncTask) {
             this.kind = SpanKind.Task;
         }
-        else if (this.context.pipeline == Pipeline.Event) {
+        else if (this.context.pipeline === Pipeline.Event) {
             this.kind = SpanKind.Event;
         }
     }
 
     static createRootSpan(ctx: RequestContext) {
         let id: SpanId = {
-            traceId: ctx.correlationId,
             parentId: ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]
         }
         return new Span(ctx, SpanKind.Request, System.fullServiceName, id);
@@ -139,37 +155,31 @@ export class Span {
         if (typeof (value) === "object") {
             value.userContext = undefined;
         }
-        if (this.kind == SpanKind.Request) {
+        if (this.kind === SpanKind.Request) {
             this.logAction("ER", `End request status: ${this.context.response.statusCode || 200}`);
         }
-        else if (this.kind == SpanKind.Task) {
+        else if (this.kind === SpanKind.Task) {
             this.logAction("ET", `Async task: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
         }
-        else if (this.kind == SpanKind.Event) {
+        else if (this.kind === SpanKind.Event) {
             this.logAction("EE", `Event ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
         }
 
         //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
     }
 
-    setAction(name: string, tags?: any) {
-        this.name = this.name + "." + name;
-        if (tags) {
-            this.addTags(tags);
-        }
-
-        let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
-        this.tracker = trackerFactory.startSpan(this.id, this.name, this.kind, this.tags);
-    }
-
     addTag(name: string, value: string) {
-        if(name && value)
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+        if (name && value)
             this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
     }
 
     addTags(tags) {
         if (!tags)
             return;
+
         Object.keys(tags)
             .forEach(key => this.addTag(key, tags[key]));
     }
@@ -186,7 +196,12 @@ export class Span {
      *
      */
     logError(error: Error, msg?: () => string) {
-        if (!this.error) this.error = error; // Catch first error
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+
+        if (!this.error) this.error = error; // Catch only first error
+
         this.tracker.trackError(error, this.tags);
         this._logger.error(this.context, error, msg);
     }
@@ -199,6 +214,9 @@ export class Span {
      *
      */
     logInfo(msg: () => string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
         this._logger.info(this.context, msg);
     }
 
@@ -211,6 +229,9 @@ export class Span {
      *
      */
     logVerbose(msg: () => string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
         this._logger.verbose(this.context, msg);
     }
 

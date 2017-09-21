@@ -5,6 +5,7 @@ import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handler
 import { Action, Query } from "../pipeline/handlers/annotations";
 import { ICommand } from "../commands/abstractCommand";
 import { Command } from "../commands/commandFactory";
+import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
@@ -34,7 +35,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
-            throw new Error("Entity doesn't exist for updating : " + entity[keyProperty]);
+            throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
         return await this.provider.updateAsync(this.schema, entity, old);
     }
 
@@ -103,7 +104,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
     async createAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "create", entity);
     }
@@ -111,7 +112,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
     async updateAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "update", entity);
     }
@@ -119,7 +120,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
     async deleteAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
 
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "delete", entity);

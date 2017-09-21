@@ -12,7 +12,7 @@ export interface IRequestTracker {
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( id: SpanId, name: string, kind: SpanKind, tags): IRequestTracker;
+    startSpan( id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker;
 }
 
 export class TrackerFactory {

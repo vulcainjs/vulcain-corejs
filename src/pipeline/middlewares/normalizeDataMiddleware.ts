@@ -4,7 +4,7 @@ import { BadRequestError } from "../errors/badRequestError";
 import { Conventions } from "../../utils/conventions";
 import { DefaultServiceNames } from "../../di/annotations";
 import { VulcainLogger } from "../../log/vulcainLogger";
-import { ApplicationRequestError } from "../errors/applicationRequestError";
+import { ApplicationError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
 import { System } from "../../globals/system";
 
@@ -38,8 +38,8 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             }
         }
         catch (e) {
-            if (!(e instanceof ApplicationRequestError)) {
-                e = new ApplicationRequestError(e.message, 500);
+            if (!(e instanceof ApplicationError)) {
+                e = new ApplicationError(e.message, 500);
             }
             ctx.response = HttpResponse.createFromError(e);
         }

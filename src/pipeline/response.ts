@@ -4,7 +4,7 @@
  * @export
  * @class HttpResponse
  */
-import { ApplicationRequestError } from "./errors/applicationRequestError";
+import { ApplicationError } from "./errors/applicationRequestError";
 import { RequestContext } from "./requestContext";
 import { System } from "./../globals/system";
 import { ErrorResponse } from "./handlers/common";
@@ -55,7 +55,7 @@ export class HttpResponse {
         return res;
     }
 */
-    static createFromError(err: ApplicationRequestError): HttpResponse {
+    static createFromError(err: ApplicationError): HttpResponse {
         let res = new HttpResponse({ error: { message: err.message, errors: err.errors }}, err.statusCode|| 500);
         return res;
     }

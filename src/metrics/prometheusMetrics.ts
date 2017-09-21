@@ -26,12 +26,12 @@ export class PrometheusMetrics implements IMetrics {
             return PrometheusMetrics.Empty;
 
         Object.keys(tags)
-            .forEach(key => key + '="' + (tags[key] || '').replace(/[:|,\.?&]/g, '-') + '"');
+            .forEach(key => key + '="' + (tags[key] || '').replace(/[:|,\.?&]/g, '_') + '"');
         return tags;
     }
 
     increment(metric: string, customTags?: any, delta = 1) {
-        metric = 'vulcain_' + metric;
+        metric = 'vulcain_' + metric.replace(/[:|,\.?&]/g, '_');
         let labels = Object.assign({}, this.tags, customTags);
 
         let counter:Prometheus.Counter = (<any>Prometheus.register).getSingleMetric(metric);
@@ -48,7 +48,7 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     timing(metric: string, duration: number, customTags?: any) {
-        metric = 'vulcain_' + metric;
+        metric = 'vulcain_' + metric.replace(/[:|,\.?&]/g, '_');
         let labels = Object.assign({}, this.tags, customTags);
         let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {

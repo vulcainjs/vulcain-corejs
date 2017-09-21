@@ -5,6 +5,7 @@ import * as os from 'os';
 import { Logger } from "./logger";
 import { IRequestContext } from "../pipeline/common";
 import { RequestContext } from "../pipeline/requestContext";
+import { ApplicationError } from '../pipeline/errors/applicationRequestError';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
@@ -61,7 +62,8 @@ export class VulcainLogger implements Logger{
         let entry = this.prepareEntry(requestContext);
         entry.message = (msg && msg()) || "Error occured";
         entry.error = error.message;
-        entry.stack = (error.stack || "").replace(/[\r\n]/g, '↵');
+        if(!(error instanceof ApplicationError))
+            entry.stack = (error.stack || "").replace(/[\r\n]/g, '↵');
 
         this.writeEntry(entry);
     }
@@ -115,7 +117,7 @@ export class VulcainLogger implements Logger{
             version: System.serviceVersion,
             kind: "Log",
             source: this._hostname,
-            timestamp: (ctx && ctx.now) || Date.now() * 1000,
+            timestamp: Date.now() * 1000,
             correlationId: (requestContext && requestContext.correlationId) || undefined,
             //parentId: (requestContext && requestContext.parentId) || undefined,
             //traceId: (requestContext && requestContext.traceId) || undefined

@@ -15,7 +15,7 @@ import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
 import { UserContext } from "../../security/securityManager";
 import { HttpResponse } from "../response";
-import { ApplicationRequestError } from "../errors/applicationRequestError";
+import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
 import { ITaskManager } from "../../providers/taskManager";
 
@@ -173,7 +173,7 @@ export class CommandManager implements IManager {
     async runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
         if (info.kind !== "action")
-            throw new ApplicationRequestError("Query handler must be requested with GET.", 405);
+            throw new ApplicationError("Query handler must be requested with GET.", 405);
 
         let metadata = <ActionMetadata>info.metadata;
         let eventMode = metadata.eventMode || EventNotificationMode.successOnly;

@@ -1,5 +1,4 @@
-import { ApplicationRequestError } from './applicationRequestError';
-export class RuntimeError extends ApplicationRequestError {
+export class RuntimeError extends Error {
     constructor(message: string) {
         super(message);
     }

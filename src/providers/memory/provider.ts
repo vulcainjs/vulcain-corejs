@@ -6,6 +6,7 @@ import { DefaultServiceNames } from '../../di/annotations';
 import { SchemaBuilder } from '../../schemas/schemaBuilder';
 import { Conventions } from '../../utils/conventions';
 import { RequestContext } from "../../pipeline/requestContext";
+import { ApplicationError } from '../../pipeline/errors/applicationRequestError';
 
 interface AstNode {
     op: string;
@@ -211,7 +212,7 @@ export class MemoryProvider implements IProvider<any>
                     throw new Error(`Can not create a ${schema.name} entity with undefined id : ${schema.getIdProperty()} `);
 
                 if (list[name]) {
-                    reject(new Error(`Can not add existing ${schema.name} ${name}`));
+                    reject(new ApplicationError(`Can not add existing ${schema.name} ${name}`));
                     return;
                 }
 
