@@ -325,7 +325,8 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.setSecurityManager(evt.userContext);// TODO + metrics
+                        ctx.setAction(evt.vulcainVerb);
+                        ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.requestContext = ctx;
                         handler.event = evt;

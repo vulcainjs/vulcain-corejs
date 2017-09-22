@@ -4,6 +4,8 @@ import { DynamicConfiguration } from '../../configurations/dynamicConfiguration'
 import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import { SpanId, SpanKind } from '../../trace/span';
+import * as os from 'os';
+
 const {
     Annotation,
     HttpHeaders: Header,
@@ -55,7 +57,7 @@ class ZipkinRequestTracker implements IRequestTracker {
         const id = new TraceId({
             traceId: new Some(spanId.traceId),
             spanId: spanId.spanId,
-            parentId: spanId.parentId ? spanId.parentId : None,
+            parentId: spanId.parentId ? new Some(spanId.parentId) : None,
             Sampled: None,
             Flags: 0
         });
@@ -63,6 +65,7 @@ class ZipkinRequestTracker implements IRequestTracker {
         this.tracer.setId(id);
         this.tracer.recordRpc(action);
         this.tracer.recordServiceName(name);
+        this.tracer.recordLocalAddr(os.hostname());
 
         if (kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientSend());

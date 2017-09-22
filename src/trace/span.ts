@@ -18,7 +18,7 @@ export enum SpanKind {
 export class SpanId {
     public traceId?: string;
     public parentId: string;
-    public spanId?: string;
+    public spanId: string;
 }
 
 export class Span {
@@ -32,13 +32,15 @@ export class Span {
     private tracker: IRequestTracker;
     private action: string;
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, id: SpanId ) {
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
-        this.id = id;
-        this.id.spanId = this.randomTraceId();
+        this.id = <SpanId>{
+            spanId: this.randomTraceId(),
+            parentId: parentId
+        };
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
@@ -54,7 +56,7 @@ export class Span {
     }
 
     private ensuresInitialized() {
-        if (!this.tracker) {
+        if (!this.tracker && this.action) {
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
             this.id.traceId = this.context.correlationId;
             this.tracker = trackerFactory.startSpan(this.id, this.name, this.kind, this.action, this.tags);
@@ -80,30 +82,26 @@ export class Span {
 
         if (this.context.pipeline === Pipeline.AsyncTask) {
             this.kind = SpanKind.Task;
+            this.name = "Async:" + this.name;
         }
         else if (this.context.pipeline === Pipeline.Event) {
             this.kind = SpanKind.Event;
+            this.name = "Event:" + this.name;
         }
     }
 
     static createRootSpan(ctx: RequestContext) {
-        let id: SpanId = {
-            parentId: ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]
-        }
-        return new Span(ctx, SpanKind.Request, System.fullServiceName, id);
+        let parentId = ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+        return new Span(ctx, SpanKind.Request, System.fullServiceName, parentId);
     }
 
     createCommandSpan(commandName: string) {
-        let id: SpanId = {
-            parentId: this.id.spanId,
-            traceId: this.id.traceId
-        };
-        return new Span(this.context, SpanKind.Command, commandName, this.id);
+        return new Span(this.context, SpanKind.Command, commandName, this.id.spanId);
     }
 
-    injectHeaders(headers: (name: string | any, value?: string)=>any) {
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
         headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.id.spanId);
-       // headers(Header.SpanId, tracer.spanId);
+        // headers(Header.SpanId, tracer.spanId);
     }
 
     dispose() {
@@ -111,12 +109,13 @@ export class Span {
             this.endRequest();
         else
             this.endCommand();
+        this.tracker.dispose(this.tags);
+        this.tracker = null;
         this.context = null;
         this._logger = null;
     }
 
-    endCommand()
-    {
+    endCommand() {
         this.metrics.timing(this.name + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
         if (this.error)
             this.metrics.increment(this.name + MetricsConstant.failure, this.tags);
