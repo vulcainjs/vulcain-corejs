@@ -5,6 +5,7 @@ import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import { SpanId, SpanKind } from '../../trace/span';
 import * as os from 'os';
+import { IRequestContext } from "../../pipeline/common";
 
 const {
     Annotation,
@@ -42,7 +43,7 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker {
+    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker {
         return new ZipkinRequestTracker(this.recorder, id, kind, name, action, tags);
     }
 }
@@ -90,7 +91,7 @@ class ZipkinRequestTracker implements IRequestTracker {
         this.setTags(tags);
     }
 
-    dispose() {
+    dispose(duration: number, tags) {
         if (this.kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientSend());
         else if (this.kind === SpanKind.Event)

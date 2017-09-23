@@ -12,21 +12,20 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
  * @class StatsdMetrics
  */
 export class StatsdMetrics implements IMetrics {
-
-    private statsd: Statsd;
-    private tags: any;
     private static EmptyString = "";
+    private tags: any;
 
-    constructor(private address?: string) {
+    constructor(private statsd: Statsd) {
+        this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
     }
 
-    initialize() {
+    static create() {
         if (!System.isDevelopment) {
-            let host = DynamicConfiguration.getPropertyValue<string>("statsdAgent") || System.resolveAlias(this.address) || this.address;
+            let host = DynamicConfiguration.getPropertyValue<string>("statsdAgent");
             if (host) {
-                this.statsd = new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs });
-                this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
-                System.log.info(null, ()=>"Initialize statsd metrics adapter on '" + host + "' with initial tags : " + this.tags);
+                let instance = new StatsdMetrics(
+                    new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs }));
+                System.log.info(null, ()=>"Initialize statsd metrics adapter on '" + host + "' with initial tags : " + instance.tags);
                 return this;
             }
         }

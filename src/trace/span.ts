@@ -59,7 +59,7 @@ export class Span {
         if (!this.tracker && this.action) {
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
             this.id.traceId = this.context.correlationId;
-            this.tracker = trackerFactory.startSpan(this.id, this.name, this.kind, this.action, this.tags);
+            this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
 
             if (this.kind === SpanKind.Command) {
                 this.logAction("BC", `Command: ${this.name}`);
@@ -101,7 +101,19 @@ export class Span {
 
     injectHeaders(headers: (name: string | any, value?: string) => any) {
         headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.id.spanId);
-        // headers(Header.SpanId, tracer.spanId);
+        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.context.correlationId);
+//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
+//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
+//        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
+//        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
+
+        // TODO move this code
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
+        }
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
+        }
     }
 
     dispose() {
@@ -109,7 +121,7 @@ export class Span {
             this.endRequest();
         else
             this.endCommand();
-        this.tracker.dispose(this.tags);
+        this.tracker.dispose(this.durationInMs, this.tags);
         this.tracker = null;
         this.context = null;
         this._logger = null;

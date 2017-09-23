@@ -209,22 +209,6 @@ export class RequestContext implements IRequestContext {
         return this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH];
     }
 
-    injectTraceHeaders(commandTracker, headers: (name: string|any, value?: string) => any) {
-        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.correlationId);
-        //header(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.requestContext.traceId);
-        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
-        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
-        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
-        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
-        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
-        }
-        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
-        }
-    //    this.metrics && this.metrics.tracer && this.metrics.tracer.injectTraceHeaders(commandTracker, headers);
-    }
-
     dispose() {
         this.rootSpan.dispose();
         this.container.dispose();

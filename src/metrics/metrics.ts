@@ -44,8 +44,8 @@ export interface IMetrics {
 export class MetricsFactory {
     static create(container: IContainer) {
         return container.get<IMetrics>(DefaultServiceNames.Metrics, true)  ||
-               new ApplicationInsightsMetrics().initialize() ||
-               new StatsdMetrics().initialize() ||
+               ApplicationInsightsMetrics.create() ||
+               StatsdMetrics.create() ||
                new PrometheusMetrics(container);
     }
 }

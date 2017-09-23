@@ -68,15 +68,15 @@ export abstract class AbstractServiceCommand {
      * @param {any} providerFactory
      */
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        let dep = this.constructor["$dependency:service"];
-        if (dep) {
-            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
-        }
     }
 
     protected setMetricTags(serviceName: string, serviceVersion: string) {
-        this.tracer.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
+//        let dep = this.constructor["$dependency:service"];
+//        if (dep) {
+//            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
+//        }
 
+        this.tracer.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
         System.manifest.registerService(serviceName, serviceVersion);
     }
 
@@ -286,7 +286,7 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(serviceName: string, serviceVersion: string, kind: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
+    protected async exec(kind: string, serviceName: string, serviceVersion: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
                 userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);

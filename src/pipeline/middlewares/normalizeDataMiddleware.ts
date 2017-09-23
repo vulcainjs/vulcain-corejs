@@ -41,6 +41,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             if (!(e instanceof ApplicationError)) {
                 e = new ApplicationError(e.message, 500);
             }
+            ctx.logError(e, () => "Request has error");
             ctx.response = HttpResponse.createFromError(e);
         }
 
