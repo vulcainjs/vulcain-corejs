@@ -110,7 +110,7 @@ export class MongoProvider implements IProvider<any>
         }
 
         const db = this.state._mongo;
-
+        let self = this;
         return new Promise((resolve, reject) => {
             // Don't use 'this' here to avoid memory leaks
             // Open connexion
@@ -118,10 +118,10 @@ export class MongoProvider implements IProvider<any>
             db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
                 (err) => {
                     if (err) {
-                        this.ctx.logError( err, ()=>`MONGODB: Error when creating index for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
+                        self.ctx.logError( err, ()=>`MONGODB: Error when creating index for ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name}`);
                     }
                     else {
-                        this.ctx.logInfo(()=>`MONGODB: Unique index created for ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name}`);
+                        self.ctx.logInfo(()=>`MONGODB: Unique index created for ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name}`);
                     }
                     resolve();
                 });
@@ -144,7 +144,7 @@ export class MongoProvider implements IProvider<any>
         let self = this;
         return new Promise<Promise<Array<any>>>(async (resolve, reject) => {
             try {
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 let cursor = db.collection(schema.description.storageName).find(query)
                     .skip(page * maxByPage)
                     .limit(maxByPage);
@@ -169,24 +169,24 @@ export class MongoProvider implements IProvider<any>
     async findOneAsync(schema: Schema, query) {
         await this.ensureSchemaReadyAsync(schema);
         this.ctx.logVerbose(()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
-
+        let self = this;
         return new Promise(async (resolve, reject) => {
             try {
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 db.collection(schema.description.storageName).findOne(query,
                     (err, res) => {
                         if (err) {
-                            this.ctx.logError(err, ()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
+                            self.ctx.logError(err, ()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
                             reject(err);
                         }
                         else {
-                            this.ctx.logVerbose(()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
+                            self.ctx.logVerbose(()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
                             resolve(res);
                         }
                     });
             }
             catch (err) {
-                this.ctx.logError(err, ()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
+                self.ctx.logError(err, ()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
                 reject(err);
             }
         });
@@ -203,23 +203,23 @@ export class MongoProvider implements IProvider<any>
         let filter = {};
         filter[this.state.keyPropertyNameBySchemas.get(schema.name) || "_id"] = name;
         this.ctx.logVerbose(()=>`MONGODB: Get query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter : ${JSON.stringify(filter)}`);
-
+        let self = this;
         return new Promise(async (resolve, reject) => {
             try {
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 db.collection(schema.description.storageName).findOne(filter, (err, res) => {
                     if (err) {
-                        this.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${name}`);
-                        reject(this.normalizeErrors(name, err));
+                        self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name}`);
+                        reject(self.normalizeErrors(name, err));
                     }
                     else {
-                        this.ctx.logVerbose(()=>`MONGODB: Get query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${name} returns a value: ${res !== null}`);
+                        self.ctx.logVerbose(()=>`MONGODB: Get query on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name} returns a value: ${res !== null}`);
                         resolve(res);
                     }
                 });
             }
             catch (err) {
-                this.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${name}`);
+                self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name}`);
                 reject(err);
             }
         });
@@ -234,10 +234,10 @@ export class MongoProvider implements IProvider<any>
         if (!old)
             throw new Error("MONGODB delete: Argument is required");
         await this.ensureSchemaReadyAsync(schema);
-
+        let self = this;
         return new Promise<boolean>(async (resolve, reject) => {
             let id;
-            let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
+            let keyPropertyName = self.state.keyPropertyNameBySchemas.get(schema.name);
             if (typeof old === "string")
                 id = old;
             else
@@ -248,23 +248,23 @@ export class MongoProvider implements IProvider<any>
             filter[keyPropertyName || "_id"] = id;
 
             try {
-                this.ctx.logVerbose(()=>`MONGODB: Deleting entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
+                self.ctx.logVerbose(()=>`MONGODB: Deleting entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
 
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 db.collection(schema.description.storageName).remove(filter, (err, res) => {
                     if (err) {
-                        let e = this.normalizeErrors(id, err);
-                        this.ctx.logError(e, ()=>`MONGODB ERROR : Deleting entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
+                        let e = self.normalizeErrors(id, err);
+                        self.ctx.logError(e, ()=>`MONGODB ERROR : Deleting entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
                         reject(e);
                     }
                     else {
-                        this.ctx.logVerbose(()=>`MONGODB: Deleting entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}. Result=${res}`);
+                        self.ctx.logVerbose(()=>`MONGODB: Deleting entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}. Result=${res}`);
                         resolve();
                     }
                 });
             }
             catch (err) {
-                this.ctx.logError(err, ()=>`MONGODB ERROR : Deleting entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
+                self.ctx.logError(err, ()=>`MONGODB ERROR : Deleting entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
                 reject(err);
             }
         });
@@ -301,24 +301,24 @@ export class MongoProvider implements IProvider<any>
             throw new Error(`MONGODB create : ${keyPropertyName} must not be null`);
 
         this.ctx.logVerbose(()=>`MONGODB: Creating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
-
+        let self = this;
         return new Promise(async (resolve, reject) => {
             try {
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 db.collection(schema.description.storageName).insertOne(entity, (err) => {
                     if (err) {
-                        let e = this.normalizeErrors(entity[keyPropertyName], err);
-                        this.ctx.logError(e, ()=>`MONGODB ERROR : Creating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
+                        let e = self.normalizeErrors(entity[keyPropertyName], err);
+                        self.ctx.logError(e, ()=>`MONGODB ERROR : Creating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                         reject(e);
                     }
                     else {
-                        this.ctx.logVerbose(()=>`MONGODB: Creating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}. Success=true`);
+                        self.ctx.logVerbose(()=>`MONGODB: Creating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}. Success=true`);
                         resolve(entity);
                     }
                 });
             }
             catch (err) {
-                this.ctx.logError(err, ()=>`MONGODB ERROR : Creating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
+                self.ctx.logError(err, ()=>`MONGODB ERROR : Creating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                 reject(err);
             }
         });
@@ -341,23 +341,23 @@ export class MongoProvider implements IProvider<any>
         filter[keyPropertyName || "_id"] = id;
 
         this.ctx.logVerbose(()=>`MONGODB: Updating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
-
+        let self = this;
         return new Promise(async (resolve, reject) => {
             try {
 
-                let db = this.state._mongo;
+                let db = self.state._mongo;
                 let collection = db.collection(schema.description.storageName);
 
                 collection.findOne(filter, (err, initial) => {
                     if (err) {
-                        let e = this.normalizeErrors(id, err);
-                        this.ctx.logError(e, ()=>`MONGODB ERROR : Updating entity (check if exists) on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
+                        let e = self.normalizeErrors(id, err);
+                        self.ctx.logError(e, ()=>`MONGODB ERROR : Updating entity (check if exists) on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                         reject(e);
                         return;
                     }
                     if (!initial) {
                         err = new ApplicationError(`Can not update unknow entity ${id}, schema: ${schema.name}`);
-                        this.ctx.logError(err, ()=>`MONGODB ERROR : Error when updating entity ${id}, schema: ${schema.name}`);
+                        self.ctx.logError(err, ()=>`MONGODB ERROR : Error when updating entity ${id}, schema: ${schema.name}`);
                         reject(err);
                         return;
                     }
@@ -369,19 +369,19 @@ export class MongoProvider implements IProvider<any>
 
                     collection.updateOne(filter, initial, err => {
                         if (err) {
-                            let e = this.normalizeErrors(id, err);
-                            this.ctx.logError(e, ()=>`MONGODB ERROR : Updating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
+                            let e = self.normalizeErrors(id, err);
+                            self.ctx.logError(e, ()=>`MONGODB ERROR : Updating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                             reject(e);
                         }
                         else {
-                            this.ctx.logVerbose(()=>`MONGODB: Updating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}. Success`);
+                            self.ctx.logVerbose(()=>`MONGODB: Updating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}. Success`);
                             resolve(initial);
                         }
                     });
                 });
             }
             catch (err) {
-                this.ctx.logError(err, ()=>`MONGODB ERROR : Updating entity on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with id: ${id}`);
+                self.ctx.logError(err, ()=>`MONGODB ERROR : Updating entity on ${System.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                 reject(err);
             }
         });
