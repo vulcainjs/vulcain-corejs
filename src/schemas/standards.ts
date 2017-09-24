@@ -54,12 +54,14 @@ export let standards = {
     },
     "any": {},
     "string": {
+        description: "Must be a string",
         message: "Property '{$propertyName}' must be a string.",
         validate: function (val) {
             if (typeof val !== "string") return this.message;
         }
     },
     "pattern": {
+        description: "Must respect the regex expression {$pattern}",
         $pattern: null,
         message: "Property '{$propertyName}' must match the following pattern : {$pattern}",
         validate: function (val) {
@@ -67,6 +69,7 @@ export let standards = {
         }
     },
     "number": {
+        description: "Must be a number.",
         message: "Property '{$propertyName}' must be a number.",
         bind: function (val) {
             if (val === undefined) return val;
@@ -79,6 +82,7 @@ export let standards = {
         }
     },
     "length": {
+        description: "Must have a length between ${min} and ${max}",
         type: "string",
         $min: undefined,
         $max: undefined,
@@ -97,6 +101,7 @@ export let standards = {
         }
     },
     "integer": {
+        description: "Must be an integer",
         message: "Property '{$propertyName}' must be an integer.",
         bind: function (val) {
             if (val === undefined) return val;
@@ -109,6 +114,7 @@ export let standards = {
         }
     },
     "boolean": {
+        description: "Must be a boolean",
         message: "Property '{$propertyName}' must be a boolean.",
         bind: function (val) {
             if (val === undefined) return val;
@@ -119,6 +125,7 @@ export let standards = {
         }
     },
     "enum": {
+        description: "Must be one of [{$values}]",
         type: "string",
         $values: null,
         message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
@@ -128,10 +135,12 @@ export let standards = {
         }
     },
     uid: {
+        description: "Must be an UID (will be generated if null)",
         type: "string",
         bind: (v) => v || uuid.v1()
     },
     "arrayOf": {
+        description: "Must be an array of ${items}",
         $items: null,
         messages: [
             "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$items}.",
@@ -151,6 +160,7 @@ export let standards = {
     },
     // Value must be a number between min and max
     range: {
+        description: "Must be a number between {$min} and ${$max}",
         type: "number",
         $min: 0,
         $max: 1,
@@ -160,6 +170,7 @@ export let standards = {
         }
     },
     email: {
+        description: "Must be an email",
         message: "Property '{$propertyName}' must be an email.",
         validate: function (val) {
             if ((typeof val !== "string")) return this.message;
@@ -170,6 +181,7 @@ export let standards = {
         }
     },
     url: {
+        description: "Must be an url",
         type: "string",
         message: "Property '{$propertyName}' must be an url.",
         validate: function (val) {
@@ -179,6 +191,7 @@ export let standards = {
         }
     },
     alphanumeric: {
+        description: "Must be an alphanumeric string",
         type: "string",
         message: "Property '{$propertyName}' must be an alphanumeric.",
         validate: function (val, ctx = { locale: 'en-US' }) {
@@ -189,6 +202,7 @@ export let standards = {
         }
     },
     'date-iso8601': {
+        description: "Must be a ISO8061 date",
         type: "string",
         message: "Property '{$propertyName}' must be an date on ISO8601 format.",
         validate: function (val, ctx = { locale: 'en-US' }) {

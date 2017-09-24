@@ -79,7 +79,8 @@ export interface IRequestContext extends ISpanTracker {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T>
+    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T>;
+    getDefaultCRUDCommandAsync<T = ICommand>(schema?: string): Promise<T>;
 }
 
 export interface RequestData {

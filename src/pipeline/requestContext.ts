@@ -86,6 +86,9 @@ export class CommandRequest implements IRequestContext {
     getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
         return this.requestContext.getCommandAsync<T>(name, schema);
     }
+    getDefaultCRUDCommandAsync<T = ICommand>(schema?: string): Promise<T> {
+        return this.requestContext.getDefaultCRUDCommandAsync(schema);
+    }
     logError(error: Error, msg?: () => string) {
         return this.tracker.logError(error, msg);
     }
@@ -231,6 +234,10 @@ export class RequestContext implements IRequestContext {
      */
     getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
         return CommandFactory.getAsync<T>(name, this, schema);
+    }
+
+    getDefaultCRUDCommandAsync<T = ICommand>(schema?: string): Promise<T> {
+        return CommandFactory.getAsync<T>("DefaultCRUDCommand", this, schema);
     }
 
     /**

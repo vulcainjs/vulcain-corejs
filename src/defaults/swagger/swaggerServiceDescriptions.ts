@@ -190,6 +190,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         if (service.kind === 'get') {
             let parameters: ParameterObject = {};
             parameters.name = 'id';
+            parameters.description = "Unique id",
             parameters.in = 'query';
             parameters['schema'] = { 'type': 'string' };
             parameters.required = true;
@@ -203,10 +204,10 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                     schema.properties.forEach((property: PropertyDescription) => {
                         let parameters: ParameterObject = {};
                         parameters.name = property.name;
-                        parameters.description = property.description;
+                        parameters.description = property.description || property.typeDescription;
                         parameters['in'] = 'query';
                         parameters.required = property.required;
-                        parameters['schema'] = { type: property.type };
+                        parameters['schema'] = { type: property.type, description: property.typeDescription };
                         parms.push(parameters);
                     });
                 }
@@ -215,12 +216,14 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             {
                 name: '$page',
                 in: 'query',
-                schema: { 'type': 'number' },
+                description: "Skip to page",
+                schema: { 'type': 'number'},
                 required: false
             },
             {
                 name: '$maxByPage',
                 in: 'query',
+                description: "Max items by page",
                 schema : { 'type': 'number' },
                 required : false
             }]);
@@ -230,6 +233,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             parameters.name = 'args';
             parameters['in'] = 'body';
             parameters.required = true;
+            parameters.description = "Argument";
             parameters['schema'] = {};
             this.setReferenceDefinition(parameters['schema'], service.inputSchema);
             return [parameters];
@@ -263,7 +267,8 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         schema.properties.forEach((property: PropertyDescription) => {
             jsonSchema.properties[property.name] = {
-                type: property.type
+                type: property.type,
+                description: property.typeDescription
             };
 
             if (property.reference === 'one' || property.reference === 'many') {

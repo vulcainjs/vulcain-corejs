@@ -48,7 +48,7 @@ export { ValidationError } from './pipeline/errors/validationError';
 export { HttpRequest } from './pipeline/vulcainPipeline';
 export { Logger } from './log/logger'
 export { UserContext, } from './security/securityManager'
-export { DefaultActionHandler, DefaultQueryHandler, DefaultRepositoryCommand } from './defaults/crudHandlers';
+export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
 
 // Bus adapter
 export * from './bus/busAdapter'

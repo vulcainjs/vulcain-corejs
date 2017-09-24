@@ -26,6 +26,7 @@ export class PropertyDescription {
     required: boolean;
     description: string;
     type: string;
+    typeDescription: string;
     reference?: "no" | "many" | "one";
     metadata: any;
     order: number;
@@ -309,6 +310,7 @@ export class ServiceDescriptors {
                     type: p.items ? p.items + "[]" : type.name, order: p.order || 0,
                     required: p.required,
                     description: p.description,
+                    typeDescription: type.description,
                     metadata
                 };
                 this.addDescription(desc, pdesc);
@@ -326,6 +328,7 @@ export class ServiceDescriptors {
                 type: r.cardinality === "many" ? r.item + "[]" : r.item,
                 required: r.required,
                 description: r.description,
+                typeDescription: "",
                 metadata,
                 order: r.order
             };
