@@ -64,7 +64,7 @@ export class StsAuthentication extends SecurityManager {
     private async verify(ctx: RequestContext, accessToken: string) {
         try {
             let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
-            let token:any = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.security.tenant });
+            let token: any = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.user.tenant });
 
             // No token found
             if (!token) {

@@ -7,8 +7,8 @@ import { System } from '../../globals/system';
 import * as URL from 'url';
 import * as Path from 'path';
 import { Logger } from "../../log/logger";
-import { RequestContext } from "../../pipeline/requestContext";
-import { ApplicationRequestError } from "../../pipeline/errors/applicationRequestError";
+import { IRequestContext } from "../../pipeline/common";
+import { ApplicationError } from "../../pipeline/errors/applicationRequestError";
 
 /**
  * Default mongo provider
@@ -28,7 +28,7 @@ export class MongoProvider implements IProvider<any>
 
     constructor(
         @Inject(DefaultServiceNames.Logger) private _logger: Logger,
-        @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,
+        @Inject(DefaultServiceNames.RequestContext, true) private ctx: IRequestContext,
         uri: string,
         private options?) {
         this.options = this.options || {authSource: "admin"};
@@ -44,7 +44,7 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri, keyPropertyNameBySchemas: new Map<string, string>() };
     }
 
-    initializeTenantAsync(context: RequestContext, tenant: string) : Promise<() => Promise<any>> {
+    initializeTenantAsync(context: IRequestContext, tenant: string) : Promise<() => Promise<any>> {
         if (!tenant)
             throw new Error("tenant is required");
 
@@ -271,7 +271,7 @@ export class MongoProvider implements IProvider<any>
 
     private normalizeErrors(id: string, err) {
         if (!err || !err.errors) return err;
-        let error = new ApplicationRequestError("Mongo error - " + (err.message || ""));
+        let error = new ApplicationError("Mongo error - " + (err.message || ""));
         if (err.errors) {
             for (let e in err.errors) {
                 if (!err.errors.hasOwnProperty(e)) continue;
@@ -355,7 +355,7 @@ export class MongoProvider implements IProvider<any>
                         return;
                     }
                     if (!initial) {
-                        err = new Error(`Can not update unknow entity ${id}, schema: ${schema.name}`);
+                        err = new ApplicationError(`Can not update unknow entity ${id}, schema: ${schema.name}`);
                         this.ctx.logError(err, ()=>`MONGODB ERROR : Error when updating entity ${id}, schema: ${schema.name}`);
                         reject(err);
                         return;

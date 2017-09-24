@@ -23,8 +23,8 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         descriptions.info.version = serviceDescription.serviceVersion;
         descriptions.info.title = serviceDescription.serviceName;
         descriptions.tags = this.computeTags(serviceDescription.services);
-        descriptions.paths = this.computePaths(serviceDescription.services);
         descriptions.definitions = this.computeDefinitions(serviceDescription.schemas);
+        descriptions.paths = this.computePaths(serviceDescription);
         descriptions.host = this.requestContext.hostName;
         descriptions.basePath = Conventions.instance.defaultUrlprefix;
 
@@ -78,7 +78,6 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         let tagsSet = new Set();
 
-
         services.forEach((service: ActionDescription) => {
             //service.verb = 'customer.myAction'
             // with split we kept only 'customer'
@@ -105,10 +104,10 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
      * See the documentation here : http://swagger.io/specification/#pathsObject
      * @param services
      */
-    private computePaths(services: Array<ActionDescription>): PathsObject {
+    private computePaths(serviceDescription: ServiceDescription): PathsObject {
         let paths: PathsObject = {};
 
-        services.forEach((service: ActionDescription) => {
+        serviceDescription.services.forEach((service: ActionDescription) => {
             let operationObject: OperationObject = {};
 
             //TODO : put this split hack into method
@@ -118,8 +117,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             if(service.inputSchema)
                 operationObject.consumes = ['application/json'];
             operationObject.produces = ['application/json'];
-            operationObject.parameters = this.computeParameters(service);
-
+            operationObject.parameters = this.computeParameters(serviceDescription.schemas, service);
             this.computeResponses(service, operationObject);
 
             paths[`/${service.verb}`] = {
@@ -146,7 +144,6 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             res.properties = Object.assign(res.properties, payload);
         return res;
     }
-
 
     private computeResponses(service: ActionDescription, operationObject: OperationObject) {
 
@@ -189,24 +186,50 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
      *  See the documentation here: http://swagger.io/specification/#parameterObject
      * @param service
      */
-    private computeParameters(service: ActionDescription): Parameters {
-        let parameters: ParameterObject = {};
+    private computeParameters(schemas: SchemaDescription[], service: ActionDescription): Parameters {
         if (service.kind === 'get') {
+            let parameters: ParameterObject = {};
             parameters.name = 'id';
             parameters.in = 'query';
             parameters['schema'] = { 'type': 'string' };
             parameters.required = true;
             return [parameters];
         }
-        else if (service.inputSchema) {
-            if (service.inputSchema !== 'string') {
-                parameters.name = 'args';
-                parameters['in'] = 'body';
-            } else {
-                parameters.name = 'id';
-                parameters['in'] = 'query';
-                parameters.required = true;
+        else if (service.kind === 'query') {
+            let parms = [];
+            if (service.inputSchema) {
+                let schema = schemas.find(sch => sch.name === service.inputSchema);
+                if (schema) {
+                    schema.properties.forEach((property: PropertyDescription) => {
+                        let parameters: ParameterObject = {};
+                        parameters.name = property.name;
+                        parameters.description = property.description;
+                        parameters['in'] = 'query';
+                        parameters.required = property.required;
+                        parameters['schema'] = { type: property.type };
+                        parms.push(parameters);
+                    });
+                }
             }
+            return parms.concat([
+            {
+                name: '$page',
+                in: 'query',
+                schema: { 'type': 'number' },
+                required: false
+            },
+            {
+                name: '$maxByPage',
+                in: 'query',
+                schema : { 'type': 'number' },
+                required : false
+            }]);
+        }
+        else if (service.inputSchema) {
+            let parameters: ParameterObject = {};
+            parameters.name = 'args';
+            parameters['in'] = 'body';
+            parameters.required = true;
             parameters['schema'] = {};
             this.setReferenceDefinition(parameters['schema'], service.inputSchema);
             return [parameters];
@@ -259,33 +282,42 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         return jsonSchema.properties;
     }
 
-    private setReferenceDefinition(desc, definitionName, propertyReference = 'one') {
+    private setReferenceDefinition(desc, definitionName: string, propertyReference = 'one') {
 
         if (propertyReference === 'one') {
-            if (this.isFundamentalObject(definitionName)) {
-                desc['type'] = definitionName;
-            } else {
-                desc['type'] = 'object';
-                desc['$ref'] = `#/definitions/${definitionName}`;
+            if (definitionName !== 'any') {
+                if (this.isFundamentalObject(definitionName)) {
+                    desc['type'] = definitionName;
+                } else {
+                    desc['type'] = 'object';
+                    desc['$ref'] = `#/definitions/${definitionName}`;
+                }
             }
         } else {
             // is a 'many' outputType
             desc['type'] = 'array';
-            let items = desc['items'] = {};
+            let def = definitionName;
+            let pos = def.indexOf('[]');
+            if (pos > 0)
+                def = def.substr(0, pos); // remove final []
 
-            if (this.isFundamentalObject(definitionName)) {
-                items['type'] = definitionName;
-            } else {
-                items['type'] = 'object';
-                items['$ref'] = `#/definitions/${definitionName}`;
+            if (def !== 'any') {
+                let items = desc['items'] = {};
+                if (this.isFundamentalObject(def)) {
+                    items['type'] = def;
+                } else {
+                    items['type'] = 'object';
+                    items['$ref'] = `#/definitions/${def}`;
+                }
             }
-
         }
-
     }
 
     private isFundamentalObject(inputSchema: string) {
-        return ['string', 'number', 'boolean'].indexOf(inputSchema) !== -1;
+        let type = this.domain._findType(inputSchema);
+        if (!type)
+            return false;
+        return this.domain.getBaseType(type);
     }
 
 }

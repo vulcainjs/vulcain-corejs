@@ -2,11 +2,11 @@ import { SecurityManager, UserContext } from '../security/securityManager';
 import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
-import { CommandMetrics } from "./middlewares/metricsMiddleware";
+import { ISpanTracker } from '../trace/common';
 
 export enum Pipeline {
-    EventNotification,
-    InProcess,
+    Event,
+    AsyncTask,
     HttpRequest,
     Test
 }
@@ -23,7 +23,7 @@ export interface ICustomEvent {
     params?: any;
 }
 
-export interface IRequestContext {
+export interface IRequestContext extends ISpanTracker {
     /**
      * Request correlation id
      *
@@ -36,7 +36,7 @@ export interface IRequestContext {
      *
      * @type {UserContext}
      */
-    security: UserContext;
+    user: UserContext;
     /**
      * Scoped container
      *
@@ -59,10 +59,8 @@ export interface IRequestContext {
      * @memberOf RequestContext
      */
     hostName: string;
-
     requestData: RequestData;
     request?: HttpRequest;
-    metrics: CommandMetrics;
 
     /**
      * Send custom event from current service
@@ -82,34 +80,6 @@ export interface IRequestContext {
      * @returns {ICommand} A command
      */
     getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T>
-
-    /**
-     * Log an error
-     *
-     * @param {Error} error Error instance
-     * @param {string} [msg] Additional message
-     *
-     */
-    logError(error: Error, msg?: () => string);
-
-    /**
-     * Log a message info
-     *
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
-     *
-     */
-    logInfo(msg: () => string);
-
-    /**
-     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
-     *
-     * @param {any} requestContext Current requestContext
-     * @param {string} msg Message format (can include %s, %j ...)
-     * @param {...Array<string>} params Message parameters
-     *
-     */
-    logVerbose(msg: () => string);
 }
 
 export interface RequestData {

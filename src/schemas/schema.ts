@@ -330,6 +330,19 @@ export class Domain {
         return this.types.get(parts[0])[parts[1]];
     }
 
+    getBaseType(type) {
+        if (!type.$$nativeSchema) {
+            let stype = type;
+            type.$$nativeSchema = stype.name
+            while (stype && stype.type) {
+                stype = stype.type;
+                type.$$nativeSchema = stype.name;
+                stype = this._findType(stype);
+            }
+        }
+        return type.$$nativeSchema;
+    }
+
     /**
      * Remove all sensible data
      *

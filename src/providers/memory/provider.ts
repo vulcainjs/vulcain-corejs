@@ -5,7 +5,8 @@ import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
 import { SchemaBuilder } from '../../schemas/schemaBuilder';
 import { Conventions } from '../../utils/conventions';
-import { RequestContext } from "../../pipeline/requestContext";
+import { IRequestContext } from "../../pipeline/common";
+import { ApplicationError } from '../../pipeline/errors/applicationRequestError';
 
 interface AstNode {
     op: string;
@@ -38,7 +39,7 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    initializeTenantAsync(context: RequestContext, tenant: string) {
+    initializeTenantAsync(context: IRequestContext, tenant: string) {
 
         if (!tenant)
             throw new Error("Tenant can not be null");
@@ -211,7 +212,7 @@ export class MemoryProvider implements IProvider<any>
                     throw new Error(`Can not create a ${schema.name} entity with undefined id : ${schema.getIdProperty()} `);
 
                 if (list[name]) {
-                    reject(new Error(`Can not add existing ${schema.name} ${name}`));
+                    reject(new ApplicationError(`Can not add existing ${schema.name} ${name}`));
                     return;
                 }
 

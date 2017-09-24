@@ -50,6 +50,32 @@ export class VulcainManifest {
         this.configurations = {};
     }
 
+    registerExternal(uri: string) {
+        let exists = this.dependencies.externals.find(ex => ex.uri === uri);
+        if (!exists) {
+            this.dependencies.externals.push({ uri });
+        }
+    }
+
+    registerProvider(address: string, schema: string) {
+        let exists = this.dependencies.databases.find(db => db.address === address && db.schema === schema);
+        if (!exists) {
+            this.dependencies.databases.push({ address, schema });
+        }
+    }
+
+    registerService(targetServiceName: string, targetServiceVersion: string) {
+        if (!targetServiceName)
+            throw new Error("You must provide a service name");
+        if (!targetServiceVersion || !targetServiceVersion.match(/[0-9]+\.[0-9]+/))
+            throw new Error("Invalid version number. Must be on the form major.minor");
+
+        let exists = this.dependencies.services.find(svc => svc.service === targetServiceName && svc.version === targetServiceVersion);
+        if (!exists) {
+            this.dependencies.services.push({ service: targetServiceName, version: targetServiceVersion });
+        }
+    }
+
     private *retrievePackage() {
         try {
             let basePath = Files.findApplicationPath();

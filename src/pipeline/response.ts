@@ -4,7 +4,7 @@
  * @export
  * @class HttpResponse
  */
-import { ApplicationRequestError } from "./errors/applicationRequestError";
+import { ApplicationError } from "./errors/applicationRequestError";
 import { RequestContext } from "./requestContext";
 import { System } from "./../globals/system";
 import { ErrorResponse } from "./handlers/common";
@@ -55,7 +55,7 @@ export class HttpResponse {
         return res;
     }
 */
-    static createFromError(err: ApplicationRequestError): HttpResponse {
+    static createFromError(err: ApplicationError): HttpResponse {
         let res = new HttpResponse({ error: { message: err.message, errors: err.errors }}, err.statusCode|| 500);
         return res;
     }
@@ -99,7 +99,7 @@ export class VulcainResponse {
 
     static create(ctx: RequestContext): VulcainResponse {
         return {
-            tenant: ctx.security.tenant,
+            tenant: ctx.user.tenant,
             domain: System.domainName,
             action: ctx.requestData.action,
             schema: ctx.requestData.schema,

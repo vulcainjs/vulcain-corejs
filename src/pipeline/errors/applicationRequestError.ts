@@ -3,13 +3,13 @@
  *
  *
  * @export
- * @class ApplicationRequestError
+ * @class ApplicationError
  * @extends {Error}
  */
 
 import { ValidationError } from "./validationError";
 
-export class ApplicationRequestError extends Error {
+export class ApplicationError extends Error {
     /**
      *
      *
@@ -36,22 +36,22 @@ export class ApplicationRequestError extends Error {
  * @class ForbiddenRequestError
  * @extends {ApplicationRequestError}
  */
-export class UnauthorizedRequestError extends ApplicationRequestError {
+export class UnauthorizedRequestError extends ApplicationError {
     constructor(msg = "Unauthorized") {
         super(msg, 401);
     }
 }
 
 /**
- * 
+ *
  */
-export class ForbiddenRequestError extends ApplicationRequestError {
+export class ForbiddenRequestError extends ApplicationError {
     constructor(msg = "Forbidden") {
         super(msg, 403);
     }
 }
 
-export class NotFoundError extends ApplicationRequestError {
+export class NotFoundError extends ApplicationError {
     constructor(msg = "Not found") {
         super(msg, 404);
     }

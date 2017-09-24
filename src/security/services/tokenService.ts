@@ -32,7 +32,8 @@ export class TokenService implements ITokenService {
                     email: user.email,
                     name: user.name,
                     tenant: user.tenant,
-                    scopes: user.scopes
+                    scopes: user.scopes,
+                    claims: user.claims
                 }
             };
 

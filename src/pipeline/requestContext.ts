@@ -1,13 +1,12 @@
-import { IRequestContext, Pipeline, RequestData } from './common';
+import { IRequestContext, Pipeline, RequestData, ICustomEvent } from './common';
 import { IContainer } from '../di/resolvers';
-import { SecurityManager, UserContext } from '../security/securityManager';
+import { SecurityManager, UserContextData } from '../security/securityManager';
 import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
 import { Logger } from "../log/logger";
-import { Metrics } from "./middlewares/metricsMiddleware";
 import { HttpRequest } from "./vulcainPipeline";
-import { ApplicationRequestError } from "./errors/applicationRequestError";
+import { ApplicationError } from "./errors/applicationRequestError";
 import { DefaultAuthentication } from "../security/defaultAuthentication";
 import { ICommand } from "../commands/abstractCommand";
 import { CommandFactory } from "../commands/commandFactory";
@@ -17,6 +16,8 @@ import { AsyncTaskData } from "./handlers/actions";
 import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
+import { ISpanTracker, SpanKind } from '../trace/common';
+import { Span } from '../trace/span';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -32,22 +33,106 @@ export class VulcainHeaderNames {
     static X_VULCAIN_REGISTER_MOCK = 'x-vulcain-register-mock-session';
 }
 
+export class CommandRequest implements IRequestContext {
+    tracker: ISpanTracker;
+    private requestContext: RequestContext;
+    get correlationId() { return this.requestContext.correlationId; }
+    get user() { return this.requestContext.user; }
+    get container() { return this.requestContext.container; }
+    get locale() { return this.requestContext.locale; }
+    get hostName() { return this.requestContext.hostName; }
+    get requestData() { return this.requestContext.requestData; }
+    get request() { return this.requestContext.request; }
+    get publicPath() { return this.requestContext.publicPath; }
+
+    constructor(requestContext: IRequestContext, commandName: string) {
+        this.requestContext = <RequestContext>requestContext;
+        this.tracker = (<Span>this.requestContext.tracker).createCommandTracker(commandName);
+    }
+
+    trackAction(action: string, tags?: any) {
+        this.tracker.trackAction(action, tags);
+    }
+    addTags(tags?: any) {
+        this.tracker.addTags(tags);
+    }
+    get durationInMs() {
+        return this.tracker.durationInMs;
+    }
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
+        this.tracker.injectHeaders(headers);
+    }
+
+    getBearerToken() {
+        return this.user.bearer;
+    }
+
+    setBearerToken(token: string) {
+        this.user.bearer = token;
+    }
+    get now() {
+        return this.requestContext.now;
+    }
+    createCommandRequest(commandName: string) {
+        return new CommandRequest(this, commandName);
+    }
+
+    getRequestDataObject() {
+        return this.requestContext.getRequestDataObject();
+    }
+    sendCustomEvent(action: string, params?: any, schema?: string) {
+        return this.requestContext.sendCustomEvent(action, params, schema);
+    }
+    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
+        return this.requestContext.getCommandAsync<T>(name, schema);
+    }
+    logError(error: Error, msg?: () => string) {
+        return this.tracker.logError(error, msg);
+    }
+    logInfo(msg: () => string) {
+        return this.tracker.logInfo(msg);
+    }
+    logVerbose(msg: () => string) {
+        return this.tracker.logVerbose(msg);
+    }
+    dispose() {
+        this.tracker.dispose();
+        this.tracker = null;
+    }
+}
+
 export class RequestContext implements IRequestContext {
     container: IContainer;
     locale: string;
     requestData: RequestData;
     response: HttpResponse;
-    metrics: Metrics;
     request: HttpRequest;
     private _securityManager: SecurityManager;
-    private _logger: Logger;
+    tracker: ISpanTracker;
+    private _customEvents: Array<ICustomEvent>;
 
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
+        this.tracker.injectHeaders(headers);
+    }
+    trackAction(action: string, tags?:any) {
+        this.tracker.trackAction(action, tags);
+    }
+    addTags(tags?: any) {
+        this.tracker.addTags(tags);
+    }
+    get durationInMs() {
+        return this.tracker.durationInMs;
+    }
     getBearerToken() {
-        return this.security.bearer;
+        return this.user.bearer;
     }
 
     setBearerToken(token: string) {
-        this.security.bearer = token;
+        this.user.bearer = token;
+    }
+
+    createCommandRequest(commandName: string) {
+        return new CommandRequest(this, commandName);
     }
 
     get correlationId(): string {
@@ -56,6 +141,10 @@ export class RequestContext implements IRequestContext {
             return id;
         }
         return this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
+    }
+
+    get now() {
+        return this.tracker.now;
     }
 
     getRequestDataObject() {
@@ -71,11 +160,11 @@ export class RequestContext implements IRequestContext {
         };
     }
 
-    get security() {
+    get user() {
         return this._securityManager;
     }
 
-    setSecurityManager(tenant: string|UserContext) {
+    setSecurityManager(tenant: string|UserContextData) {
         if (!tenant)
             throw new Error("Tenant can not be null");
         let manager = this.container.get<SecurityManager>(DefaultServiceNames.Authentication, true);
@@ -95,7 +184,6 @@ export class RequestContext implements IRequestContext {
      * @param {Pipeline} pipeline
      */
     constructor(container: IContainer, public pipeline: Pipeline, data?: any /*HttpRequest|EventData|AsyncTaskData*/) {
-        this._logger = container.get<Logger>(DefaultServiceNames.Logger);
         this.container = new Container(container, this);
         if (!data) {
             this.requestData = <any>{};
@@ -105,7 +193,7 @@ export class RequestContext implements IRequestContext {
         if (data.headers) {
             this.request = data;
         }
-        else {
+        else { // for test or async task
             this.requestData = {
                 vulcainVerb: `${data.schema}.${data.action}`,
                 action: data.action,
@@ -119,10 +207,18 @@ export class RequestContext implements IRequestContext {
                 body: data.body
             }
         }
+        let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+        this.tracker = Span.createRequestTracker(this, parentId);
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {
-        throw new Error("Method not implemented.");
+        if (!action) {
+            throw new Error("Action is required for custom event.");
+        }
+        if (!this._customEvents) {
+            this._customEvents = [];
+        }
+        this._customEvents.push({ action, schema, params });
     }
 
   /**
@@ -145,7 +241,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logError(error: Error, msg?: ()=>string) {
-        this._logger.error(this, error, msg);
+        this.tracker.logError(error, msg);
     }
 
     /**
@@ -156,7 +252,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logInfo(msg: ()=>string) {
-        this._logger.info(this, msg);
+        this.tracker.logInfo(msg);
     }
 
     /**
@@ -168,7 +264,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logVerbose(msg: ()=>string) {
-        this._logger.verbose(this, msg);
+        this.tracker.logVerbose(msg);
     }
 
     get hostName() {
@@ -191,23 +287,8 @@ export class RequestContext implements IRequestContext {
         return this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH];
     }
 
-    injectTraceHeaders(commandTracker, headers: (name: string|any, value?: string) => any) {
-        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.correlationId);
-        //header(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.requestContext.traceId);
-        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
-        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
-        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
-        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
-        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
-        }
-        if (this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
-        }
-        this.metrics && this.metrics.tracer && this.metrics.tracer.injectTraceHeaders(commandTracker, headers);
-    }
-
     dispose() {
+        this.tracker.dispose();
         this.container.dispose();
     }
 }

@@ -4,21 +4,21 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
+import { ApplicationInsightsMetrics } from '../applicationInsightsMetrics';
+import { SpanId, SpanKind } from '../../trace/common';
 
 export interface IRequestTracker {
-    injectTraceHeaders(span, headers: (name: string | any, value?: string) => any);
-    finish(result);
-    startCommand(command: string, target?: string): any;
-    finishCommand(span, error);
-    trackError(error, id?);
+    trackError(error, tags);
+    dispose(duration: number, tags);
 }
 
 export interface IRequestTrackerFactory {
-    startSpan(ctx: IRequestContext): IRequestTracker;
+    startSpan( ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker;
 }
 
 export class TrackerFactory {
     static create(container: IContainer): IRequestTrackerFactory {
-        return ZipkinInstrumentation.create();
+        return ApplicationInsightsMetrics.create() ||
+            ZipkinInstrumentation.create();
     }
 }

@@ -13,9 +13,9 @@ import { System } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
-import { UserContext } from "../../security/securityManager";
+import { UserContextData } from "../../security/securityManager";
 import { HttpResponse } from "../response";
-import { ApplicationRequestError } from "../errors/applicationRequestError";
+import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
 import { ITaskManager } from "../../providers/taskManager";
 
@@ -23,7 +23,7 @@ export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending";
     taskId?: string;
     startedAt?: string;
-    userContext?: UserContext;
+    userContext?: UserContextData;
     completedAt?: string;
 }
 
@@ -163,7 +163,7 @@ export class CommandManager implements IManager {
             startedAt: System.nowAsString(),
             value: result && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
-            userContext: ctx.security.getUserContext(),
+            userContext: ctx.user.getUserContext(),
             status: status,
             domain: this._domain.name
         };
@@ -173,11 +173,10 @@ export class CommandManager implements IManager {
     async runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
         if (info.kind !== "action")
-            throw new ApplicationRequestError("Query handler must be requested with GET.", 405);
+            throw new ApplicationError("Query handler must be requested with GET.", 405);
 
         let metadata = <ActionMetadata>info.metadata;
         let eventMode = metadata.eventMode || EventNotificationMode.successOnly;
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
         try {
             let errors = await this.validateRequestData(ctx, info, command);
@@ -226,7 +225,7 @@ export class CommandManager implements IManager {
                     status: "Pending"
                 });
 
-                pendingTask.userContext = ctx.security.getUserContext();
+                pendingTask.userContext = ctx.user.getUserContext();
                 this.messageBus.pushTask(pendingTask);
                 let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
                 if (taskManager)
@@ -248,11 +247,8 @@ export class CommandManager implements IManager {
     }
 
     async processAsyncTaskAsync(command: AsyncTaskData) {
-        let ctx = new RequestContext(this.container, Pipeline.HttpRequest, command);
-        ctx.setSecurityManager(command.userContext); // TODO metrics
-
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(ctx, "RE", command.action, JSON.stringify(command));
+        let ctx = new RequestContext(this.container, Pipeline.AsyncTask, command);
+        ctx.setSecurityManager(command.userContext);
 
         let info = this.getInfoHandler(command, ctx.container);
         let metadata = <ActionMetadata>info.metadata;
@@ -282,7 +278,7 @@ export class CommandManager implements IManager {
                 event.completedAt = System.nowAsString();
                 this.messageBus.sendEvent(event);
             }
-            System.log.error(ctx, e, () => `Error when processing async action : ${JSON.stringify(command)}`);
+            ctx.logError( e, () => `Error when processing async action : ${JSON.stringify(command)}`);
             command.status = "Error";
         }
         finally {
@@ -290,8 +286,6 @@ export class CommandManager implements IManager {
             let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
             if (taskManager)
                 await taskManager.updateTaskAsync(command);
-
-            logger.logAction(ctx, "EE");
             ctx.dispose();
         }
     }
@@ -328,16 +322,17 @@ export class CommandManager implements IManager {
             let handlers = CommandManager.eventHandlersFactory.getFilteredHandlers(evt.domain, evt.schema, evt.action);
             for (let info of handlers) {
                 let handler;
-                let ctx = new RequestContext(this.container, Pipeline.EventNotification, evt);
+                let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.setSecurityManager(evt.userContext);// TODO + metrics
+                        ctx.trackAction(evt.vulcainVerb);
+                        ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.requestContext = ctx;
                         handler.event = evt;
                     }
                     catch (e) {
-                        System.log.error(ctx, e, () => `Unable to create handler ${info.handler.name}`);
+                        ctx.logError(e, () => `Unable to create handler ${info.handler.name}`);
                         continue;
                     }
 
@@ -347,7 +342,7 @@ export class CommandManager implements IManager {
                     }
                     catch (e) {
                         let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
-                        System.log.error(ctx, error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
+                        ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
                     }
                 }
                 finally {

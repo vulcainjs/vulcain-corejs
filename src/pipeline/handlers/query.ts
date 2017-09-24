@@ -12,7 +12,7 @@ import { UserContext } from "../../security/securityManager";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
 import { HttpResponse } from "../response";
 import { BadRequestError } from "../errors/badRequestError";
-import { ApplicationRequestError } from "../errors/applicationRequestError";
+import { ApplicationError } from "../errors/applicationRequestError";
 
 
 export interface QueryResult {
@@ -104,7 +104,7 @@ export class QueryManager implements IManager {
     async runAsync(query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(query, ctx.container);
         if (info.kind !== "query")
-            throw new ApplicationRequestError("Action handler must be requested with POST.", 405);
+            throw new ApplicationError("Action handler must be requested with POST.", 405);
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 

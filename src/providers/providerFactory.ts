@@ -4,7 +4,7 @@ import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';
 import { IContainer } from '../di/resolvers';
 import { System } from '../globals/system';
-import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
 
 interface PoolItem {
     provider?: IProvider<any>;
@@ -18,7 +18,7 @@ export class ProviderFactory {
     constructor(public maxPoolSize = 20) {
     }
 
-    private addToPool(context: RequestContext, key: string, item: PoolItem) {
+    private addToPool(context: IRequestContext, key: string, item: PoolItem) {
         System.log.info(context, ()=>`Adding a new provider pool item : ${key}`);
         if (this.pool.size >= this.maxPoolSize) {
             // remove the least used
@@ -47,8 +47,8 @@ export class ProviderFactory {
         }
     }
 
-    async getProviderAsync(context: RequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
-        tenant = tenant || context.security.tenant;
+    async getProviderAsync(context: IRequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
+        tenant = tenant || context.user.tenant;
         let poolKey = providerName + "!" + tenant;
         let provider = this.getFromPool(poolKey);
         if (provider) {

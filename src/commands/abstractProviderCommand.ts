@@ -8,7 +8,8 @@ import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
 import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
-import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
+import { Span } from '../trace/span';
 
 /**
  *
@@ -21,17 +22,8 @@ import { RequestContext } from "../pipeline/requestContext";
 export abstract class AbstractProviderCommand<T> {
 
     protected providerFactory: ProviderFactory;
-    private logger: VulcainLogger;
-    protected metrics: IMetrics;
-    private customTags: any;
-    private commandTracker: any;
 
-    /**
-     *
-     *
-     * @type {RequestContext}
-     */
-    public requestContext: RequestContext;
+    public requestContext: IRequestContext;
 
     /**
      *
@@ -57,7 +49,6 @@ export abstract class AbstractProviderCommand<T> {
     constructor(
         @Inject(DefaultServiceNames.Container) public container: IContainer) {
         this.providerFactory = container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
-        this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
     /**
@@ -65,41 +56,18 @@ export abstract class AbstractProviderCommand<T> {
      *
      * @param {string} schema
      */
-    async setSchemaAsync(schema: string): Promise<any> {
+    async setSchemaAsync(schema: string): Promise<string> {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.security.tenant);
-            this.initializeMetricsInfo();
+            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.user.tenant);
+            return this.schema.name;
         }
     }
 
-    protected initializeMetricsInfo() {
-        this.setMetricsTags(this.provider.address, this.schema.name, null, false);
-    }
-
-    protected setMetricsTags(address: string, schema: string, tenant?: string, emitLog = true) {
+    protected setMetricTags(address: string, schema: string, tenant?: string) {
         address = System.removePasswordFromUrl(address);
-        let exists = System.manifest.dependencies.databases.find(db => db.address === address && db.schema === db.schema);
-        if (!exists) {
-            System.manifest.dependencies.databases.push({ address, schema });
-        }
-        this.customTags = { address: address, schema: schema, tenant: (tenant || this.requestContext.security.tenant) };
-
-        if (emitLog) {
-            this.logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            this.logger.logAction(this.requestContext, "BC", "Database", `Command: ${Object.getPrototypeOf(this).constructor.name} - Access database ${System.removePasswordFromUrl(address)}`);
-            this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(`Database request: ${schema}`, address);
-        }
-    }
-
-    onCommandCompleted(duration: number, error?: Error) {
-        if (this.schema && this.provider) {
-            this.metrics.timing(AbstractProviderCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-            if (error)
-                this.metrics.increment(AbstractProviderCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        }
-        this.logger && this.logger.logAction(this.requestContext, 'EC', 'Database', `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
+        System.manifest.registerProvider(address, schema);
+        this.requestContext.addTags({ address: address, schema: schema, tenant: (tenant || this.requestContext.user.tenant) });
     }
 
     /**

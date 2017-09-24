@@ -12,7 +12,6 @@ import { System } from "../globals/system";
 import { VulcainPipeline, HttpRequest } from "./vulcainPipeline";
 import { NormalizeDataMiddleware } from "./middlewares/normalizeDataMiddleware";
 import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware";
-import { MetricsMiddleware } from "./middlewares/metricsMiddleware";
 import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
 import { HttpResponse } from "./response";
 import Router = require('router');
@@ -139,7 +138,6 @@ export class VulcainServer {
         this.adapter.init(container,
             new VulcainPipeline([
                 new NormalizeDataMiddleware(),
-                new MetricsMiddleware(),
                 new AuthenticationMiddleware(),
                 new HandlersMiddleware(container)
             ]));

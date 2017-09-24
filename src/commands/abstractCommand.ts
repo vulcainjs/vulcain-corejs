@@ -5,6 +5,7 @@ import { Inject } from '../di/annotations';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
+import { Span } from '../trace/span';
 
 /**
  * command
@@ -13,6 +14,7 @@ import { IRequestContext } from "../pipeline/common";
  * @interface ICommand
  */
 export interface ICommand {
+    requestContext: IRequestContext;
     /**
      * execute the command
      * @param args
@@ -29,11 +31,6 @@ export interface ICommand {
  * @template T
  */
 export abstract class AbstractCommand<T> implements IInjectionNotification {
-
-    protected metrics: IMetrics;
-    protected customTags: any;
-    private static METRICS_NAME = "custom_command";
-    private commandTracker: any;
 
     /**
      *
@@ -62,28 +59,10 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     }
 
     onInjectionCompleted() {
-        this.metrics = this.container.get<IMetrics>(DefaultServiceNames.Metrics);
     }
 
-    protected setMetricsTags(args: { [key: string] : string }, emitLog?:boolean) {
-        this.customTags = args;
-        if (emitLog) {
-            let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.logAction(this.requestContext, "BC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name}`);
-            this.commandTracker = this.requestContext.metrics && this.requestContext.metrics.startCommand(`Execute command ${this.constructor.name} with parameters ${args}`);
-        }
-    }
-
-    onCommandCompleted(duration: number, error?: Error) {
-        if (!this.customTags) {
-            throw new Error("setMetricTags must be called at the beginning of runAsync.");
-        }
-        this.metrics.timing(AbstractCommand.METRICS_NAME + MetricsConstant.duration, duration, this.customTags);
-        if (error)
-            this.metrics.increment(AbstractCommand.METRICS_NAME + MetricsConstant.failure, this.customTags);
-        let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-        logger.logAction(this.requestContext, "EC", "Custom", `Command: ${Object.getPrototypeOf(this).constructor.name} completed with ${error ? 'success' : 'error'}`);
-        this.requestContext.metrics && this.requestContext.metrics.finishCommand(this.commandTracker, error);
+    protected setMetricsTags(args: { [key: string] : string }) {
+        this.requestContext.addTags(args);
     }
 
     /**

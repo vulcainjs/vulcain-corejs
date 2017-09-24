@@ -5,22 +5,19 @@ import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handler
 import { Action, Query } from "../pipeline/handlers/annotations";
 import { ICommand } from "../commands/abstractCommand";
 import { Command } from "../commands/commandFactory";
+import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
-    initializeMetricsInfo() {
-        // do nothing
-        // since this command is generic, settings are made on every request
-    }
-
     // Execute command
     runAsync(action: string, data) {
-        this.setMetricsTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.user.tenant);
         return this[action + "Internal"](data);
     }
 
     create(entity: any) {
+        this.requestContext.trackAction("create");
         return this.provider.createAsync(this.schema, entity);
     }
 
@@ -34,10 +31,11 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
+        this.requestContext.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
-            throw new Error("Entity doesn't exist for updating : " + entity[keyProperty]);
+            throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
         return await this.provider.updateAsync(this.schema, entity, old);
     }
 
@@ -52,6 +50,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     protected deleteInternal(entity: any) {
+        this.requestContext.trackAction("delete");
         return this.delete(entity);
     }
 
@@ -61,6 +60,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async get(id: any) {
+        this.requestContext.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
@@ -75,6 +75,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     all(options: any) {
+        this.requestContext.trackAction("getAll");
         return this.provider.getAllAsync(this.schema, options);
     }
 
@@ -103,7 +104,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
     async createAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "create", entity);
     }
@@ -111,7 +112,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
     async updateAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "update", entity);
     }
@@ -119,7 +120,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
     async deleteAsync(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
 
         let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
         return cmd.runAsync( "delete", entity);
@@ -139,13 +140,13 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     @Query({ action: "get", description: "Get an entity by id" })
     async getAsync(id: any) {
         let cmd = await this.getDefaultCommandAsync();
-        return <Promise<T>>cmd.runAsync("get", id);
+        return await cmd.runAsync<T>("get", id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
     async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
         let options = { maxByPage: maxByPage || this.requestContext.requestData.maxByPage || 0, page: page || this.requestContext.requestData.page || 0, query:query || {} };
         let cmd = await this.getDefaultCommandAsync();
-        return <Promise<Array<T>>>cmd.runAsync( "all", options);
+        return await cmd.runAsync<T[]>( "all", options);
     }
 }
