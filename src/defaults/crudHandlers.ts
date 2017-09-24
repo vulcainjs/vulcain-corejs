@@ -12,12 +12,12 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.security.tenant);
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.user.tenant);
         return this[action + "Internal"](data);
     }
 
     create(entity: any) {
-        this.tracer.setAction("create");
+        this.requestContext.trackAction("create");
         return this.provider.createAsync(this.schema, entity);
     }
 
@@ -31,7 +31,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
-        this.tracer.setAction("update");
+        this.requestContext.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
@@ -50,7 +50,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     protected deleteInternal(entity: any) {
-        this.tracer.setAction("delete");
+        this.requestContext.trackAction("delete");
         return this.delete(entity);
     }
 
@@ -60,7 +60,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async get(id: any) {
-        this.tracer.setAction("get");
+        this.requestContext.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
@@ -75,7 +75,7 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     all(options: any) {
-        this.tracer.setAction("getAll");
+        this.requestContext.trackAction("getAll");
         return this.provider.getAllAsync(this.schema, options);
     }
 
@@ -140,13 +140,13 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     @Query({ action: "get", description: "Get an entity by id" })
     async getAsync(id: any) {
         let cmd = await this.getDefaultCommandAsync();
-        return <Promise<T>>cmd.runAsync("get", id);
+        return await cmd.runAsync<T>("get", id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
     async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
         let options = { maxByPage: maxByPage || this.requestContext.requestData.maxByPage || 0, page: page || this.requestContext.requestData.page || 0, query:query || {} };
         let cmd = await this.getDefaultCommandAsync();
-        return <Promise<Array<T>>>cmd.runAsync( "all", options);
+        return await cmd.runAsync<T[]>( "all", options);
     }
 }

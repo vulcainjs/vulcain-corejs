@@ -97,12 +97,6 @@ export class VulcainLogger implements Logger{
             this.info(requestContext, msg);
     }
 
-    logRequestStatus(requestContext: IRequestContext, kind: EntryKind) {
-        let entry = this.prepareEntry(requestContext);
-        entry.kind = kind;
-        this.writeEntry(entry);
-    }
-
     logAction(requestContext: IRequestContext, kind: EntryKind, message?: string) {
         let entry = this.prepareEntry(requestContext);
         entry.kind = kind;

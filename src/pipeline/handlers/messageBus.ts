@@ -6,14 +6,14 @@ import { System } from '../../globals/system';
 import { RequestData } from "../../pipeline/common";
 import { RequestContext } from "../../pipeline/requestContext";
 import { CommonMetadata } from "./common";
-import { UserContext } from "../../security/securityManager";
+import { UserContextData } from "../../security/securityManager";
 
 export interface EventData extends RequestData {
     value?: any;
     // Source service name
     source: string;
     error: string;
-    userContext: UserContext;
+    userContext: UserContextData;
     startedAt: string;
     completedAt?: string;
     status: string;

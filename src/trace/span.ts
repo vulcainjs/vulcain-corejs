@@ -7,23 +7,11 @@ import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics"
 import { Pipeline } from './../pipeline/common';
 import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
+import { ISpanTracker, SpanId, SpanKind } from "./common";
 
-export enum SpanKind {
-    Request,
-    Command,
-    Task,
-    Event
-}
-
-export class SpanId {
-    public traceId?: string;
-    public parentId: string;
-    public spanId: string;
-}
-
-export class Span {
+export class Span implements ISpanTracker {
     private _logger: Logger;
-    public tags: { [name: string]: string } = {};
+    private tags: { [name: string]: string } = {};
     private startTick: [number, number];
     private startTime: number;
     private error: Error;
@@ -32,7 +20,7 @@ export class Span {
     private tracker: IRequestTracker;
     private action: string;
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
+    constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
@@ -45,9 +33,14 @@ export class Span {
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.convertKind();
+        console.log("Start span " + this.name);
     }
 
-    setAction(name: string, tags?: any) {
+    createCommandTracker(commandName: string) {
+        return new Span(this.context, SpanKind.Command, commandName, this.id.spanId);
+    }
+
+    trackAction(name: string, tags?: any) {
         this.action = name;
         this.ensuresInitialized();
         if (tags) {
@@ -57,9 +50,11 @@ export class Span {
 
     private ensuresInitialized() {
         if (!this.tracker && this.action) {
-            let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker);
             this.id.traceId = this.context.correlationId;
-            this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
+            let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
+            if (trackerFactory) {
+                this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
+            }
 
             if (this.kind === SpanKind.Command) {
                 this.logAction("BC", `Command: ${this.name}`);
@@ -90,15 +85,6 @@ export class Span {
         }
     }
 
-    static createRootSpan(ctx: RequestContext) {
-        let parentId = ctx.request && <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
-        return new Span(ctx, SpanKind.Request, System.fullServiceName, parentId);
-    }
-
-    createCommandSpan(commandName: string) {
-        return new Span(this.context, SpanKind.Command, commandName, this.id.spanId);
-    }
-
     injectHeaders(headers: (name: string | any, value?: string) => any) {
         headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.id.spanId);
         headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.context.correlationId);
@@ -117,12 +103,15 @@ export class Span {
     }
 
     dispose() {
+        console.log("Dispose span " + this.name);
         if (this.kind === SpanKind.Request)
             this.endRequest();
         else
             this.endCommand();
-        this.tracker.dispose(this.durationInMs, this.tags);
-        this.tracker = null;
+        if (this.tracker) {
+            this.tracker.dispose(this.durationInMs, this.tags);
+            this.tracker = null;
+        }
         this.context = null;
         this._logger = null;
     }
@@ -167,7 +156,7 @@ export class Span {
             value.userContext = undefined;
         }
         if (this.kind === SpanKind.Request) {
-            this.logAction("ER", `End request status: ${this.context.response.statusCode || 200}`);
+            this.logAction("ER", `End request status: ${(this.context.response  && this.context.response.statusCode) || 200}`);
         }
         else if (this.kind === SpanKind.Task) {
             this.logAction("ET", `Async task: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
@@ -212,8 +201,9 @@ export class Span {
         this.ensuresInitialized();
 
         if (!this.error) this.error = error; // Catch only first error
-
-        this.tracker.trackError(error, this.tags);
+        if (this.tracker) {
+            this.tracker.trackError(error, this.tags);
+        }
         this._logger.error(this.context, error, msg);
     }
 

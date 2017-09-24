@@ -21,7 +21,7 @@ export class StatsdMetrics implements IMetrics {
 
     static create() {
         if (!System.isDevelopment) {
-            let host = DynamicConfiguration.getPropertyValue<string>("statsdAgent");
+            let host = DynamicConfiguration.getPropertyValue<string>("statsd");
             if (host) {
                 let instance = new StatsdMetrics(
                     new Statsd({ host: host, socketTimeout: Conventions.instance.defaultStatsdDelayInMs }));

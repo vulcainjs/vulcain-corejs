@@ -3,9 +3,9 @@ import { Conventions } from '../../utils/conventions';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
-import { SpanId, SpanKind } from '../../trace/span';
 import * as os from 'os';
 import { IRequestContext } from "../../pipeline/common";
+import { SpanId, SpanKind } from '../../trace/common';
 
 const {
     Annotation,
@@ -21,7 +21,7 @@ const {HttpLogger} = require('zipkin-transport-http');
 export class ZipkinInstrumentation implements IRequestTrackerFactory {
 
     static create() {
-        let zipkinAddress = DynamicConfiguration.getPropertyValue<string>("zipkinAgent");
+        let zipkinAddress = DynamicConfiguration.getPropertyValue<string>("zipkin");
         if (zipkinAddress) {
             if (!zipkinAddress.startsWith("http://")) {
                 zipkinAddress = "http://" + zipkinAddress;

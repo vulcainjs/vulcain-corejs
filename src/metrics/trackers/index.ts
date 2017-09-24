@@ -4,8 +4,8 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
-import { SpanId, SpanKind } from '../../trace/span';
 import { ApplicationInsightsMetrics } from '../applicationInsightsMetrics';
+import { SpanId, SpanKind } from '../../trace/common';
 
 export interface IRequestTracker {
     trackError(error, tags);

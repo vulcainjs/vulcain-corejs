@@ -53,7 +53,6 @@ export abstract class AbstractServiceCommand {
 
     @Inject(DefaultServiceNames.ServiceResolver)
     serviceResolver: IServiceResolver;
-    protected tracer: Span;
 
     /**
      *
@@ -76,7 +75,7 @@ export abstract class AbstractServiceCommand {
 //            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
 //        }
 
-        this.tracer.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
+        this.requestContext.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
         System.manifest.registerService(serviceName, serviceVersion);
     }
 
@@ -136,7 +135,7 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
-        this.tracer.setAction("get");
+        this.requestContext.trackAction("get");
         let res = this.sendRequestAsync("get", url);
         return res;
     }
@@ -167,7 +166,7 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
-        this.tracer.setAction("Query");
+        this.requestContext.trackAction("Query");
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -192,13 +191,13 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', verb, args);
-        this.tracer.setAction(verb);
+        this.requestContext.trackAction(verb);
         let res = <any>this.sendRequestAsync("post", url, (req) => req.json(data));
         return res;
     }
 
     private async setUserContextAsync(request: types.IHttpCommandRequest) {
-        request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.security.tenant);
+        request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.user.tenant);
 
         if (this.overrideAuthorization) {
             request.header("Authorization", this.overrideAuthorization);
@@ -208,12 +207,12 @@ export abstract class AbstractServiceCommand {
         let ctx = this.requestContext as RequestContext;
         let token = ctx.getBearerToken();
         if (!token) {
-            if (!this.requestContext.security) {
+            if (!this.requestContext.user) {
                 return;
             }
             let tokens = this.requestContext.container.get<ITokenService>(DefaultServiceNames.TokenService);
             // Ensures jwtToken exists for user context propagation
-            let result: any = await tokens.createTokenAsync(this.requestContext.security);
+            let result: any = await tokens.createTokenAsync(this.requestContext.user);
             token = result.token;
             ctx.setBearerToken(token);
         }
@@ -237,7 +236,7 @@ export abstract class AbstractServiceCommand {
         let ctx = this.requestContext as RequestContext;
         await this.setUserContextAsync(request);
 
-        this.tracer.injectHeaders(request.header);
+        this.requestContext.injectHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 

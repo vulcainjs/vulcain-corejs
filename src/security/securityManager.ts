@@ -19,7 +19,7 @@ export interface ITokenService {
     createTokenAsync(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }>;
 }
 
-export interface UserContext {
+export interface UserContextData {
     /**
      * User display name
      *
@@ -50,11 +50,19 @@ export interface UserContext {
     tenant: string;
 
     scopes: string[];
+
+    claims: any;
+}
+
+export interface UserContext extends UserContextData {
+    getClaims<T=any>(): T;
+    isAdmin: boolean;
+    userHasScope(handlerScope: string): boolean;
+    isAnonymous(): boolean;
 }
 
 export interface UserToken extends UserContext {
     bearer: string;
-    data?: string;
 }
 
 /**
@@ -65,6 +73,8 @@ export interface UserToken extends UserContext {
  */
 export abstract class SecurityManager implements UserContext {
     private static EmptyScopes: string[] = [];
+    private static UserFields = ["name", "displayName", "email", "scopes", "tenant", "bearer", "claims"];
+
     private strategies: { name: string, verify: (ctx: RequestContext, token: string) => Promise<UserToken> }[] = [];
 
     addOrReplaceStrategy(name: string, verify: (ctx: RequestContext, token: string) => Promise<UserToken>) {
@@ -94,6 +104,10 @@ export abstract class SecurityManager implements UserContext {
     name: string;
 
     /**
+     * Claims
+     */
+    claims: any;
+    /**
      * Get user scopes
      *
      * @readonly
@@ -101,6 +115,10 @@ export abstract class SecurityManager implements UserContext {
      */
     get scopes(): Array<string> {
         return this._isAnonymous || !this._scopes ? SecurityManager.EmptyScopes : this._scopes;
+    }
+
+    get isAnonymous() {
+        return this.isAnonymous;
     }
 
     private _scopes: string[];
@@ -118,9 +136,13 @@ export abstract class SecurityManager implements UserContext {
         return this._tenant;
     }
 
+    getClaims<T=any>() {
+        return this.claims as T;
+    }
+
     constructor(private _scopePolicy: IAuthorizationPolicy) { }
 
-    setTenant(tenantOrCtx: string | UserContext) {
+    setTenant(tenantOrCtx: string | UserContextData) {
         if (typeof tenantOrCtx === "string") {
             this._tenant = tenantOrCtx;
         }
@@ -130,6 +152,7 @@ export abstract class SecurityManager implements UserContext {
             this.displayName = tenantOrCtx.displayName;
             this.email = tenantOrCtx.email;
             this._scopes = tenantOrCtx.scopes;
+            this.claims = tenantOrCtx.claims;
         }
         else
             this._tenant = System.defaultTenant;
@@ -147,6 +170,7 @@ export abstract class SecurityManager implements UserContext {
             // Anonymous
             this.name = "Anonymous";
             this._isAnonymous = true;
+            this.claims = [];
             ctx.logInfo(() => `No authentication context: User access is anonymous `);
             return;
         }
@@ -171,7 +195,12 @@ export abstract class SecurityManager implements UserContext {
                     this._scopes = userContext.scopes;
                     this._tenant = userContext.tenant || this._tenant;
                     this.bearer = userContext.bearer;
-//                    this.data = userContext.data;
+                    // Assign all other fields as claims
+                    this.claims = userContext.claims || {};
+                    Object.keys(userContext).forEach(k => {
+                        if (SecurityManager.UserFields.indexOf(k) < 0)
+                            this.claims[k] = userContext[k];
+                    });
 
                     // For context propagation
                     if (strategy.name === "bearer")
@@ -199,8 +228,15 @@ export abstract class SecurityManager implements UserContext {
             || this._scopePolicy.hasScope(this, handlerScope);
     }
 
-    getUserContext(): UserContext {
-        return { tenant: this.tenant, displayName: this.displayName, email: this.email, name: this.name, scopes: this._scopes };
+    getUserContext(): UserContextData {
+        return {
+            tenant: this.tenant,
+            displayName: this.displayName,
+            email: this.email,
+            name: this.name,
+            scopes: this._scopes,
+            claims: this.claims
+        };
     }
 
     /**
@@ -208,7 +244,7 @@ export abstract class SecurityManager implements UserContext {
      *
      * @returns {boolean}
      */
-    isAdmin(): boolean {
+    get isAdmin(): boolean {
         return !this._isAnonymous && this._scopePolicy.isAdmin(this);
     }
 

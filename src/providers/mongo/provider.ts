@@ -7,7 +7,7 @@ import { System } from '../../globals/system';
 import * as URL from 'url';
 import * as Path from 'path';
 import { Logger } from "../../log/logger";
-import { RequestContext } from "../../pipeline/requestContext";
+import { IRequestContext } from "../../pipeline/common";
 import { ApplicationError } from "../../pipeline/errors/applicationRequestError";
 
 /**
@@ -28,7 +28,7 @@ export class MongoProvider implements IProvider<any>
 
     constructor(
         @Inject(DefaultServiceNames.Logger) private _logger: Logger,
-        @Inject(DefaultServiceNames.RequestContext, true) private ctx: RequestContext,
+        @Inject(DefaultServiceNames.RequestContext, true) private ctx: IRequestContext,
         uri: string,
         private options?) {
         this.options = this.options || {authSource: "admin"};
@@ -44,7 +44,7 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri, keyPropertyNameBySchemas: new Map<string, string>() };
     }
 
-    initializeTenantAsync(context: RequestContext, tenant: string) : Promise<() => Promise<any>> {
+    initializeTenantAsync(context: IRequestContext, tenant: string) : Promise<() => Promise<any>> {
         if (!tenant)
             throw new Error("tenant is required");
 

@@ -6,13 +6,12 @@ import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
-import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
 import { Span } from '../trace/span';
 
 
 export abstract class AbstractHttpCommand {
-    public requestContext: RequestContext;
-    protected tracer: Span;
+    public requestContext: IRequestContext;
     private static METRICS_NAME = "external_call";
 
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
@@ -38,7 +37,7 @@ export abstract class AbstractHttpCommand {
         System.manifest.registerExternal(uri);
 
         if(uri && verb)
-            this.tracer.addTags({ uri: uri, verb: verb });
+            this.requestContext.addTags({ uri: uri, verb: verb });
     }
 
     runAsync(...args): Promise<any> {
@@ -79,7 +78,7 @@ export abstract class AbstractHttpCommand {
      */
     protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
-        this.tracer.setAction(verb);
+        this.requestContext.trackAction(verb);
         this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);

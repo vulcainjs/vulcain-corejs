@@ -99,7 +99,7 @@ export class VulcainResponse {
 
     static create(ctx: RequestContext): VulcainResponse {
         return {
-            tenant: ctx.security.tenant,
+            tenant: ctx.user.tenant,
             domain: System.domainName,
             action: ctx.requestData.action,
             schema: ctx.requestData.schema,

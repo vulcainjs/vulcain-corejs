@@ -14,6 +14,7 @@ import { Span } from '../trace/span';
  * @interface ICommand
  */
 export interface ICommand {
+    requestContext: IRequestContext;
     /**
      * execute the command
      * @param args
@@ -30,8 +31,6 @@ export interface ICommand {
  * @template T
  */
 export abstract class AbstractCommand<T> implements IInjectionNotification {
-
-    protected tracer: Span;
 
     /**
      *
@@ -63,7 +62,7 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     }
 
     protected setMetricsTags(args: { [key: string] : string }) {
-        this.tracer.addTags(args);
+        this.requestContext.addTags(args);
     }
 
     /**

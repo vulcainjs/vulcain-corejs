@@ -8,7 +8,7 @@ import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
 import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
-import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
 import { Span } from '../trace/span';
 
 /**
@@ -22,9 +22,8 @@ import { Span } from '../trace/span';
 export abstract class AbstractProviderCommand<T> {
 
     protected providerFactory: ProviderFactory;
-    protected tracer: Span;
 
-    public requestContext: RequestContext;
+    public requestContext: IRequestContext;
 
     /**
      *
@@ -60,7 +59,7 @@ export abstract class AbstractProviderCommand<T> {
     async setSchemaAsync(schema: string): Promise<string> {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.security.tenant);
+            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.user.tenant);
             return this.schema.name;
         }
     }
@@ -68,7 +67,7 @@ export abstract class AbstractProviderCommand<T> {
     protected setMetricTags(address: string, schema: string, tenant?: string) {
         address = System.removePasswordFromUrl(address);
         System.manifest.registerProvider(address, schema);
-        this.tracer.addTags({ address: address, schema: schema, tenant: (tenant || this.requestContext.security.tenant) });
+        this.requestContext.addTags({ address: address, schema: schema, tenant: (tenant || this.requestContext.user.tenant) });
     }
 
     /**

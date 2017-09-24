@@ -1,6 +1,6 @@
 import { IRequestContext, Pipeline, RequestData, ICustomEvent } from './common';
 import { IContainer } from '../di/resolvers';
-import { SecurityManager, UserContext } from '../security/securityManager';
+import { SecurityManager, UserContextData } from '../security/securityManager';
 import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
@@ -16,6 +16,7 @@ import { AsyncTaskData } from "./handlers/actions";
 import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
+import { ISpanTracker, SpanKind } from '../trace/common';
 import { Span } from '../trace/span';
 
 export class VulcainHeaderNames {
@@ -32,6 +33,74 @@ export class VulcainHeaderNames {
     static X_VULCAIN_REGISTER_MOCK = 'x-vulcain-register-mock-session';
 }
 
+export class CommandRequest implements IRequestContext {
+    tracker: ISpanTracker;
+    private requestContext: RequestContext;
+    get correlationId() { return this.requestContext.correlationId; }
+    get user() { return this.requestContext.user; }
+    get container() { return this.requestContext.container; }
+    get locale() { return this.requestContext.locale; }
+    get hostName() { return this.requestContext.hostName; }
+    get requestData() { return this.requestContext.requestData; }
+    get request() { return this.requestContext.request; }
+    get publicPath() { return this.requestContext.publicPath; }
+
+    constructor(requestContext: IRequestContext, commandName: string) {
+        this.requestContext = <RequestContext>requestContext;
+        this.tracker = (<Span>this.requestContext.tracker).createCommandTracker(commandName);
+    }
+
+    trackAction(action: string, tags?: any) {
+        this.tracker.trackAction(action, tags);
+    }
+    addTags(tags?: any) {
+        this.tracker.addTags(tags);
+    }
+    get durationInMs() {
+        return this.tracker.durationInMs;
+    }
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
+        this.tracker.injectHeaders(headers);
+    }
+
+    getBearerToken() {
+        return this.user.bearer;
+    }
+
+    setBearerToken(token: string) {
+        this.user.bearer = token;
+    }
+    get now() {
+        return this.requestContext.now;
+    }
+    createCommandRequest(commandName: string) {
+        return new CommandRequest(this, commandName);
+    }
+
+    getRequestDataObject() {
+        return this.requestContext.getRequestDataObject();
+    }
+    sendCustomEvent(action: string, params?: any, schema?: string) {
+        return this.requestContext.sendCustomEvent(action, params, schema);
+    }
+    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
+        return this.requestContext.getCommandAsync<T>(name, schema);
+    }
+    logError(error: Error, msg?: () => string) {
+        return this.tracker.logError(error, msg);
+    }
+    logInfo(msg: () => string) {
+        return this.tracker.logInfo(msg);
+    }
+    logVerbose(msg: () => string) {
+        return this.tracker.logVerbose(msg);
+    }
+    dispose() {
+        this.tracker.dispose();
+        this.tracker = null;
+    }
+}
+
 export class RequestContext implements IRequestContext {
     container: IContainer;
     locale: string;
@@ -39,23 +108,31 @@ export class RequestContext implements IRequestContext {
     response: HttpResponse;
     request: HttpRequest;
     private _securityManager: SecurityManager;
-    private rootSpan: Span;
+    tracker: ISpanTracker;
     private _customEvents: Array<ICustomEvent>;
 
-    setAction(action: string) {
-        this.rootSpan.setAction(action);
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
+        this.tracker.injectHeaders(headers);
     }
-
+    trackAction(action: string, tags?:any) {
+        this.tracker.trackAction(action, tags);
+    }
+    addTags(tags?: any) {
+        this.tracker.addTags(tags);
+    }
+    get durationInMs() {
+        return this.tracker.durationInMs;
+    }
     getBearerToken() {
-        return this.security.bearer;
+        return this.user.bearer;
     }
 
     setBearerToken(token: string) {
-        this.security.bearer = token;
+        this.user.bearer = token;
     }
 
-    createCommandSpan(commandName: string, parent?: Span) {
-        return (parent||this.rootSpan).createCommandSpan(commandName);
+    createCommandRequest(commandName: string) {
+        return new CommandRequest(this, commandName);
     }
 
     get correlationId(): string {
@@ -67,7 +144,7 @@ export class RequestContext implements IRequestContext {
     }
 
     get now() {
-        return this.rootSpan.now;
+        return this.tracker.now;
     }
 
     getRequestDataObject() {
@@ -83,11 +160,11 @@ export class RequestContext implements IRequestContext {
         };
     }
 
-    get security() {
+    get user() {
         return this._securityManager;
     }
 
-    setSecurityManager(tenant: string|UserContext) {
+    setSecurityManager(tenant: string|UserContextData) {
         if (!tenant)
             throw new Error("Tenant can not be null");
         let manager = this.container.get<SecurityManager>(DefaultServiceNames.Authentication, true);
@@ -130,7 +207,8 @@ export class RequestContext implements IRequestContext {
                 body: data.body
             }
         }
-        this.rootSpan = Span.createRootSpan(this);
+        let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+        this.tracker = new Span(this, SpanKind.Request, System.fullServiceName, parentId);
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {
@@ -163,7 +241,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logError(error: Error, msg?: ()=>string) {
-        this.rootSpan.logError(error, msg);
+        this.tracker.logError(error, msg);
     }
 
     /**
@@ -174,7 +252,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logInfo(msg: ()=>string) {
-        this.rootSpan.logInfo(msg);
+        this.tracker.logInfo(msg);
     }
 
     /**
@@ -186,7 +264,7 @@ export class RequestContext implements IRequestContext {
      *
      */
     logVerbose(msg: ()=>string) {
-        this.rootSpan.logVerbose(msg);
+        this.tracker.logVerbose(msg);
     }
 
     get hostName() {
@@ -210,7 +288,7 @@ export class RequestContext implements IRequestContext {
     }
 
     dispose() {
-        this.rootSpan.dispose();
+        this.tracker.dispose();
         this.container.dispose();
     }
 }

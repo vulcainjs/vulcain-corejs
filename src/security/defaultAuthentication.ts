@@ -16,7 +16,7 @@ export class DefaultAuthentication extends SecurityManager {
     private async bearerAuthentication(ctx: RequestContext, accessToken: string) {
         try {
             let tokens = ctx.container.get<ITokenService>(DefaultServiceNames.TokenService);
-            let userContext = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.security.tenant });
+            let userContext = await tokens.verifyTokenAsync({ token: accessToken, tenant: ctx.user.tenant });
 
             // No token found
             if (!userContext) {
@@ -41,11 +41,11 @@ export class DefaultAuthentication extends SecurityManager {
                 System.log.info(ctx, ()=> `ApiKey authentication ERROR: Apikey is not enabled. Use enableApiKeyAuthentication in application.ts.`);
                 return null;
             }
-            let token = await apiKeys.verifyTokenAsync({ token: accessToken, tenant: ctx.security.tenant });
+            let token = await apiKeys.verifyTokenAsync({ token: accessToken, tenant: ctx.user.tenant });
 
             // No token found
             if (!token) {
-                System.log.info(ctx, ()=> `ApiKey authentication: Invalid apiKey ${accessToken} for tenant ${ctx.security.tenant}`);
+                System.log.info(ctx, () => `ApiKey authentication: Invalid apiKey ${accessToken} for tenant ${ctx.user.tenant}`);
                 throw new UnauthorizedRequestError();
             }
 
@@ -53,7 +53,7 @@ export class DefaultAuthentication extends SecurityManager {
             return token;
         }
         catch (err) {
-            System.log.error(ctx, err, ()=> `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.security.tenant}`);
+            System.log.error(ctx, err, () => `ApiKey authentication: Error with apiKey ${accessToken} for tenant ${ctx.user.tenant}`);
             throw new UnauthorizedRequestError();
         }
     }

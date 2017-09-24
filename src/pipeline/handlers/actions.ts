@@ -13,7 +13,7 @@ import { System } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
-import { UserContext } from "../../security/securityManager";
+import { UserContextData } from "../../security/securityManager";
 import { HttpResponse } from "../response";
 import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
@@ -23,7 +23,7 @@ export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending";
     taskId?: string;
     startedAt?: string;
-    userContext?: UserContext;
+    userContext?: UserContextData;
     completedAt?: string;
 }
 
@@ -163,7 +163,7 @@ export class CommandManager implements IManager {
             startedAt: System.nowAsString(),
             value: result && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
-            userContext: ctx.security.getUserContext(),
+            userContext: ctx.user.getUserContext(),
             status: status,
             domain: this._domain.name
         };
@@ -225,7 +225,7 @@ export class CommandManager implements IManager {
                     status: "Pending"
                 });
 
-                pendingTask.userContext = ctx.security.getUserContext();
+                pendingTask.userContext = ctx.user.getUserContext();
                 this.messageBus.pushTask(pendingTask);
                 let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
                 if (taskManager)
@@ -325,7 +325,7 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.setAction(evt.vulcainVerb);
+                        ctx.trackAction(evt.vulcainVerb);
                         ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.requestContext = ctx;

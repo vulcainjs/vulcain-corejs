@@ -264,16 +264,17 @@ export class ServiceDescriptors {
         if (!schemaName)
             return defaultValue;
 
-        let schema: Schema;
-        if (typeof schemaName === "string") {
-            if (ServiceDescriptors.nativeTypes.indexOf(schemaName) >= 0) return schemaName;
-            let type = this.getPropertyType(schemaName);
-            if (type)
-                return type.name;
+        let schema = this.domain.getSchema(schemaName, true);
+        if (!schema) {
+            if (typeof schemaName === "string") {
+               // if (ServiceDescriptors.nativeTypes.indexOf(schemaName) >= 0) return schemaName;
+                let type = this.getPropertyType(schemaName);
+                if (type)
+                    return type.name;
+            }
+            if (!schema)
+                throw new Error("Unknow schema " + schemaName);
         }
-        schema = this.domain.getSchema(schemaName);
-        if (!schema)
-            throw new Error("Unknow schema " + schemaName);
 
         let desc: SchemaDescription = schemas.get(schema.name);
         if (desc) return desc.name;
