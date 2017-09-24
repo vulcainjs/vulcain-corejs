@@ -20,7 +20,7 @@ export class Span implements ISpanTracker {
     private tracker: IRequestTracker;
     private action: string;
 
-    constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
@@ -36,12 +36,18 @@ export class Span implements ISpanTracker {
         console.log("Start span " + this.name);
     }
 
+    static createRequestTracker(context: RequestContext, parentId: string) {
+        return new Span(context, SpanKind.Request, System.fullServiceName, parentId);
+    }
+
     createCommandTracker(commandName: string) {
         return new Span(this.context, SpanKind.Command, commandName, this.id.spanId);
     }
 
-    trackAction(name: string, tags?: any) {
-        this.action = name;
+    trackAction(action: string, tags?: any) {
+        if (!action || action.startsWith('_'))
+            return;
+        this.action = action;
         this.ensuresInitialized();
         if (tags) {
             this.addTags(tags);
@@ -103,12 +109,11 @@ export class Span implements ISpanTracker {
     }
 
     dispose() {
-        console.log("Dispose span " + this.name);
-        if (this.kind === SpanKind.Request)
-            this.endRequest();
-        else
-            this.endCommand();
         if (this.tracker) {
+            if (this.kind === SpanKind.Request)
+                this.endRequest();
+            else
+                this.endCommand();
             this.tracker.dispose(this.durationInMs, this.tags);
             this.tracker = null;
         }

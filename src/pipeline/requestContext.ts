@@ -208,7 +208,7 @@ export class RequestContext implements IRequestContext {
             }
         }
         let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
-        this.tracker = new Span(this, SpanKind.Request, System.fullServiceName, parentId);
+        this.tracker = Span.createRequestTracker(this, parentId);
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {
