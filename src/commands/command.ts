@@ -9,7 +9,7 @@ import { ICommandMetrics, CommandMetricsFactory } from "./metrics/commandMetrics
 import { TimeoutError } from "../pipeline/errors/timeoutError";
 import { CommandRuntimeError } from "../pipeline/errors/commandRuntimeError";
 import { BadRequestError } from "../pipeline/errors/badRequestError";
-import { RequestContext } from '../pipeline/requestContext';
+import { RequestContext, CommandRequest } from '../pipeline/requestContext';
 import { Span } from '../trace/span';
 
 export interface CommandInfo {
@@ -34,10 +34,10 @@ export class HystrixCommand {
     private hystrixMetrics: ICommandMetrics;
     private schemaName: string;
     private command: ICommand;
-    constructor(private properties: CommandProperties, command: AbstractCommand<any>, private requestContext: RequestContext, container: IContainer) {
+    constructor(private properties: CommandProperties, command: AbstractCommand<any>, requestContext: RequestContext, container: IContainer) {
         this.command = command;
         command.container = container;
-        this.command.requestContext = this.requestContext.createCommandRequest(this.getCommandName());
+        this.command.requestContext =  requestContext.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
     }
 
@@ -152,7 +152,7 @@ export class HystrixCommand {
     }
 
     private async getFallbackOrThrowException(eventType: EventType, failureType: FailureType, message: string, error: Error): Promise<any> {
-        this.requestContext.logError(error);
+        this.command.requestContext.logError(error);
 
         try {
             if (this.isUnrecoverable(error)) {
@@ -206,7 +206,7 @@ export class HystrixCommand {
 
         if (e instanceof BadRequestError) {
             this.hystrixMetrics.markBadRequest(this.command.requestContext.durationInMs);
-            this.requestContext.logError(e);
+            this.command.requestContext.logError(e);
             throw e;
         }
 
@@ -217,7 +217,7 @@ export class HystrixCommand {
     }
 
     private logInfo(msg: ()=> string) {
-        this.requestContext.logInfo(()=> this.getCommandName() + ": " + msg() );
+        this.command.requestContext.logInfo(()=> this.getCommandName() + ": " + msg() );
     }
 
     private isUnrecoverable(e) {

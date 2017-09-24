@@ -12,6 +12,13 @@ interface PoolItem {
     dispose?: () => Promise<any>;
 }
 
+class ContextualProvider {
+    constructor(public ctx: IRequestContext, provider) {
+        (<any>this).__proto__ = Object.getPrototypeOf(provider)
+        Object.assign(this, provider);
+    }
+}
+
 export class ProviderFactory {
     private pool = new Map<string, PoolItem>();
 
@@ -19,7 +26,7 @@ export class ProviderFactory {
     }
 
     private addToPool(context: IRequestContext, key: string, item: PoolItem) {
-        System.log.info(context, ()=>`Adding a new provider pool item : ${key}`);
+        System.log.info(context, () => `Adding a new provider pool item : ${key}`);
         if (this.pool.size >= this.maxPoolSize) {
             // remove the least used
             let keyToRemove;
@@ -33,7 +40,7 @@ export class ProviderFactory {
             let item = this.pool.get(keyToRemove);
             item.dispose && item.dispose();
             this.pool.delete(keyToRemove);
-            System.log.info(context, ()=> `Ejecting ${keyToRemove} from provider pool item.`);
+            System.log.info(context, () => `Ejecting ${keyToRemove} from provider pool item.`);
         }
         item.count = 1;
         this.pool.set(key, item);
@@ -51,18 +58,15 @@ export class ProviderFactory {
         tenant = tenant || context.user.tenant;
         let poolKey = providerName + "!" + tenant;
         let provider = this.getFromPool(poolKey);
-        if (provider) {
-            return provider;
-        }
-        else {
+        if (!provider) {
             provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
-            let item: PoolItem = {provider};
+            let item: PoolItem = { provider };
             item.dispose = await provider.initializeTenantAsync(context, tenant);
             if (item.dispose) {
                 this.addToPool(context, poolKey, item);
             }
         }
 
-        return provider;
+        return <IProvider<any>><any>new ContextualProvider(context, provider);
     }
 }

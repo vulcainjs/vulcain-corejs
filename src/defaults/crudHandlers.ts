@@ -18,7 +18,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     create(entity: any) {
         this.requestContext.trackAction("create");
-        return this.provider.createAsync(this.schema, entity);
+        return this.provider.createAsync( this.schema, entity);
     }
 
     protected async createInternal(entity: any) {

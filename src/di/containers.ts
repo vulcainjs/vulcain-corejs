@@ -83,7 +83,6 @@ export class Container implements IContainer {
      */
     protected setRequestContext(requestContext: RequestContext) {
         if (requestContext) {
-            this.injectInstance(requestContext, DefaultServiceNames.RequestContext);
             this.scope.requestContext = requestContext;
         }
     }
