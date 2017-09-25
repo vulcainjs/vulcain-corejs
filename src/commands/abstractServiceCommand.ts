@@ -248,7 +248,13 @@ export abstract class AbstractServiceCommand {
                         let err;
                         if (response.body) {
                             if (typeof response.body === "object") {
-                                err = new ApplicationError(response.body.message, response.status, response.body.errors);
+                                if (response.body.error) {
+                                    let appError = response.body.error;
+                                    err = new ApplicationError(appError.message, response.status, appError.errors);
+                                }
+                                else {
+                                    err = new ApplicationError(response.body.message, response.status);
+                                }
                             }
                             else {
                                 err = new ApplicationError(response.body, response.status);

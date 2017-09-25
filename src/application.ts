@@ -95,6 +95,10 @@ export class Application {
 
         this._domain = new Domain(domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
+
+        process.on('unhandledRejection', (reason, p) => {
+            System.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
+        });
     }
 
     /**

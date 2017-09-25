@@ -197,6 +197,7 @@ export class RequestContext implements IRequestContext {
             this.request = data;
         }
         else { // for test or async task
+            this.request = <any>{ headers: {} };
             this.requestData = {
                 vulcainVerb: `${data.schema}.${data.action}`,
                 action: data.action,

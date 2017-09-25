@@ -33,7 +33,6 @@ export class Span implements ISpanTracker {
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.convertKind();
-        console.log("Start span " + this.name);
     }
 
     static createRequestTracker(context: RequestContext, parentId: string) {
@@ -158,7 +157,7 @@ export class Span implements ISpanTracker {
 
         // Always remove userContext
         if (typeof (value) === "object") {
-            value.userContext = undefined;
+            value.userContext = undefined; // TODO ???
         }
         if (this.kind === SpanKind.Request) {
             this.logAction("ER", `End request status: ${(this.context.response  && this.context.response.statusCode) || 200}`);
