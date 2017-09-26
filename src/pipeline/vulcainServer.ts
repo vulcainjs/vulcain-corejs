@@ -131,7 +131,7 @@ export class VulcainServer {
     private metrics: IMetrics;
     public adapter: IServerAdapter;
 
-    constructor(protected domainName: string, protected container: IContainer, private enableHystrixStream=false) {
+    constructor(protected domainName: string, protected container: IContainer) {
         this.metrics = container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.adapter = this.container.get<IServerAdapter>(DefaultServiceNames.ServerAdapter, true) || new HttpAdapter();
@@ -145,7 +145,7 @@ export class VulcainServer {
     }
 
     public start(port: number) {
-        if (this.enableHystrixStream) {
+        // Hystrix stream
             this.adapter.registerNativeRoute("get", Conventions.instance.defaultHystrixPath, (request, response) => {
                 response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
                 response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
@@ -169,7 +169,6 @@ export class VulcainServer {
                     subscription.unsubscribe();
                 });
             });
-        }
 
         this.adapter.registerRoute('get', '/health', (req) => null);
 

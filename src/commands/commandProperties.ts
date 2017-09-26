@@ -161,4 +161,22 @@ export class CommandProperties {
             this.commandName + "." + name,
             defaultValue || Conventions.instance.hystrix[name]);
     }
+
+    public toString() {
+        return JSON.stringify({
+            metricsRollingPercentileWindowBuckets: this.metricsRollingPercentileWindowBuckets.value,
+            circuitBreakerForceClosed: this.circuitBreakerForceClosed.value,
+            circuitBreakerForceOpen: this.circuitBreakerForceOpen.value,
+            circuitBreakerSleepWindowInMilliseconds: this.circuitBreakerSleepWindowInMilliseconds.value,
+            circuitBreakerErrorThresholdPercentage: this.circuitBreakerErrorThresholdPercentage.value,
+            circuitBreakerRequestVolumeThreshold: this.circuitBreakerRequestVolumeThreshold.value,
+            executionTimeoutInMilliseconds: this.executionTimeoutInMilliseconds.value,
+            metricsRollingStatisticalWindowBuckets: this.metricsRollingStatisticalWindowBuckets.value,
+            metricsRollingStatisticalWindowInMilliseconds: this.metricsRollingStatisticalWindowInMilliseconds.value,
+            metricsRollingPercentileWindowInMilliseconds: this.metricsRollingPercentileWindowInMilliseconds.value,
+            executionIsolationSemaphoreMaxConcurrentRequests: this.executionIsolationSemaphoreMaxConcurrentRequests.value,
+            fallbackIsolationSemaphoreMaxConcurrentRequests: this.fallbackIsolationSemaphoreMaxConcurrentRequests.value,
+            circuitBreakerEnabled: this.circuitBreakerEnabled.value
+        });
+    }
 }

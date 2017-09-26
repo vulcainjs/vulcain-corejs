@@ -176,8 +176,18 @@ export class Span implements ISpanTracker {
         // This method can be raised before span is initialized (with setAction)
         // Calling ensuresInitialized ensures tracker is initialized
         this.ensuresInitialized();
-        if (name && value)
-            this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
+        if (name && value) {
+            try {
+                if (typeof value === "object") {
+                    value = JSON.stringify(value);
+                }
+                this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
+            }
+            catch (e) {
+                this.context.logError(e);
+                // then ignore
+            }
+        }
     }
 
     addTags(tags) {

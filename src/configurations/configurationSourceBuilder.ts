@@ -12,6 +12,7 @@ export class ConfigurationSourceBuilder {
 
     constructor(private _configurationManager: ConfigurationManager) {
         this._sources = [];
+        this.addVulcainSource();
     }
 
     public addSource(source: IRemoteConfigurationSource) {
@@ -19,7 +20,7 @@ export class ConfigurationSourceBuilder {
         return this;
     }
 
-    public addVulcainSource() {
+    private addVulcainSource() {
         if (System.vulcainServer) {
             if (!System.vulcainToken && !System.isTestEnvironnment) {
                 System.log.info(null, () => "No token defined for reading configuration properties. Vulcain configuration source is ignored.");

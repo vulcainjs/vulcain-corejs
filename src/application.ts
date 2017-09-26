@@ -21,6 +21,7 @@ import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
 import { LocalAdapter } from "./bus/localAdapter";
 import { System } from './globals/system';
+import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
 /**
  * Application base class
@@ -33,16 +34,7 @@ export class Application {
     private _vulcainExecutablePath: string;
     private _basePath: string;
 
-    private _container: IContainer;
     private _domain: Domain;
-    /**
-     * Enable hystrix metrics available from /hystrix.stream
-     *
-     * @type {boolean}
-     * @memberOf Application
-     */
-    public enableHystrixStream: boolean;
-
     /**
      * Enable api key authentication
      *
@@ -75,13 +67,19 @@ export class Application {
      * @param container Global component container
      * @param app  (optional)Server adapter
      */
-    constructor(domainName?: string, container?: IContainer) {
-        domainName = domainName;
-        if (!domainName) {
+    constructor(private domainName?: string, private _container?: IContainer) {
+    }
+
+    private async init() {
+        if (DynamicConfiguration.manager == null) {
+            await DynamicConfiguration.init().startPollingAsync();
+        }
+
+        if (!this.domainName) {
             throw new Error("Domain name is required.");
         }
-        System.defaultDomainName = domainName;
 
+        System.defaultDomainName = this.domainName;
         System.log.info(null, () => "Starting application");
 
         this._vulcainExecutablePath = Path.dirname(module.filename);
@@ -90,10 +88,9 @@ export class Application {
         // Ensure initializing this first
         const test = System.isDevelopment;
 
-        this._container = container || new Container();
+        this._container = this._container || new Container();
         this._container.injectInstance(this, DefaultServiceNames.Application);
-
-        this._domain = new Domain(domainName, this._container);
+        this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
 
         process.on('unhandledRejection', (reason, p) => {
@@ -130,6 +127,8 @@ export class Application {
     async start(port: number) {
 
         try {
+            await this.init();
+
             this.initializeDefaultServices(this.container);
 
             let local = new LocalAdapter();
@@ -156,7 +155,7 @@ export class Application {
             let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.createHandlersTable();
 
-            let server = new VulcainServer(this.domain.name, this._container, this.enableHystrixStream);
+            let server = new VulcainServer(this.domain.name, this._container);
             server.start(port);
         }
         catch (err) {
@@ -211,11 +210,6 @@ export class ApplicationBuilder {
 
     public useMongo(address?: string) {
         this.app.container.useMongoProvider(address);
-        return this;
-    }
-
-    public enableHystrixStream() {
-        this.app.enableHystrixStream = true;
         return this;
     }
 
