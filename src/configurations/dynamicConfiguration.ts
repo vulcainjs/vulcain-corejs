@@ -22,6 +22,11 @@ export class DynamicConfiguration {
  * For test only - Do not use directly
  */
     static manager: ConfigurationManager = new ConfigurationManager();
+    private static _initialized: boolean;
+
+    static get isInitialized() {
+        return DynamicConfiguration._initialized;
+    }
 
     /**
      * subscribe on a property changed
@@ -97,6 +102,8 @@ export class DynamicConfiguration {
             DynamicConfiguration.manager.pollingIntervalInSeconds = pollingIntervalInSeconds;
         if(sourceTimeoutInMs)
             DynamicConfiguration.manager.sourceTimeoutInMs = sourceTimeoutInMs;
+
+        DynamicConfiguration._initialized = true;
         return new ConfigurationSourceBuilder(DynamicConfiguration.manager);
     }
 }

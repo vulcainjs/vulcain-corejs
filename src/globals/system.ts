@@ -409,23 +409,36 @@ export class System {
     }
 
     /**
-     * create a new chained property for the current service. Properties chain is: service.version.name->service.name->team.namespace->name
+     * create a new chained property for the current service. Properties chain is: service.version.name->service.name->domain.name->name
      * @param name property name
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T) {
+    public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
         let p = DynamicConfiguration.getProperty<T>(name);
         if (p)
             return p;
         System.registerPropertyAsDependency(name, defaultValue);
 
+        let fullName = commandName ? commandName + "." + name : name;
+        let n = System.serviceName + "." + System.serviceVersion + "." + fullName;
+        var chain = [
+            System.serviceName + "." + fullName,
+        ];
+
+        if (commandName) {
+            chain.push(fullName);
+        }
+
+        if (System.domainName)
+            chain.push(System.domainName + "." + name);
+
+        chain.push(name);
+
         return DynamicConfiguration.asChainedProperty<T>(
-            name,
+            n,
             defaultValue,
-            System.serviceName + "." + System.serviceVersion + "." + name,
-            System.serviceName + "." + name,
-            System.domainName + "." + name);
+            ...chain);
     }
 
     /**

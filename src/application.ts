@@ -71,7 +71,7 @@ export class Application {
     }
 
     private async init() {
-        if (DynamicConfiguration.manager == null) {
+        if (!DynamicConfiguration.isInitialized) {
             await DynamicConfiguration.init().startPollingAsync();
         }
 
