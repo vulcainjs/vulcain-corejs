@@ -69,16 +69,17 @@ describe('DynamicConfiguration', function () {
     it('should chain values', function () {
 
         let chained = DynamicConfiguration.asChainedProperty("test", 30, "test1");
-        expect(30).to.equal(DynamicConfiguration.getProperty("test").value);
+        expect(30).to.equal(chained.value);
 
         let prop2 = DynamicConfiguration.asProperty("test1", 20);
         expect(20).to.equal(chained.value);
 
-        chained.set(40);
-        expect(40).to.equal(chained.value);
         prop2.set(25);
         expect(25).to.equal(chained.value);
 
+        chained.set(40);
+        expect(40).to.equal(chained.value);
+        
         expect(25).to.equal(DynamicConfiguration.asChainedProperty("??", 30, "test1").value);
         expect(40).to.equal(DynamicConfiguration.asChainedProperty("???", 40, "???").value);
     });
@@ -108,7 +109,7 @@ describe('DynamicConfiguration', function () {
             await DynamicConfiguration.manager.forcePollingAsync(source, true);
 
             let chained = DynamicConfiguration.asChainedProperty("test10", 30, "test20");
-            expect(30).to.equal(DynamicConfiguration.getProperty("test10").value);
+            expect(30).to.equal(chained.value);
 
             source.set("test20", 20);
             await DynamicConfiguration.manager.forcePollingAsync(); // Force polling

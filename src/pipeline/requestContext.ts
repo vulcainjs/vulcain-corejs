@@ -16,7 +16,7 @@ import { AsyncTaskData } from "./handlers/actions";
 import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
-import { ISpanTracker, SpanKind } from '../trace/common';
+import { ISpanTracker, SpanKind, ISpanRequestTracker, DummySpanTracker } from '../trace/common';
 import { Span } from '../trace/span';
 
 export class VulcainHeaderNames {
@@ -34,7 +34,7 @@ export class VulcainHeaderNames {
 }
 
 export class CommandRequest implements IRequestContext {
-    tracker: ISpanTracker;
+    tracker: ISpanRequestTracker;
     private requestContext: RequestContext;
     get correlationId() { return this.requestContext.correlationId; }
     get user() { return this.requestContext.user; }
@@ -47,7 +47,7 @@ export class CommandRequest implements IRequestContext {
 
     constructor(requestContext: IRequestContext, commandName: string) {
         this.requestContext = <RequestContext>requestContext;
-        this.tracker = (<Span>this.requestContext.tracker).createCommandTracker(commandName);
+        this.tracker = this.requestContext.tracker.createCommandTracker(commandName);
     }
 
     trackAction(action: string, tags?: any) {
@@ -111,7 +111,7 @@ export class RequestContext implements IRequestContext {
     response: HttpResponse;
     request: HttpRequest;
     private _securityManager: SecurityManager;
-    tracker: ISpanTracker;
+    tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
 
     injectHeaders(headers: (name: string | any, value?: string) => any) {
@@ -190,6 +190,7 @@ export class RequestContext implements IRequestContext {
         this.container = new Container(container, this);
         if (!data) {
             this.requestData = <any>{};
+            this.tracker = new DummySpanTracker();
             return;
         }
 
@@ -211,8 +212,13 @@ export class RequestContext implements IRequestContext {
                 body: data.body
             }
         }
-        let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
-        this.tracker = Span.createRequestTracker(this, parentId);
+        if (this.pipeline !== Pipeline.Test) {
+            let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+            this.tracker = Span.createRequestTracker(this, parentId);
+        }
+        else {
+            this.tracker = new DummySpanTracker();
+        }
     }
 
     sendCustomEvent(action: string, params?: any, schema?: string) {

@@ -63,7 +63,7 @@ class ZipkinRequestTracker implements IRequestTracker {
             Flags: 0
         });
 
-        console.log(`Start span ${name}, action ${action}, id: ${this.id}; kind: ${kind}`);
+       // console.log(`Start span ${name}, action ${action}, id: ${this.id}; kind: ${kind}`);
 
         this.tracer.setId(this.id);
         this.tracer.recordRpc(action);
@@ -94,7 +94,7 @@ class ZipkinRequestTracker implements IRequestTracker {
     }
 
     dispose(duration: number, tags) {
-        console.log(`End span ${this.name}, action ${this.action}, id: ${this.id}; kind: ${this.kind}`);
+      //  console.log(`End span ${this.name}, action ${this.action}, id: ${this.id}; kind: ${this.kind}`);
 
         if (this.kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientRecv());

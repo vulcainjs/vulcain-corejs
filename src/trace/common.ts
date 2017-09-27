@@ -48,3 +48,35 @@ export interface ISpanTracker {
 
     dispose();
 }
+
+export interface ISpanRequestTracker extends ISpanTracker {
+    createCommandTracker(commandName: string): ISpanRequestTracker;
+}
+
+export class DummySpanTracker implements ISpanRequestTracker {
+    durationInMs: number = 0;
+    now: number;
+
+    createCommandTracker(commandName: string): ISpanRequestTracker {
+        return this;
+    }
+    
+    trackAction(name: string, tags?: any) {
+
+    }
+    addTags(tags: any) {
+
+    }
+    injectHeaders(headers: (name: any, value?: string)=> any) {
+    }
+
+    logError(error: Error, msg?: () => string) {
+    }
+    logInfo(msg: () => string) {
+    }
+    logVerbose(msg: () => string) {
+    }
+    dispose() {
+    }
+
+}

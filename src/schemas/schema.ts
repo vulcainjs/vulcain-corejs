@@ -144,8 +144,8 @@ export class Schema {
                 let ref = schema.references[key];
                 if (ref) {
                     let item = ref.item;
-                    if (item === "any" && val && val.$schema) {
-                        item = val.$schema;
+                    if (item === "any" && val && val.__schema) {
+                        item = val.__schema;
                     }
                     let elemSchema = this.domain.findSchemaDescription(item);
                     if (elemSchema) {
@@ -378,7 +378,7 @@ export class Domain {
         }
         obj = obj || new schema.schemaType(); //origin;
 
-        (<any>obj).$schema = (<any>obj).$schema || schema.name;
+        (<any>obj).__schema = (<any>obj).__schema || schema.name;
 
         // Convert properties
         for (const ps in schema.properties) {
@@ -405,8 +405,8 @@ export class Domain {
             if (relationshipSchema && refValue) {
                 try {
                     let item = relationshipSchema.item;
-                    if (item === "any" && refValue && refValue.$schema) {
-                        item = refValue.$schema;
+                    if (item === "any" && refValue && refValue.__schema) {
+                        item = refValue.__schema;
                     }
                     let elemSchema = this.findSchemaDescription(item);
                     if (!elemSchema && item !== "any") {
@@ -475,7 +475,7 @@ export class Domain {
     resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {
         let schema: SchemaDescription;
         if (!schemaName || typeof schemaName === "string") {
-            schemaName = schemaName || val && val.$schema;
+            schemaName = schemaName || val && val.__schema;
             schema = schemaName && this._schemaDescriptions.get(<string>schemaName);
             if (!schema) { throw new Error("Unknown schema " + schemaName); }
         }

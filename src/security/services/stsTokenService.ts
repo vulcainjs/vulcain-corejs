@@ -26,7 +26,7 @@ export class StsTokenService implements ITokenService {
     private jwksClient: { getSigningKey(kid: string, callback: (err: Error, key: { publicKey: string, rsaPublicKey: string}) => void) };
 
     constructor() {
-        this.authority = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
+        this.authority = System.createChainedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
         System.log.info(null, () => `using ${this.authority.value} as STS authority`);
         this.initializeRsaSigninKey();
     }

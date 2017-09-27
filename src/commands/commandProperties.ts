@@ -157,7 +157,7 @@ export class CommandProperties {
     }
 
     private get<TValue>(name: string, schema: string, defaultValue?: TValue) {
-        return System.createServiceConfigurationProperty<TValue>(
+        return System.createChainedConfigurationProperty<TValue>(
             name,
             defaultValue || Conventions.instance.hystrix[name],
             this.commandName );

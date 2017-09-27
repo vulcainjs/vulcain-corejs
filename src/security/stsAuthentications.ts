@@ -17,7 +17,7 @@ export class StsAuthentication extends SecurityManager {
 
     constructor( @Inject(DefaultServiceNames.AuthorizationPolicy) scopePolicy: IAuthorizationPolicy) {
         super(scopePolicy);
-        this.authority = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
+        this.authority = System.createChainedConfigurationProperty<string>(Conventions.instance.TOKEN_STS_AUTHORITY, 'http://localhost:5100');
         System.log.info(null, () => `using ${this.authority.value} as STS authority`);
 
         this.addOrReplaceStrategy('bearer', this.verify.bind(this));

@@ -39,7 +39,7 @@ export class HystrixCommand {
         command.container = container;
         this.command.requestContext =  requestContext.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
-        this.command.requestContext.logInfo(() => `Initializing hystrix command ${this.getCommandName()} with properties ${this.properties.toString()}`);
+        this.command.requestContext.addTags({ hystrixProperties: this.properties.toString() });
     }
 
     get circuitBreaker() {
@@ -91,10 +91,8 @@ export class HystrixCommand {
 
                             result = await Promise.race(promises);
                             executing = false; // avoid timeout rejection
-                            console.log("Command success");
                         }
                         catch (e) {
-                            console.log("Command failed " + e.message);
                             // timeout
                             if (e instanceof TimeoutError) {
                                 this.hystrixMetrics.markTimeout();

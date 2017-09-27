@@ -18,8 +18,8 @@ export class MockManager implements IMockManager {
     }
 
     constructor() {
-        this.useMockProperty = System.createServiceConfigurationProperty<string>("vulcainUseMockSession");
-        this.registerMockProperty = System.createServiceConfigurationProperty<string>("vulcainRegisterMockSession");
+        this.useMockProperty = System.createChainedConfigurationProperty<string>("vulcainUseMockSession");
+        this.registerMockProperty = System.createChainedConfigurationProperty<string>("vulcainRegisterMockSession");
     }
 
     initialize(mocks, saveSessionsAsync?: (sessions) => Promise<any>) {

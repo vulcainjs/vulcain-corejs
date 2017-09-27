@@ -17,9 +17,9 @@ export class TokenService implements ITokenService {
     private tokenExpiration: IDynamicProperty<string>;
 
     constructor() {
-        this.issuer = System.createSharedConfigurationProperty<string>( Conventions.instance.TOKEN_ISSUER );
-        this.tokenExpiration = System.createSharedConfigurationProperty<string>(Conventions.instance.TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
-        this.secretKey = System.createSharedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
+        this.issuer = System.createChainedConfigurationProperty<string>( Conventions.instance.TOKEN_ISSUER );
+        this.tokenExpiration = System.createChainedConfigurationProperty<string>(Conventions.instance.TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
+        this.secretKey = System.createChainedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
     createTokenAsync( user: UserContext ): Promise<{ expiresIn: number, token: string, renewToken: string }> {

@@ -48,9 +48,9 @@ export class Validator {
 
             try {
                 let ref = schemaDesc.references[rs];
-                if (ref.item === "any" && formatContext.propertyValue && formatContext.propertyValue.$schema) {
+                if (ref.item === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
                     if (ref && ref.dependsOn && !ref.dependsOn(val)) continue;
-                    let schema = this.domain.getSchema(formatContext.propertyValue.$schema);
+                    let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
                     if (!schema) continue;
                     errors = errors.concat(await this.validateAsync(ctx, schema.description, formatContext.propertyValue));
                 }
@@ -74,7 +74,7 @@ export class Validator {
                     errors.push({ message: this.__formatMessage(err, formatContext, schemaDesc), id: formatContext.id });
             }
             catch (e) {
-                errors.push({ message: this.__formatMessage("Validation error for element {$schema} : " + e, formatContext), id: formatContext.id });
+                errors.push({ message: this.__formatMessage("Validation error for element {__schema} : " + e, formatContext), id: formatContext.id });
             }
         }
         return errors;
@@ -121,8 +121,8 @@ export class Validator {
         for (let val of values) {
             if (val) {
                 let currentItemSchema = baseItemSchema;
-                if (val.$schema && (!currentItemSchema || val.$schema !== currentItemSchema.name)) {
-                    currentItemSchema = this.domain.getSchema(val.$schema, true);
+                if (val.__schema && (!currentItemSchema || val.__schema !== currentItemSchema.name)) {
+                    currentItemSchema = this.domain.getSchema(val.__schema, true);
                     if (!baseItemSchema)
                         baseItemSchema = currentItemSchema;
                 }
@@ -177,7 +177,7 @@ export class Validator {
             switch (name) {
                 case "$value":
                     return ctx.propertyValue;
-                case "$schema":
+                case "__schema":
                     return ctx.propertyName ? ctx.propertySchema : ctx.schemaElement;
                 case "$id":
                     return ctx.id;

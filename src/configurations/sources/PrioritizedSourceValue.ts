@@ -1,5 +1,4 @@
 import { IConfigurationSource, IRemoteConfigurationSource } from "../abstractions";
-import { EnvironmentVariableSource } from "./environmentVariableSource";
 
 export class PrioritizedSourceValue implements IConfigurationSource {
     private chain: IConfigurationSource[];
@@ -15,7 +14,6 @@ export class PrioritizedSourceValue implements IConfigurationSource {
         else {
             this._remoteSources = [];
         }
-        this.chain.push(new EnvironmentVariableSource());
         if (localSources)
             this.chain = this.chain.concat(localSources);
     }

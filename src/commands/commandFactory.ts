@@ -9,6 +9,7 @@ import { CommandMetricsFactory } from "./metrics/commandMetricsFactory";
 import { System } from './../globals/system';
 import { Preloader } from "../preloader";
 import { Domain } from '../schemas/schema';
+import { Pipeline } from "../pipeline/common";
 
 export interface CommandConfiguration {
     circuitEnabled?: boolean;
@@ -67,6 +68,7 @@ export class CommandFactory {
             }
             else {
                 container = <IContainer>contextOrContainer;
+                context = new RequestContext(container, Pipeline.Test);
             }
             let resolvedCommand = container.resolve(cache.command);
             let cmd = new HystrixCommand(cache.properties, resolvedCommand, <RequestContext>context, container);

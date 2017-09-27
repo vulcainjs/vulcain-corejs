@@ -68,6 +68,7 @@ export class Application {
      * @param app  (optional)Server adapter
      */
     constructor(private domainName?: string, private _container?: IContainer) {
+        this._container = this._container || new Container();
     }
 
     private async init() {
@@ -88,7 +89,6 @@ export class Application {
         // Ensure initializing this first
         const test = System.isDevelopment;
 
-        this._container = this._container || new Container();
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
@@ -208,7 +208,7 @@ export class ApplicationBuilder {
         this.app = new Application(domain);
     }
 
-    public useMongo(address?: string) {
+    public useMongo(address: string) {
         this.app.container.useMongoProvider(address);
         return this;
     }

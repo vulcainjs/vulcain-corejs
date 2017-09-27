@@ -10,13 +10,12 @@ export interface IUpdatableProperty { // Internal interface
 export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProperty {
     protected val: T;
     protected removed: boolean;
-    private notifying: boolean;
-
+    protected notifying: boolean;
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
 
     constructor(protected manager: ConfigurationManager, public name: string, protected defaultValue: T) {
         manager.properties.set(name, this);
-        if(defaultValue !== undefined)
+        if(this.defaultValue !== undefined)
             this.onPropertyChanged();
     }
 
@@ -58,7 +57,7 @@ export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProper
     protected onPropertyChanged() {
         if (!this.name || this.notifying)
             return;
-        
+
         this.notifying = true;
         try {
             this._propertyChanged && this._propertyChanged.next(this);

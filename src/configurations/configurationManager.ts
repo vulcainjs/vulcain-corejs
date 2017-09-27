@@ -6,12 +6,14 @@ import { ChainedDynamicProperty } from './properties/chainedPropertyValue';
 import { FileConfigurationSource, ConfigurationDataType } from './sources/fileConfigurationSource';
 import { System } from '../globals/system';
 import { MockConfigurationSource } from './sources/memoryConfigurationSource';
+import { EnvironmentVariableSource } from "./sources/environmentVariableSource";
 
 export class ConfigurationManager {
     private _values: PrioritizedSourceValue;
-    private _dynamicProperties = new Map<string, DynamicProperty<any>>();
+    private _dynamicProperties = new Map<string, IDynamicProperty<any>>();
     private disposed: boolean;
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<any>>;
+    private _environmentVariables: EnvironmentVariableSource = new EnvironmentVariableSource();
 
     get properties() {
         return this._dynamicProperties;
@@ -29,7 +31,7 @@ export class ConfigurationManager {
         public sourceTimeoutInMs: number = 1500) {
     }
 
-    get(name: string) {
+    getValueInSources(name: string) {
         if (!this._values) {
             this._values = new PrioritizedSourceValue();
         }
@@ -40,7 +42,7 @@ export class ConfigurationManager {
     createDynamicProperty<T>(name: string, defaultValue?: T) {
         let dp = new DynamicProperty<T>(this, name, defaultValue);
         if (name) {
-            dp.set(this.get(name));
+            dp.set(this.getValueInSources(name));
         }
 
         return dp;
@@ -52,12 +54,23 @@ export class ConfigurationManager {
             return this.createDynamicProperty(name, defaultValue);
 
         let dp = new ChainedDynamicProperty<T>(this, name, properties, defaultValue);
-        dp.set(this.get(name));
+        dp.set(this.getValueInSources(name));
         return dp;
     }
 
+    getValueFromEnvironmentVariable<T>(name: string): T {
+        let val = this._environmentVariables.get(name);
+        return <T>val;
+    }
+
     getProperty<T>(name: string): IDynamicProperty<T> {
-        return this._dynamicProperties.get(name);
+        let prop = this._dynamicProperties.get(name);
+        if (!prop) {
+            let v = this._environmentVariables.get(name);
+            if (v !== undefined)
+                prop = this.createDynamicProperty(name, v);
+        }
+        return prop;
     }
 
     /**
@@ -185,8 +198,8 @@ export class ConfigurationManager {
             if (!dp) {
                 dp = this.createDynamicProperty(d.key);
             }
-            else if (dp.updateValue) {
-                dp.updateValue(d);
+            else if ((<any>dp).updateValue) {
+                (<any>dp).updateValue(d);
             }
         }
     }

@@ -8,7 +8,7 @@ export class CryptoHelper {
     private secretKey: IDynamicProperty<string>;
 
     constructor() {
-        this.secretKey = System.createSharedConfigurationProperty(
+        this.secretKey = System.createChainedConfigurationProperty(
             Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 

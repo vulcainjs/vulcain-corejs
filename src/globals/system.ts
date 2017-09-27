@@ -390,39 +390,20 @@ export class System {
     }
 
     /**
-     * create a shared property
-     * @param name
-     * @param defaultValue
-     * @returns {IDynamicProperty<T>}
-     */
-    public static createSharedConfigurationProperty<T>(name: string, defaultValue?: T): IDynamicProperty<T> {
-        let p = DynamicConfiguration.getProperty<T>(name);
-        if (p)
-            return p;
-
-        System.registerPropertyAsDependency(name, defaultValue);
-
-        return DynamicConfiguration.asChainedProperty<T>(
-            name,
-            defaultValue,
-            System.domainName && System.domainName + "." + name);
-    }
-
-    /**
      * create a new chained property for the current service. Properties chain is: service.version.name->service.name->domain.name->name
      * @param name property name
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
-    public static createServiceConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
+    public static createChainedConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
         let p = DynamicConfiguration.getProperty<T>(name);
         if (p)
             return p;
         System.registerPropertyAsDependency(name, defaultValue);
 
         let fullName = commandName ? commandName + "." + name : name;
-        let n = System.serviceName + "." + System.serviceVersion + "." + fullName;
         var chain = [
+            System.serviceName + "." + System.serviceVersion + "." + fullName,
             System.serviceName + "." + fullName,
         ];
 
@@ -436,7 +417,7 @@ export class System {
         chain.push(name);
 
         return DynamicConfiguration.asChainedProperty<T>(
-            n,
+            name,
             defaultValue,
             ...chain);
     }

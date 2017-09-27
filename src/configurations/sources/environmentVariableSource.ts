@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 export class EnvironmentVariableSource implements IConfigurationSource {
 
-    get(name: string) {
+    get(name: string):any {
         // As is
         let env = process.env[name];
         if (env)

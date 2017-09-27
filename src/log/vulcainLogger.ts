@@ -40,7 +40,7 @@ export class VulcainLogger implements Logger{
 
     private static get enableInfo() {
         if (!VulcainLogger._enableInfo)
-            VulcainLogger._enableInfo = System && System.createServiceConfigurationProperty("enableVerboseLog", false);
+            VulcainLogger._enableInfo = System && System.createChainedConfigurationProperty("enableVerboseLog", false);
         return VulcainLogger._enableInfo.value;
     }
 
