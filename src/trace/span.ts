@@ -10,6 +10,7 @@ import { EntryKind } from "../log/vulcainLogger";
 import { ISpanTracker, SpanId, SpanKind } from "./common";
 
 export class Span implements ISpanTracker {
+    private initialized: boolean;
     private _logger: Logger;
     private tags: { [name: string]: string } = {};
     private startTick: [number, number];
@@ -54,13 +55,14 @@ export class Span implements ISpanTracker {
     }
 
     private ensuresInitialized() {
-        if (!this.tracker && this.action) {
+        if (!this.initialized && this.action) {
+            this.initialized = true;
             this.id.traceId = this.context.correlationId;
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
             if (trackerFactory) {
                 this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
+                this.addTag('correlationId', this.context.correlationId);
             }
-            this.addTag('correlationId', this.context.correlationId);
 
             if (this.kind === SpanKind.Command) {
                 this.logAction("BC", `Command: ${this.name}`);
