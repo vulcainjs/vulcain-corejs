@@ -31,7 +31,6 @@ export class Span implements ISpanTracker {
         };
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
-        this.addTag('correlationId', this.context.correlationId);
 
         this.convertKind();
     }
@@ -61,6 +60,7 @@ export class Span implements ISpanTracker {
             if (trackerFactory) {
                 this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
             }
+            this.addTag('correlationId', this.context.correlationId);
 
             if (this.kind === SpanKind.Command) {
                 this.logAction("BC", `Command: ${this.name}`);
