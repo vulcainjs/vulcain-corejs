@@ -1,13 +1,14 @@
 import * as Path from 'path';
 import * as fs from 'fs';
 import { System } from './../globals/system';
+import { Conventions } from './conventions';
 
 export class Files
 {
     static findApplicationPath() {
         let parent = module.parent;
         while (parent.parent) {
-            if (fs.existsSync(Path.join(Path.dirname(parent.filename), 'startup.js')) &&
+            if (fs.existsSync(Path.join(Path.dirname(parent.filename), Conventions.instance.defaultApplicationFolder)) &&
                 fs.existsSync(Path.join(Path.dirname(parent.filename), 'index.js')))
                 break;
             parent = parent.parent;

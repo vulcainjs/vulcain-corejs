@@ -50,9 +50,9 @@ export class HystrixCommand {
         return SemaphoreFactory.getOrCreate(this.properties);
     }
 
-    async setSchemaOnCommandAsync(schema: string) {
-        if (schema && (<any>this.command).setSchemaAsync) {
-            this.schemaName = await (<any>this.command).setSchemaAsync(schema);
+    setSchemaOnCommand(schema: string) {
+        if (schema && (<any>this.command).setSchema) {
+            this.schemaName = (<any>this.command).setSchema(schema);
         }
     }
 

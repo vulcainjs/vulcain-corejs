@@ -83,11 +83,11 @@ export class CommandRequest implements IRequestContext {
     sendCustomEvent(action: string, params?: any, schema?: string) {
         return this.requestContext.sendCustomEvent(action, params, schema);
     }
-    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
-        return this.requestContext.getCommandAsync<T>(name, schema);
+    getCommand<T = ICommand>(name: string, schema?: string): T {
+        return this.requestContext.getCommand<T>(name, schema);
     }
-    getDefaultCRUDCommandAsync<T = ICommand>(schema?: string): Promise<T> {
-        return this.requestContext.getDefaultCRUDCommandAsync(schema);
+    getDefaultCRUDCommand<T = ICommand>(schema?: string): T {
+        return this.requestContext.getDefaultCRUDCommand(schema);
     }
     logError(error: Error, msg?: () => string) {
         return this.tracker.logError(error, msg);
@@ -239,12 +239,12 @@ export class RequestContext implements IRequestContext {
      * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommandAsync<T = ICommand>(name: string, schema?: string): Promise<T> {
-        return CommandFactory.getAsync<T>(name, this, schema);
+    getCommand<T = ICommand>(name: string, schema?: string): T {
+        return CommandFactory.get<T>(name, this, schema);
     }
 
-    getDefaultCRUDCommandAsync<T = ICommand>(schema?: string): Promise<T> {
-        return CommandFactory.getAsync<T>("DefaultCRUDCommand", this, schema);
+    getDefaultCRUDCommand<T = ICommand>(schema?: string): T {
+        return CommandFactory.get<T>("DefaultCRUDCommand", this, schema);
     }
 
     /**

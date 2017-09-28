@@ -15,8 +15,8 @@ export class ApiKeyService extends AbstractHandler implements ITokenService {
     }
 
     async verifyTokenAsync(data: VerifyTokenParameter): Promise<UserToken> {
-        const cmd = await CommandFactory.getAsync(ApiKeyVerifyCommand.commandName, this.requestContext);
-        return await cmd.runAsync<UserToken>(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
+        const cmd = CommandFactory.get<ApiKeyVerifyCommand>(ApiKeyVerifyCommand.commandName, this.requestContext);
+        return await cmd.runAsync(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
     }
 }
 
@@ -24,7 +24,7 @@ export class ApiKeyService extends AbstractHandler implements ITokenService {
 class ApiKeyVerifyCommand extends AbstractServiceCommand {
     static commandName = "ApiKeyVerifyCommand";
 
-    async runAsync(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<any> {
+    async runAsync(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<UserToken> {
         let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
         return resp.value;
     }

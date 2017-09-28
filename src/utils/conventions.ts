@@ -51,7 +51,7 @@ export class Conventions {
      * Naming
      *
      */
-    defaultApplicationFolder = "/api";
+    defaultApplicationFolder = "api";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
     vulcainFileName = ".vulcain";

@@ -56,10 +56,10 @@ export abstract class AbstractProviderCommand<T> {
      *
      * @param {string} schema
      */
-    async setSchemaAsync(schema: string): Promise<string> {
+    setSchema(schema: string): string {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = await this.providerFactory.getProviderAsync(this.requestContext, this.requestContext.user.tenant);
+            this.provider = this.providerFactory.getProvider(this.requestContext, this.requestContext.user.tenant);
             return this.schema.name;
         }
     }

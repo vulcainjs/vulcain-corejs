@@ -16,6 +16,7 @@ import { ApplicationError } from "../../pipeline/errors/applicationRequestError"
 export class MongoProvider implements IProvider<any>
 {
     ctx: IRequestContext;
+    private tenant: string;
 
     public state: {
         keyPropertyNameBySchemas: Map<string, string>;
@@ -45,13 +46,15 @@ export class MongoProvider implements IProvider<any>
         this.state = { uri: uri, keyPropertyNameBySchemas: new Map<string, string>() };
     }
 
-    initializeTenantAsync(context: IRequestContext, tenant: string) : Promise<() => Promise<any>> {
+    setTenant(tenant: string): () => any {
+        // Don't use this.ctx in this method (Not initialized yet)
         if (!tenant)
             throw new Error("tenant is required");
 
+        this.tenant = tenant;
         // Insert tenant into connexion string
         let url = URL.parse(this.state.uri);
-        // If no database is provide just use the tenant as database name
+        // If no database is provided just use the tenant as database name
         if( !url.pathname || url.pathname === "/")
             url.pathname = tenant;
         else
@@ -59,33 +62,20 @@ export class MongoProvider implements IProvider<any>
             url.pathname += "_" + tenant;
         this.state.uri = URL.format(url);
 
-        context.logVerbose(()=>`MONGODB: Creating provider ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
-
-        const state = this.state;
-        const options = this.options;
-
-        return new Promise((resolve, reject) => {
-            // Don't use 'this' here to avoid memory leaks
-            // Open connexion
-            MongoClient.connect(state.uri, options, (err, db) => {
-                if (err) {
-                    reject(err);
-                    context.logError(err, ()=>`MONGODB: Error when opening database ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
-                    return;
-                }
-
-                state._mongo = db;
-
-                resolve(async () => {
-                    db.close();
-                    state._mongo = null;
-                    state.dispose = null;
-                });
-            });
-        });
+        System.log.verbose(null, () => `MONGODB: Creating provider ${System.removePasswordFromUrl(this.state.uri)} for tenant ${tenant}`);
+        return this.dispose.bind(this);
     }
 
-    private ensureSchemaReadyAsync( schema: Schema) {
+    dispose() {
+        this.state._mongo.close();
+        this.state._mongo = null;
+        this.state.dispose = null;
+    }
+
+    private async ensureSchemaReadyAsync(schema: Schema) {
+        if(!this.state._mongo)
+            await this.openDatabase();
+
         let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
         if (keyPropertyName) {
             return Promise.resolve();
@@ -128,6 +118,22 @@ export class MongoProvider implements IProvider<any>
         });
     }
 
+    private openDatabase() {
+        return new Promise((resolve, reject) => {
+            // Don't use 'this' here to avoid memory leaks
+            // Open connexion
+            MongoClient.connect(this.state.uri, this.options, (err, db) => {
+                if (err) {
+                    reject(err);
+                    this.ctx.logError(err, ()=>`MONGODB: Error when opening database ${System.removePasswordFromUrl(this.state.uri)} for tenant ${this.tenant}`);
+                    return;
+                }
+
+                this.state._mongo = db;
+                resolve();
+            });
+        });
+    }
     /**
      * Return a list of entities
      * @param options

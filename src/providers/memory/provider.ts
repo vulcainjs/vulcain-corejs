@@ -39,7 +39,7 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    initializeTenantAsync(context: IRequestContext, tenant: string) {
+    setTenant(tenant: string) {
 
         if (!tenant)
             throw new Error("Tenant can not be null");
@@ -55,7 +55,7 @@ export class MemoryProvider implements IProvider<any>
         }
         this.state = { schemas: new Map<string, ISchemaData>(), folder };
 
-        return Promise.resolve(async () => { this.state = null; });
+        return () => { this.state = null; };
     }
 
     private ensureSchema(schema: Schema) {

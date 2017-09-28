@@ -9,7 +9,7 @@ import { IRequestContext } from "../pipeline/common";
 interface PoolItem {
     provider?: IProvider<any>;
     count?: number;
-    dispose?: () => Promise<any>;
+    dispose?: () => void;
 }
 
 class ContextualProvider {
@@ -54,14 +54,14 @@ export class ProviderFactory {
         }
     }
 
-    async getProviderAsync(context: IRequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
+    getProvider(context: IRequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
         tenant = tenant || context.user.tenant;
         let poolKey = providerName + "!" + tenant;
         let provider = this.getFromPool(poolKey);
         if (!provider) {
             provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
             let item: PoolItem = { provider };
-            item.dispose = await provider.initializeTenantAsync(context, tenant);
+            item.dispose = provider.setTenant(tenant);
             if (item.dispose) {
                 this.addToPool(context, poolKey, item);
             }

@@ -45,11 +45,11 @@ export interface IProvider<T>
      * Called only once by tenant
      *
      * @param {string} tenant - The tenant to use
-     * @returns {Promise<() => Promise<any>>} Dispose function
+     * @returns {() => Promise<any>} Dispose function
      *
      * @memberOf IProvider
      */
-    initializeTenantAsync(context: IRequestContext, tenant: string): Promise<() => Promise<any>>;
+    setTenant(tenant: string): () => void;
     /**
      * Find an entity
      *
