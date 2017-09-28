@@ -59,7 +59,7 @@ export abstract class AbstractServiceCommand {
      *
      * @type {IRequestContext}
      */
-    public requestContext: IRequestContext;
+    public context: IRequestContext;
     /**
      * Creates an instance of AbstractCommand.
      *
@@ -75,7 +75,7 @@ export abstract class AbstractServiceCommand {
 //            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
 //        }
 
-        this.requestContext.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
+        this.context.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
         System.manifest.registerService(serviceName, serviceVersion);
     }
 
@@ -129,13 +129,13 @@ export abstract class AbstractServiceCommand {
         const mocks = System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for ${serviceName}`);
+            System.log.info(this.context, ()=>`Using mock database result for ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
-        this.requestContext.trackAction("get");
+        this.context.trackAction("get");
         let res = this.sendRequestAsync("get", url);
         return res;
     }
@@ -160,13 +160,13 @@ export abstract class AbstractServiceCommand {
         const mocks = System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
-        this.requestContext.trackAction("Query");
+        this.context.trackAction("Query");
 
         let res = this.sendRequestAsync("get", url);
         return res;
@@ -181,38 +181,38 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<ActionResponse<T>>}
      */
     protected async sendActionAsync<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
-        let command = { params: data, correlationId: this.requestContext.correlationId };
+        let command = { params: data, correlationId: this.context.correlationId };
         const mocks=System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.requestContext, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', verb, args);
-        this.requestContext.trackAction(verb);
+        this.context.trackAction(verb);
         let res = <any>this.sendRequestAsync("post", url, (req) => req.json(data));
         return res;
     }
 
     private async setUserContextAsync(request: types.IHttpCommandRequest) {
-        request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.requestContext.user.tenant);
+        request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.context.user.tenant);
 
         if (this.overrideAuthorization) {
             request.header("Authorization", this.overrideAuthorization);
             return;
         }
 
-        let ctx = this.requestContext as RequestContext;
+        let ctx = this.context as RequestContext;
         let token = ctx.getBearerToken();
         if (!token) {
-            if (!this.requestContext.user) {
+            if (!this.context.user) {
                 return;
             }
-            let tokens = this.requestContext.container.get<ITokenService>(DefaultServiceNames.TokenService);
+            let tokens = this.context.container.get<ITokenService>(DefaultServiceNames.TokenService);
             // Ensures jwtToken exists for user context propagation
-            let result: any = await tokens.createTokenAsync(this.requestContext.user);
+            let result: any = await tokens.createTokenAsync(this.context.user);
             token = result.token;
             ctx.setBearerToken(token);
         }
@@ -233,14 +233,14 @@ export abstract class AbstractServiceCommand {
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
-        let ctx = this.requestContext as RequestContext;
+        let ctx = this.context as RequestContext;
         await this.setUserContextAsync(request);
 
-        this.requestContext.injectHeaders(request.header);
+        this.context.injectHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 
-        this.requestContext.logInfo(()=>"Calling vulcain service on " + url);
+        this.context.logInfo(()=>"Calling vulcain service on " + url);
         return new Promise<any>((resolve, reject) => {
             try {
                 request.end((response: types.IHttpCommandResponse) => {
@@ -263,24 +263,24 @@ export abstract class AbstractServiceCommand {
                         else {
                             err = new ApplicationError((response.error && response.error.message) || "Unknow error", response.status);
                         }
-                        System.log.error(this.requestContext, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        System.log.error(this.context, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;
                     }
                     let vulcainResponse = response.body;
                     if (vulcainResponse.error) {
-                        System.log.info(this.requestContext, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        System.log.info(this.context, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(new ApplicationError(vulcainResponse.error.message, response.status, vulcainResponse.error.errors));
                     }
                     else {
-                        System.log.info(this.requestContext, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
+                        System.log.info(this.context, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
                         resolve(vulcainResponse);
                     }
                 });
             }
             catch (err) {
                 let msg = ()=>`Service request ${verb} ${url} failed`;
-                System.log.error(this.requestContext, err, msg);
+                System.log.error(this.context, err, msg);
                 if (!(err instanceof Error)) {
                     let tmp = err;
                     err = new Error(msg());

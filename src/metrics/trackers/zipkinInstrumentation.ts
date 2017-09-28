@@ -43,8 +43,8 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker {
-        return new ZipkinRequestTracker(this.recorder, id, kind, name, action, tags);
+    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string): IRequestTracker {
+        return new ZipkinRequestTracker(this.recorder, id, kind, name, action);
     }
 }
 
@@ -52,7 +52,7 @@ class ZipkinRequestTracker implements IRequestTracker {
     private tracer;
     private id: any;
 
-    constructor(recorder, spanId: SpanId, private kind: SpanKind, private name: string, private action: string, tags) {
+    constructor(recorder, spanId: SpanId, private kind: SpanKind, private name: string, private action: string) {
         this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
 
         this.id = new TraceId({
@@ -78,8 +78,6 @@ class ZipkinRequestTracker implements IRequestTracker {
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
         else if (kind === SpanKind.Request)
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
-
-        this.setTags(tags);
     }
 
     private setTags(tags) {
@@ -88,13 +86,13 @@ class ZipkinRequestTracker implements IRequestTracker {
         });
     }
 
-    trackError(error, tags) {
+    trackError(error) {
         this.tracer.recordBinary("error", error.message || error);
-        this.setTags(tags);
     }
 
     dispose(duration: number, tags) {
       //  console.log(`End span ${this.name}, action ${this.action}, id: ${this.id}; kind: ${this.kind}`);
+      this.setTags(tags);
 
         if (this.kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientRecv());

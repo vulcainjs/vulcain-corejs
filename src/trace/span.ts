@@ -60,7 +60,7 @@ export class Span implements ISpanTracker {
             this.id.traceId = this.context.correlationId;
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
             if (trackerFactory) {
-                this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action, this.tags);
+                this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action);
                 this.addTag('correlationId', this.context.correlationId);
             }
 
@@ -219,7 +219,7 @@ export class Span implements ISpanTracker {
 
         if (!this.error) this.error = error; // Catch only first error
         if (this.tracker) {
-            this.tracker.trackError(error, this.tags);
+            this.tracker.trackError(error);
         }
         this._logger.error(this.context, error, msg);
     }
@@ -241,7 +241,7 @@ export class Span implements ISpanTracker {
     /**
      * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *

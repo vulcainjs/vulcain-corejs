@@ -10,7 +10,7 @@ export enum BusUsage {
 }
 
 export interface IContainer {
-    
+
     registerEndpoint(route: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
     getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
 
@@ -172,7 +172,7 @@ export class ScopedResolver extends Resolver {
             if (name && instance)
                 container.scope.set(name, instance);
         }
-        instance.requestContext = container.scope.requestContext;
+        instance.context = container.scope.context;
         return instance;
     }
 }

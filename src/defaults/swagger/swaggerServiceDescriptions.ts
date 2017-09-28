@@ -10,7 +10,7 @@ import { Conventions } from '../../utils/conventions';
 
 
 export class SwaggerServiceDescriptor implements IScopedComponent {
-    requestContext: IRequestContext;
+    context: IRequestContext;
 
     private static defaultDefinitionType: string = "object";
 
@@ -25,7 +25,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         descriptions.tags = this.computeTags(serviceDescription.services);
         descriptions.definitions = this.computeDefinitions(serviceDescription.schemas);
         descriptions.paths = this.computePaths(serviceDescription);
-        descriptions.host = this.requestContext.hostName;
+        descriptions.host = this.context.hostName;
         descriptions.basePath = Conventions.instance.defaultUrlprefix;
 
         descriptions.definitions['_errorResponse'] = this.createResponseDefinition({

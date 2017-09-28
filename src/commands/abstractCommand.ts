@@ -14,7 +14,7 @@ import { Span } from '../trace/span';
  * @interface ICommand
  */
 export interface ICommand {
-    requestContext: IRequestContext;
+    context: IRequestContext;
     /**
      * execute the command
      * @param args
@@ -37,7 +37,7 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
      *
      * @type {RequestContext}
      */
-    public requestContext: IRequestContext;
+    public context: IRequestContext;
 
     /**
      * Components container
@@ -62,7 +62,7 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     }
 
     protected setMetricsTags(args: { [key: string] : string }) {
-        this.requestContext.addTags(args);
+        this.context.addTags(args);
     }
 
     /**

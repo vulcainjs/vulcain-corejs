@@ -11,7 +11,7 @@ import { Span } from '../trace/span';
 
 
 export abstract class AbstractHttpCommand {
-    public requestContext: IRequestContext;
+    public context: IRequestContext;
     private static METRICS_NAME = "external_call";
 
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
@@ -37,7 +37,7 @@ export abstract class AbstractHttpCommand {
         System.manifest.registerExternal(uri);
 
         if(uri && verb)
-            this.requestContext.addTags({ uri: uri, verb: verb });
+            this.context.addTags({ uri: uri, verb: verb });
     }
 
     runAsync(...args): Promise<any> {
@@ -78,26 +78,26 @@ export abstract class AbstractHttpCommand {
      */
     protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
-        this.requestContext.trackAction(verb);
+        this.context.trackAction(verb);
         this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttpAsync(url, verb);
         if (result) {
-            System.log.info(this.requestContext, ()=>`Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+            System.log.info(this.context, ()=>`Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
             return result;
         }
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
-        System.log.info(this.requestContext, ()=>`Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
+        System.log.info(this.context, ()=>`Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
 
         return new Promise<types.IHttpCommandResponse>((resolve, reject) => {
             request.end((response) => {
                 if (response.status >= 400) {
                     let msg = ()=> `Http request ${verb} ${url} failed with status code ${response.status}`;
-                    System.log.info(this.requestContext, msg);
+                    System.log.info(this.context, msg);
                     reject(new HttpCommandError(msg(), response));
                     return;
                 }
@@ -108,14 +108,14 @@ export abstract class AbstractHttpCommand {
                     return;
                 }
 
-                System.log.info(this.requestContext, ()=>`Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
+                System.log.info(this.context, ()=>`Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
                 resolve(response);
             });
         });
     }
 
     private handleError(msg: ()=>string, err?) {
-        System.log.error(this.requestContext, err, msg);
+        System.log.error(this.context, err, msg);
         if (err && !(err instanceof Error)) {
             let tmp = err;
             err = new Error(msg());

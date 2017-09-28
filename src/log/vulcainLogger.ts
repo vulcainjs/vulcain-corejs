@@ -51,15 +51,15 @@ export class VulcainLogger implements Logger{
     /**
      * Log an error
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {Error} error Error instance
      * @param {string} [msg] Additional message
      *
      * @memberOf VulcainLogger
      */
-    error(requestContext: IRequestContext, error: Error, msg?: ()=>string) {
+    error(context: IRequestContext, error: Error, msg?: ()=>string) {
         if (!error) return;
-        let entry = this.prepareEntry(requestContext);
+        let entry = this.prepareEntry(context);
         entry.message = (msg && msg()) || "Error occured";
         entry.error = error.message;
         if(!(error instanceof ApplicationError))
@@ -71,14 +71,14 @@ export class VulcainLogger implements Logger{
     /**
      * Log a message
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *
      * @memberOf VulcainLogger
      */
-    info(requestContext: IRequestContext, msg: ()=>string) {
-        let entry = this.prepareEntry(requestContext);
+    info(context: IRequestContext, msg: ()=>string) {
+        let entry = this.prepareEntry(context);
         entry.message = msg && msg();
         this.writeEntry(entry);
     }
@@ -86,35 +86,35 @@ export class VulcainLogger implements Logger{
     /**
      * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *
      * @memberOf VulcainLogger
      */
-    verbose(requestContext: IRequestContext, msg: ()=>string) {
+    verbose(context: IRequestContext, msg: ()=>string) {
         if (VulcainLogger.enableInfo || System.isDevelopment)
-            this.info(requestContext, msg);
+            this.info(context, msg);
     }
 
-    logAction(requestContext: IRequestContext, kind: EntryKind, message?: string) {
-        let entry = this.prepareEntry(requestContext);
+    logAction(context: IRequestContext, kind: EntryKind, message?: string) {
+        let entry = this.prepareEntry(context);
         entry.kind = kind;
         entry.message = message;
         this.writeEntry(entry);
     }
 
-    private prepareEntry(requestContext: IRequestContext) {
-        const ctx = <RequestContext>requestContext;
+    private prepareEntry(context: IRequestContext) {
+        const ctx = <RequestContext>context;
         return <LogEntry>{
             service: System.serviceName,
             version: System.serviceVersion,
             kind: "Log",
             source: this._hostname,
             timestamp: Date.now() * 1000,
-            correlationId: (requestContext && requestContext.correlationId) || undefined,
-            //parentId: (requestContext && requestContext.parentId) || undefined,
-            //traceId: (requestContext && requestContext.traceId) || undefined
+            correlationId: (context && context.correlationId) || undefined,
+            //parentId: (context && context.parentId) || undefined,
+            //traceId: (context && context.traceId) || undefined
         };
     }
 

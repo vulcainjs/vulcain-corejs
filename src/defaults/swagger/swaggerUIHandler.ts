@@ -16,7 +16,7 @@ export class SwaggerUIHandler {
 
     @Query({ outputSchema: "string", description: "Display Swagger UI", action: "_swagger" })
     displaySwaggerUI() {
-        let ctx: RequestContext = (<any>this).requestContext;
+        let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)
             throw new ForbiddenRequestError();
 

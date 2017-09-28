@@ -11,8 +11,9 @@ import { SpanId, SpanKind } from "../trace/common";
 const appInsights = require('applicationinsights');
 class Tracker implements IRequestTracker {
     private error: Error;
+    private tags;
 
-    constructor(private ctx: IRequestContext, private id: SpanId, private name: string, private kind: SpanKind, private action: string, private tags) {
+    constructor(private ctx: IRequestContext, private id: SpanId, private name: string, private kind: SpanKind, private action: string) {
     }
 
     private getDependencyData(duration: number, error: Error, tags) {
@@ -41,7 +42,7 @@ class Tracker implements IRequestTracker {
         return data;
     };
 
-    trackError(error: any, tags: any) {
+    trackError(error: any) {
         this.error = error;
     }
 
@@ -83,8 +84,8 @@ class Tracker implements IRequestTracker {
 export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFactory {
     private static instance: ApplicationInsightsMetrics;
 
-    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker {
-        return new Tracker(ctx, id, name, kind, action, tags);
+    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string): IRequestTracker {
+        return new Tracker(ctx, id, name, kind, action);
     }
 
     static create() {

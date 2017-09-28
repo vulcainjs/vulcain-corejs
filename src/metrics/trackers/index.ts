@@ -8,12 +8,12 @@ import { ApplicationInsightsMetrics } from '../applicationInsightsMetrics';
 import { SpanId, SpanKind } from '../../trace/common';
 
 export interface IRequestTracker {
-    trackError(error, tags);
+    trackError(error);
     dispose(duration: number, tags);
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string, tags): IRequestTracker;
+    startSpan( ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string): IRequestTracker;
 }
 
 export class TrackerFactory {

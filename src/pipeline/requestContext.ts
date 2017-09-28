@@ -35,19 +35,19 @@ export class VulcainHeaderNames {
 
 export class CommandRequest implements IRequestContext {
     tracker: ISpanRequestTracker;
-    private requestContext: RequestContext;
-    get correlationId() { return this.requestContext.correlationId; }
-    get user() { return this.requestContext.user; }
-    get container() { return this.requestContext.container; }
-    get locale() { return this.requestContext.locale; }
-    get hostName() { return this.requestContext.hostName; }
-    get requestData() { return this.requestContext.requestData; }
-    get request() { return this.requestContext.request; }
-    get publicPath() { return this.requestContext.publicPath; }
+    private context: RequestContext;
+    get correlationId() { return this.context.correlationId; }
+    get user() { return this.context.user; }
+    get container() { return this.context.container; }
+    get locale() { return this.context.locale; }
+    get hostName() { return this.context.hostName; }
+    get requestData() { return this.context.requestData; }
+    get request() { return this.context.request; }
+    get publicPath() { return this.context.publicPath; }
 
-    constructor(requestContext: IRequestContext, commandName: string) {
-        this.requestContext = <RequestContext>requestContext;
-        this.tracker = this.requestContext.tracker.createCommandTracker(commandName);
+    constructor(context: IRequestContext, commandName: string) {
+        this.context = <RequestContext>context;
+        this.tracker = this.context.tracker.createCommandTracker(commandName);
     }
 
     trackAction(action: string, tags?: any) {
@@ -71,23 +71,23 @@ export class CommandRequest implements IRequestContext {
         this.user.bearer = token;
     }
     get now() {
-        return this.requestContext.now;
+        return this.context.now;
     }
     createCommandRequest(commandName: string) {
         return new CommandRequest(this, commandName);
     }
 
     getRequestDataObject() {
-        return this.requestContext.getRequestDataObject();
+        return this.context.getRequestDataObject();
     }
     sendCustomEvent(action: string, params?: any, schema?: string) {
-        return this.requestContext.sendCustomEvent(action, params, schema);
+        return this.context.sendCustomEvent(action, params, schema);
     }
     getCommand<T = ICommand>(name: string, schema?: string): T {
-        return this.requestContext.getCommand<T>(name, schema);
+        return this.context.getCommand<T>(name, schema);
     }
     getDefaultCRUDCommand<T = ICommand>(schema?: string): T {
-        return this.requestContext.getDefaultCRUDCommand(schema);
+        return this.context.getDefaultCRUDCommand(schema);
     }
     logError(error: Error, msg?: () => string) {
         return this.tracker.logError(error, msg);
@@ -205,7 +205,7 @@ export class RequestContext implements IRequestContext {
                 schema: data.schema,
                 correlationId: data.correlationId,
                 domain: data.domain,
-                params: data.params,
+                params: this.pipeline === Pipeline.Event ? data.value : data.params,
                 inputSchema: data.inputSchema,
                 maxByPage: data.maxByPage,
                 page: data.page,
@@ -213,7 +213,9 @@ export class RequestContext implements IRequestContext {
             }
         }
         if (this.pipeline !== Pipeline.Test) {
-            let parentId = this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+            // For event we don not use parentId to chain traces.
+            // However all traces can be aggredated with the correlationId tag.
+            let parentId = this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
             this.tracker = Span.createRequestTracker(this, parentId);
         }
         else {
@@ -272,7 +274,7 @@ export class RequestContext implements IRequestContext {
     /**
      * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *

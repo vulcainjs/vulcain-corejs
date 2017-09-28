@@ -14,7 +14,7 @@ export class DependencyExplorer {
 
     @Query({ outputSchema: "VulcainManifest", description: "Get service dependencies", action: "_serviceDependencies" })
     getDependencies() {
-        let ctx: RequestContext = (<any>this).requestContext;
+        let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)
             throw new ForbiddenRequestError();
 

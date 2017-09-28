@@ -22,14 +22,14 @@ export abstract class AbstractHandler implements IScopedComponent {
     constructor( @Inject("Container") public container: IContainer) {
     }
 
-    get requestContext(): IRequestContext {
+    get context(): IRequestContext {
         if (!this._requestContext) {
             this._requestContext = new RequestContext(this.container, Pipeline.HttpRequest); // TODO init metrics...
         }
         return this._requestContext;
     }
 
-    set requestContext(ctx: IRequestContext) {
+    set context(ctx: IRequestContext) {
         this._requestContext = <RequestContext>ctx;
     }
 

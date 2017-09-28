@@ -68,7 +68,7 @@ export interface IScopedComponent {
      *
      * @type {IRequestContext}
      */
-    requestContext: IRequestContext;
+    context: IRequestContext;
 }
 
 /**

@@ -34,12 +34,12 @@ export class HystrixCommand {
     private hystrixMetrics: ICommandMetrics;
     private schemaName: string;
     private command: ICommand;
-    constructor(private properties: CommandProperties, command: AbstractCommand<any>, requestContext: RequestContext, container: IContainer) {
+    constructor(private properties: CommandProperties, command: AbstractCommand<any>, context: RequestContext, container: IContainer) {
         this.command = command;
         command.container = container;
-        this.command.requestContext =  requestContext.createCommandRequest(this.getCommandName());
+        this.command.context =  context.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
-        this.command.requestContext.addTags({ hystrixProperties: this.properties.toString() });
+        this.command.context.addTags({ hystrixProperties: this.properties.toString() });
     }
 
     get circuitBreaker() {
@@ -106,7 +106,7 @@ export class HystrixCommand {
 
                         // Execution complete correctly
                         this.hystrixMetrics.markSuccess();
-                        this.hystrixMetrics.addExecutionTime(this.command.requestContext.durationInMs);
+                        this.hystrixMetrics.addExecutionTime(this.command.context.durationInMs);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
 
@@ -141,17 +141,17 @@ export class HystrixCommand {
         }
         finally {
             if (recordTotalTime) {
-                this.recordTotalExecutionTime(this.command.requestContext.durationInMs);
+                this.recordTotalExecutionTime(this.command.context.durationInMs);
             }
 
-            this.command.requestContext.dispose();
+            this.command.context.dispose();
             this.hystrixMetrics.decrementExecutionCount();
             this.status.isExecutionComplete = true;
         }
     }
 
     private async getFallbackOrThrowException(eventType: EventType, failureType: FailureType, message: string, error: Error): Promise<any> {
-        this.command.requestContext.logError(error);
+        this.command.context.logError(error);
 
         try {
             if (this.isUnrecoverable(error)) {
@@ -165,8 +165,8 @@ export class HystrixCommand {
                 throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
-                let oldContext = <RequestContext>this.command.requestContext;
-                this.command.requestContext= oldContext.createCommandRequest(this.getCommandName() + " Fallback");
+                let oldContext = <RequestContext>this.command.context;
+                this.command.context= oldContext.createCommandRequest(this.getCommandName() + " Fallback");
                 try {
                     this.logInfo(()=>"Use fallback for command");
                     let result = await fallback.apply(this.command, this._arguments);
@@ -175,7 +175,7 @@ export class HystrixCommand {
                     return result;
                 }
                 catch (e) {
-                    this.command.requestContext.logError(e);
+                    this.command.context.logError(e);
                     this.logInfo(()=>"Fallback failed " + e);
                     this.hystrixMetrics.markFallbackFailure();
                     this.status.addEvent(EventType.FALLBACK_FAILURE);
@@ -183,8 +183,8 @@ export class HystrixCommand {
                 }
                 finally {
                     this.semaphore.releaseFallback();
-                    this.command.requestContext.dispose();
-                    this.command.requestContext = oldContext;
+                    this.command.context.dispose();
+                    this.command.context = oldContext;
                 }
             }
             else {
@@ -204,8 +204,8 @@ export class HystrixCommand {
         e = e || new Error("Unknow error");
 
         if (e instanceof BadRequestError) {
-            this.hystrixMetrics.markBadRequest(this.command.requestContext.durationInMs);
-            this.command.requestContext.logError(e);
+            this.hystrixMetrics.markBadRequest(this.command.context.durationInMs);
+            this.command.context.logError(e);
             throw e;
         }
 
@@ -216,7 +216,7 @@ export class HystrixCommand {
     }
 
     private logInfo(msg: ()=> string) {
-        this.command.requestContext.logInfo(()=> this.getCommandName() + ": " + msg() );
+        this.command.context.logInfo(()=> this.getCommandName() + ": " + msg() );
     }
 
     private isUnrecoverable(e) {

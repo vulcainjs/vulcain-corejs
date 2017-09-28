@@ -2,8 +2,8 @@ import { EntryKind } from "./vulcainLogger";
 import { IRequestContext } from "../pipeline/common";
 
 export interface Logger {
-    error(requestContext: IRequestContext, error: Error, msg?: () => string);
-    info(requestContext: IRequestContext, msg: () => string);
-    verbose(requestContext: IRequestContext, msg: () => string);
-    logAction(requestContext: IRequestContext, kind: EntryKind, message?: string);
+    error(context: IRequestContext, error: Error, msg?: () => string);
+    info(context: IRequestContext, msg: () => string);
+    verbose(context: IRequestContext, msg: () => string);
+    logAction(context: IRequestContext, kind: EntryKind, message?: string);
 }

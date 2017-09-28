@@ -13,7 +13,7 @@ let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = await CommandFactory.getAsync("TestCommand", context.requestContext);
+        let command = CommandFactory.get("TestCommand", context.context);
         expect(command).not.to.be.undefined;
 
         let result = await command.runAsync<string>("success");
@@ -24,7 +24,7 @@ describe("Command", function () {
     });
 
     it("should timeout if the function does not resolve within the configured timeout", async () => {
-        let command = await CommandFactory.getAsync("TestCommandTimeout", context.requestContext);
+        let command = CommandFactory.get("TestCommandTimeout", context.context);
 
         expect(command).not.to.be.undefined;
         try {
@@ -41,7 +41,7 @@ describe("Command", function () {
     });
 
     it("should resolve with fallback if the run function fails", async () => {
-        let command = await CommandFactory.getAsync("TestCommandFallback", context.requestContext);
+        let command = CommandFactory.get("TestCommandFallback", context.context);
 
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
@@ -51,7 +51,7 @@ describe("Command", function () {
     });
 
     it("should not execute the run command, if the circuit is open", async () => {
-        let command = await CommandFactory.getAsync("TestCommandCircuitOpen", context.requestContext);
+        let command = CommandFactory.get("TestCommandCircuitOpen", context.context);
         let spy = sinon.spy((<any>command).command, "runAsync");
 
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");

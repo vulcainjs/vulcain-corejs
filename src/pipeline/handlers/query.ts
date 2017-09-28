@@ -115,7 +115,7 @@ export class QueryManager implements IManager {
             }
 
             query.schema = query.schema || <string>info.metadata.schema;
-            info.handler.requestContext = ctx;
+            info.handler.context = ctx;
 
             let result = await info.handler[info.method](query.params);
 

@@ -27,13 +27,13 @@ export class ServiceExplorer {
 
     @Query({ outputSchema: "ServiceDescription", description: "Get all service handler description. You can get the response on swagger format.", action: "_serviceDescription" })
     async getServiceDescriptions(model: ServiceExplorerParameter) {
-        let ctx: RequestContext = (<any>this).requestContext;
+        let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)
             throw new ForbiddenRequestError();
 
         let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         let result: ServiceDescription = await descriptors.getDescriptions();
-        result.alternateAddress = (<any>this).requestContext.hostName;
+        result.alternateAddress = (<any>this).context.hostName;
 
         if (model.format === 'swagger') {
             let descriptors = this.container.get<SwaggerServiceDescriptor>(DefaultServiceNames.SwaggerServiceDescriptor);

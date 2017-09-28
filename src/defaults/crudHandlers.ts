@@ -12,12 +12,12 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     // Execute command
     runAsync(action: string, data) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.user.tenant);
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         return this[action + "Internal"](data);
     }
 
     create(entity: any) {
-        this.requestContext.trackAction("create");
+        this.context.trackAction("create");
         return this.provider.createAsync( this.schema, entity);
     }
 
@@ -31,7 +31,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
-        this.requestContext.trackAction("update");
+        this.context.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
         if (!old)
@@ -50,7 +50,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     protected deleteInternal(entity: any) {
-        this.requestContext.trackAction("delete");
+        this.context.trackAction("delete");
         return this.delete(entity);
     }
 
@@ -60,7 +60,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     async get(id: any) {
-        this.requestContext.trackAction("get");
+        this.context.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
@@ -75,7 +75,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     all(options: any) {
-        this.requestContext.trackAction("getAll");
+        this.context.trackAction("getAll");
         return this.provider.getAllAsync(this.schema, options);
     }
 
@@ -105,7 +105,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async createAsync(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = await this.requestContext.getDefaultCRUDCommand(this.metadata.schema);
+        let cmd = await this.context.getDefaultCRUDCommand(this.metadata.schema);
         return cmd.runAsync( "create", entity);
     }
 
@@ -113,7 +113,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async updateAsync(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = await this.requestContext.getDefaultCRUDCommand(this.metadata.schema);
+        let cmd = await this.context.getDefaultCRUDCommand(this.metadata.schema);
         return cmd.runAsync( "update", entity);
     }
 
@@ -122,7 +122,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         if (!entity)
             throw new ApplicationError("Entity is required");
 
-        let cmd = await this.requestContext.getDefaultCRUDCommand(this.metadata.schema);
+        let cmd = await this.context.getDefaultCRUDCommand(this.metadata.schema);
         return cmd.runAsync( "delete", entity);
     }
 }
@@ -135,14 +135,14 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     @Query({ action: "get", description: "Get an entity by id" })
     async getAsync(id: any) {
-        let cmd = await this.requestContext.getDefaultCRUDCommand(this.metadata.schema);
+        let cmd = await this.context.getDefaultCRUDCommand(this.metadata.schema);
         return await cmd.runAsync<T>("get", id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
     async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
-        let options = { maxByPage: maxByPage || this.requestContext.requestData.maxByPage || 0, page: page || this.requestContext.requestData.page || 0, query:query || {} };
-        let cmd = await this.requestContext.getDefaultCRUDCommand(this.metadata.schema);
+        let options = { maxByPage: maxByPage || this.context.requestData.maxByPage || 0, page: page || this.context.requestData.page || 0, query:query || {} };
+        let cmd = await this.context.getDefaultCRUDCommand(this.metadata.schema);
         return await cmd.runAsync<T[]>( "all", options);
     }
 }

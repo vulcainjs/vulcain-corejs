@@ -39,7 +39,7 @@ export interface ISpanTracker {
     /**
      * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
      *
-     * @param {any} requestContext Current requestContext
+     * @param {any} context Current context
      * @param {string} msg Message format (can include %s, %j ...)
      * @param {...Array<string>} params Message parameters
      *
@@ -60,7 +60,7 @@ export class DummySpanTracker implements ISpanRequestTracker {
     createCommandTracker(commandName: string): ISpanRequestTracker {
         return this;
     }
-    
+
     trackAction(name: string, tags?: any) {
 
     }

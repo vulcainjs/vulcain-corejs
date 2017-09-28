@@ -23,7 +23,7 @@ export abstract class AbstractProviderCommand<T> {
 
     protected providerFactory: ProviderFactory;
 
-    public requestContext: IRequestContext;
+    public context: IRequestContext;
 
     /**
      *
@@ -59,7 +59,7 @@ export abstract class AbstractProviderCommand<T> {
     setSchema(schema: string): string {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = this.providerFactory.getProvider(this.requestContext, this.requestContext.user.tenant);
+            this.provider = this.providerFactory.getProvider(this.context, this.context.user.tenant);
             return this.schema.name;
         }
     }
@@ -67,7 +67,7 @@ export abstract class AbstractProviderCommand<T> {
     protected setMetricTags(address: string, schema: string, tenant?: string) {
         address = System.removePasswordFromUrl(address);
         System.manifest.registerProvider(address, schema);
-        this.requestContext.addTags({ address: address, schema: schema, tenant: (tenant || this.requestContext.user.tenant) });
+        this.context.addTags({ address: address, schema: schema, tenant: (tenant || this.context.user.tenant) });
     }
 
     /**

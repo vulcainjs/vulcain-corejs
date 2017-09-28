@@ -189,7 +189,7 @@ export class CommandManager implements IManager {
             // Synchronous task
             if (!metadata.async) {
 
-                info.handler.requestContext = ctx;
+                info.handler.context = ctx;
                 /** // Inject runAsyncTask in the current context
                 (<any>ctx)._runAsyncTask = (action, schema, params) => {
                     let task = <RequestData>{ action, schema, params };
@@ -257,7 +257,7 @@ export class CommandManager implements IManager {
         let res;
         try {
             ctx.trackAction(command.vulcainVerb, {params: command.params});
-            info.handler.requestContext = ctx;
+            info.handler.context = ctx;
             let result = await info.handler[info.method](Object.assign({}, command.params));
 
             if (result instanceof HttpResponse) {
@@ -326,10 +326,10 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.trackAction(evt.vulcainVerb, {params: evt.params});
+                        ctx.trackAction(evt.vulcainVerb, {params: ctx.requestData.params, source: evt.source});
                         ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
-                        handler.requestContext = ctx;
+                        handler.context = ctx;
                         handler.event = evt;
                     }
                     catch (e) {

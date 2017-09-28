@@ -42,18 +42,18 @@ export class Container implements IContainer {
      * Creates an instance of Container.
      *
      * @param {IContainer} [parent]
-     * @param {RequestContext} [requestContext]
+     * @param {RequestContext} [context]
      *
      * @memberOf Container
      */
-    constructor(private parent?: IContainer, requestContext?: RequestContext) {
-        if (parent && !requestContext)
+    constructor(private parent?: IContainer, context?: RequestContext) {
+        if (parent && !context)
             throw new Error("RequestContext must not be null.");
 
-        this.scope = new Scope(parent && (<any>parent).scope, requestContext);
+        this.scope = new Scope(parent && (<any>parent).scope, context);
         this.injectInstance(this, DefaultServiceNames.Container);
 
-        this.setRequestContext(requestContext);
+        this.setRequestContext(context);
 
         if (!parent) {
             this.injectInstance(new VulcainLogger(), DefaultServiceNames.Logger);
@@ -77,13 +77,13 @@ export class Container implements IContainer {
      * used by test
      *
      * @protected
-     * @param {RequestContext} requestContext
+     * @param {RequestContext} context
      *
      * @memberOf Container
      */
-    protected setRequestContext(requestContext: RequestContext) {
-        if (requestContext) {
-            this.scope.requestContext = requestContext;
+    protected setRequestContext(context: RequestContext) {
+        if (context) {
+            this.scope.context = context;
         }
     }
 
@@ -231,7 +231,7 @@ export class Container implements IContainer {
     }
 
     /**
-     * Scoped by request. Component are initialized with the current requestContext
+     * Scoped by request. Component are initialized with the current context
      *
      * @param fn
      * @param args

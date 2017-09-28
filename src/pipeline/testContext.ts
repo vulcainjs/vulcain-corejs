@@ -30,20 +30,20 @@ export class TestContext extends RequestContext {
     }
 
     getService<T>(name: string) {
-        return this.requestContext.container.get<T>(name);
+        return this.context.container.get<T>(name);
     }
 
-    get requestContext() {
+    get context() {
         let ctx = new RequestContext(this.container, Pipeline.Test);
         ctx.setSecurityManager("test");
         return ctx;
     }
 
     createHandler<T extends AbstractHandler>(handler: Function) {
-        let ctx = this.requestContext;
+        let ctx = this.context;
         let scopedContainer = new Container(this.container, ctx);
         let h = new (<(container: IContainer) => void>handler)(scopedContainer);
-        h.requestContext = ctx;
+        h.context = ctx;
         return h;
     }
 }
