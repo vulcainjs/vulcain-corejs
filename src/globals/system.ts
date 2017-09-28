@@ -321,7 +321,7 @@ export class System {
     }
 
     static get fullServiceName() {
-        return this.serviceName + "." + this.serviceVersion;
+        return this.serviceName + "-" + this.serviceVersion;
     }
 
     /**

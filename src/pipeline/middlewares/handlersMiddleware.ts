@@ -41,20 +41,23 @@ export class HandlersMiddleware extends VulcainMiddleware {
         const mocks = System.getMocksManager(ctx.container);
         let params = Object.assign({}, command.params || {});
         let metadata = <ActionMetadata>info.metadata;
+        let useMockResult = false;
         result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, metadata, info.verb, params);
 
         if (!mocks.enabled || result === undefined) {
             result = await manager.runAsync(command, ctx);
         }
+        else {
+            useMockResult = true;
+        }
         // TODO
         if (result && command.correlationId) {
-            result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
+        //    result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
         }
 
         ctx.response = result;
 
-        //this.endRequest(result, ctx);
-        mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
+        !useMockResult && mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
         return super.invoke(ctx);
     }
 }

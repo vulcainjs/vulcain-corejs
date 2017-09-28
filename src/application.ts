@@ -208,8 +208,18 @@ export class ApplicationBuilder {
         this.app = new Application(domain);
     }
 
-    public useMongo(address: string) {
+    public useMongoProvider(address: string) {
         this.app.container.useMongoProvider(address);
+        return this;
+    }
+
+    public useMemoryProvider(folder: string) {
+        this.app.container.useMemoryProvider(folder);
+        return this;
+    }
+
+    public useRabbitmqBus(address: string) {
+        this.app.container.useRabbitBusAdapter(address);
         return this;
     }
 

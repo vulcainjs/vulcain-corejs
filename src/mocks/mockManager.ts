@@ -18,8 +18,8 @@ export class MockManager implements IMockManager {
     }
 
     constructor() {
-        this.useMockProperty = System.createChainedConfigurationProperty<string>("vulcainUseMockSession");
-        this.registerMockProperty = System.createChainedConfigurationProperty<string>("vulcainRegisterMockSession");
+        this.useMockProperty = System.createChainedConfigurationProperty<string>("UseMocks");
+        this.registerMockProperty = System.createChainedConfigurationProperty<string>("SaveMocks");
     }
 
     initialize(mocks, saveSessionsAsync?: (sessions) => Promise<any>) {
@@ -138,7 +138,7 @@ export class MockManager implements IMockManager {
         for (let item of session) {
             let input = item.input;
             if (input) {
-                if (this.deepCompare(data, input)) {
+                if (this.deepCompare(data.input, input)) {
                     session.splice(ix, 1); // remove old item
                     break;
                 }
@@ -150,10 +150,19 @@ export class MockManager implements IMockManager {
         return this.saveSessionsAsync(this.sessions);
     }
 
+    /**
+     * Session syntax :
+     *  <session>[:<filter]
+     *  session : session name to use (save and get data)
+     *  filter : * | any part of a full service name (regexp)
+     *   ex for ServiceA, version 1.0 => fullName = ServiceA-1.0
+     *   filter : ServiceA, Service, ServiceA-1, Service.-1\.0
+     */
     private splitAndTestSession(val: string): string {
         if (!val) {
             return null;
         }
+
         const pos = val.indexOf(':');
         if (pos <= 0) {
             return val;
@@ -166,7 +175,7 @@ export class MockManager implements IMockManager {
         }
 
         const regex = new RegExp(filter, 'i');
-        if (regex.test(System.serviceName)) {
+        if (regex.test(System.fullServiceName)) {
             return session;
         }
         return null;
@@ -180,9 +189,6 @@ export class MockManager implements IMockManager {
         }
 
         let result = await this.getMockResultAsync(await this.readMockSessions(session, verb), params);
-       // if (result && result.content) {
-       //     result.content.correlationId = ctx.correlationId;
-       // }
         return result;
     }
 
@@ -194,7 +200,7 @@ export class MockManager implements IMockManager {
         }
         const data = {
             input: params,
-            output: result
+            output: { content: result.content, contentType: result.contentType, statusCode: result.statusCode }
         };
         return this.writeMockSessions(session, verb, data);
     }
