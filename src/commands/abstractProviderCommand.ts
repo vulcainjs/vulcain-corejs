@@ -38,8 +38,6 @@ export abstract class AbstractProviderCommand<T> {
      */
     schema: Schema;
 
-    private static METRICS_NAME = "database_io";
-
     /**
      * Creates an instance of AbstractCommand.
      *

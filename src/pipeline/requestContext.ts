@@ -18,6 +18,7 @@ const guid = require('uuid');
 import * as os from 'os';
 import { ISpanTracker, SpanKind, ISpanRequestTracker, DummySpanTracker } from '../trace/common';
 import { Span } from '../trace/span';
+import { DefaultCRUDCommand } from '../defaults/crudHandlers';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -86,7 +87,7 @@ export class CommandRequest implements IRequestContext {
     getCommand<T = ICommand>(name: string, schema?: string): T {
         return this.context.getCommand<T>(name, schema);
     }
-    getDefaultCRUDCommand<T = ICommand>(schema?: string): T {
+    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand {
         return this.context.getDefaultCRUDCommand(schema);
     }
     logError(error: Error, msg?: () => string) {
@@ -245,8 +246,8 @@ export class RequestContext implements IRequestContext {
         return CommandFactory.get<T>(name, this, schema);
     }
 
-    getDefaultCRUDCommand<T = ICommand>(schema?: string): T {
-        return CommandFactory.get<T>("DefaultCRUDCommand", this, schema);
+    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand {
+        return CommandFactory.get<DefaultCRUDCommand>("DefaultCRUDCommand", this, schema);
     }
 
     /**

@@ -3,6 +3,7 @@ import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
 import { ISpanTracker } from '../trace/common';
+import { DefaultCRUDCommand } from '../defaults/crudHandlers';
 
 export enum Pipeline {
     Event,
@@ -80,7 +81,7 @@ export interface IRequestContext extends ISpanTracker {
      * @returns {ICommand} A command
      */
     getCommand<T = ICommand>(name: string, schema?: string): T;
-    getDefaultCRUDCommand<T = ICommand>(schema?: string): T;
+    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand;
 }
 
 export interface RequestData {
