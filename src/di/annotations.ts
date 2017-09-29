@@ -18,7 +18,7 @@ export class DefaultServiceNames {
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static SwaggerServiceDescriptor = "SwaggerServiceDescriptor";
-    static "Authentication" = "Authentication";
+    static SecurityManager = "SecurityManager";
     static "Logger" = "Logger";
     static "Provider" = "Provider";
     static "EventBusAdapter" = "EventBusAdapter";

@@ -171,7 +171,7 @@ export class RequestContext implements IRequestContext {
     setSecurityManager(tenant: string|UserContextData) {
         if (!tenant)
             throw new Error("Tenant can not be null");
-        let manager = this.container.get<SecurityManager>(DefaultServiceNames.Authentication, true);
+        let manager = this.container.get<SecurityManager>(DefaultServiceNames.SecurityManager, true);
         if (!manager) {
             let scopePolicy = this.container.get<IAuthorizationPolicy>(DefaultServiceNames.AuthorizationPolicy);
             manager = new DefaultAuthentication(scopePolicy);

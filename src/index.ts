@@ -20,9 +20,7 @@ export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOpt
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
 
 // Auth
-export {SecurityManager, VerifyTokenParameter, ITokenService} from './security/securityManager'
-export { StsTokenService } from './security/services/stsTokenService';
-export { StsAuthentication } from './security/stsAuthentications';
+export {SecurityManager, VerifyTokenParameter, ITokenService, UserToken} from './security/securityManager'
 
 // Core
 export * from './application'
@@ -31,7 +29,7 @@ export { IMetrics } from './metrics/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
 export { IRequestTracker } from './metrics/trackers/index';
-import { IServerAdapter } from './pipeline/vulcainServer';
+export { ServerAdapter } from './pipeline/serverAdapter';
 
 // Pipeline
 export * from './pipeline/handlers/annotations';

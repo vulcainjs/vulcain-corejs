@@ -143,11 +143,11 @@ export class Application {
                 commandBus = local;
             }
 
-            await eventBus.startAsync();
-            await commandBus.startAsync();
-
             this.registerComponents();
             Preloader.instance.runPreloads(this.container, this._domain);
+
+            await eventBus.startAsync();
+            await commandBus.startAsync();
 
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
             this.defineScopeDescriptions(scopes);
@@ -228,7 +228,7 @@ export class ApplicationBuilder {
         return this;
     }
 
-    protected useService(name: string, service: Function, lifeTime?: LifeTime) {
+    useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.app.container.inject(name, service, lifeTime);
         return this;
     }

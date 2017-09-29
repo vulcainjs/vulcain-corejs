@@ -48,7 +48,6 @@
     "applicationinsights": "^0.22.0",
     "fast-stats": "0.0.3",
     "jsonwebtoken": "^8.0.1",
-    "jwks-rsa": "^1.1.1",
     "moment": "^2.18.0",
     "mongodb": "^2.2.25",
     "prom-client": "^10.0.3",
