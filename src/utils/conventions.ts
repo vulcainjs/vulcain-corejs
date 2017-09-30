@@ -63,15 +63,12 @@ export class Conventions {
     VULCAIN_SECRET_KEY = "vulcainSecretKey";
     TOKEN_ISSUER = "vulcainTokenIssuer";
     TOKEN_EXPIRATION = "vulcainTokenExpiration";
-    TOKEN_STS_AUTHORITY = "vulcainStsAuthority";
-
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
     ENV_VULCAIN_ENV = "VULCAIN_ENV";            // staging, prod, test...
     ENV_VULCAIN_DOMAIN = "VULCAIN_DOMAIN";
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
     ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE"; // 'production', 'test' or 'local'
-    ENV_TEST_USER = "VULCAIN_TEST_USER";
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,

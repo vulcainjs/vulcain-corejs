@@ -22,11 +22,7 @@ export class DynamicConfiguration {
  * For test only - Do not use directly
  */
     static manager: ConfigurationManager = new ConfigurationManager();
-    private static _initialized: boolean;
-
-    static get isInitialized() {
-        return DynamicConfiguration._initialized;
-    }
+    private static _builder: ConfigurationSourceBuilder;
 
     /**
      * subscribe on a property changed
@@ -97,13 +93,15 @@ export class DynamicConfiguration {
     /// <param name="pollingIntervalInSeconds">Polling interval in seconds (default 60)</param>
     /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>
     /// <returns>ConfigurationSourceBuilder</returns>
-    public static init(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
-        if(pollingIntervalInSeconds)
+    public static getBuilder(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
+        if (pollingIntervalInSeconds)
             DynamicConfiguration.manager.pollingIntervalInSeconds = pollingIntervalInSeconds;
-        if(sourceTimeoutInMs)
+        if (sourceTimeoutInMs)
             DynamicConfiguration.manager.sourceTimeoutInMs = sourceTimeoutInMs;
 
-        DynamicConfiguration._initialized = true;
-        return new ConfigurationSourceBuilder(DynamicConfiguration.manager);
+        if (!DynamicConfiguration._builder) {
+            DynamicConfiguration._builder = new ConfigurationSourceBuilder(DynamicConfiguration.manager);
+        }
+        return DynamicConfiguration._builder;
     }
 }

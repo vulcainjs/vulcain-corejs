@@ -72,9 +72,7 @@ export class Application {
     }
 
     private async init() {
-        if (!DynamicConfiguration.isInitialized) {
-            await DynamicConfiguration.init().startPollingAsync();
-        }
+        await DynamicConfiguration.getBuilder().startPollingAsync();
 
         if (!this.domainName) {
             throw new Error("Domain name is required.");

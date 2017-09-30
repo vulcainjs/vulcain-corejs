@@ -9,6 +9,7 @@ import { MockConfigurationSource } from './sources/memoryConfigurationSource';
 import { EnvironmentVariableSource } from "./sources/environmentVariableSource";
 
 export class ConfigurationManager {
+    public isRunning: boolean;
     private _values: PrioritizedSourceValue;
     private _dynamicProperties = new Map<string, IDynamicProperty<any>>();
     private disposed: boolean;
@@ -32,7 +33,7 @@ export class ConfigurationManager {
     }
 
     getValueInSources(name: string) {
-        if (!this._values) {
+        if (!this._values) { // For testing
             this._values = new PrioritizedSourceValue();
         }
         let val = this._values.get(name);
@@ -110,6 +111,7 @@ export class ConfigurationManager {
                 // All sources are OK
                 if (pollSources)
                     this.repeatPolling();
+                this.isRunning = true;
                 return;
             }
 
