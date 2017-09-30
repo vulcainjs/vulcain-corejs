@@ -57,7 +57,7 @@ export interface UserContextData {
 export interface UserContext extends UserContextData {
     getClaims<T=any>(): T;
     isAdmin: boolean;
-    userHasScope(handlerScope: string): boolean;
+    hasScope(handlerScope: string): boolean;
     isAnonymous(): boolean;
 }
 
@@ -222,7 +222,7 @@ export abstract class SecurityManager implements UserContext {
         throw new UnauthorizedRequestError();
     }
 
-    userHasScope(handlerScope: string): boolean {
+    hasScope(handlerScope: string): boolean {
         //  this.logVerbose(() => `Check scopes [${this.scopes}] for user ${this.name} to handler scope ${handlerScope}`);
         return (!this._isAnonymous && (!handlerScope || handlerScope === "?"))
             || this._scopePolicy.hasScope(this, handlerScope);

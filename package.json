@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "2.0.0-beta6",
+  "version": "2.0.0-beta7",
   "description": "Vulcain micro-service framework",
   "main": "dist/index.js",
   "scripts": {
@@ -26,7 +26,6 @@
     "@types/mocha": "^2.2.40",
     "@types/mongodb": "^2.2.9",
     "@types/sinon": "^2.3.3",
-    "@types/statsd-client": "^0.1.30",
     "chai": "^4.1.2",
     "fs-extra": "^4.0.1",
     "gulp": "^3.9.0",
@@ -58,8 +57,8 @@
     "swagger-ui-dist": "^3.2.1",
     "unirest": "^0.5.0",
     "uuid": "^3.0.1",
-    "validator": "^8.0.0",
-    "zipkin": "^0.7.3",
-    "zipkin-transport-http": "^0.7.3"
+    "validator": "^9.0.0",
+    "zipkin": "^0.9.0",
+    "zipkin-transport-http": "^0.9.0"
   }
 }

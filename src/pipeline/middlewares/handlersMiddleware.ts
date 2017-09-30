@@ -31,7 +31,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         System.log.info(ctx, () => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
 
         // Verify authorization
-        if (!ctx.user.userHasScope(info.metadata.scope)) {
+        if (!ctx.user.hasScope(info.metadata.scope)) {
             System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
             throw new UnauthorizedRequestError();
         }

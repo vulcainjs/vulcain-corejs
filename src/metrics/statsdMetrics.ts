@@ -1,5 +1,5 @@
 import { Conventions } from '../utils/conventions';
-import * as Statsd from "statsd-client";
+const Statsd = require("statsd-client");
 import { System } from './../globals/system';
 import { IMetrics, MetricsConstant } from './metrics';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
@@ -15,7 +15,7 @@ export class StatsdMetrics implements IMetrics {
     private static EmptyString = "";
     private tags: any;
 
-    constructor(private statsd: Statsd) {
+    constructor(private statsd) {
         this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
     }
 

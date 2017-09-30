@@ -33,8 +33,27 @@ import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 export class Application {
     private _vulcainExecutablePath: string;
     private _basePath: string;
-
     private _domain: Domain;
+
+    public useMongoProvider(address: string) {
+        this.container.useMongoProvider(address);
+        return this;
+    }
+
+    public useMemoryProvider(folder: string) {
+        this.container.useMemoryProvider(folder);
+        return this;
+    }
+
+    public useRabbitmqBus(address: string) {
+        this.container.useRabbitBusAdapter(address);
+        return this;
+    }
+
+    useService(name: string, service: Function, lifeTime?: LifeTime) {
+        this.container.inject(name, service, lifeTime);
+        return this;
+    }
     /**
      * Enable api key authentication
      *
@@ -196,42 +215,5 @@ export class Application {
         }
         this._container.injectFrom(path);
         return this._container;
-    }
-}
-
-export class ApplicationBuilder {
-    private app: Application;
-
-    constructor(domain: string) {
-        this.app = new Application(domain);
-    }
-
-    public useMongoProvider(address: string) {
-        this.app.container.useMongoProvider(address);
-        return this;
-    }
-
-    public useMemoryProvider(folder: string) {
-        this.app.container.useMemoryProvider(folder);
-        return this;
-    }
-
-    public useRabbitmqBus(address: string) {
-        this.app.container.useRabbitBusAdapter(address);
-        return this;
-    }
-
-    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.app.enableApiKeyAuthentication(apiKeyServiceName, version);
-        return this;
-    }
-
-    useService(name: string, service: Function, lifeTime?: LifeTime) {
-        this.app.container.inject(name, service, lifeTime);
-        return this;
-    }
-
-    runAsync(port = 8080) {
-        return this.app.start(port);
     }
 }
