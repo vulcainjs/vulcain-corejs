@@ -18,6 +18,7 @@ import { HttpResponse } from "../response";
 import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
 import { ITaskManager } from "../../providers/taskManager";
+import { IRequestContext } from '../../index';
 
 export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending";
@@ -65,13 +66,14 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
  * @extends {CommonActionMetadata}
  */
 export interface ActionMetadata extends CommonActionMetadata {
+    
     async?: boolean;
     eventMode?: EventNotificationMode;
     outputSchema: string;
+    eventFactory?: (context: IRequestContext, event: EventData)=>EventData;
 }
 
 export class CommandManager implements IManager {
-
     private messageBus: MessageBus;
     private _domain: Domain;
     private _initialized = false;
@@ -211,7 +213,11 @@ export class CommandManager implements IManager {
                 }
 
                 if (eventMode === EventNotificationMode.successOnly || eventMode === EventNotificationMode.always) {
-                    this.messageBus.sendEvent(this.createEvent(ctx, "Success", resultRaw));
+                    let event = this.createEvent(ctx, "Success", resultRaw);
+                    if (metadata.eventFactory)
+                        event = metadata.eventFactory(ctx, event);
+                    if(event)
+                        this.messageBus.sendEvent(event);
                 }
 
                 this.sendCustomEvent(ctx);
@@ -267,7 +273,10 @@ export class CommandManager implements IManager {
                 result = result && HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 let event = this.createEvent(ctx, "Success", result);
                 event.completedAt = System.nowAsString();
-                this.messageBus.sendEvent(event);
+                if (metadata.eventFactory)
+                    event = metadata.eventFactory(ctx, event);
+                if(event)
+                    this.messageBus.sendEvent(event);
             }
             this.sendCustomEvent(ctx);
             command.status = "Success";
@@ -277,7 +286,10 @@ export class CommandManager implements IManager {
                 let error = (e instanceof CommandRuntimeError) ? e.error : e;
                 let event = this.createEvent(ctx, "Error", null, error);
                 event.completedAt = System.nowAsString();
-                this.messageBus.sendEvent(event);
+                if (metadata.eventFactory)
+                    event = metadata.eventFactory(ctx, event);
+                if(event)
+                    this.messageBus.sendEvent(event);
             }
             ctx.logError( e, () => `Error when processing async action : ${JSON.stringify(command)}`);
             command.status = "Error";

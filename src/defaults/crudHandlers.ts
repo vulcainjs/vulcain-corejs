@@ -140,8 +140,12 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ action: "all", description: "Get all entities" })
-    async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
-        let options = { maxByPage: maxByPage || this.context.requestData.maxByPage || 0, page: page || this.context.requestData.page || 0, query:query || {} };
+    async getAllAsync(query?: any) : Promise<Array<T>> {
+        let options = {
+            maxByPage: this.context.requestData.maxByPage || 0,
+            page: this.context.requestData.page || 0,
+            query: query || {}
+        };
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
         return await cmd.runAsync<T[]>( "all", options);
     }

@@ -5,6 +5,9 @@ import { Conventions } from '../utils/conventions';
 import http = require('http');
 import url = require('url');
 import Router = require('router');
+import { DefaultServiceNames } from '../index';
+import { ISerializer } from "./serializers/serializer";
+import { DefaultSerializer } from "./serializers/defaultSerializer";
 
 export interface IServerAdapter {
     init(container: IContainer, pipeline: VulcainPipeline);
@@ -16,24 +19,30 @@ export interface IServerAdapter {
 export abstract class ServerAdapter implements IServerAdapter {
     protected container: IContainer;
     protected vulcainPipe: VulcainPipeline;
+    protected serializer: ISerializer;
     /**
      *
      */
     init(container: IContainer, vulcainPipeline: VulcainPipeline) {
         this.container = container;
         this.vulcainPipe = vulcainPipeline;
+        this.serializer = new DefaultSerializer(container);
     }
 
     abstract startAsync(port: number, callback: (err) => void);
 
-    protected async processVulcainRequest(req: http.IncomingMessage, resp: http.ServerResponse, body) {
-        let request: HttpRequest = { body: body, headers: req.headers, verb: req.method, url: url.parse(req.url, true) }
+    protected async processVulcainRequest(req: http.IncomingMessage, resp: http.ServerResponse, body, request?: HttpRequest) {
+        request = request || { body: body, headers: req.headers, verb: req.method, url: url.parse(req.url, true) };
+        let response: HttpResponse = null;
         try {
-            let result = await this.vulcainPipe.process(this.container, request);
-            this.sendResponse(resp, result);
+            request.body = this.serializer.deserialize(request);
+            response = await this.vulcainPipe.process(this.container, request);
+            response = this.serializer.serialize(request, response);
         }
-        finally {
+        catch (e) {
+            response = HttpResponse.createFromError(e);
         }
+        this.sendResponse(resp, response);
     }
 
     protected sendResponse(resp: http.ServerResponse, response: HttpResponse) {
@@ -53,13 +62,7 @@ export abstract class ServerAdapter implements IServerAdapter {
             resp.setHeader('Content-Type', response.contentType || "application/json");
 
             if (response.content) {
-                if (response.encoding) {
-                    resp.end(response.content, response.encoding);
-                }
-                else {
-                    let str = typeof response.content === "string" ? response.content : JSON.stringify(response.content)
-                    resp.end(str, "utf8");
-                }
+                resp.end(response.content, response.encoding || "utf8");
             }
             else {
                 resp.end();

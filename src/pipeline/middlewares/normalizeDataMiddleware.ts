@@ -64,7 +64,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         const body = ctx.request.body;
 
         ctx.requestData = <any>{  };
-        ctx.requestData.body = (typeof body === "object") ? body : JSON.parse(body);
+        ctx.requestData.body = body;
 
         // Try to get schema and action from path
         let schemaAction = url.pathname.substr(Conventions.instance.defaultUrlprefix.length + 1);

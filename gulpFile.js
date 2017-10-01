@@ -15,7 +15,6 @@ var gulp = require("gulp"),
     typedoc = require("gulp-typedoc");
 
 // Base root directory for source map
-var rootDir = "file://" + __dirname;
 process.on('uncaughtException', console.error.bind(console));
 
 gulp.task('default', ['compile-test']);
@@ -114,7 +113,6 @@ gulp.task("doc", function () {
         }))
         ;
 });
-
 
 gulp.task('clean', function (done) {
     fse.remove('dist', done);

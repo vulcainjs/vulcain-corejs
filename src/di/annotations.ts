@@ -11,6 +11,7 @@ import { IRequestContext } from "../pipeline/common";
  * @class DefaultServiceNames
  */
 export class DefaultServiceNames {
+    static Serializer = "Serializer";
     static TokenService = "TokenService";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";

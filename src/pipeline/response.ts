@@ -87,24 +87,3 @@ export class HttpRedirectResponse extends HttpResponse {
         this.addHeader("Location", url);
     }
 }
-
-export class VulcainResponse {
-    tenant: string;
-    domain: string;
-    action: string;
-    schema: string;
-    error?: ErrorResponse;
-    value?: any;
-    correlationId: string;
-
-    static create(ctx: RequestContext): VulcainResponse {
-        return {
-            tenant: ctx.user.tenant,
-            domain: System.domainName,
-            action: ctx.requestData.action,
-            schema: ctx.requestData.schema,
-            correlationId: ctx.correlationId,
-            value: ctx.response
-        };
-    }
-}

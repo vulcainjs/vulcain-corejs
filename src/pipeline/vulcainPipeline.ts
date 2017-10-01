@@ -5,7 +5,7 @@ import { Pipeline } from "./common";
 import { VulcainLogger } from "../log/vulcainLogger";
 import { DefaultServiceNames } from "../di/annotations";
 import { ApplicationError } from "./errors/applicationRequestError";
-import { HttpResponse, VulcainResponse } from "./response";
+import { HttpResponse } from "./response";
 
 export abstract class VulcainMiddleware {
     next: VulcainMiddleware;
@@ -54,7 +54,6 @@ export class VulcainPipeline {
 
         try {
             await this.first.invoke(ctx);
-            let response = VulcainResponse.create(ctx);
         }
         finally {
             ctx.dispose();
