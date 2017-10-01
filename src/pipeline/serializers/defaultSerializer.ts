@@ -17,9 +17,9 @@ export class DefaultSerializer implements ISerializer {
             if (!body)
                 return body;
         }
-        if (request.headers["Content-Type"] !== "application/json")
+        if (request.headers["content-type"] !== "application/json")
             throw new BadRequestError("Unsupported Media Type");
-        
+
         return (typeof request.body === "object") ? request.body : JSON.parse(request.body);
     }
 

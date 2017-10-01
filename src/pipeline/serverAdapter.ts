@@ -37,11 +37,11 @@ export abstract class ServerAdapter implements IServerAdapter {
         try {
             request.body = this.serializer.deserialize(request);
             response = await this.vulcainPipe.process(this.container, request);
-            response = this.serializer.serialize(request, response);
         }
         catch (e) {
             response = HttpResponse.createFromError(e);
         }
+        response = this.serializer.serialize(request, response);
         this.sendResponse(resp, response);
     }
 
