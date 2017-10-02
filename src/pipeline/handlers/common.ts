@@ -10,19 +10,7 @@ export interface ErrorResponse {
     message:string;
     errors?: Array<ValidationError>;
 }
-/*
-export interface CommonRequestResponse<T> {
-    tenant: string;
-    userContext: UserContext;
-    domain: string;
-    action: string;
-    schema: string;
-    error?: ErrorResponse;
-    value?: T;
-    inputSchema?: string;
-    correlationId: string;
-}
-*/
+
 export interface CommonActionMetadata {
     description: string;
     action?: string;

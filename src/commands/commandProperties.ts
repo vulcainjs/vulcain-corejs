@@ -2,6 +2,7 @@ import { CommandConfiguration } from './commandFactory';
 import { Conventions } from './../utils/conventions';
 import { System } from '../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 let HystrixPropertiesNames = {
     HYSTRIX_HEALTH_SNAPSHOT_IN_MS: "hystrix.health.snapshot.validityInMilliseconds",
@@ -157,7 +158,7 @@ export class CommandProperties {
     }
 
     private get<TValue>(name: string, schema: string, defaultValue?: TValue) {
-        return System.createChainedConfigurationProperty<TValue>(
+        return DynamicConfiguration.getChainedConfigurationProperty<TValue>(
             name,
             defaultValue || Conventions.instance.hystrix[name],
             this.commandName );

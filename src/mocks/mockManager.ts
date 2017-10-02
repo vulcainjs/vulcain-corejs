@@ -5,6 +5,7 @@ import { IDynamicProperty } from '../configurations/abstractions';
 import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
 import { ActionMetadata } from "../pipeline/handlers/actions";
 import { HttpResponse } from "../pipeline/response";
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 export class MockManager implements IMockManager {
     private mocks;
@@ -18,8 +19,8 @@ export class MockManager implements IMockManager {
     }
 
     constructor() {
-        this.useMockProperty = System.createChainedConfigurationProperty<string>("UseMocks");
-        this.registerMockProperty = System.createChainedConfigurationProperty<string>("SaveMocks");
+        this.useMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("UseMocks");
+        this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMocks");
     }
 
     initialize(mocks, saveSessionsAsync?: (sessions) => Promise<any>) {

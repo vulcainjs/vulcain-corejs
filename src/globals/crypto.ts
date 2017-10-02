@@ -2,13 +2,14 @@ import { System } from './system';
 import * as crypto from 'crypto';
 import { Conventions } from '../utils/conventions';
 import { IDynamicProperty } from '../configurations/abstractions';
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 export class CryptoHelper {
 
     private secretKey: IDynamicProperty<string>;
 
     constructor() {
-        this.secretKey = System.createChainedConfigurationProperty(
+        this.secretKey = DynamicConfiguration.getChainedConfigurationProperty(
             Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 

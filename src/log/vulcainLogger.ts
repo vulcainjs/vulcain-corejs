@@ -6,6 +6,7 @@ import { Logger } from "./logger";
 import { IRequestContext } from "../pipeline/common";
 import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError } from '../pipeline/errors/applicationRequestError';
+import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
@@ -40,7 +41,7 @@ export class VulcainLogger implements Logger{
 
     private static get enableInfo() {
         if (!VulcainLogger._enableInfo)
-            VulcainLogger._enableInfo = System && System.createChainedConfigurationProperty("enableVerboseLog", false);
+            VulcainLogger._enableInfo = System && DynamicConfiguration.getChainedConfigurationProperty("enableVerboseLog", false);
         return VulcainLogger._enableInfo.value;
     }
 

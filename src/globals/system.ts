@@ -376,7 +376,7 @@ export class System {
         return System.crypto.decrypt(value);
     }
 
-    private static registerPropertyAsDependency(name: string, defaultValue) {
+    static registerPropertyAsDependency(name: string, defaultValue) {
         let prefix = (System.serviceName + "." + System.serviceVersion);
 
         let p = System.manifest.configurations[name];
@@ -387,39 +387,6 @@ export class System {
             schema = typeof defaultValue;
         }
         System.manifest.configurations[name] = schema;
-    }
-
-    /**
-     * create a new chained property for the current service. Properties chain is: service.version.name->service.name->domain.name->name
-     * @param name property name
-     * @param defaultValue
-     * @returns {IDynamicProperty<T>}
-     */
-    public static createChainedConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
-        let p = DynamicConfiguration.getProperty<T>(name);
-        if (p)
-            return p;
-        System.registerPropertyAsDependency(name, defaultValue);
-
-        let fullName = commandName ? commandName + "." + name : name;
-        var chain = [
-            System.serviceName + "." + System.serviceVersion + "." + fullName,
-            System.serviceName + "." + fullName,
-        ];
-
-        if (commandName) {
-            chain.push(fullName);
-        }
-
-        if (System.domainName)
-            chain.push(System.domainName + "." + name);
-
-        chain.push(name);
-
-        return DynamicConfiguration.asChainedProperty<T>(
-            name,
-            defaultValue,
-            ...chain);
     }
 
     /**

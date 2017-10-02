@@ -6,6 +6,7 @@ import { ConfigurationProperty } from '../../dependencies/annotations';
 import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
+import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 
 export class TokenService implements ITokenService {
 
@@ -17,9 +18,9 @@ export class TokenService implements ITokenService {
     private tokenExpiration: IDynamicProperty<string>;
 
     constructor() {
-        this.issuer = System.createChainedConfigurationProperty<string>( Conventions.instance.TOKEN_ISSUER );
-        this.tokenExpiration = System.createChainedConfigurationProperty<string>(Conventions.instance.TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
-        this.secretKey = System.createChainedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
+        this.issuer = DynamicConfiguration.getChainedConfigurationProperty<string>( Conventions.instance.TOKEN_ISSUER );
+        this.tokenExpiration = DynamicConfiguration.getChainedConfigurationProperty<string>(Conventions.instance.TOKEN_EXPIRATION, Conventions.instance.defaultTokenExpiration);
+        this.secretKey = DynamicConfiguration.getChainedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
     createTokenAsync( user: UserContext ): Promise<{ expiresIn: number, token: string, renewToken: string }> {

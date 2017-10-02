@@ -1,6 +1,7 @@
 import { IDynamicProperty } from "./abstractions";
 import { ConfigurationManager } from "./configurationManager";
 import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
+import { System } from "../globals/system";
 
 /**
  *
@@ -18,10 +19,10 @@ import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
 * </code>
 */
 export class DynamicConfiguration {
-/**
- * For test only - Do not use directly
- */
-    static manager: ConfigurationManager = new ConfigurationManager();
+    /**
+     * For test only - Do not use directly
+     */
+    private static manager: ConfigurationManager = new ConfigurationManager();
     private static _builder: ConfigurationSourceBuilder;
 
     /**
@@ -40,24 +41,53 @@ export class DynamicConfiguration {
     /**
      * Create a new property
      */
-    public static asProperty<T>(name: string, value: T): IDynamicProperty<T> {
+    public static getProperty<T>(name: string, value?: T): IDynamicProperty<T> {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
-        if (p) {
-            throw new Error("Duplicate property " + name);
+        if (!p) {
+            p = DynamicConfiguration.manager.createDynamicProperty(name, value);
         }
-
-        p = DynamicConfiguration.manager.createDynamicProperty(name, value);
         return p;
     }
 
-    public static asChainedProperty<T>(name: string, defaultValue: T,  ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
+    public static getChainedProperty<T>(name: string, defaultValue: T, ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
         if (p) {
-            throw new Error("Duplicate property " + name);
+            p = DynamicConfiguration.manager.createChainedDynamicProperty(name, fallbackPropertyNames, defaultValue);
+        }
+        return p;
+    }
+
+    /**
+     * create a new chained property for the current service. Properties chain is: service.version.name->service.name->domain.name->name
+     * @param name property name
+     * @param defaultValue
+     * @returns {IDynamicProperty<T>}
+     */
+    public static getChainedConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
+        let p = DynamicConfiguration.getProperty<T>(name);
+        if (p)
+            return p;
+        System.registerPropertyAsDependency(name, defaultValue);
+
+        let fullName = commandName ? commandName + "." + name : name;
+        let chain = [
+            System.serviceName + "." + System.serviceVersion + "." + fullName,
+            System.serviceName + "." + fullName,
+        ];
+
+        if (commandName) {
+            chain.push(fullName);
         }
 
-        p = DynamicConfiguration.manager.createChainedDynamicProperty(name, fallbackPropertyNames, defaultValue);
-        return p;
+        if (System.domainName)
+            chain.push(System.domainName + "." + name);
+
+        chain.push(name);
+
+        return DynamicConfiguration.getChainedProperty<T>(
+            name,
+            defaultValue,
+            ...chain);
     }
 
     /**
@@ -72,20 +102,8 @@ export class DynamicConfiguration {
      */
     static getPropertyValue<T>(name: string) {
         let p = this.getProperty<T>(name);
-        if (!p) {
-            p = this.manager.createDynamicProperty<T>(name);
-        }
         return p.value;
     }
-
-    /**
-     * Get a dynamic property
-     */
-    static getProperty<T>(name: string): IDynamicProperty<T> {
-        let prop = DynamicConfiguration.manager.getProperty<T>(name);
-        return prop;
-    }
-
 
     /// <summary>
     /// Initialise dynamic properties configuration. Can be call only once and before any call to DynamicProperties.instance.
