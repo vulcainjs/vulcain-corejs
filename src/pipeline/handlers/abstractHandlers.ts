@@ -1,4 +1,4 @@
-import {IContainer} from '../../di/resolvers';
+import { IContainer } from '../../di/resolvers';
 import { Inject, DefaultServiceNames, IScopedComponent } from '../../di/annotations';
 import 'reflect-metadata';
 import { RequestContext } from "../../pipeline/requestContext";
@@ -48,23 +48,11 @@ export abstract class AbstractHandler implements IScopedComponent {
     }
 }
 
-export abstract class AbstractActionHandler extends AbstractHandler{
-}
-
-export interface IEventMetadata {
-    action: string;
-    schema: string;
+export abstract class AbstractActionHandler extends AbstractHandler {
 }
 
 export abstract class AbstractEventHandler extends AbstractHandler {
     event: EventData;
-}
-
-export interface IQueryMetadata {
-    action: string;
-    scope?: string;
-    schema: string;
-    inputSchema?: string;
 }
 
 export abstract class AbstractQueryHandler extends AbstractHandler {
