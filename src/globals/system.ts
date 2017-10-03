@@ -9,6 +9,8 @@ import { IContainer } from '../di/resolvers';
 import { IMockManager, DummyMockManager } from "../mocks/imockManager";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IDynamicProperty } from '../configurations/abstractions';
+import { Files } from '../utils/files';
+import * as Path from 'path';
 
 /**
  * Static class providing service helper methods
@@ -114,7 +116,8 @@ export class System {
             this._vulcainConfig = this._vulcainConfig || {};
             this._vulcainConfig.mocks = this._vulcainConfig.mocks || {};
             this._vulcainConfig.mocks.sessions = sessions;
-            fs.writeFileSync(Conventions.instance.vulcainFileName, JSON.stringify(this._vulcainConfig));
+            let path = Path.join(Files.findApplicationPath(), Conventions.instance.vulcainFileName);
+            fs.writeFileSync(path, JSON.stringify(this._vulcainConfig));
         }
         catch (e) {
             System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings mock sessions.");
@@ -132,8 +135,10 @@ export class System {
             return;
         }
         try {
-            if (fs.existsSync(Conventions.instance.vulcainFileName)) {
-                let data = fs.readFileSync(Conventions.instance.vulcainFileName, "utf8");
+            let path = Path.join(Files.findApplicationPath(), Conventions.instance.vulcainFileName);
+
+            if (fs.existsSync(path)) {
+                let data = fs.readFileSync(path, "utf8");
                 if (data) {
                     System._vulcainConfig = JSON.parse(data);
                 }
@@ -260,9 +265,9 @@ export class System {
      * @memberOf System
      */
     static get vulcainServer() {
-        if (!System._vulcainServer) {
-            let env = DynamicConfiguration.getPropertyValue<string>("vulcainServer");
-            System._vulcainServer = env; // for dev
+        if (System._vulcainServer === undefined) {
+            let env = DynamicConfiguration.getPropertyValue<string>("vulcainServer") ;
+            System._vulcainServer = env || null; // for dev
         }
         return System._vulcainServer;
     }
@@ -277,7 +282,7 @@ export class System {
      */
     static get vulcainToken() {
         if (System._vulcainToken === undefined) {
-            System._vulcainToken = DynamicConfiguration.getPropertyValue<string>("vulcainToken");
+            System._vulcainToken = DynamicConfiguration.getPropertyValue<string>("vulcainToken") || null;
         }
         return System._vulcainToken;
     }

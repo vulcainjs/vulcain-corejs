@@ -13,7 +13,7 @@ export abstract class AbstractRemoteSource implements IRemoteConfigurationSource
     protected mergeChanges(changes: Map<string, ConfigurationItem>) {
         changes && changes.forEach(item => {
             if (!item.deleted)
-                this._values.set(item.key, item.value);
+                this._values.set(item.key, item);
             else
                 this._values.delete(item.key);
         });

@@ -169,7 +169,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Name is required.");
         this.resolvers.set(name, new InstanceResolver(fn));
         if (name !== "Container" && fn.name)
-            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -196,7 +196,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -226,7 +226,7 @@ export class Container implements IContainer {
             return;
         this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if (fn.name)
-            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -255,7 +255,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.info(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -354,25 +354,3 @@ export class Container implements IContainer {
     }
 
 }
-
-/**
- * Default container for test
- *
- * @export
- * @class TestContainer
- * @extends {Container}
- */
-/*export class TestContainer extends Container {
-    constructor(public domainName: string, addDefaultServices?: (container: IContainer) => void) {
-        super();
-        this.setRequestContext(RequestContext.createMock(this));
-
-        this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
-        let domain = new Domain(domainName, this);
-        this.injectInstance(domain, DefaultServiceNames.Domain);
-
-        addDefaultServices && addDefaultServices(this);
-
-        Preloader.instance.runPreloads(this, domain);
-    }
-}*/

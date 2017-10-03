@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 
 try {
-    DynamicConfiguration.init();
+    DynamicConfiguration.getBuilder();
 }
 catch (e) { }
 

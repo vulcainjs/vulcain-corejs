@@ -50,7 +50,7 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
                             let data = response.body;
                             data.value && data.value.forEach(cfg => values.set(cfg.key, cfg));
                             self.lastUpdate = moment.utc().format();
-                            this.mergeChanges(values);
+                            self.mergeChanges(values);
                         }
                     }
                     else {

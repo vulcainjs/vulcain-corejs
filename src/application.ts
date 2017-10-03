@@ -87,17 +87,17 @@ export class Application {
      * @param app  (optional)Server adapter
      */
     constructor(private domainName?: string, private _container?: IContainer) {
+        if (!this.domainName) {
+            throw new Error("Domain name is required.");
+        }
+
+        System.defaultDomainName = this.domainName;
         this._container = this._container || new Container();
     }
 
     private async init() {
         await DynamicConfiguration.getBuilder().startPollingAsync();
 
-        if (!this.domainName) {
-            throw new Error("Domain name is required.");
-        }
-
-        System.defaultDomainName = this.domainName;
         System.log.info(null, () => "Starting application");
 
         this._vulcainExecutablePath = Path.dirname(module.filename);

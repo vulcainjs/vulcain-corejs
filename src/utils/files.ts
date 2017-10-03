@@ -6,11 +6,12 @@ import { Conventions } from './conventions';
 export class Files
 {
     static findApplicationPath() {
+        let folder = process.env["APPLICATION_FOLDER"];
+        if (folder)
+            return folder;
+        
         let parent = module.parent;
         while (parent.parent) {
-            if (fs.existsSync(Path.join(Path.dirname(parent.filename), Conventions.instance.defaultApplicationFolder)) &&
-                fs.existsSync(Path.join(Path.dirname(parent.filename), 'index.js')))
-                break;
             parent = parent.parent;
         }
         return Path.dirname(parent.filename);

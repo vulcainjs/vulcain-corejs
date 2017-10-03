@@ -12,11 +12,15 @@ export class DefaultSerializer implements ISerializer {
     }
 
     deserialize(request: HttpRequest) {
+        if (!request.body)
+            return null;
+
         if (this.serializer) {
             let body = this.deserialize(request);
             if (!body)
                 return body;
         }
+        
         if (request.headers["content-type"] !== "application/json")
             throw new BadRequestError("Unsupported Media Type");
 

@@ -13,7 +13,8 @@ export class VulcainConfigurationSource extends HttpConfigurationSource {
     }
 
     protected prepareRequest(request) {
-        request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
+        if(System.vulcainToken)
+            request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
         return request;
     }
 

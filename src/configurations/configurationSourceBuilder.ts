@@ -26,7 +26,7 @@ export class ConfigurationSourceBuilder {
                 System.log.info(null, () => "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
             }
             else {
-                let uri = `http://${System.vulcainServer}/api/config.forservice`;
+                let uri = `http://${System.vulcainServer}/api/configforservice`;
                 let options = {
                     environment: System.environment,
                     service: System.serviceName,

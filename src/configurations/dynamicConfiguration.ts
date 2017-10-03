@@ -2,6 +2,7 @@ import { IDynamicProperty } from "./abstractions";
 import { ConfigurationManager } from "./configurationManager";
 import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
 import { System } from "../globals/system";
+import * as rx from 'rxjs';
 
 /**
  *
@@ -26,20 +27,14 @@ export class DynamicConfiguration {
     private static _builder: ConfigurationSourceBuilder;
 
     /**
-     * subscribe on a property changed
+     * subscribe for a global property changed
      */
-    public static onPropertyChanged<T>(handler: (e: IDynamicProperty<T>) => void, propertyName?: string) {
-        if (propertyName) {
-            let prop = DynamicConfiguration.manager.getProperty(propertyName);
-            if (!prop) throw new Error("Property not found : " + propertyName);
-            prop.propertyChanged.subscribe(handler);
-        }
-        else
-            DynamicConfiguration.manager.propertyChanged.subscribe(handler);
+    public static get propertyChanged(): rx.Observable<IDynamicProperty<any>> {
+        return DynamicConfiguration.manager.propertyChanged;
     }
 
     /**
-     * Create a new property
+     * Get a property
      */
     public static getProperty<T>(name: string, value?: T): IDynamicProperty<T> {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
@@ -51,20 +46,21 @@ export class DynamicConfiguration {
 
     public static getChainedProperty<T>(name: string, defaultValue: T, ...fallbackPropertyNames: Array<string>): IDynamicProperty<T> {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
-        if (p) {
+        if (!p) {
             p = DynamicConfiguration.manager.createChainedDynamicProperty(name, fallbackPropertyNames, defaultValue);
         }
         return p;
     }
 
     /**
-     * create a new chained property for the current service. Properties chain is: service.version.name->service.name->domain.name->name
+     * get a chained property for the current service.
+     * Properties chain is: service.version.name->service.name->domain.name->name
      * @param name property name
      * @param defaultValue
      * @returns {IDynamicProperty<T>}
      */
     public static getChainedConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
-        let p = DynamicConfiguration.getProperty<T>(name);
+        let p = DynamicConfiguration.manager.getProperty<T>(name);
         if (p)
             return p;
         System.registerPropertyAsDependency(name, defaultValue);
@@ -121,5 +117,16 @@ export class DynamicConfiguration {
             DynamicConfiguration._builder = new ConfigurationSourceBuilder(DynamicConfiguration.manager);
         }
         return DynamicConfiguration._builder;
+    }
+
+    /**
+     *
+     * @param pollingIntervalInSeconds For test only
+     */
+    public static reset(pollingIntervalInSeconds?: number) {
+        DynamicConfiguration.manager = new ConfigurationManager();
+        if (pollingIntervalInSeconds)
+            DynamicConfiguration.manager.pollingIntervalInSeconds = pollingIntervalInSeconds;
+        return DynamicConfiguration.manager;
     }
 }

@@ -2,6 +2,8 @@ import { ILocalConfigurationSource, ConfigurationItem, DataSource } from '../abs
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { System } from '../../globals/system';
+import * as Path from 'path';
+import { Files } from '../../utils/Files';
 
 export enum ConfigurationDataType {
     KeyValue,
@@ -15,13 +17,14 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
 
     constructor(private path: string, private mode: ConfigurationDataType = ConfigurationDataType.Json) {
         try {
-            if (!fs.existsSync(path)) {
+            this.path = Path.join(Files.findApplicationPath(), path);
+            if (!fs.existsSync(this.path)) {
                 System.log.info(null, () => "CONFIGURATIONS : File " + path + " doesn't exist.");
                 this._disabled = true;
             }
         }
         catch (e) {
-            System.log.error(null, e, () => "Invalid path when reading file configuration source at " + path + ". Are you using an unmounted docker volume ?");
+            System.log.error(null, e, () => "Invalid path when reading file configuration source at " + this.path + ". Are you using an unmounted docker volume ?");
         }
     }
 
