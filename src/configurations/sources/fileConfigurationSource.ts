@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { System } from '../../globals/system';
 import * as Path from 'path';
-import { Files } from '../../utils/Files';
+import { Files } from '../../utils/files';
 
 export enum ConfigurationDataType {
     KeyValue,

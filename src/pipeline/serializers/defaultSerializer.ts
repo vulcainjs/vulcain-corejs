@@ -20,7 +20,7 @@ export class DefaultSerializer implements ISerializer {
             if (!body)
                 return body;
         }
-        
+
         if (request.headers["content-type"] !== "application/json")
             throw new BadRequestError("Unsupported Media Type");
 
@@ -28,19 +28,21 @@ export class DefaultSerializer implements ISerializer {
     }
 
     serialize(request: HttpRequest, response: HttpResponse) {
-        if (this.serializer) {
-            let resp = this.serialize(request, response);
-            if (!resp)
-                return resp;
-        }
+        if (!response.contentType) {
+            if (this.serializer) {
+                let resp = this.serialize(request, response);
+                if (!resp)
+                    return resp;
+            }
 
-        if (typeof response.content === "string") {
-            response.contentType = "text/plain";
-        }
-        else {
-            response.contentType = "application/json";
-            response.encoding = response.encoding || "utf8";
-            response.content = JSON.stringify(response.content);
+            if (typeof response.content === "string") {
+                response.contentType = "text/plain";
+            }
+            else {
+                response.contentType = "application/json";
+                response.encoding = response.encoding || "utf8";
+                response.content = JSON.stringify(response.content);
+            }
         }
         return response;
     }
