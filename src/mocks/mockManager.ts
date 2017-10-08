@@ -19,8 +19,8 @@ export class MockManager implements IMockManager {
     }
 
     constructor() {
-        this.useMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("UseMocks");
-        this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMocks");
+        this.useMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("UseMockSession");
+        this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession");
     }
 
     initialize(mocks, saveSessionsAsync?: (sessions) => Promise<any>) {
@@ -41,10 +41,20 @@ export class MockManager implements IMockManager {
             return false;
         }
 
+        if (a === b)
+            return true;
+
+        if (typeof a !== typeof b)
+            return false;
+
         // Compare ignorecase
-        if (typeof b !== "object") {
+        if (typeof b === "string") {
             const regex = new RegExp('^' + b.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&") + '$', "i");
             return regex.test(a);
+        }
+
+        if (typeof a !== "object") {
+            return false
         }
 
         for (let p of Object.keys(b)) {
@@ -120,7 +130,9 @@ export class MockManager implements IMockManager {
                 if (item.latency) {
                     await this.sleep(item.latency);
                 }
-                return <HttpResponse>item.output; // result
+                let res = new HttpResponse(item.output.content, item.output.statusCode); // result
+                res.contentType = item.output.contentType;
+                return res;
             }
         }
         return;

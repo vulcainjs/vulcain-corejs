@@ -31,7 +31,7 @@ export class VulcainHeaderNames {
     static X_VULCAIN_CONTAINER = "x-vulcain-container";
     static X_VULCAIN_PUBLICPATH = "x-vulcain-publicpath";
     static X_VULCAIN_USE_MOCK = 'x-vulcain-use-mock-session';
-    static X_VULCAIN_REGISTER_MOCK = 'x-vulcain-register-mock-session';
+    static X_VULCAIN_REGISTER_MOCK = 'x-vulcain-save-mock-session';
 }
 
 export class CommandRequest implements IRequestContext {

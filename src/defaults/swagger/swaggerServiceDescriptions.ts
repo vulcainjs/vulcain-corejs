@@ -135,7 +135,10 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 meta: {
                     type: "object",
                     properties: {
-                        correlationId: { type: 'string' }
+                        correlationId: { type: 'string' },
+                        total: {type: 'number'},
+                        maxByPage: { type: 'number' },
+                        page: { type: 'number' }
                     }
                 }
             }

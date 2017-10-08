@@ -16,10 +16,11 @@ import { ApplicationError } from "../errors/applicationRequestError";
 
 
 export interface QueryResult {
-    maxByPage?: number;
-    page?: number;
-    totalPages?: number;
-    total?: number;
+    meta: {
+        maxByPage?: number;
+        page?: number;
+        total?: number;
+    };
     value?;
 }
 
@@ -120,12 +121,12 @@ export class QueryManager implements IManager {
             let result = await info.handler[info.method](query.params);
 
             if (!(result instanceof HttpResponse)) {
-                let res: QueryResult = { value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, result) };
+                let res: QueryResult = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, result) };
 
                 if (result && Array.isArray(result)) {
-                    res.total = result.length;
-                    res.maxByPage = query.maxByPage;
-                    res.page = query.page;
+                    res.meta.total = result.length;
+                    res.meta.maxByPage = query.maxByPage;
+                    res.meta.page = query.page;
                 }
                 return new HttpResponse(res);
             }
