@@ -1,6 +1,6 @@
 import { LifeTime, DefaultServiceNames } from '../di/annotations';
 import { System } from './../globals/system';
-import { VulcainManifest } from './../dependencies/annotations';
+import { VulcainManifest } from '../globals/manifest';
 import { QueryHandler } from "../pipeline/handlers/annotations.handlers";
 import { Query } from "../pipeline/handlers/annotations";
 import { RequestContext } from "../pipeline/requestContext";

@@ -9,7 +9,7 @@ import { VulcainLogger } from './../log/vulcainLogger';
 import { System } from './../globals/system';
 import { ConsoleMetrics } from '../metrics/consoleMetrics';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
-import { ServiceResolver } from '../globals/serviceResolver';
+import { ServiceResolver } from '../di/serviceResolver';
 import { RequestContext } from "../pipeline/requestContext";
 import { DefaultAuthorizationPolicy } from "../security/authorizationPolicy";
 import { HttpRequest } from "../pipeline/vulcainPipeline";

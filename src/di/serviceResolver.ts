@@ -1,4 +1,4 @@
-import { System } from './system';
+import { System } from '../globals/system';
 
 export interface IServiceResolver {
     resolveAsync(serviceName: string, version: string): Promise<string>;

@@ -1,8 +1,8 @@
-import { CryptoHelper } from './crypto';
+import { CryptoHelper } from '../utils/crypto';
 import { VulcainLogger } from './../log/vulcainLogger';
 import * as moment from 'moment';
 import * as fs from 'fs';
-import { VulcainManifest } from './../dependencies/annotations';
+import { VulcainManifest } from './manifest';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IContainer } from '../di/resolvers';
@@ -11,6 +11,7 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { Files } from '../utils/files';
 import * as Path from 'path';
+import { Settings } from './settings';
 
 /**
  * Static class providing service helper methods
@@ -19,21 +20,26 @@ import * as Path from 'path';
  * @class System
  */
 export class System {
-
+    private static _settings: Settings;
     private static _vulcainServer: string;
     private static _vulcainToken: string;
-    private static _vulcainConfig;
     private static logger: VulcainLogger;
     private static _environment: string;
     private static _serviceName: string;
     private static _serviceVersion: string;
     private static _domainName: string;
     private static crypter: CryptoHelper;
-    private static _environmentMode: "local" | "test" | "production";
     private static _manifest: VulcainManifest;
     private static _mocksManager: IMockManager;
     static defaultDomainName: string;
 
+    public static get settings() {
+        if (!System._settings) {
+            System._settings = new Settings();
+            System.log.info(null, () => `Running in ${System._settings.environmentMode} mode`);
+        }
+        return System._settings;
+    }
     /**
      * Get the application manifest when the application runs in developement mode
      *
@@ -102,61 +108,13 @@ export class System {
         if (!System._mocksManager) {
             if (System.isTestEnvironnment) {
                 let manager:any = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
-                manager.initialize && manager.initialize(System._vulcainConfig && System._vulcainConfig.mocks, System.saveSessionsAsync);
+                manager.initialize && manager.initialize(System.settings.mockSessions, System.settings.saveMocksAsync);
             }
             else {
                 System._mocksManager = new DummyMockManager();
             }
         }
         return System._mocksManager; // TODO as service
-    }
-
-    private static async saveSessionsAsync(sessions): Promise<any> {
-        try {
-            this._vulcainConfig = this._vulcainConfig || {};
-            this._vulcainConfig.mocks = this._vulcainConfig.mocks || {};
-            this._vulcainConfig.mocks.sessions = sessions;
-            let path = Path.join(Files.findApplicationPath(), Conventions.instance.vulcainFileName);
-            fs.writeFileSync(path, JSON.stringify(this._vulcainConfig));
-        }
-        catch (e) {
-            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings mock sessions.");
-        }
-    }
-
-    /**
-     * Read configurations from .vulcain file
-     * Set env type from environment variable then .vulcain config
-     *
-     * @private
-     */
-    private static readEnvironmentContext() {
-        if (System._environmentMode) {
-            return;
-        }
-        try {
-            let path = Path.join(Files.findApplicationPath(), Conventions.instance.vulcainFileName);
-
-            if (fs.existsSync(path)) {
-                let data = fs.readFileSync(path, "utf8");
-                if (data) {
-                    System._vulcainConfig = JSON.parse(data);
-                }
-            }
-            System._environmentMode = (process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE]
-                || (System._vulcainConfig && System._vulcainConfig.mode)
-                || "production").toLowerCase(); // default
-
-            if (System._environmentMode !== "production" && System._environmentMode !==  "test" && System._environmentMode !== "local") {
-                throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
-            }
-        }
-        catch (e) {
-            System._environmentMode = "production"; // Set this first to avoid stack overflow
-            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Loading error");
-        }
-
-        System.log.info(null, ()=> `Running in ${System._environmentMode} mode`);
     }
 
     /**
@@ -169,8 +127,7 @@ export class System {
      * @memberOf System
      */
     static get isDevelopment() {
-        System.readEnvironmentContext();
-        return System._environmentMode === "local";
+        return System.settings.isDevelopment;
     }
 
     /**
@@ -182,7 +139,7 @@ export class System {
      * @memberOf System
      */
     static get isTestEnvironnment() {
-        return System.isDevelopment || System._environmentMode === "test";
+        return System.settings.isTestEnvironnment;
     }
 
     /**
@@ -199,17 +156,9 @@ export class System {
             return null;
 
         // Try to find an alternate uri
-        if (System.isDevelopment && System._vulcainConfig && System._vulcainConfig.alias) {
-            let alias = System._vulcainConfig.alias[name];
-            if (alias) {
-                if (typeof alias === "string") {
-                    return alias;
-                }
-                alias = alias[version];
-                if (alias)
-                    return alias;
-            }
-        }
+        let alias = System.settings.getAlias(name, version);
+        if (alias)
+            return alias;
 
         let propertyName = '$alias.' + name;
         if (version)

@@ -2,7 +2,7 @@ import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/anno
 import { Conventions } from '../../utils/conventions';
 import { System } from '../../globals/system';
 import { IDynamicProperty } from '../../configurations/abstractions';
-import { ConfigurationProperty } from '../../dependencies/annotations';
+import { ConfigurationProperty } from '../../globals/manifest';
 import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
 const jwt = require('jsonwebtoken');
 const ms = require('ms');

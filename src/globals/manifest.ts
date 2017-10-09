@@ -78,7 +78,7 @@ export class VulcainManifest {
 
     private *retrievePackage() {
         try {
-            let basePath = Files.findApplicationPath();
+            let basePath = process.cwd();
             let json = fs.readFileSync(Path.join(basePath, "../package.json"), "utf8");
             let pkg = JSON.parse(json);
             let dependencies = pkg.dependencies;

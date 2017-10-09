@@ -54,7 +54,7 @@ export class Conventions {
     defaultApplicationFolder = "api";
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
-    vulcainFileName = ".vulcain";
+    vulcainFileName = "vulcain.json";
 
     defaultStatsdDelayInMs = 10000;
     defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";

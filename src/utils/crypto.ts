@@ -1,4 +1,4 @@
-import { System } from './system';
+import { System } from '../globals/system';
 import * as crypto from 'crypto';
 import { Conventions } from '../utils/conventions';
 import { IDynamicProperty } from '../configurations/abstractions';

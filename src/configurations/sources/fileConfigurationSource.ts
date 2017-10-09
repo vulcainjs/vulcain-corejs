@@ -17,7 +17,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
 
     constructor(private path: string, private mode: ConfigurationDataType = ConfigurationDataType.Json) {
         try {
-            this.path = Path.join(Files.findApplicationPath(), path);
+            this.path = Path.join(process.cwd(), path);
             if (!fs.existsSync(this.path)) {
                 System.log.info(null, () => "CONFIGURATIONS : File " + path + " doesn't exist.");
                 this._disabled = true;

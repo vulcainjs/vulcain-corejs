@@ -4,7 +4,7 @@ import { System } from './../globals/system';
 import { DynamicConfiguration } from './../configurations/dynamicConfiguration';
 import { IMetrics, MetricsConstant } from '../metrics/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
-import { IServiceResolver } from '../globals/serviceResolver';
+import { IServiceResolver } from '../di/serviceResolver';
 import * as types from './types';
 import 'reflect-metadata';
 const rest = require('unirest');

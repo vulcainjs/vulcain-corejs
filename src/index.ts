@@ -9,10 +9,10 @@ export { ILocalConfigurationSource, DataSource, IDynamicProperty, IRemoteConfigu
 export { ConfigurationSourceBuilder } from './configurations/configurationSourceBuilder';
 export { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
-export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './dependencies/annotations';
+export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './globals/manifest';
 export { VulcainLogger } from './log/vulcainLogger';
 export { System } from './globals/system';
-export { IServiceResolver } from './globals/serviceResolver';
+export { IServiceResolver } from './di/serviceResolver';
 
 // Schemas
 export * from './schemas/schema'
