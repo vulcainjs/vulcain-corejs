@@ -4,7 +4,7 @@ import { Domain } from '../schemas/schema';
 import { Preloader } from '../preloader';
 import { ConsoleMetrics } from "../metrics/consoleMetrics";
 import { IContainer } from "../di/resolvers";
-import { UserContext } from "../security/securityManager";
+import { UserContext } from "../security/securityContext";
 import { Container } from "../di/containers";
 import { RequestContext } from "./requestContext";
 import { Pipeline } from "./common";

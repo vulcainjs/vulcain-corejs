@@ -15,7 +15,6 @@ import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)
 import { LifeTime } from "./di/annotations";
-import { ApiKeyService } from "./security/services/apiKeyService";
 import { ServiceDescriptors } from "./pipeline/handlers/serviceDescriptions";
 import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
@@ -53,17 +52,6 @@ export class Application {
     useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.container.inject(name, service, lifeTime);
         return this;
-    }
-    /**
-     * Enable api key authentication
-     *
-     * @param {string} apiKeyServiceName Vulcain service name
-     * @param {string} [version="1.0"] Service version
-     *
-     * @memberOf Application
-     */
-    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.container.injectScoped(ApiKeyService, DefaultServiceNames.ApiKeyService, apiKeyServiceName, version);
     }
 
     /**

@@ -34,7 +34,7 @@ import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDesc
  * @implements {IContainer}
  */
 export class Container implements IContainer {
-    private resolvers: Map<string, IResolver> = new Map<string, IResolver>();
+    private resolvers: Map<string, IResolver[]> = new Map<string, IResolver[]>();
     public scope: Scope;
     private disposed = false;
 
@@ -65,7 +65,7 @@ export class Container implements IContainer {
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
-            this.injectSingleton(TokenService, DefaultServiceNames.TokenService);
+            this.injectSingleton(TokenService, DefaultServiceNames.AuthenticationStrategy);
             this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
             this.injectInstance(TrackerFactory.create(this), DefaultServiceNames.RequestTracker);
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
@@ -155,6 +155,14 @@ export class Container implements IContainer {
         this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
     }
 
+    // Insert always in first position
+    // so 'get' take the last inserted
+    private addResolver(name: string, resolver: IResolver) {
+        let list = this.resolvers.get(name) || [];
+        list.unshift(resolver);
+        this.resolvers.set(name, list);
+    }
+
     /**
      * Register a instance of a component
      *
@@ -167,7 +175,7 @@ export class Container implements IContainer {
             return;
 
         if (!name) throw new Error("Name is required.");
-        this.resolvers.set(name, new InstanceResolver(fn));
+        this.addResolver(name, new InstanceResolver(fn));
         if (name !== "Container" && fn.name)
             System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
@@ -194,9 +202,12 @@ export class Container implements IContainer {
         let attr = Reflect.getOwnMetadata(Symbol.for("di:export"), fn);
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Can not find a name when injecting component. Use @Export.");
-        this.resolvers.set(name, new SingletonResolver(fn, Array.from(args)));
+
+        this.addResolver(name, new SingletonResolver(fn, Array.from(args)));
+
         if (fn.name)
             System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+
         return this;
     }
 
@@ -224,7 +235,7 @@ export class Container implements IContainer {
         name = name || attr && attr.name || fn.name;
         if (!name)
             return;
-        this.resolvers.set(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
+        this.addResolver(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if (fn.name)
             System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
@@ -253,7 +264,7 @@ export class Container implements IContainer {
         let attr = Reflect.getOwnMetadata(Symbol.for("di:export"), fn);
         name = name || attr && attr.name || fn.name;
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
-        this.resolvers.set(name, new ScopedResolver(fn, Array.from(args)));
+        this.addResolver(name, new ScopedResolver(fn, Array.from(args)));
         if (fn.name)
             System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
@@ -312,15 +323,17 @@ export class Container implements IContainer {
         return instance;
     }
 
-    private findResolver(name: string) {
+    private findResolvers(name: string) {
         let self: Container = this;
+        let list: {resolver: IResolver, container: Container}[] = [];
         while (self) {
-            let resolver = self.resolvers.get(name);
-            if (resolver)
-                return { resolver, container: self };
+            let resolvers = self.resolvers.get(name);
+            if (resolvers) {
+                list.concat( resolvers.map(resolver=>{ return { resolver, container: self }; }));
+            }
             self = <Container>self.parent;
         }
-        return null;
+        return list;
     }
 
     /**
@@ -333,14 +346,26 @@ export class Container implements IContainer {
      * @returns A component
      */
     get<T>(name: string, optional?: boolean, assertLifeTime?: LifeTime) {
-        let res = this.findResolver(name);
-        let resolver = res && res.resolver;
-        if (assertLifeTime && resolver) {
-            if (!(assertLifeTime & resolver.lifeTime))
+        let resolvers = this.findResolvers(name);
+        let item = resolvers.length > 0 && resolvers[0];
+        if (assertLifeTime && item) {
+            if (!(assertLifeTime & item.resolver.lifeTime))
                 throw new Error("Component " + name + " must be declared with a life time = " + assertLifeTime);
         }
-        let component = this._resolve(res && res.container, resolver, name, optional);
+        let component = this._resolve(item && item.container, item.resolver, name, optional);
         return <T>component;
+    }
+
+    getList<T>(name: string): T[] {
+        let resolvers = this.findResolvers(name);
+        var list: T[] = [];
+        for(let item of resolvers) {
+            let component = this._resolve(item && item.container, item.resolver, name, true);
+            if(component) {
+                list.push(component);
+            }
+        }
+        return list;
     }
 
     private customEndpoints: { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] = [];

@@ -3,12 +3,15 @@ import { Conventions } from '../../utils/conventions';
 import { System } from '../../globals/system';
 import { IDynamicProperty } from '../../configurations/abstractions';
 import { ConfigurationProperty } from '../../globals/manifest';
-import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
+import { IAuthenticationStrategy, UserContext, UserToken } from "../securityContext";
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
+import { IRequestContext } from '../../pipeline/common';
 
-export class TokenService implements ITokenService {
+export class TokenService implements IAuthenticationStrategy {
+
+    public readonly name = "bearer";
 
     @ConfigurationProperty(Conventions.instance.TOKEN_ISSUER, "string")
     private issuer: IDynamicProperty<string>;
@@ -67,9 +70,9 @@ export class TokenService implements ITokenService {
         return token;
     }
 
-    verifyTokenAsync(p: VerifyTokenParameter): Promise<UserToken> {
+    verifyTokenAsync(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserToken> {
         return new Promise(async (resolve, reject) => {
-            if (!p.token) {
+            if (!accessToken) {
                 reject("You must provide a valid token");
                 return;
             }
@@ -79,13 +82,13 @@ export class TokenService implements ITokenService {
                 let key = this.secretKey.value;
                 //options.algorithms=[ALGORITHM];
 
-                jwt.verify(p.token, key, options, (err, payload) => {
+                jwt.verify(accessToken, key, options, (err, payload) => {
                     if (err) {
-                        reject(err);
+                        reject(`Bearer authentication: Invalid jwtToken, error: ${err}`);
                     }
                     else {
-                        const token = payload.value;
-                        resolve(token);
+                        const userContext = payload.value;
+                        resolve(userContext);
                     }
                 });
             }

@@ -1,4 +1,4 @@
-import { SecurityManager } from './securityManager';
+import { SecurityContext } from './securityContext';
 import { System } from "../globals/system";
 
 export interface IAuthorizationPolicy {
@@ -9,7 +9,7 @@ export interface IAuthorizationPolicy {
      *
      * @memberOf IPolicy
      */
-    scopes(sec: SecurityManager): Array<string>;
+    scopes(sec: SecurityContext): Array<string>;
     /**
      * Check if the current user scopes are valid with a specific scope
      *
@@ -18,8 +18,8 @@ export interface IAuthorizationPolicy {
      *
      * @memberOf IPolicy
      */
-    hasScope(sec: SecurityManager, handlerScope: string): boolean;
-    isAdmin(sec: SecurityManager): boolean;
+    hasScope(sec: SecurityContext, handlerScope: string): boolean;
+    isAdmin(sec: SecurityContext): boolean;
 }
 
 /**
@@ -36,7 +36,7 @@ export class DefaultAuthorizationPolicy {
      * @readonly
      * @type {Array<string>}
      */
-    scopes(sec: SecurityManager): Array<string> {
+    scopes(sec: SecurityContext): Array<string> {
         return (sec && sec.scopes) || [];
     }
 
@@ -54,7 +54,7 @@ export class DefaultAuthorizationPolicy {
      * @param {string} scope
      * @returns {number}
      */
-    hasScope(sec: SecurityManager, handlerScope: string): boolean {
+    hasScope(sec: SecurityContext, handlerScope: string): boolean {
         if (!handlerScope || handlerScope === "?" || System.isDevelopment) {
             return true;
         }
@@ -103,7 +103,7 @@ export class DefaultAuthorizationPolicy {
      *
      * @returns {boolean}
      */
-    isAdmin(sec: SecurityManager): boolean {
+    isAdmin(sec: SecurityContext): boolean {
         let scopes = this.scopes(sec);
         return scopes && scopes.length > 0 && scopes[0] === "*";
     }

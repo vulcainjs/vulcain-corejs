@@ -12,10 +12,11 @@ import * as URL from 'url';
 import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
 import { IRequestContext } from "../pipeline/common";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
-import { ITokenService } from "../security/securityManager";
+import { IAuthenticationStrategy } from "../security/securityContext";
 import { QueryResult } from "../pipeline/handlers/query";
 import { ActionResult } from "../pipeline/handlers/actions";
 import { Span } from '../trace/span';
+import { TokenService } from '../security/services/tokenService';
 
 
 export class HttpCommandError extends ApplicationError {
@@ -83,17 +84,17 @@ export abstract class AbstractServiceCommand {
      * Set (or reset) user context to use for calling service.
      *
      * @protected
-     * @param {string} apiKey - null for reset
+     * @param {string} authorization - null for reset
      * @param {string} tenant - null for reset
      *
      * @memberOf AbstractServiceCommand
      */
-    protected setRequestContext(apiKey?: string, tenant?: string) {
-        if (!apiKey) {
+    protected setRequestContext(authorization?: string, tenant?: string) {
+        if (!authorization) {
             this.overrideAuthorization = null;
         }
         else {
-            this.overrideAuthorization = "ApiKey " + apiKey;
+            this.overrideAuthorization = authorization;
         }
         this.overrideTenant = tenant;
     }
@@ -210,7 +211,7 @@ export abstract class AbstractServiceCommand {
             if (!this.context.user) {
                 return;
             }
-            let tokens = this.context.container.get<ITokenService>(DefaultServiceNames.TokenService);
+            let tokens = new TokenService();
             // Ensures jwtToken exists for user context propagation
             let result: any = await tokens.createTokenAsync(this.context.user);
             token = result.token;
@@ -294,17 +295,17 @@ export abstract class AbstractServiceCommand {
     protected async exec(kind: string, serviceName: string, serviceVersion: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
         switch (kind) {
             case 'action': {
-                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
                 let response = await this.sendActionAsync(serviceName, serviceVersion, verb, data, args);
                 return response.value;
             }
             case 'query': {
-                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
                 let response = await this.getQueryAsync(serviceName, serviceVersion, verb, data, args, page, maxByPage);
                 return response.value;
             }
             case 'get': {
-                userContext && this.setRequestContext(userContext.apiKey, userContext.tenant);
+                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
                 let response = await this.getRequestAsync(serviceName, serviceVersion, data, args);
                 return response.value;
             }

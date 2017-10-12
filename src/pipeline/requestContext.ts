@@ -1,13 +1,12 @@
 import { IRequestContext, Pipeline, RequestData, ICustomEvent } from './common';
 import { IContainer } from '../di/resolvers';
-import { SecurityManager, UserContextData } from '../security/securityManager';
+import { SecurityContext, UserContextData } from '../security/securityContext';
 import { IAuthorizationPolicy } from "../security/authorizationPolicy";
 import { DefaultServiceNames } from '../di/annotations';
 import { Container } from '../di/containers';
 import { Logger } from "../log/logger";
 import { HttpRequest } from "./vulcainPipeline";
 import { ApplicationError } from "./errors/applicationRequestError";
-import { DefaultAuthentication } from "../security/defaultAuthentication";
 import { ICommand } from "../commands/abstractCommand";
 import { CommandFactory } from "../commands/commandFactory";
 import { HttpResponse } from "./response";
@@ -111,7 +110,7 @@ export class RequestContext implements IRequestContext {
     requestData: RequestData;
     response: HttpResponse;
     request: HttpRequest;
-    private _securityManager: SecurityManager;
+    private _securityManager: SecurityContext;
     tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
 
@@ -171,10 +170,10 @@ export class RequestContext implements IRequestContext {
     setSecurityManager(tenant: string|UserContextData) {
         if (!tenant)
             throw new Error("Tenant can not be null");
-        let manager = this.container.get<SecurityManager>(DefaultServiceNames.SecurityManager, true);
+        let manager = this.container.get<SecurityContext>(DefaultServiceNames.SecurityManager, true);
         if (!manager) {
             let scopePolicy = this.container.get<IAuthorizationPolicy>(DefaultServiceNames.AuthorizationPolicy);
-            manager = new DefaultAuthentication(scopePolicy);
+            manager = new SecurityContext(this.container, scopePolicy);
         }
         manager.setTenant(tenant);
         this._securityManager = manager;

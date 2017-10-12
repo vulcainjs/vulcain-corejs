@@ -8,7 +8,7 @@ import { System } from '../../globals/system';
 import { VulcainLogger } from '../../log/vulcainLogger';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData } from "../../pipeline/common";
-import { UserContext } from "../../security/securityManager";
+import { UserContext } from "../../security/securityContext";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
 import { HttpResponse } from "../response";
 import { BadRequestError } from "../errors/badRequestError";

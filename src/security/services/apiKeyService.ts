@@ -1,11 +1,11 @@
 import { DefaultServiceNames, Inject } from '../../di/annotations';
 import { AbstractHandler } from "../../pipeline/handlers/abstractHandlers";
-import { ITokenService, UserContext, VerifyTokenParameter, UserToken } from "../securityManager";
+import { IAuthenticationStrategy, UserContext, UserToken } from "../securityContext";
 import { IContainer } from "../../di/resolvers";
 import { Command, CommandFactory } from "../../commands/commandFactory";
 import { AbstractServiceCommand } from "../../commands/abstractServiceCommand";
-
-export class ApiKeyService extends AbstractHandler implements ITokenService {
+/*
+export class ApiKeyService extends AbstractHandler implements IAuthenticationStrategy {
     constructor(@Inject(DefaultServiceNames.Container) container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
         super(container);
     }
@@ -28,4 +28,4 @@ class ApiKeyVerifyCommand extends AbstractServiceCommand {
         let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
         return resp.value;
     }
-}
+}*/

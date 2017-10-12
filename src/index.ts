@@ -20,7 +20,8 @@ export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOpt
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
 
 // Auth
-export {SecurityManager, VerifyTokenParameter, ITokenService, UserToken} from './security/securityManager'
+export {SecurityContext, IAuthenticationStrategy, UserToken} from './security/securityContext'
+export {IAuthorizationPolicy} from './security/authorizationPolicy'
 
 // Core
 export * from './application'
@@ -45,7 +46,7 @@ export { ValidationError } from './pipeline/errors/validationError';
 export { ISerializer } from './pipeline/serializers/serializer';
 export { HttpRequest } from './pipeline/vulcainPipeline';
 export { Logger } from './log/logger'
-export { UserContext, } from './security/securityManager'
+export { UserContext, } from './security/securityContext'
 export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
 
 // Bus adapter

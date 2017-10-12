@@ -1,4 +1,4 @@
-import { SecurityManager, UserContext } from '../security/securityManager';
+import { SecurityContext, UserContext } from '../security/securityContext';
 import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";

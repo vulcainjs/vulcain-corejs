@@ -13,7 +13,7 @@ import { System } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
-import { UserContextData } from "../../security/securityManager";
+import { UserContextData } from "../../security/securityContext";
 import { HttpResponse } from "../response";
 import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
@@ -66,7 +66,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
  * @extends {CommonActionMetadata}
  */
 export interface ActionMetadata extends CommonActionMetadata {
-    
+
     async?: boolean;
     eventMode?: EventNotificationMode;
     outputSchema: string;

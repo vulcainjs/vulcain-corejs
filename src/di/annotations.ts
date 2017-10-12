@@ -12,7 +12,7 @@ import { IRequestContext } from "../pipeline/common";
  */
 export class DefaultServiceNames {
     static Serializer = "Serializer";
-    static TokenService = "TokenService";
+    static AuthenticationStrategy = "AuthenticationStrategy";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";
     static TaskManager = "TaskManager";
@@ -30,7 +30,6 @@ export class DefaultServiceNames {
     static Container = "Container";
     static ProviderFactory = "ProviderFactory";
     static Metrics = "Metrics";
-    static ApiKeyService = "ApiKeyService";
     static MockManager = "MockManager";
     static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
