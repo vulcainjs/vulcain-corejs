@@ -48,6 +48,7 @@ export { HttpRequest } from './pipeline/vulcainPipeline';
 export { Logger } from './log/logger'
 export { UserContext, } from './security/securityContext'
 export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
+export { TrackerInfo } from './trace/common';
 
 // Bus adapter
 export * from './bus/busAdapter'

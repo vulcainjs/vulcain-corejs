@@ -329,7 +329,7 @@ export class Container implements IContainer {
         while (self) {
             let resolvers = self.resolvers.get(name);
             if (resolvers) {
-                list.concat( resolvers.map(resolver=>{ return { resolver, container: self }; }));
+                list = list.concat( resolvers.map(resolver=>{ return { resolver, container: self }; }));
             }
             self = <Container>self.parent;
         }

@@ -7,9 +7,9 @@ import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics"
 import { Pipeline } from './../pipeline/common';
 import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
-import { ISpanTracker, SpanId, SpanKind } from "./common";
+import { ISpanTracker, TrackerInfo, SpanKind, ISpanHasId } from "./common";
 
-export class Span implements ISpanTracker {
+export class Span implements ISpanTracker, ISpanHasId {
     private initialized: boolean;
     private _logger: Logger;
     private tags: { [name: string]: string } = {};
@@ -17,16 +17,20 @@ export class Span implements ISpanTracker {
     private startTime: number;
     private error: Error;
     private metrics: IMetrics;
-    private id: SpanId;
+    private _id: TrackerInfo;
     private tracker: IRequestTracker;
     private action: string;
+
+    get id() {
+        return this._id;
+    }
 
     private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
-        this.id = <SpanId>{
+        this._id = <TrackerInfo>{
             spanId: this.randomTraceId(),
             parentId: parentId
         };
@@ -40,8 +44,8 @@ export class Span implements ISpanTracker {
         return new Span(context, SpanKind.Request, System.fullServiceName, parentId);
     }
 
-    createCommandTracker(commandName: string) {
-        return new Span(this.context, SpanKind.Command, commandName, this.id.spanId);
+    createCommandTracker(context: RequestContext, commandName: string) {
+        return new Span(context, SpanKind.Command, commandName, this._id.spanId);
     }
 
     trackAction(action: string, tags?: any) {
@@ -50,18 +54,20 @@ export class Span implements ISpanTracker {
         this.action = action;
         this.ensuresInitialized();
         if (tags) {
-            this.addTags(tags);
+            this.addTrackerTags(tags);
         }
+        this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
     }
 
     private ensuresInitialized() {
         if (!this.initialized && this.action) {
             this.initialized = true;
-            this.id.traceId = this.context.correlationId;
+            let info = this.context.getTrackerInfo(); // Ensures correlationId is initialized
+
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
             if (trackerFactory) {
-                this.tracker = trackerFactory.startSpan(this.context, this.id, this.name, this.kind, this.action);
-                this.addTag('correlationId', this.context.correlationId);
+                this.tracker = trackerFactory.startSpan(this.context, this._id, this.name, this.kind, this.action);
+                this.addTag('correlationId', info.correlationId);
             }
 
             if (this.kind === SpanKind.Command) {
@@ -94,8 +100,8 @@ export class Span implements ISpanTracker {
     }
 
     injectHeaders(headers: (name: string | any, value?: string) => any) {
-        headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this.id.spanId);
-        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this.context.correlationId);
+        headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this._id.spanId);
+        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this._id.correlationId);
 //        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
 //        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
 //        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
@@ -111,11 +117,12 @@ export class Span implements ISpanTracker {
     }
 
     dispose() {
+        if (this.kind === SpanKind.Request)
+            this.endRequest();
+        else
+            this.endCommand();
+
         if (this.tracker) {
-            if (this.kind === SpanKind.Request)
-                this.endRequest();
-            else
-                this.endCommand();
             this.tracker.dispose(this.durationInMs, this.tags);
             this.tracker = null;
         }
@@ -193,7 +200,7 @@ export class Span implements ISpanTracker {
         }
     }
 
-    addTags(tags) {
+    addTrackerTags(tags) {
         if (!tags)
             return;
 

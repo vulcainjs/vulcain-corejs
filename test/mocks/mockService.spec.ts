@@ -54,11 +54,11 @@ describe('Mock service', function () {
 
         manager.initialize(mockDefinitions);
 
-        expect(await manager.applyMockServiceAsync("service1", "3.0", "Customer.create", {})).to.be.equals(1);
-        expect(await manager.applyMockServiceAsync("service2", "2.0", "Customer.create", {})).to.be.equals(22);
-        expect(await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id33"}  })).to.be.equals(33);
-        expect(await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id3", filter:"filter1"}  })).to.be.equals(333);
-        expect(await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id3"}  })).to.be.equals(3);
+        expect((await manager.applyMockServiceAsync("service1", "3.0", "Customer.create", {})).content).to.be.equals(1);
+        expect((await manager.applyMockServiceAsync("service2", "2.0", "Customer.create", {})).content).to.be.equals(22);
+        expect((await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id33"}  })).content).to.be.equals(33);
+        expect((await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id3", filter:"filter1"}  })).content).to.be.equals(333);
+        expect((await manager.applyMockServiceAsync("service3", "2.0", "Customer.get", { data: {id:"id3"}  })).content).to.be.equals(3);
     });
 
 });

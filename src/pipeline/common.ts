@@ -4,6 +4,7 @@ import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
 import { ISpanTracker } from '../trace/common';
 import { DefaultCRUDCommand } from '../defaults/crudHandlers';
+import { TrackerInfo } from '../trace/common';
 
 export enum Pipeline {
     Event,
@@ -25,13 +26,7 @@ export interface ICustomEvent {
 }
 
 export interface IRequestContext extends ISpanTracker {
-    /**
-     * Request correlation id
-     *
-     * @type {string}
-     */
-    correlationId: string;
-
+    getTrackerInfo(): TrackerInfo;
     /**
      * Current user or null
      *

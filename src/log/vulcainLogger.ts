@@ -7,6 +7,7 @@ import { IRequestContext } from "../pipeline/common";
 import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError } from '../pipeline/errors/applicationRequestError';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
+import * as ms from 'moment';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
@@ -106,26 +107,43 @@ export class VulcainLogger implements Logger{
     }
 
     private prepareEntry(context: IRequestContext) {
-        const ctx = <RequestContext>context;
+        let trackInfo = context && context.getTrackerInfo();
+        if (System.isDevelopment) {
+            return <LogEntry>{
+                correlationId: (trackInfo && trackInfo.correlationId) || undefined,
+                parentId: (trackInfo && trackInfo.parentId) || undefined,
+                traceId: (trackInfo && trackInfo.spanId) || undefined
+            };
+        }
+
         return <LogEntry>{
             service: System.serviceName,
             version: System.serviceVersion,
             kind: "Log",
             source: this._hostname,
-            timestamp: Date.now() * 1000,
-            correlationId: (context && context.correlationId) || undefined,
-            //parentId: (context && context.parentId) || undefined,
-            //traceId: (context && context.traceId) || undefined
+            timestamp: Date.now() * 1000, // TODO
+            correlationId: (trackInfo && trackInfo.correlationId) || undefined,
+            parentId: (trackInfo && trackInfo.parentId) || undefined,
+            traceId: (trackInfo && trackInfo.spanId) || undefined
         };
     }
 
     private writeEntry(entry: LogEntry) {
 
         if (System.isDevelopment) {
-            util.log(`${entry.message} - ${JSON.stringify(entry)}`);
+            if (entry.kind === "RR")
+                console.log("======================");
+            const msg = entry.message;
+            entry.message = undefined;
+            let str = JSON.stringify(entry);
+            str = str.substr(1, str.length - 2); // Remove {}
+            if (str)
+                str = "- " + str;
+            let timestamp = ms().format('HH:mm:ss:SSS');
+            console.log(`${timestamp} - ${msg} ${str}`);
         }
         else {
-            util.log( JSON.stringify(entry));
+            console.log( JSON.stringify(entry));
         }
     }
 }

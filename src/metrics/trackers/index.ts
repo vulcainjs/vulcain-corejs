@@ -5,7 +5,7 @@ import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
 import { ApplicationInsightsMetrics } from '../applicationInsightsMetrics';
-import { SpanId, SpanKind } from '../../trace/common';
+import { TrackerInfo, SpanKind } from '../../trace/common';
 
 export interface IRequestTracker {
     trackError(error);
@@ -13,7 +13,7 @@ export interface IRequestTracker {
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string): IRequestTracker;
+    startSpan( ctx: IRequestContext, id: TrackerInfo, name: string, kind: SpanKind, action: string): IRequestTracker;
 }
 
 export class TrackerFactory {

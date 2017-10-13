@@ -39,7 +39,7 @@ export class HystrixCommand {
         command.container = container;
         this.command.context =  context.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
-        this.command.context.addTags({ hystrixProperties: this.properties.toString() });
+        this.command.context.addTrackerTags({ hystrixProperties: this.properties.toString() });
     }
 
     get circuitBreaker() {

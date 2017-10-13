@@ -51,7 +51,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
 
         if (typeof (ctx.response.content) === "object") {
             ctx.response.content.meta = ctx.response.content.meta || {};
-            ctx.response.content.meta.correlationId = ctx.correlationId;
+            ctx.response.content.meta.correlationId = ctx.requestData.correlationId;
         }
     }
 

@@ -1,4 +1,4 @@
-import { CryptoHelper } from '../../dist/globals/crypto';
+import { CryptoHelper } from '../../dist/utils/crypto';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 

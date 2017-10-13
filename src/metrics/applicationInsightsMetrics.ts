@@ -6,14 +6,14 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from "./trackers/index";
 import { IRequestContext } from "./../pipeline/common";
 import * as url from 'url';
-import { SpanId, SpanKind } from "../trace/common";
+import { TrackerInfo, SpanKind } from "../trace/common";
 
 const appInsights = require('applicationinsights');
 class Tracker implements IRequestTracker {
     private error: Error;
     private tags;
 
-    constructor(private ctx: IRequestContext, private id: SpanId, private name: string, private kind: SpanKind, private action: string) {
+    constructor(private ctx: IRequestContext, private id: TrackerInfo, private name: string, private kind: SpanKind, private action: string) {
     }
 
     private getDependencyData(duration: number, error: Error, tags) {
@@ -84,7 +84,7 @@ class Tracker implements IRequestTracker {
 export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFactory {
     private static instance: ApplicationInsightsMetrics;
 
-    startSpan(ctx: IRequestContext, id: SpanId, name: string, kind: SpanKind, action: string): IRequestTracker {
+    startSpan(ctx: IRequestContext, id: TrackerInfo, name: string, kind: SpanKind, action: string): IRequestTracker {
         return new Tracker(ctx, id, name, kind, action);
     }
 

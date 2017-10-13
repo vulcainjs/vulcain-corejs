@@ -15,9 +15,10 @@ import { AsyncTaskData } from "./handlers/actions";
 import { System } from '../globals/system';
 const guid = require('uuid');
 import * as os from 'os';
-import { ISpanTracker, SpanKind, ISpanRequestTracker, DummySpanTracker } from '../trace/common';
+import {  SpanKind, ISpanRequestTracker, DummySpanTracker } from '../trace/common';
 import { Span } from '../trace/span';
 import { DefaultCRUDCommand } from '../defaults/crudHandlers';
+import { TrackerInfo } from '../trace/common';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -36,7 +37,6 @@ export class VulcainHeaderNames {
 export class CommandRequest implements IRequestContext {
     tracker: ISpanRequestTracker;
     private context: RequestContext;
-    get correlationId() { return this.context.correlationId; }
     get user() { return this.context.user; }
     get container() { return this.context.container; }
     get locale() { return this.context.locale; }
@@ -47,18 +47,25 @@ export class CommandRequest implements IRequestContext {
 
     constructor(context: IRequestContext, commandName: string) {
         this.context = <RequestContext>context;
-        this.tracker = this.context.tracker.createCommandTracker(commandName);
+        this.tracker = this.context.tracker.createCommandTracker(this, commandName);
+    }
+
+    getTrackerInfo(): TrackerInfo {
+        return this.tracker.id;
     }
 
     trackAction(action: string, tags?: any) {
         this.tracker.trackAction(action, tags);
     }
-    addTags(tags?: any) {
-        this.tracker.addTags(tags);
+
+    addTrackerTags(tags?: any) {
+        this.tracker.addTrackerTags(tags);
     }
+
     get durationInMs() {
         return this.tracker.durationInMs;
     }
+
     injectHeaders(headers: (name: string | any, value?: string) => any) {
         this.tracker.injectHeaders(headers);
     }
@@ -114,14 +121,25 @@ export class RequestContext implements IRequestContext {
     tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
 
+    getTrackerInfo(): TrackerInfo {
+        let spanId = this.tracker.id;
+        let id = this.requestData.correlationId;
+        if (!id) {
+            this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
+        }
+
+        spanId.correlationId = id;
+        return spanId;
+    }
+
     injectHeaders(headers: (name: string | any, value?: string) => any) {
         this.tracker.injectHeaders(headers);
     }
     trackAction(action: string, tags?:any) {
         this.tracker.trackAction(action, tags);
     }
-    addTags(tags?: any) {
-        this.tracker.addTags(tags);
+    addTrackerTags(tags?: any) {
+        this.tracker.addTrackerTags(tags);
     }
     get durationInMs() {
         return this.tracker.durationInMs;
@@ -138,14 +156,6 @@ export class RequestContext implements IRequestContext {
         return new CommandRequest(this, commandName);
     }
 
-    get correlationId(): string {
-        let id = this.requestData.correlationId;
-        if (id) {
-            return id;
-        }
-        return this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
-    }
-
     get now() {
         return this.tracker.now;
     }
@@ -153,7 +163,7 @@ export class RequestContext implements IRequestContext {
     getRequestDataObject() {
         return {
             vulcainVerb: this.requestData.vulcainVerb,
-            correlationId: this.correlationId,
+            correlationId: this.requestData.correlationId,
             action: this.requestData.action,
             domain: this.requestData.domain,
             schema: this.requestData.schema,

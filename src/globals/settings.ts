@@ -67,45 +67,36 @@ export class Settings {
      * @private
      */
     private readContext() {
-        this._alias = this._config = this._mocks = {};
+        this._alias = {};
+        this._config = {};
+        this._mocks = {};
 
-        this._environmentMode = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE];
+        // Default mode is local
+        this._environmentMode = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE] || "local";
         if (this._environmentMode === "production") {
             // Settings are ignored in production
             return;
         }
 
-        // Default mode is production
-        this._environmentMode = "production";
-
         try {
             let path = this.getFilePath();
-            let data;
             if (fs.existsSync(path)) {
-                data = fs.readFileSync(path, "utf8");
+                let data:any = fs.readFileSync(path, "utf8");
                 data = data && JSON.parse(data);
                 if (data) {
                     this._alias = data.alias || this._alias;
                     this._config = data._config || this._config;
                     this._mocks = data._mocks || this._mocks;
-
-                    // If there is a config file and no environment variable default is 'test'
-                    this._environmentMode = (data.mode || "test").toLowerCase(); // default
+                    this._environmentMode = (data.mode || this._environmentMode).toLowerCase();
                 }
             }
         }
         catch (e) {
-            this._environmentMode = "production"; // Set this first to avoid stack overflow
             throw new Error("VULCAIN MANIFEST : Loading error");
         }
 
-        if (this._environmentMode !== "production" && this._environmentMode !== "test" && this._environmentMode !== "local") {
+        if ( this._environmentMode !== "test" && this._environmentMode !== "local") {
             throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
-        }
-
-        // If producation has been forced, reset all settings
-        if (this._environmentMode === "production") {
-            this._alias = this._config = this._mocks = {};
         }
     }
 

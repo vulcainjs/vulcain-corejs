@@ -37,7 +37,7 @@ export abstract class AbstractHttpCommand {
         System.manifest.registerExternal(uri);
 
         if(uri && verb)
-            this.context.addTags({ uri: uri, verb: verb });
+            this.context.addTrackerTags({ uri: uri, verb: verb });
     }
 
     runAsync(...args): Promise<any> {

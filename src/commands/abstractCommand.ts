@@ -62,7 +62,7 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     }
 
     protected setMetricsTags(args: { [key: string] : string }) {
-        this.context.addTags(args);
+        this.context.addTrackerTags(args);
     }
 
     /**

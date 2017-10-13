@@ -76,7 +76,7 @@ export abstract class AbstractServiceCommand {
 //            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
 //        }
 
-        this.context.addTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
+        this.context.addTrackerTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
         System.manifest.registerService(serviceName, serviceVersion);
     }
 
@@ -182,7 +182,7 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<ActionResponse<T>>}
      */
     protected async sendActionAsync<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
-        let command = { params: data, correlationId: this.context.correlationId };
+        let command = { params: data, correlationId: this.context.requestData.correlationId };
         const mocks=System.getMocksManager(this.container);
         let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {

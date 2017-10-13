@@ -115,12 +115,25 @@ export class MockManager implements IMockManager {
         return this.getMockResultAsync(mock, data);
     }
 
+    private CreateResponse(content) {
+        let statusCode: number;
+        let contentType: string;
+        if (typeof (content) === "object") {
+            statusCode = content.statusCode;
+            contentType = content.contentType;
+            content = content.content;
+        }
+        let res = new HttpResponse(content, statusCode); // result
+        res.contentType = contentType;
+        return res;
+    }
+
     private async getMockResultAsync(mock, data): Promise<HttpResponse> {
         if (!mock) {
             return;
         }
         if (!Array.isArray(mock)) {
-            return mock;
+            return this.CreateResponse(mock)
         }
 
         // Iterate over data input filter
@@ -130,12 +143,10 @@ export class MockManager implements IMockManager {
                 if (item.latency) {
                     await this.sleep(item.latency);
                 }
-                let res = new HttpResponse(item.output.content, item.output.statusCode); // result
-                res.contentType = item.output.contentType;
-                return res;
+
+                return this.CreateResponse(item.output)
             }
         }
-        return;
     }
 
     protected async readMockSessions(session: string, verb: string): Promise<any> {
