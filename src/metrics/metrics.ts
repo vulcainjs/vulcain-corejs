@@ -28,7 +28,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    increment(metric: string, customTags?: any, delta?: number);
+    increment(metric: string, customTags?: any, delta?: number): void;
 
     /**
      * Set a duration
@@ -38,7 +38,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    timing(metric: string, duration: number, customTags?: any);
+    timing(metric: string, duration: number, customTags?: any): void;
 }
 
 export class MetricsFactory {

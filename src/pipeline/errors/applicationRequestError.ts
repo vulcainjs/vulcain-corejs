@@ -16,7 +16,7 @@ export class ApplicationError extends Error {
      * @private
      * @type {Array<ValidationError>}
      */
-    public errors: Array<ValidationError>;
+    public errors: Array<ValidationError>|undefined;
 
     /**
      * Creates an instance of ApplicationRequestError.

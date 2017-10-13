@@ -12,7 +12,7 @@ export interface EventData extends RequestData {
     value?: any;
     // Source service name
     source: string;
-    error: string;
+    error?: string;
     userContext: UserContextData;
     startedAt: string;
     completedAt?: string;

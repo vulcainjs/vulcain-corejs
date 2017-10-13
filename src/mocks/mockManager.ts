@@ -8,11 +8,11 @@ import { HttpResponse } from "../pipeline/response";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 export class MockManager implements IMockManager {
-    private mocks;
-    private sessions;
+    private mocks: any;
+    private sessions: any;
     useMockProperty: IDynamicProperty<string>;
     registerMockProperty: IDynamicProperty<string>;
-    private saveSessionsAsync: (sessions) => Promise<any>;
+    private saveSessionsAsync: (sessions:any) => Promise<any>;
 
     get enabled() {
         return System.isTestEnvironnment && (!this.mocks || !this.mocks.disabled);
@@ -23,7 +23,7 @@ export class MockManager implements IMockManager {
         this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession");
     }
 
-    initialize(mocks, saveSessionsAsync?: (sessions) => Promise<any>) {
+    initialize(mocks:any, saveSessionsAsync?: (sessions:any) => Promise<any>) {
         this.saveSessionsAsync = saveSessionsAsync;
         this.mocks = mocks;
         this.sessions = (mocks && mocks.sessions) || {};
@@ -33,7 +33,7 @@ export class MockManager implements IMockManager {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    private deepCompare(a, b) {
+    private deepCompare(a:any, b:any) {
         if (!b) {
             return true;
         }
@@ -70,7 +70,7 @@ export class MockManager implements IMockManager {
                 if (val.length !== val2.length) {
                     return false;
                 }
-                for (let i; i < val.length; i++) {
+                for (let i=0; i < val.length; i++) {
                     if (!this.deepCompare(val2[i], val[i])) {
                         return false;
                     }
@@ -97,7 +97,7 @@ export class MockManager implements IMockManager {
         return res;
     }
 
-    public applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data) {
+    public applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data:any) {
         if (!this.mocks || !serviceName || !this.mocks.services) {
             return undefined;
         }
@@ -115,9 +115,9 @@ export class MockManager implements IMockManager {
         return this.getMockResultAsync(mock, data);
     }
 
-    private CreateResponse(content) {
-        let statusCode: number;
-        let contentType: string;
+    private CreateResponse(content:any) {
+        let statusCode: number|undefined;
+        let contentType: string|undefined;
         if (typeof (content) === "object") {
             statusCode = content.statusCode;
             contentType = content.contentType;
@@ -128,7 +128,7 @@ export class MockManager implements IMockManager {
         return res;
     }
 
-    private async getMockResultAsync(mock, data): Promise<HttpResponse> {
+    private async getMockResultAsync(mock:any|null, data:any): Promise<HttpResponse|undefined> {
         if (!mock) {
             return;
         }
@@ -154,7 +154,7 @@ export class MockManager implements IMockManager {
         return serviceSessions && serviceSessions[verb];
     }
 
-    protected writeMockSessions(sessionName: string, verb: string, data): Promise<any> {
+    protected writeMockSessions(sessionName: string, verb: string, data:any): Promise<any> {
         let serviceSessions = this.sessions[sessionName] = this.sessions[sessionName] || {};
         let session: any[] = serviceSessions[verb] = serviceSessions[verb] || [];
 
@@ -182,7 +182,7 @@ export class MockManager implements IMockManager {
      *   ex for ServiceA, version 1.0 => fullName = ServiceA-1.0
      *   filter : ServiceA, Service, ServiceA-1, Service.-1\.0
      */
-    private splitAndTestSession(val: string): string {
+    private splitAndTestSession(val: string): string|null {
         if (!val) {
             return null;
         }

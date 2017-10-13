@@ -133,7 +133,7 @@ export class QueryManager implements IManager {
             return result;
         }
         catch (e) {
-            let error = (e instanceof CommandRuntimeError) ? e.error : e;
+            let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
             throw error;
         }
     }

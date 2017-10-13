@@ -15,7 +15,7 @@ import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
 
 export interface HandlerItem {
     methodName: string;
-    handler;
+    handler: Function;
     metadata: CommonActionMetadata;
     kind: "action" | "query" | "event";
     verb?: string;
@@ -56,7 +56,7 @@ export class ServiceDescription {
     domain: string;
     serviceName: string;
     serviceVersion: string;
-    alternateAddress: string;
+    alternateAddress?: string;
     services: Array<ActionDescription>;
     schemas: Array<SchemaDescription>;
     hasAsyncTasks: boolean;
@@ -78,11 +78,11 @@ export class ServiceDescriptors {
         return this.descriptions;
     }
 
-    getHandlerInfo(container: IContainer, schema: string, action: string, optional?: boolean) {
+    getHandlerInfo(container: IContainer|undefined, schema: string, action: string, optional?: boolean) {
         this.createHandlersTable();
 
         let verb = action && action.toLowerCase();
-        let item: HandlerItem;
+        let item: HandlerItem|undefined;
 
         if (!schema) {
             item = this.routes.get(verb);
@@ -123,7 +123,7 @@ export class ServiceDescriptors {
         let schemas = new Map<string, SchemaDescription>();
 
         // Check if there is only one Schema
-        let lastSchema: string;
+        let lastSchema: string|undefined;
         let monoSchema = true;
         this.handlers.forEach(item => {
             if (!item.metadata.schema)
@@ -142,17 +142,17 @@ export class ServiceDescriptors {
             services: [],
             schemas: new Array<SchemaDescription>(),
             domain: this.domain.name,
-            serviceName: System.serviceName,
-            serviceVersion: System.serviceVersion,
-            alternateAddress: null,
+            serviceName: System.serviceName || "unknow",
+            serviceVersion: System.serviceVersion || "",
+            alternateAddress: undefined,
             hasAsyncTasks: false,
             scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description }; })
         };
 
         for (let item of this.handlers.filter(h => h.kind === "action")) {
-            let schema = this.getSchemaDescription(schemas, item.metadata.schema);
+            let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
 
-            let verb = !item.metadata.schema
+            let verb = !schema
                 ? item.metadata.action
                 : schema + "." + item.metadata.action;
 

@@ -59,7 +59,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    error(context: IRequestContext, error: Error, msg?: ()=>string) {
+    error(context: IRequestContext|null, error: Error, msg?: ()=>string) {
         if (!error) return;
         let entry = this.prepareEntry(context);
         entry.message = (msg && msg()) || "Error occured";
@@ -79,7 +79,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    info(context: IRequestContext, msg: ()=>string) {
+    info(context: IRequestContext|null, msg: ()=>string) {
         let entry = this.prepareEntry(context);
         entry.message = msg && msg();
         this.writeEntry(entry);
@@ -94,7 +94,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    verbose(context: IRequestContext, msg: ()=>string) {
+    verbose(context: IRequestContext|null, msg: ()=>string) {
         if (VulcainLogger.enableInfo || System.isDevelopment)
             this.info(context, msg);
     }
@@ -106,7 +106,7 @@ export class VulcainLogger implements Logger{
         this.writeEntry(entry);
     }
 
-    private prepareEntry(context: IRequestContext) {
+    private prepareEntry(context: IRequestContext|null) {
         let trackInfo = context && context.getTrackerInfo();
         if (System.isDevelopment) {
             return <LogEntry>{

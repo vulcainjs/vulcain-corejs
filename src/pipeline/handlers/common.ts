@@ -5,6 +5,8 @@ import { UserContext } from "../../security/securityContext";
 import { RequestData } from "../../pipeline/common";
 import { ValidationError } from "../../pipeline/errors/validationError";
 import { HttpResponse } from "../response";
+import { RequestContext } from '../requestContext';
+import { Schema } from '../../index';
 
 export interface ErrorResponse {
     message:string;
@@ -37,15 +39,15 @@ export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
 export interface IManager {
     container: IContainer;
     getInfoHandler(command: RequestData, container?: IContainer): { verb: string, handler: Function, metadata: CommonActionMetadata, method: string, kind: "query" | "action" | "event" };
-    runAsync(command: RequestData, ctx): Promise<HttpResponse>;
+    runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse>;
 }
 
 export class HandlerFactory {
 
-    static obfuscateSensibleData(domain: Domain, container: IContainer, result) {
+    static obfuscateSensibleData(domain: Domain, container: IContainer, result?:any) {
         if (result) {
             if (Array.isArray(result)) {
-                let outputSchema;
+                let outputSchema:Schema|null;
                 result.forEach(v => {
                     if (v.__schema) {
                         if (!outputSchema || outputSchema.name !== v.__schema)

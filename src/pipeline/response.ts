@@ -30,7 +30,7 @@ export class HttpResponse {
      * @type {string}
      * @memberOf HttpResponse
      */
-    public contentType: string;
+    public contentType: string|undefined;
     /**
      * Response content
      *
@@ -60,7 +60,7 @@ export class HttpResponse {
         return res;
     }
 
-    constructor(content?, statusCode = 200) {
+    constructor(content?:any, statusCode = 200) {
         this.headers = {};
         this.statusCode = statusCode;
 

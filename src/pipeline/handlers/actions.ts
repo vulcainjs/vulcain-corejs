@@ -29,7 +29,7 @@ export interface AsyncTaskData extends RequestData {
 }
 
 export interface ActionResult {
-    value?;
+    value?:any;
     status?: "Error" | "Success" | "Pending";
     taskId?: string;
 }
@@ -116,7 +116,7 @@ export class CommandManager implements IManager {
         (<any>ctx)._customEvents = null;
     }
 
-    private async validateRequestData(ctx: RequestContext, info, command) {
+    private async validateRequestData(ctx: RequestContext, info:any, command: RequestData) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -155,7 +155,7 @@ export class CommandManager implements IManager {
         return info;
     }
 
-    private createEvent(ctx: RequestContext, status: "Error" | "Pending" | "Success", result, error?): EventData {
+    private createEvent(ctx: RequestContext, status: "Error" | "Pending" | "Success", result:any, error?:Error): EventData {
         let event: EventData = {
             vulcainVerb: `${ctx.requestData.schema}.${ctx.requestData.action}`,
             correlationId: ctx.requestData.correlationId,
@@ -174,7 +174,7 @@ export class CommandManager implements IManager {
 
     async runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
-        if (info.kind !== "action")
+        if (!info || info.kind !== "action")
             throw new ApplicationError("Query handler must be requested with GET.", 405);
 
         let metadata = <ActionMetadata>info.metadata;
@@ -247,7 +247,7 @@ export class CommandManager implements IManager {
             }
         }
         catch (e) {
-            let error = (e instanceof CommandRuntimeError) ? e.error : e;
+            let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
             throw error;
         }
     }
@@ -283,7 +283,7 @@ export class CommandManager implements IManager {
         }
         catch (e) {
             if (eventMode === EventNotificationMode.always) {
-                let error = (e instanceof CommandRuntimeError) ? e.error : e;
+                let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
                 let event = this.createEvent(ctx, "Error", null, error);
                 event.completedAt = System.nowAsString();
                 if (metadata.eventFactory)
@@ -354,7 +354,7 @@ export class CommandManager implements IManager {
                         this.sendCustomEvent(ctx);
                     }
                     catch (e) {
-                        let error = (e instanceof CommandRuntimeError) ? e.error.toString() : (e.message || e.toString());
+                        let error = (e instanceof CommandRuntimeError && e.error) ? e.error.toString() : (e.message || e.toString());
                         ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
                     }
                 }
