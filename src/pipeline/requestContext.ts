@@ -191,7 +191,7 @@ export class RequestContext implements IRequestContext {
 
     /**
      * Do not use directly
-     * Creates an instance of RequestContext.
+     * Create an instance of RequestContext.
      *
      * @param {IContainer} container
      * @param {Pipeline} pipeline
