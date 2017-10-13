@@ -5,7 +5,7 @@ import { IDynamicProperty } from '../configurations/abstractions';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
 export class CryptoHelper {
-
+    private static IV_LENGTH = 16;
     private secretKey: IDynamicProperty<string>;
 
     constructor() {
@@ -14,17 +14,20 @@ export class CryptoHelper {
     }
 
     encrypt(value) {
-        let cipher = crypto.createCipher('aes-256-ctr', this.secretKey.value);
-        let encrypted = cipher.update(value, 'utf8', 'binary');
-        encrypted += cipher.final('binary');
-        let hexVal = new Buffer(encrypted, 'binary');
-        return hexVal.toString('base64');
+        let iv = crypto.randomBytes(CryptoHelper.IV_LENGTH);
+        let cipher = crypto.createCipheriv('aes-256-ctr', this.secretKey.value, iv);
+        let encrypted: Buffer = cipher.update(value);
+        encrypted = Buffer.concat([encrypted, cipher.final()]);
+        return iv.toString('hex') + ":" + encrypted.toString('hex');
     }
 
-    decrypt(value) {
-        let decipher = crypto.createDecipher('aes-256-ctr', this.secretKey.value);
-        let decrypted = decipher.update(value, 'base64', 'utf8');
-        decrypted += decipher.final('utf8');
-        return decrypted;
+    decrypt(value: string) {
+        let parts = value.split(':');
+        let iv = new Buffer(parts.shift(), 'hex');
+        let encryptedText = new Buffer(parts.join(':'), 'hex');
+        let decipher = crypto.createDecipheriv('aes-256-ctr', this.secretKey.value, iv);
+        let decrypted: Buffer = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        return decrypted.toString();
     }
 }

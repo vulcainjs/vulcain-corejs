@@ -57,8 +57,8 @@ export class Conventions {
     vulcainFileName = "vulcain.json";
 
     defaultStatsdDelayInMs = 10000;
-    defaultSecretKey = "DnQBnCG7*fjEX@Rw5uN^hWR4*AkRVKMeRu2#Ucu^ECUNWrKr";
-    defaultTokenExpiration = "20m";
+    defaultSecretKey = "Dn~BnCG7*fjEX@Rw5uN^hWR4*AkRVKMe"; // 32 length random string
+    defaultTokenExpiration = "20m"; // in moment format
 
     VULCAIN_SECRET_KEY = "vulcainSecretKey";
     TOKEN_ISSUER = "vulcainTokenIssuer";
