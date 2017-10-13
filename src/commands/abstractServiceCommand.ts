@@ -46,7 +46,6 @@ export class HttpCommandError extends ApplicationError {
  * @export
  * @abstract
  * @class AbstractCommand
- * @template T
  */
 export abstract class AbstractServiceCommand {
     private overrideAuthorization: string;
@@ -208,7 +207,7 @@ export abstract class AbstractServiceCommand {
         let ctx = this.context as RequestContext;
         let token = ctx.getBearerToken();
         if (!token) {
-            if (!this.context.user) {
+            if (this.context.user.isAnonymous) {
                 return;
             }
             let tokens = new TokenService();
@@ -292,28 +291,36 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    protected async exec(kind: string, serviceName: string, serviceVersion: string, verb: string, userContext, data, args, page, maxByPage): Promise<any> {
-        switch (kind) {
-            case 'action': {
-                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-                let response = await this.sendActionAsync(serviceName, serviceVersion, verb, data, args);
-                return response.value;
-            }
-            case 'query': {
-                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-                let response = await this.getQueryAsync(serviceName, serviceVersion, verb, data, args, page, maxByPage);
-                return response.value;
-            }
-            case 'get': {
-                userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-                let response = await this.getRequestAsync(serviceName, serviceVersion, data, args);
-                return response.value;
-            }
-        }
+    private async runGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
+        userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
+        let response = await this.getRequestAsync(serviceName, serviceVersion, data, args);
+        return response.value;
     }
 
-    runAsync(...args): Promise<any> {
-        return (<any>this).exec(...args);
+    private async runQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
+        userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
+        let response = await this.getQueryAsync(serviceName, serviceVersion, verb, data, args, page, maxByPage);
+        return response.value;
+    }
+
+    private async runAction<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
+        userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
+        let response = await this.sendActionAsync(serviceName, serviceVersion, verb, data, args);
+        return response.value;
+    }
+
+    runAsync<T>(kind: "action"|"query"|"get", serviceName: string, serviceVersion: string, verb: string, userContext:any, data, args:any, page?: number, maxByPage?: number) {
+        switch (kind) {
+            case 'action': {
+                return this.runAction<T>(serviceName, serviceVersion, userContext, verb, data, args);
+            }
+            case 'query': {
+                return this.runQuery<T>(serviceName, serviceVersion, userContext, verb, data, args, page, maxByPage);
+            }
+            case 'get': {
+                return this.runGet<T>(serviceName, serviceVersion, userContext, data, args);
+            }
+        }
     }
 
     // Must be defined in command
