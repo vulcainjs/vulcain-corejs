@@ -68,15 +68,6 @@ export abstract class AbstractProviderCommand<T> {
         this.context.addTrackerTags({ address: address, schema: schema, tenant: (tenant || this.context.user.tenant) });
     }
 
-    /**
-     * execute command
-     * @protected
-     * @abstract
-     * @param {any} args
-     * @returns {Promise<T>}
-     */
-    abstract runAsync(...args);
-
     // Must be defined in command
     // protected fallbackAsync(err, ...args)
 }

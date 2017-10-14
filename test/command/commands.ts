@@ -3,9 +3,9 @@ import { Command } from '../../dist/commands/commandFactory';
 
 @Command()
 export class TestCommand extends AbstractCommand<any> {
-    runAsync(args) {
+    foo(args:string) {
         this.setMetricsTags({"test":"true"});
-        return Promise.resolve(args);
+        return Promise.resolve<string>(args);
     }
 }
 

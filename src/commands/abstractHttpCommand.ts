@@ -40,30 +40,19 @@ export abstract class AbstractHttpCommand {
             this.context.addTrackerTags({ uri: uri, verb: verb });
     }
 
-    runAsync(...args): Promise<any> {
-        return (<any>this).execAsync(...args);
-    }
-
-    private async execAsync(verb: string, url: string, data?): Promise<any> {
-        let method: Function = this[verb + "Async"];
-        if (!method)
-            throw new Error(`${verb} is not implemented in AbstractHttpCommand. Use a custom command for this verb or use sendRequestAsync directly.`);
-        return await method.apply(this, [url, data]);
-    }
-
-    protected postAsync(url: string, data) {
+    postAsync(url: string, data) {
         return this.sendRequestAsync('post', url, req => req.json(data));
     }
 
-    protected getAsync(url: string) {
+    getAsync(url: string) {
         return this.sendRequestAsync('get', url);
     }
 
-    protected deleteAsync(url: string) {
+    deleteAsync(url: string) {
         return this.sendRequestAsync('delete', url);
     }
 
-    protected putAsync(url: string, data) {
+    putAsync(url: string, data) {
         return this.sendRequestAsync('put', url, req => req.json(data));
     }
 

@@ -90,10 +90,10 @@ export class CommandRequest implements IRequestContext {
     sendCustomEvent(action: string, params?: any, schema?: string) {
         return this.context.sendCustomEvent(action, params, schema);
     }
-    getCommand<T = ICommand>(name: string, schema?: string): T {
-        return this.context.getCommand<T>(name, schema);
+    getCommand<T = ICommand>(name: string, ...args): T {
+        return this.context.getCommand<T>(name, args);
     }
-    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand {
+    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand {
         return this.context.getDefaultCRUDCommand(schema);
     }
     logError(error: Error, msg?: () => string) {
@@ -248,15 +248,14 @@ export class RequestContext implements IRequestContext {
      * Throws an exception if the command is unknown
      *
      * @param {string} name Command name
-     * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommand<T = ICommand>(name: string, schema?: string): T {
-        return CommandFactory.get<T>(name, this, schema);
+    getCommand<T = ICommand>(name: string, ...args): T {
+        return CommandFactory.getCommand<T>(name, this, args);
     }
 
-    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand {
-        return CommandFactory.get<DefaultCRUDCommand>("DefaultCRUDCommand", this, schema);
+    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand {
+        return CommandFactory.getProviderCommand("DefaultCRUDCommand", this, schema);
     }
 
     /**

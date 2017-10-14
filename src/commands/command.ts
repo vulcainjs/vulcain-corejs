@@ -26,15 +26,16 @@ export interface IHasFallbackCommand<T extends any> {
     fallbackAsync(...args): Promise<T>;
 }
 
-
 export class HystrixCommand {
     public status: ExecutionResult = new ExecutionResult();
     private running: boolean;
     private _arguments;
     private hystrixMetrics: ICommandMetrics;
     private schemaName: string;
-    private command: ICommand;
-    constructor(private properties: CommandProperties, command: AbstractCommand<any>, context: RequestContext, container: IContainer) {
+    private command: AbstractCommand<any>;
+
+    constructor(private properties: CommandProperties, command: AbstractCommand<any>, private handler: Function, context: RequestContext, container: IContainer, args) {
+        this._arguments = args;
         this.command = command;
         command.container = container;
         this.command.context =  context.createCommandRequest(this.getCommandName());
@@ -56,15 +57,13 @@ export class HystrixCommand {
         }
     }
 
-    async runAsync<T>(...args): Promise<T> {
+    async runAsync<T>(): Promise<T> {
         if (this.running) {
             throw new Error("This instance can only be executed once. Please instantiate a new instance.");
         }
         this.running = true;
-        this._arguments = arguments;
-        let result;
 
-        // Get form Cache
+        let result;
 
         // Execution
         this.hystrixMetrics.incrementExecutionCount();
@@ -79,7 +78,7 @@ export class HystrixCommand {
 
                             let promises = [];
                             // Initialize command span
-                            promises.push((<any>this.command).runAsync.apply(this.command, this._arguments));
+                            promises.push(this.handler.apply(this.command, this._arguments));
                             if (this.properties.executionTimeoutInMilliseconds.value > 0) {
                                 promises.push(
                                     new Promise((resolve, reject) =>
@@ -159,7 +158,24 @@ export class HystrixCommand {
                 this.status.addEvent(eventType);
                 throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and encountered unrecoverable error", error);
             }
-            let fallback = (<any>this.command).fallbackAsync;
+
+            // Find fallback method
+            // 1. <methodName>Fallback
+            // 2. <methodName>FallbackAsync
+            // 3. fallback
+            // 4. fallbackAsync
+            let fallbackName = this.handler.name;
+            if (fallbackName.endsWith('Async'))
+                fallbackName = fallbackName.substr(0, fallbackName.length - 5); // remove final async
+            fallbackName += 'Fallback';
+            let fallback = this.command[fallbackName];
+            if (!fallback)
+                fallback = this.command[fallbackName + 'Async'];
+            if (!fallback)
+                fallback = (<any>this.command).fallback;
+            if (!fallback)
+                fallback = (<any>this.command).fallbackAsync;
+            
             if (!fallback) {
                 //this.logInfo("No fallback for command");
                 throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);

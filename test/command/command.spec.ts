@@ -8,15 +8,16 @@ import './commands';
 import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeError';
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
 import { TestContext } from '../../dist/pipeline/testContext';
+import { TestCommand } from "./commands";
 
 let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = CommandFactory.get("TestCommand", context.context);
+        let command = CommandFactory.get<TestCommand>("TestCommand", context.context);
         expect(command).not.to.be.undefined;
 
-        let result = await command.runAsync<string>("success");
+        let result = await command.foo("success");
         expect(result).to.be.equal("success");
         let metrics = CommandMetricsFactory.get("TestCommand");
         expect((<HystrixCommandMetrics>metrics).getHealthCounts().totalCount).to.be.equal(1);
@@ -52,12 +53,9 @@ describe("Command", function () {
 
     it("should not execute the run command, if the circuit is open", async () => {
         let command = CommandFactory.get("TestCommandCircuitOpen", context.context);
-        let spy = sinon.spy((<any>command).command, "runAsync");
-
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
-        expect(spy.notCalled);
     });
 
     /*   it("should execute the run command, if the circuit volume threshold is not reached", function(done) {

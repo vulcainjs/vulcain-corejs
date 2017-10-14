@@ -291,38 +291,24 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    private async runGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
+    async execGetAsync<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.getRequestAsync(serviceName, serviceVersion, data, args);
         return response.value;
     }
 
-    private async runQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
+    async execQueryAsync<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.getQueryAsync(serviceName, serviceVersion, verb, data, args, page, maxByPage);
         return response.value;
     }
 
-    private async runAction<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
+    async execActionAsync<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.sendActionAsync(serviceName, serviceVersion, verb, data, args);
         return response.value;
     }
 
-    runAsync<T>(kind: "action"|"query"|"get", serviceName: string, serviceVersion: string, verb: string, userContext:any, data, args:any, page?: number, maxByPage?: number) {
-        switch (kind) {
-            case 'action': {
-                return this.runAction<T>(serviceName, serviceVersion, userContext, verb, data, args);
-            }
-            case 'query': {
-                return this.runQuery<T>(serviceName, serviceVersion, userContext, verb, data, args, page, maxByPage);
-            }
-            case 'get': {
-                return this.runGet<T>(serviceName, serviceVersion, userContext, data, args);
-            }
-        }
-    }
-
     // Must be defined in command
-    // protected fallbackAsync(err, ...args)
+    //protected fallbackAsync(err, ...args);
 }

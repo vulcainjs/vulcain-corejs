@@ -15,11 +15,6 @@ import { Span } from '../trace/span';
  */
 export interface ICommand {
     context: IRequestContext;
-    /**
-     * execute the command
-     * @param args
-     */
-    runAsync<T>(...args): Promise<T>;
 }
 
 /**
@@ -30,7 +25,7 @@ export interface ICommand {
  * @class AbstractCommand
  * @template T
  */
-export abstract class AbstractCommand<T> implements IInjectionNotification {
+export abstract class AbstractCommand<T> {
 
     /**
      *
@@ -58,21 +53,9 @@ export abstract class AbstractCommand<T> implements IInjectionNotification {
     constructor() {
     }
 
-    onInjectionCompleted() {
-    }
-
     protected setMetricsTags(args: { [key: string] : string }) {
         this.context.addTrackerTags(args);
     }
-
-    /**
-     * execute command
-     * @protected
-     * @abstract
-     * @param {any} args
-     * @returns {Promise<T>}
-     */
-    abstract runAsync(...args): Promise<T>;
 
     // Must be defined in command
     // protected fallbackAsync(err, ...args)

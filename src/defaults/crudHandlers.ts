@@ -9,28 +9,23 @@ import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
-
-    // Execute command
-    runAsync<T>(action: string, data): T {
+    createAsync(entity: any) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
-        return this[action + "Internal"](data);
-    }
-
-    create(entity: any) {
         this.context.trackAction("create");
         return this.provider.createAsync( this.schema, entity);
     }
 
-    protected async createInternal(entity: any) {
+    async createWithSensibleDataAsync(entity: any) {
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
-        entity = await this.create(entity);
+        entity = await this.createAsync(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    async update(entity: any) {
+    async updateAsync(entity: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
@@ -39,27 +34,29 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.updateAsync(this.schema, entity, old);
     }
 
-    protected async updateInternal(entity: any) {
+    async updateWithSensibleDataAsync(entity: any) {
         // TODO move to provider
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
-        entity = await this.update(entity);
+        entity = await this.updateAsync(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    protected deleteInternal(entity: any) {
-        this.context.trackAction("delete");
-        return this.delete(entity);
+    deleteWithSensibleDataAsync(entity: any) {
+        return this.deleteAsync(entity);
     }
 
-    delete(entity: any) {
+    deleteAsync(entity: any) {
+        this.context.trackAction("delete");
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
         return this.provider.deleteAsync(this.schema, entity[keyProperty]);
     }
 
-    async get(id: any) {
+    async getAsync(id: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
@@ -67,20 +64,21 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.findOneAsync(this.schema, query);
     }
 
-    protected async getInternal(id: any) {
-        let entity = await this.get(id);
+    async getWithSensibleDataAsync(id: any) {
+        let entity = await this.getAsync(id);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    all(options: any) {
+    getAllAsync(options: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("getAll");
         return this.provider.getAllAsync(this.schema, options);
     }
 
-    protected async allInternal(options: any) {
-        let list = await this.all(options);
+    async getAllWithSensibleDataAsync(options: any) {
+        let list = await this.getAllAsync(options);
         if (list && list.length > 0 && this.schema.description.hasSensibleData) {
             let result = [];
             for (let entity of list) {
@@ -106,7 +104,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         if (!entity)
             throw new ApplicationError("Entity is required");
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.runAsync( "create", entity);
+        return cmd.createWithSensibleDataAsync(entity);
     }
 
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
@@ -114,7 +112,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         if (!entity)
             throw new ApplicationError("Entity is required");
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.runAsync( "update", entity);
+        return cmd.updateWithSensibleDataAsync( entity);
     }
 
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
@@ -123,7 +121,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
             throw new ApplicationError("Entity is required");
 
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.runAsync( "delete", entity);
+        return cmd.deleteWithSensibleDataAsync( entity);
     }
 }
 
@@ -134,9 +132,9 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ action: "get", description: "Get an entity by id" })
-    async getAsync(id: any) {
+    async getAsync(id: any): Promise<T> {
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return await cmd.runAsync<T>("get", id);
+        return await cmd.getWithSensibleDataAsync(id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
@@ -147,6 +145,6 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
             query: query || {}
         };
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return await cmd.runAsync<T[]>( "all", options);
+        return await cmd.getAllWithSensibleDataAsync(options);
     }
 }

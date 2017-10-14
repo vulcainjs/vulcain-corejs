@@ -54,7 +54,7 @@ export interface UserContext extends UserContextData {
     getClaims<T=any>(): T;
     isAdmin: boolean;
     hasScope(handlerScope: string): boolean;
-    isAnonymous(): boolean;
+    isAnonymous: boolean;
 }
 
 export interface UserToken extends UserContext {
@@ -78,7 +78,7 @@ export class SecurityContext implements UserContext {
         this.addOrReplaceStrategy(new TokenService());
 
         let strategies = container.getList<IAuthenticationStrategy>(DefaultServiceNames.AuthenticationStrategy);
-        for(var strategy of strategies) {
+        for(let strategy of strategies) {
             this.addOrReplaceStrategy(strategy);
         }
     }
@@ -124,7 +124,7 @@ export class SecurityContext implements UserContext {
     }
 
     get isAnonymous() {
-        return this.isAnonymous;
+        return this._isAnonymous;
     }
 
     private _scopes: string[];

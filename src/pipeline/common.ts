@@ -72,11 +72,10 @@ export interface IRequestContext extends ISpanTracker {
      * Throws an exception if the command is unknown
      *
      * @param {string} name Command name
-     * @param {string} [schema] Optional schema used to initialize the provider
      * @returns {ICommand} A command
      */
-    getCommand<T = ICommand>(name: string, schema?: string): T;
-    getDefaultCRUDCommand(schema?: string): DefaultCRUDCommand;
+    getCommand<T = ICommand>(name: string, ...args): T;
+    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand;
 }
 
 export interface RequestData {

@@ -54,26 +54,30 @@ interface CommandCache {
 }
 
 export class CommandFactory {
+    static getCommand<T=ICommand>(commandKey: string, context: IRequestContext, ...args): T {
+        return CommandFactory.getProviderCommand(commandKey, context, null, args);
+    }
 
-    static get<T=ICommand>(commandKey: string, container: IContainer): T;
-    static get<T=ICommand>(commandKey: string, context: IRequestContext, schema?: string): T;
-    static get<T=ICommand>(commandKey: string, contextOrContainer: IRequestContext | IContainer, schema?: string): T {
+    static getProviderCommand<T=ICommand>(commandKey: string, context: IRequestContext, schema: string, ...args): T {
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
-            let container: IContainer;
-            let context: IRequestContext;
-            if (contextOrContainer instanceof RequestContext) {
-                context = contextOrContainer;
-                container = context.container;
-            }
-            else {
-                container = <IContainer>contextOrContainer;
-                context = new RequestContext(container, Pipeline.Test);
-            }
-            let resolvedCommand = container.resolve(cache.command);
-            let cmd = new HystrixCommand(cache.properties, resolvedCommand, <RequestContext>context, container);
-            cmd.setSchemaOnCommand(schema);
-            return <T><any>cmd;
+            let container = context.container;
+
+            let resolvedCommand = container.resolve(cache.command, args);
+
+            return new Proxy(resolvedCommand, {
+                get(ctx, name) {
+                    let handler = <Function>ctx[name];
+                    if (!handler)
+                        throw new Error(`Method ${name} doesn't exist in command ${resolvedCommand.name}`);
+
+                    return function (...args) {
+                        let cmd = new HystrixCommand(cache.properties, resolvedCommand, handler, <RequestContext>context, container, args);
+                        schema && cmd.setSchemaOnCommand(schema);
+                        return cmd.runAsync();
+                    };
+                }
+            });
         }
     }
 
