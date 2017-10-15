@@ -169,20 +169,25 @@ export class HystrixCommand {
                 fallbackName = fallbackName.substr(0, fallbackName.length - 5); // remove final async
             fallbackName += 'Fallback';
             let fallback = this.command[fallbackName];
-            if (!fallback)
+            if (!fallback) {
+                fallbackName += "Async";
                 fallback = this.command[fallbackName + 'Async'];
-            if (!fallback)
+            }
+            if (!fallback) {
+                fallbackName = "fallback";
                 fallback = (<any>this.command).fallback;
-            if (!fallback)
+            }
+            if (!fallback) {
+                fallbackName = "fallbackAsync";
                 fallback = (<any>this.command).fallbackAsync;
-            
+            }
             if (!fallback) {
                 //this.logInfo("No fallback for command");
                 throw new CommandRuntimeError(failureType, this.getCommandName(), this.getLogMessagePrefix() + " " + message + " and no fallback provided.", error);
             }
             if (this.semaphore.canExecuteFallback()) {
                 let oldContext = <RequestContext>this.command.context;
-                this.command.context= oldContext.createCommandRequest(this.getCommandName() + " Fallback");
+                this.command.context= oldContext.createCommandRequest(this.getCommandName() + "-" + fallbackName);
                 try {
                     this.logInfo(()=>"Use fallback for command");
                     let result = await fallback.apply(this.command, this._arguments);
