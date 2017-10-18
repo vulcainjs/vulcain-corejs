@@ -23,7 +23,7 @@ let context = new TestContext();
 describe("HystrixSSEStream", function () {
 
     function executeCommand(commandKey) {
-        let command = CommandFactory.get(commandKey, context.context);
+        let command = CommandFactory.getCommand<HystrixSSECommand1>(commandKey, context.context);
         command.runAsync("success");
     }
 

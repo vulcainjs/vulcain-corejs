@@ -6,7 +6,6 @@ import { Query } from "../../pipeline/handlers/annotations";
 import { RequestContext } from "../../pipeline/requestContext";
 import { ForbiddenRequestError } from "../../pipeline/errors/applicationRequestError";
 import { HttpResponse } from "../../pipeline/response";
-import { SwaggerTemplate } from './swaggerTemplate';
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class SwaggerUIHandler {
@@ -22,7 +21,9 @@ export class SwaggerUIHandler {
 
         let url = '/api/_servicedescription?format=swagger';
 
-        let response = new HttpResponse(SwaggerTemplate.getHtmlRendered('Vulcainjs - Swagger UI', url));
+        let template = require('./_swaggerTemplate');
+        
+        let response = new HttpResponse(template.getHtmlRendered('Vulcainjs - Swagger UI', url));
         response.contentType = "text/html";
         return response;
     }

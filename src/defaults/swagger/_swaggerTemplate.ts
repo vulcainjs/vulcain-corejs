@@ -4,6 +4,7 @@ import * as path from 'path';
 
 const swaggerUiAbsolutePath = swaggerUI.getAbsoluteFSPath();
 
+// tslint:disable-next-line:class-name
 export class SwaggerTemplate {
 
     static getHtmlRendered(title: string, url: string) {

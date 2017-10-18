@@ -22,6 +22,9 @@ import { LocalAdapter } from "./bus/localAdapter";
 import { System } from './globals/system';
 import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
+const vulcainExecutablePath = __dirname;
+const applicationPath = Path.dirname(module.parent.parent.filename);
+
 /**
  * Application base class
  *
@@ -30,8 +33,6 @@ import { DynamicConfiguration } from './configurations/dynamicConfiguration';
  * @class Application
  */
 export class Application {
-    private _vulcainExecutablePath: string;
-    private _basePath: string;
     private _domain: Domain;
 
     public useMongoProvider(address: string) {
@@ -49,7 +50,7 @@ export class Application {
         return this;
     }
 
-    useService(name: string, service: Function, lifeTime?: LifeTime) {
+    public useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.container.inject(name, service, lifeTime);
         return this;
     }
@@ -88,12 +89,6 @@ export class Application {
 
         System.log.info(null, () => "Starting application");
 
-        this._vulcainExecutablePath = Path.dirname(module.filename);
-        this._basePath = process.cwd();
-
-        // Ensure initializing this first
-        const test = System.isDevelopment;
-
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
@@ -112,16 +107,7 @@ export class Application {
      * @memberOf Application
      */
     protected defineScopeDescriptions(scopes: ScopesDescriptor) {
-
-    }
-
-    /**
-     * Override this method to initialize default containers
-     *
-     * @protected
-     * @param {IContainer} container
-     */
-    protected initializeDefaultServices(container: IContainer) {
+        return this;
     }
 
     /**
@@ -133,8 +119,6 @@ export class Application {
 
         try {
             await this.init();
-
-            this.initializeDefaultServices(this.container);
 
             let local = new LocalAdapter();
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
@@ -170,10 +154,11 @@ export class Application {
     }
 
     private registerComponents() {
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults"));
+        this.registerRecursive(Path.join(vulcainExecutablePath, "defaults"));
 
-        let path = Conventions.instance.defaultApplicationFolder;
-        this.registerRecursive(Path.join(this._basePath, path));
+        //let path = Conventions.instance.defaultApplicationFolder;
+        //this.registerRecursive(Path.join(applicationPath, path));
+        this.registerRecursive(applicationPath);
     }
 
     /**
@@ -183,7 +168,7 @@ export class Application {
      */
     private registerRecursive(path: string) {
         if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
+            path = Path.join(applicationPath, path);
         }
         Files.traverse(path);
 
@@ -195,13 +180,13 @@ export class Application {
      *
      * @protected
      * @param {string} path Folder path
-     * @returns The current container
+     * @returns The current application
      */
-    protected injectFrom(path: string) {
+    public injectFrom(path: string) {
         if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
+            path = Path.join(applicationPath, path);
         }
         this._container.injectFrom(path);
-        return this._container;
+        return this;
     }
 }

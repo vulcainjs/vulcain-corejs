@@ -107,8 +107,8 @@ export class System {
     static getMocksManager(container: IContainer) {
         if (!System._mocksManager) {
             if (System.isTestEnvironnment) {
-                let manager:any = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
-                manager.initialize && manager.initialize(System.settings.mockSessions, System.settings.saveMocksAsync);
+                let manager = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
+                manager.initialize && manager.initialize(System.settings.mockSessions, System.settings.saveMocksAsync.bind(System.settings));
             }
             else {
                 System._mocksManager = new DummyMockManager();

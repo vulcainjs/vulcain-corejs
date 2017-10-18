@@ -11,8 +11,8 @@ import { TokenService } from './services/tokenService';
 
 export interface IAuthenticationStrategy {
     name: string;
-    verifyTokenAsync(ctx: IRequestContext, token: string, tenant: string): Promise<UserToken>;
-    createTokenAsync?(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }>;
+    verifyTokenAsync(ctx: IRequestContext, token: string, tenant: string): Promise<UserContextData>;
+    createTokenAsync?(user: UserContextData): Promise<{ expiresIn: number, token: string, renewToken: string }>;
 }
 
 export interface UserContextData {
@@ -141,6 +141,9 @@ export class SecurityContext implements UserContext {
     get tenant(): string {
         return this._tenant;
     }
+    set tenant(tenant: string) {
+        this._tenant = tenant;
+    }
 
     getClaims<T=any>() {
         return this.claims as T;
@@ -190,14 +193,14 @@ export class SecurityContext implements UserContext {
                 continue;
             if (!token) { throw new UnauthorizedRequestError("Invalid authorization header."); }
             try {
-                let userContext = await strategy.verifyTokenAsync(ctx, token, ctx.user.tenant);
+                let userContext = await strategy.verifyTokenAsync(ctx, token, this._tenant);
                 if (userContext) {
                     this.name = userContext.name;
                     this.displayName = userContext.displayName;
                     this.email = userContext.email;
                     this._scopes = userContext.scopes;
                     this._tenant = userContext.tenant || this._tenant;
-                    this.bearer = userContext.bearer;
+                    this.bearer = (<UserToken>userContext).bearer;
                     // Assign all other fields as claims
                     this.claims = userContext.claims || {};
                     Object.keys(userContext).forEach(k => {

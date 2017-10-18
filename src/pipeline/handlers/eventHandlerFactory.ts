@@ -44,7 +44,7 @@ export class EventHandlerFactory {
             let keys                         = [domainName];
             let schema                       = <string>actionMetadata.subscribeToSchema || <string>handlerMetadata.schema || "*";
             actionMetadata.subscribeToSchema = schema;
-            actionMetadata.subscribeToAction = actionMetadata.subscribeToAction || "*";
+            actionMetadata.subscribeToAction = (actionMetadata.subscribeToAction || "*").toLowerCase();
 
             keys.push(actionMetadata.subscribeToAction);
             let handlerKey = keys.join('.').toLowerCase();

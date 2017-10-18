@@ -8,13 +8,13 @@ import './commands';
 import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeError';
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
 import { TestContext } from '../../dist/pipeline/testContext';
-import { TestCommand } from "./commands";
+import { TestCommand, TestCommandTimeout, TestCommandFallback, TestCommandCircuitOpen } from "./commands";
 
 let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = CommandFactory.get<TestCommand>("TestCommand", context.context);
+        let command = CommandFactory.getCommand<TestCommand>("TestCommand", context.context);
         expect(command).not.to.be.undefined;
 
         let result = await command.foo("success");
@@ -25,7 +25,7 @@ describe("Command", function () {
     });
 
     it("should timeout if the function does not resolve within the configured timeout", async () => {
-        let command = CommandFactory.get("TestCommandTimeout", context.context);
+        let command = CommandFactory.getCommand<TestCommandTimeout>("TestCommandTimeout", context.context);
 
         expect(command).not.to.be.undefined;
         try {
@@ -42,7 +42,7 @@ describe("Command", function () {
     });
 
     it("should resolve with fallback if the run function fails", async () => {
-        let command = CommandFactory.get("TestCommandFallback", context.context);
+        let command = CommandFactory.getCommand<TestCommandFallback>("TestCommandFallback", context.context);
 
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
@@ -52,7 +52,7 @@ describe("Command", function () {
     });
 
     it("should not execute the run command, if the circuit is open", async () => {
-        let command = CommandFactory.get("TestCommandCircuitOpen", context.context);
+        let command = CommandFactory.getCommand<TestCommandCircuitOpen>("TestCommandCircuitOpen", context.context);
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");

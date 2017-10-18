@@ -325,7 +325,7 @@ export class CommandManager implements IManager {
         }
         // Filtered by action
         if (metadata.subscribeToAction !== '*') {
-            events = events.filter(e => e.action === metadata.subscribeToAction);
+            events = events.filter(e => !e.action ||  (e.action.toLowerCase() === metadata.subscribeToAction));
         }
         // And by custom filter
         if (metadata.filter)

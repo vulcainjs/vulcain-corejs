@@ -51,7 +51,7 @@ export class CommandRequest implements IRequestContext {
     }
 
     getTrackerInfo(): TrackerInfo {
-        return this.tracker.id;
+        return this.tracker && this.tracker.id;
     }
 
     trackAction(action: string, tags?: any) {

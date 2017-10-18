@@ -8,6 +8,7 @@ import { System } from '../globals/system';
 import { MockConfigurationSource } from './sources/memoryConfigurationSource';
 import { EnvironmentVariableSource } from "./sources/environmentVariableSource";
 import { Conventions } from '../utils/conventions';
+import { Files } from '../utils/files';
 
 export class ConfigurationManager {
     public isRunning: boolean;
@@ -87,7 +88,7 @@ export class ConfigurationManager {
         if (!Array.isArray(sources)) {
             sources = [sources];
         }
-        sources.push(new FileConfigurationSource(Conventions.instance.vulcainFileName, ConfigurationDataType.VulcainConfig));
+        sources.push(new FileConfigurationSource(Files.findConfigurationFile(), ConfigurationDataType.VulcainConfig));
 
         for (let source of sources) {
             // Local properties has loaded first (less priority)

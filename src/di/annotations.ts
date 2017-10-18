@@ -33,6 +33,7 @@ export class DefaultServiceNames {
     static MockManager = "MockManager";
     static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
+    static BearerTokenService = "BearerTokenService";
 }
 
 /**

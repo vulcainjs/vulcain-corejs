@@ -35,17 +35,15 @@ export class Settings {
         return this._mocks;
     }
 
-    private getFilePath() {
-        return Path.join(process.cwd(), Conventions.instance.vulcainFileName);
-    }
-
     public async saveMocksAsync(mockSessions: any): Promise<any> {
         if (!this._mocks) // production
             return;
 
         try {
             this._mocks.sessions = mockSessions;
-            let path = this.getFilePath();
+            let path = Files.findConfigurationFile();
+            if (!path)
+                return;
             fs.writeFileSync(path, JSON.stringify(
                 {
                     mode: this._environmentMode,
@@ -79,8 +77,8 @@ export class Settings {
         }
 
         try {
-            let path = this.getFilePath();
-            if (fs.existsSync(path)) {
+            let path = Files.findConfigurationFile();
+            if (path) {
                 let data:any = fs.readFileSync(path, "utf8");
                 data = data && JSON.parse(data);
                 if (data) {

@@ -187,7 +187,7 @@ export class MockManager implements IMockManager {
             return null;
         }
 
-        const pos = val.indexOf(':');
+        const pos = val.indexOf('=');
         if (pos <= 0) {
             return val;
         }

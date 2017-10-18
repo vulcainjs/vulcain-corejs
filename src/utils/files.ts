@@ -5,10 +5,25 @@ import { Conventions } from './conventions';
 
 export class Files
 {
-    static traverse( dir:string, callback?:( n, v )=>void, filter?:(fileName)=>boolean )
+    private static _configFilePath: string|undefined|null;
+    static findConfigurationFile() {
+        if (Files._configFilePath === undefined)
+            return Files._configFilePath;
+
+        let fileName = Conventions.instance.vulcainFileName;
+        let filePath = Path.join(process.cwd(), fileName);
+        if (fs.existsSync(filePath))
+        {
+            return Files._configFilePath = filePath;
+        }
+
+        return Files._configFilePath = null;
+    }
+
+    static traverse(dir: string, callback?: (n, v) => void, filter?: (fileName) => boolean)
     {
         if(!filter)
-            filter = (fn) => Path.extname( fn ) === ".js";
+            filter = (fn) => Path.extname( fn ) === ".js" && fn[0] !== "_";
 
         if( fs.existsSync( dir ) )
         {

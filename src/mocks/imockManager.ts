@@ -4,6 +4,7 @@ import { HttpResponse } from "../pipeline/response";
 
 export interface IMockManager {
     enabled: boolean;
+    initialize?(sessions: any, saveHandler: Function);
     applyMockHttpAsync(url: string, verb: string);
     applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data);
     tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any): Promise<HttpResponse>;

@@ -3,12 +3,13 @@ import { Conventions } from '../../utils/conventions';
 import { System } from '../../globals/system';
 import { IDynamicProperty } from '../../configurations/abstractions';
 import { ConfigurationProperty } from '../../globals/manifest';
-import { IAuthenticationStrategy, UserContext, UserToken } from "../securityContext";
+import { IAuthenticationStrategy, UserContextData } from "../securityContext";
 const jwt = require('jsonwebtoken');
 const ms = require('ms');
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestContext } from '../../pipeline/common';
 
+@Injectable(LifeTime.Singleton, DefaultServiceNames.BearerTokenService)
 export class TokenService implements IAuthenticationStrategy {
 
     public readonly name = "bearer";
@@ -26,7 +27,7 @@ export class TokenService implements IAuthenticationStrategy {
         this.secretKey = DynamicConfiguration.getChainedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
-    createTokenAsync( user: UserContext ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
+    createTokenAsync( user: UserContextData ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
 
         return new Promise(async (resolve, reject) => {
             const payload = {
@@ -70,7 +71,7 @@ export class TokenService implements IAuthenticationStrategy {
         return token;
     }
 
-    verifyTokenAsync(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserToken> {
+    verifyTokenAsync(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserContextData> {
         return new Promise(async (resolve, reject) => {
             if (!accessToken) {
                 reject("You must provide a valid token");
