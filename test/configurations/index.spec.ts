@@ -78,7 +78,7 @@ describe('DynamicConfiguration', function () {
         let manager = DynamicConfiguration.reset(1);
 
         let source = new MockConfigurationSource();
-        await manager.forcePollingAsync(source, true);
+        await manager.forcePolling(source, true);
 
         let prop = DynamicConfiguration.getProperty("test");
         expect(prop.value).to.be.undefined;
@@ -87,7 +87,7 @@ describe('DynamicConfiguration', function () {
         prop = DynamicConfiguration.getProperty("test");
         expect(prop.value).to.be.undefined;
 
-        await manager.forcePollingAsync(); // Force polling
+        await manager.forcePolling(); // Force polling
 
         prop = DynamicConfiguration.getProperty("test");
         expect(10).to.equal(prop.value);
@@ -97,23 +97,23 @@ describe('DynamicConfiguration', function () {
         let manager = DynamicConfiguration.reset(1);
 
             let source = new MockConfigurationSource();
-            await manager.forcePollingAsync(source, true);
+            await manager.forcePolling(source, true);
 
             let chained = DynamicConfiguration.getChainedProperty("test10", 30, "test20");
             expect(30).to.equal(chained.value);
 
             source.set("test20", 20);
-            await manager.forcePollingAsync(); // Force polling
+            await manager.forcePolling(); // Force polling
 
             expect(20).to.equal(chained.value);
 
             source.set("test10", 10);
-            await manager.forcePollingAsync(); // Force polling
+            await manager.forcePolling(); // Force polling
 
             expect(10).to.equal(chained.value);
 
             source.set("test10", 11);
-            await manager.forcePollingAsync(); // Force polling
+            await manager.forcePolling(); // Force polling
 
             expect(11).to.equal(chained.value);
     });
@@ -122,21 +122,21 @@ describe('DynamicConfiguration', function () {
         let manager = DynamicConfiguration.reset(1);
 
             let source1 = new MockConfigurationSource();
-            await manager.forcePollingAsync(source1, true);
+            await manager.forcePolling(source1, true);
 
             let source2 = new MockConfigurationSource();
-            await manager.forcePollingAsync(source2);
+            await manager.forcePolling(source2);
 
             let prop = DynamicConfiguration.getProperty("test30", 0);
             expect(0).to.equal(prop.value);
 
             source1.set("test30", 10);
-            await manager.forcePollingAsync(); // Force polling
+            await manager.forcePolling(); // Force polling
 
             expect(10).to.equal(prop.value);
 
             source2.set("test30", 20);
-            await manager.forcePollingAsync(); // Force polling
+            await manager.forcePolling(); // Force polling
 
             expect(20).to.equal(prop.value);
     });

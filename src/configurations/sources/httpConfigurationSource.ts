@@ -24,7 +24,7 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
         return uri;
     }
 
-    async pollPropertiesAsync(timeoutInMs: number) {
+    async pollProperties(timeoutInMs: number) {
         let self = this;
         return new Promise<DataSource>((resolve) => {
             let uri = this.createRequestUrl();

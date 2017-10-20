@@ -27,7 +27,7 @@ export class TokenService implements IAuthenticationStrategy {
         this.secretKey = DynamicConfiguration.getChainedConfigurationProperty<string>(Conventions.instance.VULCAIN_SECRET_KEY, Conventions.instance.defaultSecretKey);
     }
 
-    createTokenAsync( user: UserContextData ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
+    createToken( user: UserContextData ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
 
         return new Promise(async (resolve, reject) => {
             const payload = {
@@ -45,8 +45,8 @@ export class TokenService implements IAuthenticationStrategy {
             let options = { issuer: this.issuer.value, expiresIn: this.tokenExpiration.value };
 
             try {
-                let jwtToken = this.createToken(payload, options);
-                let renewToken = this.createToken({}, options);
+                let jwtToken = this.generateToken(payload, options);
+                let renewToken = this.generateToken({}, options);
 
                 let expiresIn;
                 if (typeof this.tokenExpiration.value === 'string') {
@@ -65,13 +65,13 @@ export class TokenService implements IAuthenticationStrategy {
         });
     }
 
-    private createToken(payload, options) {
+    private generateToken(payload, options) {
         let token;
         token = jwt.sign(payload, this.secretKey.value, options);
         return token;
     }
 
-    verifyTokenAsync(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserContextData> {
+    verifyToken(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserContextData> {
         return new Promise(async (resolve, reject) => {
             if (!accessToken) {
                 reject("You must provide a valid token");

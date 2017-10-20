@@ -72,7 +72,7 @@ export class MongoProvider implements IProvider<any>
         this.state.dispose = null;
     }
 
-    private async ensureSchemaReadyAsync(schema: Schema) {
+    private async ensureSchemaReady(schema: Schema) {
         if(!this.state._mongo)
             await this.openDatabase();
 
@@ -139,8 +139,8 @@ export class MongoProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    async getAllAsync(schema: Schema, options: ListOptions): Promise<Array<any>> {
-        await this.ensureSchemaReadyAsync(schema);
+    async getAll(schema: Schema, options: ListOptions): Promise<Array<any>> {
+        await this.ensureSchemaReady(schema);
 
         let page = options.page || 0;
         let maxByPage = options.maxByPage || 100;
@@ -172,8 +172,8 @@ export class MongoProvider implements IProvider<any>
         });
     }
 
-    async findOneAsync(schema: Schema, query) {
-        await this.ensureSchemaReadyAsync(schema);
+    async findOne(schema: Schema, query) {
+        await this.ensureSchemaReady(schema);
         this.ctx.logVerbose(()=>`MONGODB: Get findone on ${System.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
         let self = this;
         return new Promise(async (resolve, reject) => {
@@ -203,8 +203,8 @@ export class MongoProvider implements IProvider<any>
      * @param name
      * @returns {Promise}
      */
-    async getAsync(schema: Schema, name: string) {
-        await this.ensureSchemaReadyAsync(schema);
+    async get(schema: Schema, name: string) {
+        await this.ensureSchemaReady(schema);
 
         let filter = {};
         filter[this.state.keyPropertyNameBySchemas.get(schema.name) || "_id"] = name;
@@ -236,10 +236,10 @@ export class MongoProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    async deleteAsync(schema: Schema, old: string | any) {
+    async delete(schema: Schema, old: string | any) {
         if (!old)
             throw new Error("MONGODB delete: Argument is required");
-        await this.ensureSchemaReadyAsync(schema);
+        await this.ensureSchemaReady(schema);
         let self = this;
         return new Promise<boolean>(async (resolve, reject) => {
             let id;
@@ -294,10 +294,10 @@ export class MongoProvider implements IProvider<any>
      * @param entity
      * @returns {Promise}
      */
-    async createAsync(schema: Schema, entity) {
+    async create(schema: Schema, entity) {
         if (!entity)
             throw new Error("MONGODB create: Entity is required");
-        await this.ensureSchemaReadyAsync(schema);
+        await this.ensureSchemaReady(schema);
 
         entity._created = new Date().toUTCString();
         let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
@@ -336,10 +336,10 @@ export class MongoProvider implements IProvider<any>
      * @param old
      * @returns {Promise<T>}
      */
-    async updateAsync(schema: Schema, entity, old) {
+    async update(schema: Schema, entity, old) {
         if (!entity)
             throw new Error("Entity is required");
-        await this.ensureSchemaReadyAsync(schema);
+        await this.ensureSchemaReady(schema);
         let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
 
         let id = (old || entity)[keyPropertyName];

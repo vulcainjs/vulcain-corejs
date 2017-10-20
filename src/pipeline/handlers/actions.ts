@@ -127,7 +127,7 @@ export class CommandManager implements IManager {
                 // Custom binding if any
                 command.params = schema && schema.bind(command.params);
 
-                errors = await schema.validateAsync(ctx, command.params);
+                errors = await schema.validate(ctx, command.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -172,7 +172,7 @@ export class CommandManager implements IManager {
         return event;
     }
 
-    async runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
+    async run(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(command, ctx.container);
         if (!info || info.kind !== "action")
             throw new ApplicationError("Query handler must be requested with GET.", 405);
@@ -192,8 +192,8 @@ export class CommandManager implements IManager {
             if (!metadata.async) {
 
                 info.handler.context = ctx;
-                /** // Inject runAsyncTask in the current context
-                (<any>ctx)._runAsyncTask = (action, schema, params) => {
+                /** // Inject runTask in the current context
+                (<any>ctx)._runTask = (action, schema, params) => {
                     let task = <RequestData>{ action, schema, params };
                     task.correlationId = ctx.correlationId;
                     task.startedAt = System.nowAsString();
@@ -235,7 +235,7 @@ export class CommandManager implements IManager {
                 this.messageBus.pushTask(pendingTask);
                 let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
                 if (taskManager)
-                    await taskManager.registerTaskAsync(pendingTask);
+                    await taskManager.registerTask(pendingTask);
 
                 let res = {
                     meta: {
@@ -252,7 +252,7 @@ export class CommandManager implements IManager {
         }
     }
 
-    async processAsyncTaskAsync(command: AsyncTaskData) {
+    async processAsyncTask(command: AsyncTaskData) {
         let ctx = new RequestContext(this.container, Pipeline.AsyncTask, command);
         ctx.setSecurityManager(command.userContext);
 
@@ -298,7 +298,7 @@ export class CommandManager implements IManager {
             command.completedAt = System.nowAsString();
             let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
             if (taskManager)
-                await taskManager.updateTaskAsync(command);
+                await taskManager.updateTask(command);
             ctx.dispose();
         }
     }

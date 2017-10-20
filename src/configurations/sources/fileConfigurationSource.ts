@@ -20,7 +20,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
             this._disabled = true;
             return;
         }
-        
+
         try {
             if (!fs.existsSync(this.path)) {
                 System.log.info(null, () => "CONFIGURATIONS : File " + path + " doesn't exist.");
@@ -114,7 +114,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
         System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${name}`);
     }
 
-    readPropertiesAsync() {
+    readProperties() {
         if (this._disabled)
             return;
 

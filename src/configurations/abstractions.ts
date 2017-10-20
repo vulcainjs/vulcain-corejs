@@ -5,11 +5,11 @@ export interface IConfigurationSource {
 }
 
 export interface ILocalConfigurationSource extends IConfigurationSource {
-    readPropertiesAsync(timeout?: number): Promise<DataSource>;
+    readProperties(timeout?: number): Promise<DataSource>;
 }
 
 export interface IRemoteConfigurationSource extends IConfigurationSource {
-    pollPropertiesAsync(timeout?: number): Promise<DataSource>;
+    pollProperties(timeout?: number): Promise<DataSource>;
 }
 
 

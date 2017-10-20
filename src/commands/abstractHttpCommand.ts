@@ -40,20 +40,20 @@ export abstract class AbstractHttpCommand {
             this.context.addTrackerTags({ uri: uri, verb: verb });
     }
 
-    postAsync(url: string, data) {
-        return this.sendRequestAsync('post', url, req => req.json(data));
+    post(url: string, data) {
+        return this.sendRequest('post', url, req => req.json(data));
     }
 
-    getAsync(url: string) {
-        return this.sendRequestAsync('get', url);
+    get(url: string) {
+        return this.sendRequest('get', url);
     }
 
-    deleteAsync(url: string) {
-        return this.sendRequestAsync('delete', url);
+    delete(url: string) {
+        return this.sendRequest('delete', url);
     }
 
-    putAsync(url: string, data) {
-        return this.sendRequestAsync('put', url, req => req.json(data));
+    put(url: string, data) {
+        return this.sendRequest('put', url, req => req.json(data));
     }
 
     /**
@@ -65,13 +65,13 @@ export abstract class AbstractHttpCommand {
      * @param {(req:types.IHttpCommandRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+    protected async sendRequest(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
         this.context.trackAction(verb);
         this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttpAsync(url, verb);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttp(url, verb);
         if (result) {
             System.log.info(this.context, ()=>`Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
             return result;

@@ -37,7 +37,7 @@ export class ServiceExplorer {
 
         if (model.format === 'swagger') {
             let descriptors = this.container.get<SwaggerServiceDescriptor>(DefaultServiceNames.SwaggerServiceDescriptor);
-            let swaggerResult: SwaggerApiDefinition = await descriptors.getDescriptionsAsync(result);
+            let swaggerResult: SwaggerApiDefinition = await descriptors.getDescriptions(result);
             let response = new HttpResponse();
             response.content = swaggerResult;
             return response;

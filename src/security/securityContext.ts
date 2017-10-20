@@ -11,8 +11,8 @@ import { TokenService } from './services/tokenService';
 
 export interface IAuthenticationStrategy {
     name: string;
-    verifyTokenAsync(ctx: IRequestContext, token: string, tenant: string): Promise<UserContextData>;
-    createTokenAsync?(user: UserContextData): Promise<{ expiresIn: number, token: string, renewToken: string }>;
+    verifyToken(ctx: IRequestContext, token: string, tenant: string): Promise<UserContextData>;
+    createToken?(user: UserContextData): Promise<{ expiresIn: number, token: string, renewToken: string }>;
 }
 
 export interface UserContextData {
@@ -193,7 +193,7 @@ export class SecurityContext implements UserContext {
                 continue;
             if (!token) { throw new UnauthorizedRequestError("Invalid authorization header."); }
             try {
-                let userContext = await strategy.verifyTokenAsync(ctx, token, this._tenant);
+                let userContext = await strategy.verifyToken(ctx, token, this._tenant);
                 if (userContext) {
                     this.name = userContext.name;
                     this.displayName = userContext.displayName;

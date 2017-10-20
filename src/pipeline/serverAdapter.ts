@@ -11,7 +11,7 @@ import { DefaultSerializer } from "./serializers/defaultSerializer";
 
 export interface IServerAdapter {
     init(container: IContainer, pipeline: VulcainPipeline);
-    startAsync(port: number, callback: (err) => void);
+    start(port: number, callback: (err) => void);
     registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse);
     registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void);
 }
@@ -29,7 +29,7 @@ export abstract class ServerAdapter implements IServerAdapter {
         this.serializer = new DefaultSerializer(container);
     }
 
-    abstract startAsync(port: number, callback: (err) => void);
+    abstract start(port: number, callback: (err) => void);
 
     protected async processVulcainRequest(req: http.IncomingMessage, resp: http.ServerResponse, body, request?: HttpRequest) {
         request = request || { body: body, headers: req.headers, verb: req.method, url: url.parse(req.url, true) };
@@ -96,7 +96,7 @@ export class HttpAdapter extends ServerAdapter {
         this.router = Router();
     }
 
-    startAsync(port: number, callback: (err) => void) {
+    start(port: number, callback: (err) => void) {
 
         this.srv = http.createServer((req, resp) => {
             // Actions and query

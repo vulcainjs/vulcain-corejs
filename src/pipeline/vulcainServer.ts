@@ -66,6 +66,6 @@ export class VulcainServer {
             this.adapter.registerRoute(e.verb, e.path, e.handler);
         });
 
-        this.adapter.startAsync(port, (err) => System.log.info(null, () => 'Listening on port ' + port));
+        this.adapter.start(port, (err) => System.log.info(null, () => 'Listening on port ' + port));
     }
 }

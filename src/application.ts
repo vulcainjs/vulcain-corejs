@@ -85,7 +85,7 @@ export class Application {
     }
 
     private async init() {
-        await DynamicConfiguration.getBuilder().startPollingAsync();
+        await DynamicConfiguration.getBuilder().startPolling();
 
         System.log.info(null, () => "Starting application");
 
@@ -135,8 +135,8 @@ export class Application {
             this.registerComponents();
             Preloader.instance.runPreloads(this.container, this._domain);
 
-            await eventBus.startAsync();
-            await commandBus.startAsync();
+            await eventBus.start();
+            await commandBus.start();
 
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
             this.defineScopeDescriptions(scopes);

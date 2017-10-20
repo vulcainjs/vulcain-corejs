@@ -16,7 +16,7 @@ export interface IActionBusAdapter {
      *
      * @memberOf IActionBusAdapter
      */
-    startAsync();
+    start();
     /**
      * Publish an async action
      *
@@ -46,7 +46,7 @@ export interface IActionBusAdapter {
  * @interface IEventBusAdapter
  */
 export interface IEventBusAdapter {
-    startAsync();
+    start();
     sendEvent(domain: string, event: EventData);
     consumeEvents(domain: string, handler: (event: EventData) => void);
 }

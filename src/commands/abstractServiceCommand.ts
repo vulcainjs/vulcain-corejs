@@ -116,7 +116,7 @@ export abstract class AbstractServiceCommand {
             catch (e) {/*ignore*/ }
         }
 
-        return await this.serviceResolver.resolveAsync(serviceName, serviceVersion);
+        return await this.serviceResolver.resolve(serviceName, serviceVersion);
     }
 
     /**
@@ -125,9 +125,9 @@ export abstract class AbstractServiceCommand {
      * @param schema - optional element schema
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequestAsync<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<QueryResult> {
+    protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<QueryResult> {
         const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
             System.log.info(this.context, ()=>`Using mock database result for ${serviceName}`);
             return result;
@@ -136,7 +136,7 @@ export abstract class AbstractServiceCommand {
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
         this.context.trackAction("get");
-        let res = this.sendRequestAsync("get", url);
+        let res = this.sendRequest("get", url);
         return res;
     }
 
@@ -152,13 +152,13 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQueryAsync<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResult> {
+    protected async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResult> {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
         data.$query = query && JSON.stringify(query);
         const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, verb, data);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
             System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
@@ -168,7 +168,7 @@ export abstract class AbstractServiceCommand {
         let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
         this.context.trackAction("Query");
 
-        let res = this.sendRequestAsync("get", url);
+        let res = this.sendRequest("get", url);
         return res;
     }
 
@@ -180,10 +180,10 @@ export abstract class AbstractServiceCommand {
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected async sendActionAsync<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
+    protected async sendAction<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
         let command = { params: data, correlationId: this.context.requestData.correlationId };
         const mocks=System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockServiceAsync(serviceName, serviceVersion, verb, data);
+        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
             System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
             return result;
@@ -192,11 +192,11 @@ export abstract class AbstractServiceCommand {
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', verb, args);
         this.context.trackAction(verb);
-        let res = <any>this.sendRequestAsync("post", url, (req) => req.json(data));
+        let res = <any>this.sendRequest("post", url, (req) => req.json(data));
         return res;
     }
 
-    private async setUserContextAsync(request: types.IHttpCommandRequest) {
+    private async setUserContext(request: types.IHttpCommandRequest) {
         request.header(VulcainHeaderNames.X_VULCAIN_TENANT, this.overrideTenant || this.context.user.tenant);
 
         if (this.overrideAuthorization) {
@@ -212,7 +212,7 @@ export abstract class AbstractServiceCommand {
             }
             let tokens = new TokenService();
             // Ensures jwtToken exists for user context propagation
-            let result: any = await tokens.createTokenAsync(this.context.user);
+            let result: any = await tokens.createToken(this.context.user);
             token = result.token;
             ctx.setBearerToken(token);
         }
@@ -229,12 +229,12 @@ export abstract class AbstractServiceCommand {
      * @param {(req:types.IHttpCommandRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected async sendRequestAsync(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+    protected async sendRequest(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
         let ctx = this.context as RequestContext;
-        await this.setUserContextAsync(request);
+        await this.setUserContext(request);
 
         this.context.injectHeaders(request.header);
 
@@ -291,24 +291,24 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    async execGetAsync<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
+    async execGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.getRequestAsync(serviceName, serviceVersion, data, args);
+        let response = await this.getRequest(serviceName, serviceVersion, data, args);
         return response.value;
     }
 
-    async execQueryAsync<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
+    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.getQueryAsync(serviceName, serviceVersion, verb, data, args, page, maxByPage);
+        let response = await this.getQuery(serviceName, serviceVersion, verb, data, args, page, maxByPage);
         return response.value;
     }
 
-    async execActionAsync<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
+    async execAction<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.sendActionAsync(serviceName, serviceVersion, verb, data, args);
+        let response = await this.sendAction(serviceName, serviceVersion, verb, data, args);
         return response.value;
     }
 
     // Must be defined in command
-    //protected fallbackAsync(err, ...args);
+    //protected fallback(err, ...args);
 }

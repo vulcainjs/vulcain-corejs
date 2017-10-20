@@ -42,10 +42,10 @@ export class HandlersMiddleware extends VulcainMiddleware {
         let params = Object.assign({}, command.params || {});
         let metadata = <ActionMetadata>info.metadata;
         let useMockResult = false;
-        result = mocks.enabled && await mocks.tryGetMockValueAsync(ctx, metadata, info.verb, params);
+        result = mocks.enabled && await mocks.tryGetMockValue(ctx, metadata, info.verb, params);
 
         if (!mocks.enabled || result === undefined) {
-            result = await manager.runAsync(command, ctx);
+            result = await manager.run(command, ctx);
         }
         else {
             useMockResult = true;
@@ -57,7 +57,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
         ctx.response = result;
 
-        !useMockResult && mocks.enabled && await mocks.saveMockValueAsync(ctx, metadata, info.verb, params, result);
+        !useMockResult && mocks.enabled && await mocks.saveMockValue(ctx, metadata, info.verb, params, result);
         return super.invoke(ctx);
     }
 }

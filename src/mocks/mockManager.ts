@@ -12,7 +12,7 @@ export class MockManager implements IMockManager {
     private sessions: any;
     useMockProperty: IDynamicProperty<string>;
     registerMockProperty: IDynamicProperty<string>;
-    private saveSessionsAsync: (sessions:any) => Promise<any>;
+    private saveSessions: (sessions:any) => Promise<any>;
 
     get enabled() {
         return System.isTestEnvironnment && (!this.mocks || !this.mocks.disabled);
@@ -23,8 +23,8 @@ export class MockManager implements IMockManager {
         this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession");
     }
 
-    initialize(mocks:any, saveSessionsAsync?: (sessions:any) => Promise<any>) {
-        this.saveSessionsAsync = saveSessionsAsync;
+    initialize(mocks:any, saveSessions?: (sessions:any) => Promise<any>) {
+        this.saveSessions = saveSessions;
         this.mocks = mocks;
         this.sessions = (mocks && mocks.sessions) || {};
     }
@@ -84,7 +84,7 @@ export class MockManager implements IMockManager {
         return true;
     }
 
-    public async applyMockHttpAsync(url: string, verb: string) {
+    public async applyMockHttp(url: string, verb: string) {
         if (!this.mocks || !this.mocks.http) {
             return undefined;
         }
@@ -97,7 +97,7 @@ export class MockManager implements IMockManager {
         return res;
     }
 
-    public applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data:any) {
+    public applyMockService(serviceName: string, serviceVersion: string, verb: string, data:any) {
         if (!this.mocks || !serviceName || !this.mocks.services) {
             return undefined;
         }
@@ -112,7 +112,7 @@ export class MockManager implements IMockManager {
 
         // Verb is optional
         let mock = verb && mockService[verb.toLowerCase()];
-        return this.getMockResultAsync(mock, data);
+        return this.getMockResult(mock, data);
     }
 
     private CreateResponse(content:any) {
@@ -128,7 +128,7 @@ export class MockManager implements IMockManager {
         return res;
     }
 
-    private async getMockResultAsync(mock:any|null, data:any): Promise<HttpResponse|undefined> {
+    private async getMockResult(mock:any|null, data:any): Promise<HttpResponse|undefined> {
         if (!mock) {
             return;
         }
@@ -171,7 +171,7 @@ export class MockManager implements IMockManager {
         }
 
         session.push(data);
-        return this.saveSessionsAsync(this.sessions);
+        return this.saveSessions(this.sessions);
     }
 
     /**
@@ -205,18 +205,18 @@ export class MockManager implements IMockManager {
         return null;
     }
 
-    async tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any) {
+    async tryGetMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any) {
         const setting = this.useMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK];
         const session = this.splitAndTestSession(setting);
         if (!session) {
             return undefined;
         }
 
-        let result = await this.getMockResultAsync(await this.readMockSessions(session, verb), params);
+        let result = await this.getMockResult(await this.readMockSessions(session, verb), params);
         return result;
     }
 
-    saveMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
+    saveMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
         const setting = this.registerMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK];
         const session = this.splitAndTestSession(setting);
         if (!session) {

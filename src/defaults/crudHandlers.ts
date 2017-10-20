@@ -9,76 +9,76 @@ import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 
 @Command({ executionTimeoutInMilliseconds: 5000 })
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
-    createAsync(entity: any) {
+    create(entity: any) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("create");
-        return this.provider.createAsync( this.schema, entity);
+        return this.provider.create( this.schema, entity);
     }
 
-    async createWithSensibleDataAsync(entity: any) {
+    async createWithSensibleData(entity: any) {
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
-        entity = await this.createAsync(entity);
+        entity = await this.create(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    async updateAsync(entity: any) {
+    async update(entity: any) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
-        let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
+        let old = await this.provider.get(this.schema, entity[keyProperty]);
         if (!old)
             throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
-        return await this.provider.updateAsync(this.schema, entity, old);
+        return await this.provider.update(this.schema, entity, old);
     }
 
-    async updateWithSensibleDataAsync(entity: any) {
+    async updateWithSensibleData(entity: any) {
         // TODO move to provider
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
-        entity = await this.updateAsync(entity);
+        entity = await this.update(entity);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    deleteWithSensibleDataAsync(entity: any) {
-        return this.deleteAsync(entity);
+    deleteWithSensibleData(entity: any) {
+        return this.delete(entity);
     }
 
-    deleteAsync(entity: any) {
+    delete(entity: any) {
         this.context.trackAction("delete");
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
-        return this.provider.deleteAsync(this.schema, entity[keyProperty]);
+        return this.provider.delete(this.schema, entity[keyProperty]);
     }
 
-    async getAsync(id: any) {
+    async get(id: any) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
-        return await this.provider.findOneAsync(this.schema, query);
+        return await this.provider.findOne(this.schema, query);
     }
 
-    async getWithSensibleDataAsync(id: any) {
-        let entity = await this.getAsync(id);
+    async getWithSensibleData(id: any) {
+        let entity = await this.get(id);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    getAllAsync(options: any) {
+    getAll(options: any) {
         this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         this.context.trackAction("getAll");
-        return this.provider.getAllAsync(this.schema, options);
+        return this.provider.getAll(this.schema, options);
     }
 
-    async getAllWithSensibleDataAsync(options: any) {
-        let list = await this.getAllAsync(options);
+    async getAllWithSensibleData(options: any) {
+        let list = await this.getAll(options);
         if (list && list.length > 0 && this.schema.description.hasSensibleData) {
             let result = [];
             for (let entity of list) {
@@ -100,28 +100,28 @@ export class DefaultActionHandler extends AbstractActionHandler {
     }
 
     @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
-    async createAsync(entity: any) {
+    async create(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.createWithSensibleDataAsync(entity);
+        return cmd.createWithSensibleData(entity);
     }
 
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
-    async updateAsync(entity: any) {
+    async update(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.updateWithSensibleDataAsync( entity);
+        return cmd.updateWithSensibleData( entity);
     }
 
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
-    async deleteAsync(entity: any) {
+    async delete(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
 
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return cmd.deleteWithSensibleDataAsync( entity);
+        return cmd.deleteWithSensibleData( entity);
     }
 }
 
@@ -132,19 +132,19 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ action: "get", description: "Get an entity by id" })
-    async getAsync(id: any): Promise<T> {
+    async get(id: any): Promise<T> {
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return await cmd.getWithSensibleDataAsync(id);
+        return await cmd.getWithSensibleData(id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
-    async getAllAsync(query?: any,  maxByPage?:number, page?:number) : Promise<Array<T>> {
+    async getAll(query?: any,  maxByPage?:number, page?:number) : Promise<Array<T>> {
         let options = {
             maxByPage: maxByPage || this.context.requestData.maxByPage || 0,
             page: page || this.context.requestData.page || 0,
             query: query || {}
         };
         let cmd = this.context.getDefaultCRUDCommand(this.metadata.schema);
-        return await cmd.getAllWithSensibleDataAsync(options);
+        return await cmd.getAllWithSensibleData(options);
     }
 }

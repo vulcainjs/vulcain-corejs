@@ -58,5 +58,5 @@ export abstract class AbstractCommand<T> {
     }
 
     // Must be defined in command
-    // protected fallbackAsync(err, ...args)
+    // protected fallback(err, ...args)
 }

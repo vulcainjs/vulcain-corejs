@@ -3,7 +3,7 @@ import { IRemoteConfigurationSource, ConfigurationItem, DataSource } from "../ab
 export abstract class AbstractRemoteSource implements IRemoteConfigurationSource {
     private _values = new Map<string, ConfigurationItem>();
 
-    abstract pollPropertiesAsync(timeout?: number): Promise<DataSource>;
+    abstract pollProperties(timeout?: number): Promise<DataSource>;
 
     get(name: string) {
         let v = this._values.get(name);

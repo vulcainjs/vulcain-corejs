@@ -74,7 +74,7 @@ export class CommandFactory {
                     return function (...args) {
                         let cmd = new HystrixCommand(cache.properties, resolvedCommand, handler, <RequestContext>context, container, args);
                         schema && cmd.setSchemaOnCommand(schema);
-                        return cmd.runAsync();
+                        return cmd.run();
                     };
                 }
             });

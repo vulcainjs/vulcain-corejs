@@ -1,13 +1,17 @@
 import { IConfigurationSource } from "../abstractions";
 import * as fs from 'fs';
+const NONE = "$$__none__$$";
 
 export class EnvironmentVariableSource implements IConfigurationSource {
 
     get(name: string):any {
         // As is
         let env = process.env[name];
-        if (env)
+        if (env) {
+            if (env === NONE)
+                return undefined;
             return env;
+        }
 
         // Replace dot
         env = process.env[name.replace(/\./g, '_')];
@@ -35,6 +39,10 @@ export class EnvironmentVariableSource implements IConfigurationSource {
             catch (e) {
                 // ignore error
             }
+        }
+        if (env === undefined) {
+            // Set cache to avoid many file reads
+            process.env[name] = NONE;
         }
         return env;
     }

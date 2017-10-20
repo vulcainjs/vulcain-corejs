@@ -35,7 +35,7 @@ export class Settings {
         return this._mocks;
     }
 
-    public async saveMocksAsync(mockSessions: any): Promise<any> {
+    public async saveMocks(mockSessions: any): Promise<any> {
         if (!this._mocks) // production
             return;
 

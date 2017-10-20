@@ -87,7 +87,7 @@ export class MemoryProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAllAsync(schema: Schema, options: ListOptions): Promise<Array<any>> {
+    getAll(schema: Schema, options: ListOptions): Promise<Array<any>> {
         let data = this.ensureSchema(schema);
 
         options = options || { maxByPage: -1 };
@@ -125,10 +125,10 @@ export class MemoryProvider implements IProvider<any>
     }
 
 
-    async findOneAsync(schema: Schema, query) {
+    async findOne(schema: Schema, query) {
         let options = <ListOptions>{};
         options.query = query;
-        let list = await this.getAllAsync(schema, options);
+        let list = await this.getAll(schema, options);
         return list && list.length > 0 ? list[0] : null;
     }
 
@@ -137,7 +137,7 @@ export class MemoryProvider implements IProvider<any>
      * @param name
      * @returns {Promise}
      */
-    getAsync(schema: Schema, name: string) {
+    get(schema: Schema, name: string) {
         let data = this.ensureSchema(schema);
 
         const self = this;
@@ -157,7 +157,7 @@ export class MemoryProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    deleteAsync(schema: Schema, old: string | any) {
+    delete(schema: Schema, old: string | any) {
         if (!old)
             throw new Error("Argument is required");
         let data = this.ensureSchema(schema);
@@ -192,7 +192,7 @@ export class MemoryProvider implements IProvider<any>
      * @param entity
      * @returns {Promise}
      */
-    createAsync(schema: Schema, entity) {
+    create(schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
         let data = this.ensureSchema(schema);
@@ -232,7 +232,7 @@ export class MemoryProvider implements IProvider<any>
      * @param old
      * @returns {Promise<T>}
      */
-    updateAsync(schema: Schema, entity, old) {
+    update(schema: Schema, entity, old) {
         if (!entity)
             throw new Error("Entity is required");
         let data = this.ensureSchema(schema);

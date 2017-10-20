@@ -1,7 +1,7 @@
 import { System } from '../globals/system';
 
 export interface IServiceResolver {
-    resolveAsync(serviceName: string, version: string): Promise<string>;
+    resolve(serviceName: string, version: string): Promise<string>;
 }
 
 export class ServiceResolver implements IServiceResolver {
@@ -13,7 +13,7 @@ export class ServiceResolver implements IServiceResolver {
      * @param {number} version
      * @returns
      */
-    resolveAsync(serviceName: string, version: string) {
+    resolve(serviceName: string, version: string) {
         if (!serviceName)
             throw new Error("You must provide a service name");
         if (!version || !version.match(/[0-9]+\.[0-9]+/))

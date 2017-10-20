@@ -5,24 +5,24 @@ import { HttpResponse } from "../pipeline/response";
 export interface IMockManager {
     enabled: boolean;
     initialize?(sessions: any, saveHandler: Function);
-    applyMockHttpAsync(url: string, verb: string);
-    applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data);
-    tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any): Promise<HttpResponse>;
-    saveMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse): Promise<void>;
+    applyMockHttp(url: string, verb: string);
+    applyMockService(serviceName: string, serviceVersion: string, verb: string, data);
+    tryGetMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any): Promise<HttpResponse>;
+    saveMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse): Promise<void>;
 }
 
 export class DummyMockManager implements IMockManager {
     get enabled() { return false;}
-    tryGetMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, command: any): Promise<HttpResponse> {
+    tryGetMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, command: any): Promise<HttpResponse> {
         return Promise.resolve(null);;
     }
-    saveMockValueAsync(ctx: RequestContext, metadata: ActionMetadata, verb: string, command: any, result: HttpResponse): Promise<void> {
+    saveMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, command: any, result: HttpResponse): Promise<void> {
         return Promise.resolve();
     }
-    applyMockHttpAsync(url: string, verb: string) {
+    applyMockHttp(url: string, verb: string) {
         return undefined;
     }
-    applyMockServiceAsync(serviceName: string, serviceVersion: string, verb: string, data: any) {
+    applyMockService(serviceName: string, serviceVersion: string, verb: string, data: any) {
         return undefined;
     }
 }

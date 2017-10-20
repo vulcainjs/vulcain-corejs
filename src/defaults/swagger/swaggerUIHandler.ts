@@ -21,8 +21,8 @@ export class SwaggerUIHandler {
 
         let url = '/api/_servicedescription?format=swagger';
 
-        let template = require('./_swaggerTemplate');
-        
+        let template = require('./_swaggerTemplate').SwaggerTemplate;
+
         let response = new HttpResponse(template.getHtmlRendered('Vulcainjs - Swagger UI', url));
         response.contentType = "text/html";
         return response;

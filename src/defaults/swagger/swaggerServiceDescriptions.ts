@@ -17,7 +17,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
     }
 
-    async getDescriptionsAsync(serviceDescription: ServiceDescription) {
+    async getDescriptions(serviceDescription: ServiceDescription) {
         let descriptions = this.initialize();
 
         descriptions.info.version = serviceDescription.serviceVersion;
@@ -108,6 +108,8 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         let paths: PathsObject = {};
 
         serviceDescription.services.forEach((service: ActionDescription) => {
+            if (service.action.startsWith("_"))
+                return;
             let operationObject: OperationObject = {};
 
             //TODO : put this split hack into method

@@ -83,7 +83,7 @@ export class QueryManager implements IManager {
                 // Custom binding if any
                 query.params = schema.bind(query.params);
 
-                errors = await schema.validateAsync(ctx, query.params);
+                errors = await schema.validate(ctx, query.params);
                 if (errors && !Array.isArray(errors))
                     errors = [errors];
             }
@@ -102,7 +102,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async runAsync(query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
+    async run(query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
         let info = this.getInfoHandler(query, ctx.container);
         if (info.kind !== "query")
             throw new ApplicationError("Action handler must be requested with POST.", 405);

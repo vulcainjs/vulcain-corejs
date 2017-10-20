@@ -39,7 +39,7 @@ export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
 export interface IManager {
     container: IContainer;
     getInfoHandler(command: RequestData, container?: IContainer): { verb: string, handler: Function, metadata: CommonActionMetadata, method: string, kind: "query" | "action" | "event" };
-    runAsync(command: RequestData, ctx: RequestContext): Promise<HttpResponse>;
+    run(command: RequestData, ctx: RequestContext): Promise<HttpResponse>;
 }
 
 export class HandlerFactory {

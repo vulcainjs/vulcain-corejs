@@ -38,7 +38,7 @@ export class ConsulConfigurationSource implements IRemoteConfigurationSource {
         }
     }
 
-    async pollPropertiesAsync(timeoutInMs: number) {
+    async pollProperties(timeoutInMs: number) {
         try {
             if (!this._initialized && this.consul) {
                 if (timeoutInMs > 0)
@@ -49,10 +49,10 @@ export class ConsulConfigurationSource implements IRemoteConfigurationSource {
                 // First time, retrieve all
                 this._changes = new Map<string, ConfigurationItem>();
                 this._allkeys.clear();
-                let data = await this.getAsync(this.globalKeys);
+                let data = await this.get(this.globalKeys);
                 data && this.merge(this.globalKeys, data);
                 if (this.serviceKey) {
-                    data = await this.getAsync(this.serviceKey);
+                    data = await this.get(this.serviceKey);
                     data && this.merge(this.serviceKey, data);
                 }
                 this.watchDefinitionsChanges();
@@ -70,7 +70,7 @@ export class ConsulConfigurationSource implements IRemoteConfigurationSource {
         }
     }
 
-    getAsync(key: string) {
+    get(key: string) {
         return new Promise<any>((resolve, reject) => {
             try {
                 this.consul.kv.get({ key: key, recurse: true }, (err, data) => {

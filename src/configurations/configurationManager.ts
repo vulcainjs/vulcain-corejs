@@ -81,7 +81,7 @@ export class ConfigurationManager {
  * @param sources List of sources
  * @returns {Promise<T>}
  */
-    async startPollingAsync(sources: IConfigurationSource | Array<IConfigurationSource> = [], pollSources = true) {
+    async startPolling(sources: IConfigurationSource | Array<IConfigurationSource> = [], pollSources = true) {
         let localSources: Array<IConfigurationSource> = [];
         let remoteSources: Array<IRemoteConfigurationSource> = [];
 
@@ -92,9 +92,9 @@ export class ConfigurationManager {
 
         for (let source of sources) {
             // Local properties has loaded first (less priority)
-            if ((<ILocalConfigurationSource>source).readPropertiesAsync) {
+            if ((<ILocalConfigurationSource>source).readProperties) {
                 localSources.push(source);
-                await (<ILocalConfigurationSource>source).readPropertiesAsync();
+                await (<ILocalConfigurationSource>source).readProperties();
             }
             else {
                 let s = source as IRemoteConfigurationSource;
@@ -109,7 +109,7 @@ export class ConfigurationManager {
         // Run initialization
         let tries = 2;
         while (tries > 0) {
-            if (await this.pollingAsync(3000, false)) {
+            if (await this.polling(3000, false)) {
                 // All sources are OK
                 if (pollSources)
                     this.repeatPolling();
@@ -133,7 +133,7 @@ export class ConfigurationManager {
     /**
      * for test only
      */
-    async forcePollingAsync(src?: IRemoteConfigurationSource, reset?: boolean) {
+    async forcePolling(src?: IRemoteConfigurationSource, reset?: boolean) {
         if (reset)
             this._values = null;
 
@@ -145,7 +145,7 @@ export class ConfigurationManager {
                 this._values.remoteSources.push(src);
             }
         }
-        await this.pollingAsync(3000, false);
+        await this.polling(3000, false);
     }
 
     /**
@@ -157,7 +157,7 @@ export class ConfigurationManager {
      *
      * @memberOf ConfigurationManager
      */
-    async pollingAsync(timeout?: number, pollSources = true) {
+    async polling(timeout?: number, pollSources = true) {
         let ok = true;
 
         try {
@@ -167,8 +167,8 @@ export class ConfigurationManager {
             let promises: Promise<DataSource>[] = [];
             list.forEach(src => {
                 promises.push(
-                    // pollPropertiesAsync cannot failed
-                    src.pollPropertiesAsync(timeout || this.sourceTimeoutInMs)
+                    // pollProperties cannot failed
+                    src.pollProperties(timeout || this.sourceTimeoutInMs)
                 );
             });
 
@@ -214,7 +214,7 @@ export class ConfigurationManager {
 
     private repeatPolling() {
         if (!this.disposed && this._values.remoteSources.length > 0)
-            setTimeout(this.pollingAsync.bind(this), this.pollingIntervalInSeconds * 1000);
+            setTimeout(this.polling.bind(this), this.pollingIntervalInSeconds * 1000);
     }
 
     /**

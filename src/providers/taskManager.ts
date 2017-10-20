@@ -1,8 +1,8 @@
 import { AsyncTaskData } from "../pipeline/handlers/actions";
 
 export interface ITaskManager {
-    registerTaskAsync(task: AsyncTaskData): Promise<void>;
-    updateTaskAsync(task: AsyncTaskData): Promise<void>;
-    getTaskAsync(taskId: string): Promise<AsyncTaskData>;
-    getAllTasksAsync(query?: any): Promise<AsyncTaskData[]>;
+    registerTask(task: AsyncTaskData): Promise<void>;
+    updateTask(task: AsyncTaskData): Promise<void>;
+    getTask(taskId: string): Promise<AsyncTaskData>;
+    getAllTasks(query?: any): Promise<AsyncTaskData[]>;
 }

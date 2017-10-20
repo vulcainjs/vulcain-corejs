@@ -20,7 +20,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             this.address = "amqp://" + address;
     }
 
-    startAsync() {
+    start() {
         let self = this;
         return new Promise((resolve, reject) => {
             if (self.initialized)

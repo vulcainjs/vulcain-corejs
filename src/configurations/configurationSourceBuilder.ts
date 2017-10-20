@@ -51,7 +51,7 @@ export class ConfigurationSourceBuilder {
         return this;
     }
 
-    public startPollingAsync() {
-        return this._configurationManager.startPollingAsync(this._sources);
+    public startPolling() {
+        return this._configurationManager.startPolling(this._sources);
     }
 }

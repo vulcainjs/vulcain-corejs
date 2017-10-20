@@ -72,8 +72,8 @@ export class Schema {
         return this.domain.bind(origin, this.description, old);
     }
 
-    validateAsync(ctx: RequestContext, obj) {
-        return this.domain.validateAsync(ctx, obj, this.description);
+    validate(ctx: RequestContext, obj) {
+        return this.domain.validate(ctx, obj, this.description);
     }
 
     getIdProperty() {
@@ -465,11 +465,11 @@ export class Domain {
      * @param schemaName : schema to use (default=current schema)
      * @returns Array<string> : A list of errors
      */
-    validateAsync(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
+    validate(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
         if (!val) { return Promise.resolve([]); }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
         let validator = new Validator(this, this.container);
-        return validator.validateAsync(ctx, schema, val);
+        return validator.validate(ctx, schema, val);
     }
 
     resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {

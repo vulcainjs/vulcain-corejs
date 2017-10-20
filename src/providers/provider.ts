@@ -59,7 +59,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    findOneAsync(schema: Schema, query): Promise<T>;
+    findOne(schema: Schema, query): Promise<T>;
     /**
      * Get an entity list
      *
@@ -69,7 +69,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    getAllAsync(schema: Schema, options: ListOptions): Promise<Array<T>>;
+    getAll(schema: Schema, options: ListOptions): Promise<Array<T>>;
     /**
      * Get an entity by id
      *
@@ -79,7 +79,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    getAsync(schema: Schema, id: string): Promise<T>;
+    get(schema: Schema, id: string): Promise<T>;
     /**
      * Create an entity
      *
@@ -89,7 +89,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    createAsync(schema: Schema, entity: T): Promise<T>;
+    create(schema: Schema, entity: T): Promise<T>;
     /**
      * Update an entity
      *
@@ -100,7 +100,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    updateAsync(schema: Schema, entity: T, old?: T): Promise<T>;
+    update(schema: Schema, entity: T, old?: T): Promise<T>;
     /**
      * Delete an entity
      *
@@ -110,6 +110,6 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    deleteAsync(schema: Schema, old:string|T ) : Promise<boolean>;
+    delete(schema: Schema, old:string|T ) : Promise<boolean>;
 }
 

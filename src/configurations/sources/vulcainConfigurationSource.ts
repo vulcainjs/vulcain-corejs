@@ -23,11 +23,11 @@ export class VulcainConfigurationSource extends HttpConfigurationSource {
         return this.uri + "?$query=" + JSON.stringify(this.options);;
     }
 
-    pollPropertiesAsync(timeoutInMs: number) {
+    pollProperties(timeoutInMs: number) {
         if (!System.vulcainToken && !System.isTestEnvironnment) {
             return Promise.resolve(null);
         }
 
-        return super.pollPropertiesAsync(timeoutInMs);
+        return super.pollProperties(timeoutInMs);
     }
 }

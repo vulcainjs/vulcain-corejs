@@ -10,13 +10,13 @@ export class ApiKeyService extends AbstractHandler implements IAuthenticationStr
         super(container);
     }
 
-    createTokenAsync(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }> {
+    createToken(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }> {
         return Promise.reject("Invalid method. You must use vulcain-authentication module to create token.");
     }
 
-    async verifyTokenAsync(data: VerifyTokenParameter): Promise<UserToken> {
+    async verifyToken(data: VerifyTokenParameter): Promise<UserToken> {
         const cmd = CommandFactory.get<ApiKeyVerifyCommand>(ApiKeyVerifyCommand.commandName, this.context);
-        return await cmd.runAsync(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
+        return await cmd.run(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
     }
 }
 
@@ -24,8 +24,8 @@ export class ApiKeyService extends AbstractHandler implements IAuthenticationStr
 class ApiKeyVerifyCommand extends AbstractServiceCommand {
     static commandName = "ApiKeyVerifyCommand";
 
-    async runAsync(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<UserToken> {
-        let resp = await this.sendActionAsync<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
+    async run(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<UserToken> {
+        let resp = await this.sendAction<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
         return resp.value;
     }
 }*/

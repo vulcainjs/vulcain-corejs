@@ -3,7 +3,7 @@ import { ILocalConfigurationSource, ConfigurationItem, IRemoteConfigurationSourc
 
 export class MemoryConfigurationSource implements ILocalConfigurationSource {
     protected _values = new Map<string, ConfigurationItem>();
-    readPropertiesAsync(timeout?: number): Promise<DataSource> {
+    readProperties(timeout?: number): Promise<DataSource> {
         return Promise.resolve( new DataSource(this._values.values()));
     }
 
@@ -23,7 +23,7 @@ export class MemoryConfigurationSource implements ILocalConfigurationSource {
 }
 
 export class MockConfigurationSource extends MemoryConfigurationSource implements IRemoteConfigurationSource {
-    pollPropertiesAsync(timeout?: number): Promise<DataSource> {
-        return this.readPropertiesAsync();
+    pollProperties(timeout?: number): Promise<DataSource> {
+        return this.readProperties();
     }
 }

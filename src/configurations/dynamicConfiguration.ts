@@ -14,7 +14,7 @@ import * as rx from 'rxjs';
 * Dynamic properties are read only. You can set a value but it will be valid only as a default value.
 * </p>
 * <code>
-* DynamicConfiguration.init().addRest("http....").startPollingAsync();
+* DynamicConfiguration.init().addRest("http....").startPolling();
 * let i:number = DynamicConfiguration.getProperty("prop1");
 * let i2:number = DynamicConfiguration.getOrDefaultProperty("prop1", 1);
 * </code>

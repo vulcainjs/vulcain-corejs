@@ -23,7 +23,7 @@ export interface CommandInfo {
 }
 
 export interface IHasFallbackCommand<T extends any> {
-    fallbackAsync(...args): Promise<T>;
+    fallback(...args): Promise<T>;
 }
 
 export class HystrixCommand {
@@ -57,7 +57,7 @@ export class HystrixCommand {
         }
     }
 
-    async runAsync<T>(): Promise<T> {
+    async run<T>(): Promise<T> {
         if (this.running) {
             throw new Error("This instance can only be executed once. Please instantiate a new instance.");
         }
