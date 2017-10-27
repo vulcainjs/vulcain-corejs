@@ -107,7 +107,7 @@ export class VulcainLogger implements Logger{
     }
 
     private prepareEntry(context: IRequestContext|null) {
-        let trackInfo = context && context.getTrackerInfo();
+        let trackInfo = context && context.getTrackerId();
         if (System.isDevelopment) {
             return <LogEntry>{
                 correlationId: (trackInfo && trackInfo.correlationId) || undefined,

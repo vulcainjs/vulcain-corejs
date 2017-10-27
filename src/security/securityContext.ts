@@ -129,21 +129,10 @@ export class SecurityContext implements UserContext {
 
     private _scopes: string[];
     private _isAnonymous: boolean;
-    private _tenant?: string;
+    public tenant: string;
+    
     // For context propagation
     bearer: string;
-
-    /**
-     *
-     *
-     * @type {string}
-     */
-    get tenant(): string {
-        return this._tenant;
-    }
-    set tenant(tenant: string) {
-        this._tenant = tenant;
-    }
 
     getClaims<T=any>() {
         return this.claims as T;
@@ -151,10 +140,10 @@ export class SecurityContext implements UserContext {
 
     setTenant(tenantOrCtx: string | UserContextData) {
         if (typeof tenantOrCtx === "string") {
-            this._tenant = tenantOrCtx;
+            this.tenant = tenantOrCtx;
         }
         else if (tenantOrCtx) {
-            this._tenant = tenantOrCtx.tenant;
+            this.tenant = tenantOrCtx.tenant;
             this.name = tenantOrCtx.name;
             this.displayName = tenantOrCtx.displayName;
             this.email = tenantOrCtx.email;
@@ -162,7 +151,7 @@ export class SecurityContext implements UserContext {
             this.claims = tenantOrCtx.claims;
         }
         else
-            this._tenant = System.defaultTenant;
+            this.tenant = System.defaultTenant;
     }
 
     async process(ctx: RequestContext) {
@@ -193,13 +182,13 @@ export class SecurityContext implements UserContext {
                 continue;
             if (!token) { throw new UnauthorizedRequestError("Invalid authorization header."); }
             try {
-                let userContext = await strategy.verifyToken(ctx, token, this._tenant);
+                let userContext = await strategy.verifyToken(ctx, token, this.tenant);
                 if (userContext) {
                     this.name = userContext.name;
                     this.displayName = userContext.displayName;
                     this.email = userContext.email;
                     this._scopes = userContext.scopes;
-                    this._tenant = userContext.tenant || this._tenant;
+                    this.tenant = userContext.tenant || this.tenant;
                     this.bearer = (<UserToken>userContext).bearer;
                     // Assign all other fields as claims
                     this.claims = userContext.claims || {};
@@ -212,7 +201,7 @@ export class SecurityContext implements UserContext {
                     if (strategy instanceof TokenService)
                         this.bearer = token;
 
-                    ctx.logInfo(() => `User ${this.name} authentified with tenant ${this._tenant}, scopes ${this.scopes}`);
+                    ctx.logInfo(() => `User ${this.name} authentified with tenant ${this.tenant}, scopes ${this.scopes}`);
                     return;
                 }
             }

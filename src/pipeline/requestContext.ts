@@ -50,7 +50,7 @@ export class CommandRequest implements IRequestContext {
         this.tracker = this.context.tracker.createCommandTracker(this, commandName);
     }
 
-    getTrackerInfo(): TrackerInfo {
+    getTrackerId(): TrackerInfo {
         return this.tracker && this.tracker.id;
     }
 
@@ -91,10 +91,7 @@ export class CommandRequest implements IRequestContext {
         return this.context.sendCustomEvent(action, params, schema);
     }
     getCommand<T = ICommand>(name: string, ...args): T {
-        return this.context.getCommand<T>(name, args);
-    }
-    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand {
-        return this.context.getDefaultCRUDCommand(schema);
+        return this.context.getCommand<T>(name, ...args);
     }
     logError(error: Error, msg?: () => string) {
         return this.tracker.logError(error, msg);
@@ -121,11 +118,11 @@ export class RequestContext implements IRequestContext {
     tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
 
-    getTrackerInfo(): TrackerInfo {
+    getTrackerId(): TrackerInfo {
         let spanId = this.tracker.id;
         let id = this.requestData.correlationId;
         if (!id) {
-            this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
+            id = this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
         }
 
         spanId.correlationId = id;
@@ -251,11 +248,7 @@ export class RequestContext implements IRequestContext {
      * @returns {ICommand} A command
      */
     getCommand<T = ICommand>(name: string, ...args): T {
-        return CommandFactory.getCommand<T>(name, this, args);
-    }
-
-    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand {
-        return CommandFactory.getProviderCommand("DefaultCRUDCommand", this, schema);
+        return CommandFactory.getCommand<T>(name, this, ...args);
     }
 
     /**

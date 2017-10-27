@@ -249,10 +249,7 @@ export class HystrixCommand {
     }
 
     private getCommandName() {
-        let name = Object.getPrototypeOf(this.command).constructor.name || this.properties.commandName;
-        if (this.schemaName)
-            return name + "." + this.schemaName;
-        return name;
+        return this.properties.commandName;
     }
 
     ///

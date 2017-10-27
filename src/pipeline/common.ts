@@ -26,7 +26,7 @@ export interface ICustomEvent {
 }
 
 export interface IRequestContext extends ISpanTracker {
-    getTrackerInfo(): TrackerInfo;
+    getTrackerId(): TrackerInfo;
     /**
      * Current user or null
      *
@@ -75,7 +75,6 @@ export interface IRequestContext extends ISpanTracker {
      * @returns {ICommand} A command
      */
     getCommand<T = ICommand>(name: string, ...args): T;
-    getDefaultCRUDCommand(schema: string): DefaultCRUDCommand;
 }
 
 export interface RequestData {

@@ -57,6 +57,8 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             let actions = getMetadata(symActions, target);
             descriptors.register(container, domain, target, actions, metadata, "action");
+            // DefaultHandler
+            target.prototype.defineCommand && target.prototype.defineCommand.call(null, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     };
@@ -88,6 +90,8 @@ export function QueryHandler(metadata: QueryMetadata) {
             let descriptors = container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             let actions = getMetadata(symActions, target);
             descriptors.register(container, domain, target, actions, metadata, "query");
+            // DefaultHandler
+            target.prototype.defineCommand && target.prototype.defineCommand.call(null, metadata);
             Reflect.defineMetadata(symMetadata, metadata, target);
         });
     };

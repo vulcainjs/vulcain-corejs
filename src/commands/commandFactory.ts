@@ -37,13 +37,8 @@ const hystrixCommandsCache = new Map<string, CommandCache>();
 export function Command(config: CommandConfiguration = {}, commandKey?: string, commandGroup?: string) {
 
     return function (command: Function) {
-        commandGroup = commandGroup || System.fullServiceName;
-        commandKey = commandKey || command.name;
         Preloader.instance.registerHandler(command, (container, domain: Domain) => {
-            let properties = new CommandProperties(commandKey, commandGroup, config);
-            CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
-            CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
-            hystrixCommandsCache.set(commandKey, { properties, command });
+            CommandFactory.registerCommand(command, config, commandKey, commandGroup);
         });
     };
 }
@@ -54,15 +49,32 @@ interface CommandCache {
 }
 
 export class CommandFactory {
-    static getCommand<T=ICommand>(commandKey: string, context: IRequestContext, ...args): T {
-        return CommandFactory.getProviderCommand(commandKey, context, null, args);
+
+    static registerCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {
+        commandGroup = commandGroup || System.fullServiceName;
+        commandKey = commandKey || command.name;
+
+        if (!hystrixCommandsCache.has(commandKey)) {
+            let properties = new CommandProperties(commandKey, commandGroup, config);
+            CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
+            CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
+            hystrixCommandsCache.set(commandKey, { properties, command });
+        }
     }
 
-    static getProviderCommand<T=ICommand>(commandKey: string, context: IRequestContext, schema: string, ...args): T {
+    /**
+     * Get a new command
+     * @param commandKey Command name
+     * @param contextCurrent request context
+     * @param args Optional command arguments
+     */
+    static getCommand<T=ICommand>(commandKey: string, context: IRequestContext, ...args): T {
+
         let cache = hystrixCommandsCache.get(commandKey);
         if (cache) {
             let container = context.container;
 
+            let schema = args && args.length > 0 && args[0];
             let resolvedCommand = container.resolve(cache.command, args);
 
             return new Proxy(resolvedCommand, {

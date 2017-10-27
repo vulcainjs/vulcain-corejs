@@ -25,14 +25,15 @@ export class Span implements ISpanTracker, ISpanHasId {
         return this._id;
     }
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string) {
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string|TrackerInfo) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
         this._id = <TrackerInfo>{
+            correlationId: !parentId || typeof parentId === "string" ? null : parentId.correlationId,
             spanId: this.randomTraceId(),
-            parentId: parentId
+            parentId: !parentId || typeof parentId === "string" ? parentId : parentId.spanId
         };
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
@@ -45,7 +46,7 @@ export class Span implements ISpanTracker, ISpanHasId {
     }
 
     createCommandTracker(context: RequestContext, commandName: string) {
-        return new Span(context, SpanKind.Command, commandName, this._id.spanId);
+        return new Span(context, SpanKind.Command, commandName, this._id);
     }
 
     trackAction(action: string, tags?: any) {
@@ -62,7 +63,7 @@ export class Span implements ISpanTracker, ISpanHasId {
     private ensuresInitialized() {
         if (!this.initialized && this.action) {
             this.initialized = true;
-            let info = this.context.getTrackerInfo(); // Ensures correlationId is initialized
+            let info = this.context.getTrackerId(); // Ensures correlationId is initialized
 
             let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
             if (trackerFactory) {

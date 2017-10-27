@@ -39,7 +39,7 @@ export class TestContext extends RequestContext {
         return ctx;
     }
 
-    createHandler<T extends AbstractHandler>(handler: Function) {
+    createHandler<T extends AbstractHandler>(handler: Function): T {
         let ctx = this.context;
         let scopedContainer = new Container(this.container, ctx);
         let h = new (<(container: IContainer) => void>handler)(scopedContainer);
