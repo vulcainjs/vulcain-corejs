@@ -1,9 +1,10 @@
 import { CommandMetricsFactory } from "../metrics/commandMetricsFactory";
-import {CircuitBreakerFactory} from "../command/circuitBreaker";
-import ActualTime from "../../utils/actualTime";
 import RollingNumberEvent from "../metrics/hystrix/rollingNumberEvent";
 import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics';
 import {Observable} from 'rxjs';
+import ActualTime from "../../utils/actualTime";
+import { CircuitBreakerFactory } from "../circuitBreaker";
+import { System } from "../../globals/system";
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {
@@ -22,8 +23,8 @@ export class HystrixSSEStream {
     static toCommandJson(metrics: HystrixCommandMetrics) {
         let json:any = {};
         json.type = "HystrixCommand";
-        json.name = metrics.commandName;
-        json.group = metrics.commandGroup;
+        json.name =  metrics.commandName;
+        json.group = System.fullServiceName;
         json.currentTime = ActualTime.getCurrentTime();
 
         let circuitBreaker = CircuitBreakerFactory.get(metrics.commandName);

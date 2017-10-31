@@ -1,4 +1,3 @@
-import {EventData, ActionData} from '../pipeline/actions';
 
 /**
  * Async actions dispatcher
@@ -7,6 +6,9 @@ import {EventData, ActionData} from '../pipeline/actions';
  * @export
  * @interface IActionBusAdapter
  */
+import { RequestData } from "../pipeline/common";
+import { EventData } from "../pipeline/handlers/messageBus";
+
 export interface IActionBusAdapter {
     /**
      * Start a new topic
@@ -14,7 +16,7 @@ export interface IActionBusAdapter {
      *
      * @memberOf IActionBusAdapter
      */
-    startAsync();
+    start();
     /**
      * Publish an async action
      *
@@ -24,7 +26,7 @@ export interface IActionBusAdapter {
      *
      * @memberOf IActionBusAdapter
      */
-    publishTask(domain: string, serviceId: string, command: ActionData);
+    publishTask(domain: string, serviceId: string, command: RequestData);
     /**
      * Consume an async action
      *
@@ -34,7 +36,7 @@ export interface IActionBusAdapter {
      *
      * @memberOf IActionBusAdapter
      */
-    consumeTask(domain: string, serviceId: string, handler: Function);
+    consumeTask(domain: string, serviceId: string, handler:  (event: RequestData) => void);
 }
 
 /**
@@ -44,7 +46,7 @@ export interface IActionBusAdapter {
  * @interface IEventBusAdapter
  */
 export interface IEventBusAdapter {
-    startAsync();
+    start();
     sendEvent(domain: string, event: EventData);
-    consumeEvents(domain: string, handler: Function);
+    consumeEvents(domain: string, handler: (event: EventData) => void);
 }

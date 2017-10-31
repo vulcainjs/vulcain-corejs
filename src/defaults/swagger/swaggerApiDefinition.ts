@@ -4,7 +4,7 @@ import { Model } from '../../schemas/annotations';
 
 export interface IJsonSchema {
     id?: string
-    $schema?: string
+    __schema?: string
     title?: string
     description?: string
     multipleOf?: number

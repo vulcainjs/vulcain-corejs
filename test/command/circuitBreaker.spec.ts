@@ -1,11 +1,11 @@
-import { CircuitBreakerFactory } from "../../dist/commands/command/circuitBreaker";
-import { CommandProperties } from "../../dist/commands/command/commandProperties";
+import { CircuitBreakerFactory } from "../../dist/commands/circuitBreaker";
+import { CommandProperties } from "../../dist/commands/commandProperties";
 import { ICommandMetrics, CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 
 try {
-    DynamicConfiguration.init();
+    DynamicConfiguration.getBuilder();
 }
 catch (e) { }
 
@@ -27,7 +27,7 @@ beforeEach(function () {
 describe("CircuitBreaker", function () {
 
     it("should cache instances in the factory", function () {
-        var cb = CircuitBreakerFactory.getOrCreate(getCBOptions("Test"));
+        let cb = CircuitBreakerFactory.getOrCreate(getCBOptions("Test"));
         expect(cb).to.not.be.undefined;
         expect(CircuitBreakerFactory.getCache().size).to.equal(1);
         cb = CircuitBreakerFactory.getOrCreate(getCBOptions("AnotherTest"));
@@ -36,21 +36,21 @@ describe("CircuitBreaker", function () {
     });
 
     it("should open circuit if error threshold is greater than error percentage", function () {
-        var options = getCBOptions("Test1");
-        var cb = CircuitBreakerFactory.getOrCreate(options);
-        var metrics = CommandMetricsFactory.getOrCreate(options);
+        let options = getCBOptions("Test1");
+        let cb = CircuitBreakerFactory.getOrCreate(options);
+        let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
         metrics.markFailure();
         expect(cb.isOpen()).to.be.true;
     });
 
     it("should not open circuit if the volume has not reached threshold", function () {
-        var options = getCBOptions("Test2");
+        let options = getCBOptions("Test2");
         options.circuitBreakerRequestVolumeThreshold.set(2);
         options.circuitBreakerErrorThresholdPercentage.set(50);
 
-        var cb = CircuitBreakerFactory.getOrCreate(options);
-        var metrics = CommandMetricsFactory.getOrCreate(options);
+        let cb = CircuitBreakerFactory.getOrCreate(options);
+        let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
         metrics.markFailure();
         expect(cb.isOpen()).to.be.false;
@@ -61,9 +61,9 @@ describe("CircuitBreaker", function () {
     });
 
     it("should retry after a configured sleep time, if the circuit was open", function (done) {
-        var options = getCBOptions("Test3");
-        var cb = CircuitBreakerFactory.getOrCreate(options);
-        var metrics = CommandMetricsFactory.getOrCreate(options);
+        let options = getCBOptions("Test3");
+        let cb = CircuitBreakerFactory.getOrCreate(options);
+        let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
         metrics.markFailure();
         expect(cb.allowRequest()).to.be.false;
@@ -75,9 +75,9 @@ describe("CircuitBreaker", function () {
     });
 
     it("should reset metrics after the circuit was closed again", function () {
-        var options = getCBOptions("Test4");
-        var cb = CircuitBreakerFactory.getOrCreate(options);
-        var metrics = CommandMetricsFactory.getOrCreate(options);
+        let options = getCBOptions("Test4");
+        let cb = CircuitBreakerFactory.getOrCreate(options);
+        let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
         metrics.markFailure();
         expect(cb.allowRequest()).to.be.false;

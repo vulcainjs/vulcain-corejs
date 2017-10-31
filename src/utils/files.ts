@@ -1,24 +1,29 @@
 import * as Path from 'path';
 import * as fs from 'fs';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
+import { Conventions } from './conventions';
 
 export class Files
 {
-    static findApplicationPath() {
-        let parent = module.parent;
-        while (parent.parent) {
-            if (fs.existsSync(Path.join(Path.dirname(parent.filename), 'startup.js')) &&
-                fs.existsSync(Path.join(Path.dirname(parent.filename), 'index.js')))
-                break;
-            parent = parent.parent;
+    private static _configFilePath: string|undefined|null;
+    static findConfigurationFile() {
+        if (Files._configFilePath === undefined)
+            return Files._configFilePath;
+
+        let fileName = Conventions.instance.vulcainFileName;
+        let filePath = Path.join(process.cwd(), fileName);
+        if (fs.existsSync(filePath))
+        {
+            return Files._configFilePath = filePath;
         }
-        return Path.dirname(parent.filename);
+
+        return Files._configFilePath = null;
     }
 
-    static traverse( dir:string, callback?:( n, v )=>void, filter?:(fileName)=>boolean )
+    static traverse(dir: string, callback?: (n, v) => void, filter?: (fileName) => boolean)
     {
         if(!filter)
-            filter = (fn) => Path.extname( fn ) === ".js";
+            filter = (fn) => Path.extname( fn ) === ".js" && fn[0] !== "_";
 
         if( fs.existsSync( dir ) )
         {

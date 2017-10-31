@@ -1,30 +1,22 @@
-import { Action, Query} from '../pipeline/annotations';
-import {AbstractActionHandler, AbstractQueryHandler} from '../pipeline/abstractHandlers';
-import {ICommand} from '../commands/command/abstractCommand';
 import {IContainer} from '../di/resolvers';
 import {Inject} from '../di/annotations';
-import {Command} from '../commands/command/commandFactory';
-import { AbstractProviderCommand } from '../commands/command/abstractProviderCommand';
+import { AbstractProviderCommand } from "../commands/abstractProviderCommand";
+import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handlers/abstractHandlers";
+import { Action, Query } from "../pipeline/handlers/annotations";
+import { ICommand } from "../commands/abstractCommand";
+import { Command } from "../commands/commandFactory";
+import { ApplicationError } from './../pipeline/errors/applicationRequestError';
+import { CommandFactory } from '../commands/commandFactory';
+import { System } from '../globals/system';
 
-@Command({ executionTimeoutInMilliseconds: 5000 })
-export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
-
-    initializeMetricsInfo() {
-        // do nothing
-        // since this command is generic, settings are made on every request
-    }
-
-    // Execute command
-    runAsync(action: string, data) {
-        this.setMetricsTags(this.provider.address, this.schema && this.schema.name, this.requestContext && this.requestContext.tenant);
-        return this[action + "Internal"](data);
-    }
-
+export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     create(entity: any) {
-        return this.provider.createAsync(this.schema, entity);
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
+        this.context.trackAction("create");
+        return this.provider.create( this.schema, entity);
     }
 
-    protected async createInternal(entity: any) {
+    async createWithSensibleData(entity: any) {
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
         entity = await this.create(entity);
@@ -34,14 +26,16 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
+        this.context.trackAction("update");
         let keyProperty = this.schema.getIdProperty();
-        let old = await this.provider.getAsync(this.schema, entity[keyProperty]);
+        let old = await this.provider.get(this.schema, entity[keyProperty]);
         if (!old)
-            throw new Error("Entity doesn't exist for updating : " + entity[keyProperty]);
-        return await this.provider.updateAsync(this.schema, entity, old);
+            throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
+        return await this.provider.update(this.schema, entity, old);
     }
 
-    protected async updateInternal(entity: any) {
+    async updateWithSensibleData(entity: any) {
         // TODO move to provider
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
@@ -51,35 +45,41 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    protected deleteInternal(entity: any) {
+    deleteWithSensibleData(entity: any) {
         return this.delete(entity);
     }
 
     delete(entity: any) {
+        this.context.trackAction("delete");
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
-        return this.provider.deleteAsync(this.schema, entity[keyProperty]);
+        return this.provider.delete(this.schema, entity[keyProperty]);
     }
 
     async get(id: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
+        this.context.trackAction("get");
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
-        return await this.provider.findOneAsync(this.schema, query);
+        return await this.provider.findOne(this.schema, query);
     }
 
-    protected async getInternal(id: any) {
+    async getWithSensibleData(id: any) {
         let entity = await this.get(id);
         if (entity && this.schema.description.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    all(options: any) {
-        return this.provider.getAllAsync(this.schema, options);
+    getAll(options: any) {
+        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
+        this.context.trackAction("getAll");
+        return this.provider.getAll(this.schema, options);
     }
 
-    protected async allInternal(options: any) {
-        let list = await this.all(options);
+    async getAllWithSensibleData(options: any) {
+        let list = await this.getAll(options);
         if (list && list.length > 0 && this.schema.description.hasSensibleData) {
             let result = [];
             for (let entity of list) {
@@ -94,58 +94,78 @@ export class DefaultRepositoryCommand extends AbstractProviderCommand<any> {
     }
 }
 
+function createCommandName(metadata, kind) {
+    return metadata.schema + kind + "Command";
+}
+
 export class DefaultActionHandler extends AbstractActionHandler {
+
+    private defineCommand(metadata) {
+        CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Action"));
+    }
+
+    protected getDefaultCommand<T>() {
+        return this.context.getCommand<T>(createCommandName(this.metadata, "Action"), this.metadata.schema);
+    }
 
     constructor( @Inject("Container") container: IContainer) {
         super(container);
     }
 
     @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
-    async createAsync(entity: any) {
+    async create(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
-        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
-        return cmd.runAsync( "create", entity);
+            throw new ApplicationError("Entity is required");
+        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        return cmd.createWithSensibleData(entity);
     }
 
     @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
-    async updateAsync(entity: any) {
+    async update(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
-        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
-        return cmd.runAsync( "update", entity);
+            throw new ApplicationError("Entity is required");
+        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        return cmd.updateWithSensibleData( entity);
     }
 
     @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
-    async deleteAsync(entity: any) {
+    async delete(entity: any) {
         if (!entity)
-            throw new Error("Entity is required");
+            throw new ApplicationError("Entity is required");
 
-        let cmd = await this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
-        return cmd.runAsync( "delete", entity);
+        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        return cmd.deleteWithSensibleData( entity);
     }
 }
 
 export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
+    private defineCommand(metadata) {
+        CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Query"));
+    }
+
+    protected getDefaultCommand<T>() {
+        return this.context.getCommand<T>(createCommandName(this.metadata, "Query"), this.metadata.schema);
+    }
+
     constructor( @Inject("Container") container: IContainer ) {
         super(container);
     }
 
-    private getDefaultCommandAsync(): Promise<ICommand> {
-        return this.requestContext.getCommandAsync("DefaultRepositoryCommand", this.metadata.schema);
-    }
-
     @Query({ action: "get", description: "Get an entity by id" })
-    async getAsync(id: any) {
-        let cmd = await this.getDefaultCommandAsync();
-        return <Promise<T>>cmd.runAsync("get", id);
+    async get(id: any): Promise<T> {
+        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        return await cmd.getWithSensibleData(id);
     }
 
     @Query({ action: "all", description: "Get all entities" })
-    async getAllAsync(query?: any, maxByPage:number=0, page?:number) : Promise<Array<T>> {
-        let options = { maxByPage: maxByPage || this.query && this.query.maxByPage || 0, page: page || this.query && this.query.page || 0, query:query || {} };
-        let cmd = await this.getDefaultCommandAsync();
-        return <Promise<Array<T>>>cmd.runAsync( "all", options);
+    async getAll(query?: any,  maxByPage?:number, page?:number) : Promise<Array<T>> {
+        let options = {
+            maxByPage: maxByPage || this.context.requestData.maxByPage || 0,
+            page: page || this.context.requestData.page || 0,
+            query: query || {}
+        };
+        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        return await cmd.getAllWithSensibleData(options);
     }
 }

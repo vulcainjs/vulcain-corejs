@@ -1,55 +1,76 @@
-import {IDynamicProperty} from '../dynamicProperty';
-import {DynamicProperties} from './dynamicProperties';
+import { ConfigurationItem, IDynamicProperty } from "../abstractions";
+import { ConfigurationManager } from "../configurationManager";
 import * as rx from 'rxjs';
+import { System } from "../../globals/system";
 
-export class DynamicProperty<T> implements IDynamicProperty<T>
-{
-    private val:T;
-    private  disposed = false;
+export interface IUpdatableProperty { // Internal interface
+    updateValue(val: ConfigurationItem);
+}
+
+export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProperty {
+    protected val: T;
+    protected removed: boolean;
+    protected notifying: boolean;
     private _propertyChanged: rx.ReplaySubject<IDynamicProperty<T>>;
+
+    constructor(protected manager: ConfigurationManager, public name: string, protected defaultValue: T) {
+        manager.properties.set(name, this);
+        if(this.defaultValue !== undefined)
+            this.onPropertyChanged();
+    }
 
     get propertyChanged(): rx.Observable<IDynamicProperty<T>> {
         if (!this._propertyChanged) {
             this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
         }
-        return <rx.Observable<IDynamicProperty<any>>>this._propertyChanged;
+        return <rx.Observable<IDynamicProperty<T>>>this._propertyChanged;
     }
 
-    constructor(private propertiesManager: DynamicProperties, public name: string, private defaultValue?:T) {
+    get value() {
+        return !this.removed ? (this.val||this.defaultValue) : undefined;
     }
 
-    get value():T {
-        if( this.disposed ) throw new Error("Can not use a disposed property. Do you have called DynamicProperties.reset() ?");
-        return this.val || this.defaultValue;
-    }
-
-    set(val:T)
-    {
-        if( this.disposed ) throw new Error("Can not use a disposed property. Do you have called DynamicProperties.reset() ?");
-
-        if( this.val !== val) {
+    set(val: T) {
+        if (this.val !== val) {
             this.val = val;
             this.onPropertyChanged();
         }
     }
 
-    private onPropertyChanged()
-    {
-        this._propertyChanged && this._propertyChanged.next( this );
-        this.propertiesManager.onPropertyChanged(this, "changed");
+    updateValue(item: ConfigurationItem) {
+        if (item.deleted) {
+            this.removed = true;
+            System.log.info(null, () => `CONFIG: Removing property value for key ${this.name}`);
+            this.onPropertyChanged();
+            return;
+        }
+
+        if (this.val !== item.value) {
+            this.val = item.encrypted ? System.decrypt(item.value) : item.value;
+            let v = item.encrypted ? "********" : item.value;
+            System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${this.name}`);
+            this.onPropertyChanged();
+            return;
+        }
     }
 
-    public reset() {
-        this.val = undefined;
-        this.onPropertyChanged();
+    protected onPropertyChanged() {
+        if (!this.name || this.notifying)
+            return;
+
+        this.notifying = true;
+        try {
+            this._propertyChanged && this._propertyChanged.next(this);
+            this.manager.onPropertyChanged(this);
+        }
+        finally {
+            this.notifying = false;
+        }
     }
 
-    public dispose()
-    {
-        this.disposed = true;
+    public dispose() {
         this.onPropertyChanged();
         //this._propertyChanged.dispose();
-        if (this._propertyChanged)
-            this._propertyChanged = new rx.ReplaySubject<IDynamicProperty<T>>(1);
+        this._propertyChanged = null;
     }
 }

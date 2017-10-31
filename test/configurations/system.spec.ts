@@ -1,5 +1,5 @@
 import {expect} from "chai";
-import {System} from "../../dist/configurations/globals/system";
+import {System} from "../../dist/globals/system";
 
 let urlExcepted = "http://localhost:8080/api/alert?tag=RED&tag=BLUE&in=00001";
 let urlExceptedPath = "http://localhost:8080/api/alert/id";

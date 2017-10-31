@@ -9,4 +9,8 @@ deploy:
   api_key: $NPM_KEY
   email: "alain.metge@zenasoft.com"
   on:
-    tags: true
+    branch: master
+  tag: next
+branches:
+  only:
+  - master

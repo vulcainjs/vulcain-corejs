@@ -1,4 +1,8 @@
-import { IHttpAdapterRequest } from '../servers/abstractAdapter';
+import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
+import { StatsdMetrics } from './statsdMetrics';
+import { PrometheusMetrics } from './prometheusMetrics';
+import { IContainer } from '../di/resolvers';
+import { DefaultServiceNames } from "./../di/annotations";
 
 export class MetricsConstant {
     static duration = "_duration";
@@ -24,7 +28,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    increment(metric: string, customTags?: any, delta?: number);
+    increment(metric: string, customTags?: any, delta?: number): void;
 
     /**
      * Set a duration
@@ -34,5 +38,14 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    timing(metric: string, duration: number, customTags?: any);
+    timing(metric: string, duration: number, customTags?: any): void;
+}
+
+export class MetricsFactory {
+    static create(container: IContainer) {
+        return container.get<IMetrics>(DefaultServiceNames.Metrics, true)  ||
+               ApplicationInsightsMetrics.create() ||
+               StatsdMetrics.create() ||
+               new PrometheusMetrics(container);
+    }
 }

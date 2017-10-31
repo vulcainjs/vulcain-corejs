@@ -1,6 +1,6 @@
-import ActualTime from "../../../utils/actualTime";
 import Bucket from "./percentileBucket";
 import {Stats} from 'fast-stats';
+import ActualTime from "../../../utils/actualTime";
 
 export class RollingPercentile {
 

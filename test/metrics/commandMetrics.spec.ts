@@ -1,6 +1,6 @@
 import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumberEvent";
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
-import { CommandProperties } from "../../dist/commands/command/commandProperties";
+import { CommandProperties } from "../../dist/commands/commandProperties";
 import { expect } from 'chai';
 import ActualTime from "../../dist/utils/actualTime";
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';

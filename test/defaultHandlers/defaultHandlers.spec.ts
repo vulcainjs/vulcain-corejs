@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { TestContext, DefaultActionHandler, DefaultQueryHandler, QueryHandler, Query, ActionHandler, Model, Property, RequestContext, IContainer } from '../../dist/index';
+import { TestContext, DefaultActionHandler, DefaultQueryHandler, QueryHandler, Query, ActionHandler, Model, Property, IRequestContext, IContainer } from '../../dist/index';
 import { DefaultServiceNames } from '../../src/di/annotations';
 
 @Model()
@@ -31,10 +31,10 @@ describe("Default action handler", function () {
     it("should create an entity", async function () {
         const actionHandler = context.createHandler<TestActionHandler>(TestActionHandler);
         let entity = { firstName: "elvis", lastName: "Presley" };
-        await actionHandler.createAsync(entity);
+        await actionHandler.create(entity);
 
         let query = context.getService<TestQueryHandler>("TestQueryService");
-        entity = await query.getAsync("Presley");
+        entity = await query.get("Presley");
         expect(entity).to.be.not.null;
     });
 

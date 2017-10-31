@@ -1,20 +1,20 @@
 import { Domain, SchemaDescription, ErrorMessage } from './schema';
 import { IContainer } from '../di/resolvers';
-import { RequestContext } from '../servers/requestContext';
+import { RequestContext } from "../pipeline/requestContext";
 
 export class Validator {
 
     constructor(private domain: Domain, private container: IContainer) {
     }
 
-    async validateAsync(ctx: RequestContext, schemaDesc: SchemaDescription, val) {
+    async validate(ctx: RequestContext, schemaDesc: SchemaDescription, val) {
         let errors: Array<ErrorMessage> = [];
         if (!schemaDesc || !val) return errors;
 
         if (schemaDesc.extends) {
             let base = this.domain.resolveSchemaDescription(schemaDesc.extends);
             if (base) {
-                (await this.validateAsync(ctx, base, val)).forEach(e => { errors.push(e); });
+                (await this.validate(ctx, base, val)).forEach(e => { errors.push(e); });
             }
         }
 
@@ -29,7 +29,7 @@ export class Validator {
             formatContext.propertyValue = val[ps];
 
             try {
-                let err = await this.validatePropertyAsync(ctx, formatContext, schemaDesc.properties[ps], val[ps], val);
+                let err = await this.validateProperty(ctx, formatContext, schemaDesc.properties[ps], val[ps], val);
                 if (err) {
                     errors.push({ message: err, property: ps, id: formatContext.id });
                 }
@@ -52,10 +52,10 @@ export class Validator {
                     if (ref && ref.dependsOn && !ref.dependsOn(val)) continue;
                     let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
                     if (!schema) continue;
-                    errors = errors.concat(await this.validateAsync(ctx, schema.description, formatContext.propertyValue));
+                    errors = errors.concat(await this.validate(ctx, schema.description, formatContext.propertyValue));
                 }
                 else {
-                    let errors2 = await this.validateReferenceAsync(ctx, formatContext, ref, val[rs], val);
+                    let errors2 = await this.validateReference(ctx, formatContext, ref, val[rs], val);
                     if(errors2)
                         errors = errors.concat(errors2);
                 }
@@ -80,7 +80,7 @@ export class Validator {
         return errors;
     }
 
-    private async validateReferenceAsync(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<Array<ErrorMessage>> {
+    private async validateReference(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<Array<ErrorMessage>> {
         if (!schema)
             return;
 
@@ -127,14 +127,14 @@ export class Validator {
                         baseItemSchema = currentItemSchema;
                 }
                 if (currentItemSchema) {
-                    errors = errors.concat(await this.validateAsync(ctx, currentItemSchema.description, val));
+                    errors = errors.concat(await this.validate(ctx, currentItemSchema.description, val));
                 }
             }
         }
         return errors;
     }
 
-    private async validatePropertyAsync(ctx: RequestContext, formatContext: FormatContext, schema: string | any, val, entity): Promise<string> {
+    private async validateProperty(ctx: RequestContext, formatContext: FormatContext, schema: string | any, val, entity): Promise<string> {
         if (typeof schema === "string") {
             let type = this.domain._findType(<string>schema);
             if (!type) {
@@ -177,7 +177,7 @@ export class Validator {
             switch (name) {
                 case "$value":
                     return ctx.propertyValue;
-                case "$schema":
+                case "__schema":
                     return ctx.propertyName ? ctx.propertySchema : ctx.schemaElement;
                 case "$id":
                     return ctx.id;

@@ -1,9 +1,9 @@
 import {RollingNumber} from "./rollingNumber";
 import {RollingPercentile} from "./rollingPercentile";
 import RollingNumberEvent from "./rollingNumberEvent";
+import { CommandProperties } from "../../commandProperties";
+import { ICommandMetrics } from "../commandMetricsFactory";
 import ActualTime from "../../../utils/actualTime";
-import { CommandProperties } from '../../command/commandProperties';
-import { ICommandMetrics } from '../../../commands/metrics/commandMetricsFactory';
 
 export class HystrixCommandMetrics implements ICommandMetrics {
     private rollingCount: RollingNumber;

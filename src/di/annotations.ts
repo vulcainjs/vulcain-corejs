@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
-import { System } from '../configurations/globals/system';
-import { RequestContext } from '../servers/requestContext';
+import { System } from '../globals/system';
+import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
 
 /**
  * List of default service names
@@ -10,14 +11,15 @@ import { RequestContext } from '../servers/requestContext';
  * @class DefaultServiceNames
  */
 export class DefaultServiceNames {
-    static TokenService = "TokenService";
+    static Serializer = "Serializer";
+    static AuthenticationStrategy = "AuthenticationStrategy";
     static AuthorizationPolicy = "AuthorizationPolicy";
     static TenantPolicy = "TenantPolicy";
-
+    static TaskManager = "TaskManager";
     static ScopesDescriptor = "ScopesDescriptor";
     static ServiceDescriptors = "ServiceDescriptors";
     static SwaggerServiceDescriptor = "SwaggerServiceDescriptor";
-    static "Authentication" = "Authentication";
+    static SecurityManager = "SecurityManager";
     static "Logger" = "Logger";
     static "Provider" = "Provider";
     static "EventBusAdapter" = "EventBusAdapter";
@@ -27,12 +29,11 @@ export class DefaultServiceNames {
     static "ServerAdapter" = "ServerAdapter";
     static Container = "Container";
     static ProviderFactory = "ProviderFactory";
-    static RequestContext = "RequestContext";
     static Metrics = "Metrics";
-    static ApiKeyService = "ApiKeyService";
     static MockManager = "MockManager";
-    static RequestTracer = "RequestTracer";
+    static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
+    static BearerTokenService = "BearerTokenService";
 }
 
 /**
@@ -66,9 +67,9 @@ export interface IScopedComponent {
     /**
      * Current request context (scope)
      *
-     * @type {RequestContext}
+     * @type {IRequestContext}
      */
-    requestContext: RequestContext;
+    context: IRequestContext;
 }
 
 /**

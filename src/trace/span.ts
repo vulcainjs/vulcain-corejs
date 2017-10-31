@@ -1,0 +1,287 @@
+import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
+import { System } from "../globals/system";
+import { IContainer } from '../di/resolvers';
+import { DefaultServiceNames } from '../di/annotations';
+import { Logger } from "../log/logger";
+import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics";
+import { Pipeline } from './../pipeline/common';
+import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
+import { EntryKind } from "../log/vulcainLogger";
+import { ISpanTracker, TrackerInfo, SpanKind, ISpanHasId } from "./common";
+
+export class Span implements ISpanTracker, ISpanHasId {
+    private initialized: boolean;
+    private _logger: Logger;
+    private tags: { [name: string]: string } = {};
+    private startTick: [number, number];
+    private startTime: number;
+    private error: Error;
+    private metrics: IMetrics;
+    private _id: TrackerInfo;
+    private tracker: IRequestTracker;
+    private action: string;
+
+    get id() {
+        return this._id;
+    }
+
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string|TrackerInfo) {
+        this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
+
+        this.startTime = Date.now() * 1000;
+        this.startTick = process.hrtime();
+        this._id = <TrackerInfo>{
+            correlationId: !parentId || typeof parentId === "string" ? null : parentId.correlationId,
+            spanId: this.randomTraceId(),
+            parentId: !parentId || typeof parentId === "string" ? parentId : parentId.spanId
+        };
+
+        this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
+
+        this.convertKind();
+    }
+
+    static createRequestTracker(context: RequestContext, parentId: string) {
+        return new Span(context, SpanKind.Request, System.fullServiceName, parentId);
+    }
+
+    createCommandTracker(context: RequestContext, commandName: string) {
+        return new Span(context, SpanKind.Command, commandName, this._id);
+    }
+
+    trackAction(action: string, tags?: any) {
+        if (!action || action.startsWith('_'))
+            return;
+        this.action = action;
+        this.ensuresInitialized();
+        if (tags) {
+            this.addTrackerTags(tags);
+        }
+        this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
+    }
+
+    private ensuresInitialized() {
+        if (!this.initialized && this.action) {
+            this.initialized = true;
+            let info = this.context.getTrackerId(); // Ensures correlationId is initialized
+
+            let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
+            if (trackerFactory) {
+                this.tracker = trackerFactory.startSpan(this.context, this._id, this.name, this.kind, this.action);
+                this.addTag('correlationId', info.correlationId);
+            }
+
+            if (this.kind === SpanKind.Command) {
+                this.logAction("BC", `Command: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Request) {
+                this.logAction("RR", `Request: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Task) {
+                this.logAction("RT", `Async task: ${this.name}`);
+            }
+            else if (this.kind === SpanKind.Event) {
+                this.logAction("RE", `Event: ${this.name}`);
+            }
+        }
+    }
+
+    private convertKind() {
+        if (this.kind === SpanKind.Command)
+            return;
+
+        if (this.context.pipeline === Pipeline.AsyncTask) {
+            this.kind = SpanKind.Task;
+            this.name = "Async:" + this.name;
+        }
+        else if (this.context.pipeline === Pipeline.Event) {
+            this.kind = SpanKind.Event;
+            this.name = "Event:" + this.name;
+        }
+    }
+
+    injectHeaders(headers: (name: string | any, value?: string) => any) {
+        headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this._id.spanId);
+        headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this._id.correlationId);
+//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
+//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
+//        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
+//        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
+
+        // TODO move this code
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
+        }
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
+            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
+        }
+    }
+
+    dispose() {
+        if (this.kind === SpanKind.Request)
+            this.endRequest();
+        else
+            this.endCommand();
+
+        if (this.tracker) {
+            this.tracker.dispose(this.durationInMs, this.tags);
+            this.tracker = null;
+        }
+        this.context = null;
+        this._logger = null;
+    }
+
+    endCommand() {
+        this.metrics.timing(this.name + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
+        if (this.error)
+            this.metrics.increment(this.name + MetricsConstant.failure, this.tags);
+
+        // End Command trace
+        this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
+    }
+
+    private endRequest() {
+        let hasError = false;
+        let prefix: string = "";
+
+        let value = this.context.response && this.context.response.content;
+        hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
+
+        if (this.context.requestData.schema) {
+            prefix = this.context.requestData.schema.toLowerCase() + "_" + this.context.requestData.action.toLowerCase();
+        }
+        else if (this.context.requestData.action) {
+            prefix = this.context.requestData.action.toLowerCase();
+        }
+
+        const duration = this.durationInMicroseconds;
+
+        // Duration
+        this.metrics.timing(prefix + MetricsConstant.duration, duration);
+        this.metrics.timing(MetricsConstant.allRequestsDuration, duration);
+
+        // Failure
+        if (hasError) {
+            this.metrics.increment(prefix + MetricsConstant.failure);
+            this.metrics.increment(MetricsConstant.allRequestsFailure);
+        }
+
+        // Always remove userContext
+        if (typeof (value) === "object") {
+            value.userContext = undefined; // TODO ???
+        }
+        if (this.kind === SpanKind.Request) {
+            this.logAction("ER", `End request status: ${(this.context.response  && this.context.response.statusCode) || 200}`);
+        }
+        else if (this.kind === SpanKind.Task) {
+            this.logAction("ET", `Async task: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
+        }
+        else if (this.kind === SpanKind.Event) {
+            this.logAction("EE", `Event ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
+        }
+
+        //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
+    }
+
+    addTag(name: string, value: string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+        if (name && value) {
+            try {
+                if (typeof value === "object") {
+                    value = JSON.stringify(value);
+                }
+                this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
+            }
+            catch (e) {
+                this.context.logError(e);
+                // then ignore
+            }
+        }
+    }
+
+    addTrackerTags(tags) {
+        if (!tags)
+            return;
+
+        Object.keys(tags)
+            .forEach(key => this.addTag(key, tags[key]));
+    }
+
+    private logAction(action: EntryKind, message: string) {
+        this._logger.logAction(this.context, action, message);
+    }
+
+    /**
+     * Log an error
+     *
+     * @param {Error} error Error instance
+     * @param {string} [msg] Additional message
+     *
+     */
+    logError(error: Error, msg?: () => string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+
+        if (!this.error) this.error = error; // Catch only first error
+        if (this.tracker) {
+            this.tracker.trackError(error);
+        }
+        this._logger.error(this.context, error, msg);
+    }
+
+    /**
+     * Log a message info
+     *
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logInfo(msg: () => string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+        this._logger.info(this.context, msg);
+    }
+
+    /**
+     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     *
+     * @param {any} context Current context
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logVerbose(msg: () => string) {
+        // This method can be raised before span is initialized (with setAction)
+        // Calling ensuresInitialized ensures tracker is initialized
+        this.ensuresInitialized();
+        this._logger.verbose(this.context, msg);
+    }
+
+    get now() {
+        return this.startTime + this.durationInMicroseconds;
+    }
+
+    get durationInMs() {
+        return this.durationInMicroseconds / 1000;
+    }
+
+    private get durationInMicroseconds() {
+        const hrtime = process.hrtime(this.startTick);
+        const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
+        return elapsedMicros;
+    }
+
+    private randomTraceId() {
+        const digits = '0123456789abcdef';
+        let n = '';
+        for (let i = 0; i < 16; i++) {
+            const rand = Math.floor(Math.random() * 16);
+            n += digits[rand];
+        }
+        return n;
+    }
+}

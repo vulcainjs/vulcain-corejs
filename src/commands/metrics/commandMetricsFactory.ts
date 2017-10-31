@@ -1,5 +1,5 @@
-import { CommandProperties } from '../command/commandProperties';
 import { HystrixCommandMetrics } from './hystrix/hystrixCommandMetrics';
+import { CommandProperties } from "../commandProperties";
 
 export interface ICommandMetrics {
     incrementExecutionCount();

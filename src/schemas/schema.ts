@@ -5,8 +5,8 @@ import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
 import { ModelPropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
-import { System } from './../configurations/globals/system';
-import { RequestContext } from '../servers/requestContext';
+import { System } from './../globals/system';
+import { RequestContext } from "../pipeline/requestContext";
 
 export interface ErrorMessage {
     message: string;
@@ -72,8 +72,8 @@ export class Schema {
         return this.domain.bind(origin, this.description, old);
     }
 
-    validateAsync(ctx: RequestContext, obj) {
-        return this.domain.validateAsync(ctx, obj, this.description);
+    validate(ctx: RequestContext, obj) {
+        return this.domain.validate(ctx, obj, this.description);
     }
 
     getIdProperty() {
@@ -330,6 +330,19 @@ export class Domain {
         return this.types.get(parts[0])[parts[1]];
     }
 
+    getBaseType(type) {
+        if (!type.$$nativeSchema) {
+            let stype = type;
+            type.$$nativeSchema = stype.name
+            while (stype && stype.type) {
+                stype = stype.type;
+                type.$$nativeSchema = stype.name;
+                stype = this._findType(stype);
+            }
+        }
+        return type.$$nativeSchema;
+    }
+
     /**
      * Remove all sensible data
      *
@@ -452,11 +465,11 @@ export class Domain {
      * @param schemaName : schema to use (default=current schema)
      * @returns Array<string> : A list of errors
      */
-    validateAsync(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
+    validate(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
         if (!val) { return Promise.resolve([]); }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
         let validator = new Validator(this, this.container);
-        return validator.validateAsync(ctx, schema, val);
+        return validator.validate(ctx, schema, val);
     }
 
     resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {

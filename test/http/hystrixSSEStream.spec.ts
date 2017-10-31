@@ -1,10 +1,10 @@
 import { HystrixSSEStream } from "../../dist/commands/http/hystrixSSEStream";
-import { CommandFactory } from '../../dist/commands/command/commandFactory';
-import { CommandProperties } from "../../dist/commands/command/commandProperties";
+import { CommandFactory } from '../../dist/commands/commandFactory';
+import { CommandProperties } from "../../dist/commands/commandProperties";
 import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
-import { AbstractCommand } from '../../dist/commands/command/abstractCommand';
-import { Command } from '../../dist/commands/command/commandFactory';
-import { TestContext } from '../../dist/di/testContext';
+import { AbstractCommand } from '../../dist/commands/abstractCommand';
+import { Command } from '../../dist/commands/commandFactory';
+import { TestContext } from '../../dist/pipeline/testContext';
 
 @Command()
 export class HystrixSSECommand1 extends AbstractCommand<any> {
@@ -22,8 +22,8 @@ let context = new TestContext();
 
 describe("HystrixSSEStream", function () {
 
-    async function executeCommand(commandKey) {
-        let command = await CommandFactory.getAsync(commandKey, context.requestContext);
+    function executeCommand(commandKey) {
+        let command = CommandFactory.getCommand<HystrixSSECommand1>(commandKey, context.context);
         command.runAsync("success");
     }
 

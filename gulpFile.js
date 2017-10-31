@@ -6,6 +6,7 @@ var gulp = require("gulp"),
     ts = require("gulp-typescript"),
     merge = require('merge2'),
     fse = require('fs-extra'),
+    typescript = require('typescript'),
     mocha = require('gulp-mocha'),
     istanbul = require('gulp-istanbul'),
     sourcemaps = require('gulp-sourcemaps'),
@@ -14,7 +15,6 @@ var gulp = require("gulp"),
     typedoc = require("gulp-typedoc");
 
 // Base root directory for source map
-var rootDir = "file://" + __dirname;
 process.on('uncaughtException', console.error.bind(console));
 
 gulp.task('default', ['compile-test']);
@@ -42,15 +42,9 @@ gulp.task('test', ['istanbul:hook'], function () {
 });
 
 gulp.task("compile-test", ['compile-ts'], function () {
-    var tsProject = ts.createProject(
-        './tsconfig.json',
-        {
-            typescript: require('typescript')    // must be a project package dependency
-        });
+    var tsProject = ts.createProject('./test/tsconfig.json', { typescript });
 
-    var tsResult = gulp.src([
-        "./test/**/*.ts"
-    ], { base: 'test/' })
+    var tsResult = tsProject.src()
         .pipe(sourcemaps.init())
         .pipe(tsProject())
         .once("error", function () {
@@ -61,8 +55,8 @@ gulp.task("compile-test", ['compile-ts'], function () {
         });
 
     return tsResult.js
-        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: rootDir + "/test"}))
-        .pipe(gulp.dest("dist-test/"));
+        .pipe(sourcemaps.write('../dist-test', {includeContent: false, sourceRoot:  "../test"}))
+        .pipe(gulp.dest("dist-test"));
 });
 
 gulp.task("istanbul:hook", ['compile-test'], function () {
@@ -79,15 +73,9 @@ gulp.task("istanbul:hook", ['compile-test'], function () {
 
 // https://www.npmjs.com/package/gulp-typescript
 gulp.task("compile-ts", [ 'clean'], function () {
-    var tsProject = ts.createProject(
-        './tsconfig.json',
-        {
-            typescript: require('typescript')    // must be a project package dependency
-        });
+    var tsProject = ts.createProject('./src/tsconfig.json', { typescript });
 
-    var tsResult = gulp.src([
-        "./src/**/*.ts"
-    ])
+    var tsResult = tsProject.src()
         .pipe(sourcemaps.init())
         .pipe(tsProject())
         .once("error", function () {
@@ -100,7 +88,7 @@ gulp.task("compile-ts", [ 'clean'], function () {
             tsResult.dts
                 .pipe(gulp.dest('dist')),
             tsResult.js
-                .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: rootDir + "/src"}))
+                .pipe(sourcemaps.write('../dist', {includeContent: false, sourceRoot: "../src"}))
                 .pipe(gulp.dest('dist'))
         ]
     );
@@ -125,7 +113,6 @@ gulp.task("doc", function () {
         }))
         ;
 });
-
 
 gulp.task('clean', function (done) {
     fse.remove('dist', done);

@@ -1,20 +1,14 @@
-import { CryptoHelper } from '../../dist/configurations/globals/crypto';
+import { CryptoHelper } from '../../dist/utils/crypto';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 let plainText = "abcdefghijklmnopqrstuvwxyz\n";
-let expected = "v2/wO9VusPOh9vaiokZZf1pBAwYwqPan6CzN";
+let crypto = new CryptoHelper();
 
 describe('CryptoHelper', function () {
 
-    it('should encrypt a value', function () {
-        let crypto = new CryptoHelper();
-        expect(crypto.encrypt(plainText)).to.equal(expected);
+    it('should decrypt an encrypted value', function () {
+        let encrypted = crypto.encrypt(plainText);
+        expect(crypto.decrypt(encrypted)).to.equal(plainText);
     });
-
-    it('should decrypt a value', function () {
-        let crypto = new CryptoHelper();
-        expect(crypto.decrypt(expected)).to.equal(plainText);
-    });
-
 });

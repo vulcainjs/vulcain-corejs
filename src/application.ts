@@ -1,30 +1,29 @@
 import { Preloader } from './preloader'; // always on first line
 
-import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
-import { LocalAdapter } from './bus/localAdapter';
 import * as Path from 'path';
 import { Domain } from './schemas/schema';
 import { Container } from './di/containers';
 import { Files } from './utils/files';
-import { ExpressAdapter } from './servers/express/expressAdapter';
 import 'reflect-metadata';
 import { DefaultServiceNames } from './di/annotations';
 import { IContainer } from "./di/resolvers";
-import { AbstractAdapter } from './servers/abstractAdapter';
 import { Conventions } from './utils/conventions';
 import { MemoryProvider } from "./providers/memory/provider";
-import { UserContext, RequestContext } from './servers/requestContext';
+import './defaults/schemasDescriptor'; // Don't remove (auto register)
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
-import './pipeline/scopeDescriptors';  // Don't remove (auto register)
-import { ServiceDescriptors } from './pipeline/serviceDescriptions';
-import { System } from './configurations/globals/system';
-import { ScopesDescriptor } from './pipeline/scopeDescriptors';
-import { ApiKeyService } from './defaults/services/apiKeyService';
+import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)
 import { LifeTime } from "./di/annotations";
-import { MetricsWrapper } from "./metrics/metricsWrapper";
-import { ZipkinInstrumentation } from "./metrics/zipkinInstrumentation";
+import { ServiceDescriptors } from "./pipeline/handlers/serviceDescriptions";
+import { HttpResponse } from "./pipeline/response";
+import { VulcainServer } from "./pipeline/vulcainServer";
+import { LocalAdapter } from "./bus/localAdapter";
+import { System } from './globals/system';
+import { DynamicConfiguration } from './configurations/dynamicConfiguration';
+
+const vulcainExecutablePath = __dirname;
+const applicationPath = Path.dirname(module.parent.parent.filename);
 
 /**
  * Application base class
@@ -34,48 +33,27 @@ import { ZipkinInstrumentation } from "./metrics/zipkinInstrumentation";
  * @class Application
  */
 export class Application {
-    private _vulcainExecutablePath: string;
-    private _basePath: string;
-
-    private _container: IContainer;
     private _domain: Domain;
-    /**
-     * Enable hystrix metrics available from /hystrix.stream
-     *
-     * @type {boolean}
-     * @memberOf Application
-     */
-    public enableHystrixStream: boolean;
 
-    /**
-     *
-     *
-     * @type {AbstractAdapter}
-     * @memberOf Application
-     */
-    public adapter: AbstractAdapter;
-
-    /**
-     * Enable api key authentication
-     *
-     * @param {string} apiKeyServiceName Vulcain service name
-     * @param {string} [version="1.0"] Service version
-     *
-     * @memberOf Application
-     */
-    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.container.injectScoped(ApiKeyService, DefaultServiceNames.ApiKeyService, apiKeyServiceName, version);
+    public useMongoProvider(address: string) {
+        this.container.useMongoProvider(address);
+        return this;
     }
 
-    /**
-     * Called when the server adapter is started
-     *
-     * @param {*} server
-     * @param {*} adapter
-     *
-     * @memberOf Application
-     */
-    onServerStarted(server: any, adapter: any) { }
+    public useMemoryProvider(folder: string) {
+        this.container.useMemoryProvider(folder);
+        return this;
+    }
+
+    public useRabbitmqBus(address: string) {
+        this.container.useRabbitBusAdapter(address);
+        return this;
+    }
+
+    public useService(name: string, service: Function, lifeTime?: LifeTime) {
+        this.container.inject(name, service, lifeTime);
+        return this;
+    }
 
     /**
      * Current component container
@@ -97,57 +75,26 @@ export class Application {
      * @param container Global component container
      * @param app  (optional)Server adapter
      */
-    constructor(domainName?: string, container?: IContainer) {
-        domainName = domainName;
-        if (!domainName) {
+    constructor(private domainName?: string, private _container?: IContainer) {
+        if (!this.domainName) {
             throw new Error("Domain name is required.");
         }
-        System.defaultDomainName = domainName;
 
-        System.log.info(null, ()=>"Starting application");
-
-        this._vulcainExecutablePath = Path.dirname(module.filename);
-        this._basePath = Files.findApplicationPath();
-
-        // Ensure initializing this first
-        const test = System.isDevelopment;
-
-        this._container = container || new Container();
-        this._container.injectInstance(this, DefaultServiceNames.Application);
-
-        this._domain = new Domain(domainName, this._container);
-        this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
+        System.defaultDomainName = this.domainName;
+        this._container = this._container || new Container();
     }
 
-    private startHystrixStream() {
-        if (!this.enableHystrixStream) {
-            return;
-        }
+    private async init() {
+        await DynamicConfiguration.getBuilder().startPolling();
 
-        this.adapter.useMiddleware("get", Conventions.instance.defaultHystrixPath, (request, response) => {
-            response.append('Content-Type', 'text/event-stream;charset=UTF-8');
-            response.append('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
-            response.append('Pragma', 'no-cache');
-            System.log.info(null, ()=>"get hystrix.stream");
+        System.log.info(null, () => "Starting application");
 
-            let subscription = hystrixStream.toObservable().subscribe(
-                function onNext(sseData) {
-                    response.write('data: ' + sseData + '\n\n');
-                },
-                function onError(error) {
-                    System.log.info(null, ()=>"hystrixstream: error");
-                },
-                function onComplete() {
-                    System.log.info(null, ()=>"end hystrix.stream");
-                    return response.end();
-                }
-            );
-            request.on("close", () => {
-                System.log.info(null, ()=> "close hystrix.stream");
-                subscription.unsubscribe();
-            });
+        this._container.injectInstance(this, DefaultServiceNames.Application);
+        this._domain = new Domain(this.domainName, this._container);
+        this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
 
-            return subscription;
+        process.on('unhandledRejection', (reason, p) => {
+            System.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
         });
     }
 
@@ -159,35 +106,8 @@ export class Application {
      *
      * @memberOf Application
      */
-    protected defineScopes(scopes: ScopesDescriptor) {
-
-    }
-
-    /**
-     * Override this method to initialize default containers
-     *
-     * @protected
-     * @param {IContainer} container
-     */
-    protected initializeDefaultServices(container: IContainer) {
-    }
-
-    /**
-     * Override this method to add your custom services
-     *
-     * @protected
-     * @param {IContainer} container
-     */
-    protected initializeServices(container: IContainer) {
-    }
-
-    /**
-     * Called before the server adapter is started
-     *
-     * @protected
-     * @param {AbstractAdapter} abstractAdapter
-     */
-    protected initializeServerAdapter(abstractAdapter: AbstractAdapter) {
+    protected defineScopeDescriptions(scopes: ScopesDescriptor) {
+        return this;
     }
 
     /**
@@ -196,8 +116,9 @@ export class Application {
      * @param {number} port
      */
     async start(port: number) {
+
         try {
-            this.initializeDefaultServices(this.container);
+            await this.init();
 
             let local = new LocalAdapter();
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
@@ -211,51 +132,33 @@ export class Application {
                 commandBus = local;
             }
 
-            await eventBus.startAsync();
-            await commandBus.startAsync();
-
             this.registerComponents();
-            this.initializeServices(this.container);
             Preloader.instance.runPreloads(this.container, this._domain);
 
+            await eventBus.start();
+            await commandBus.start();
+
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
-            this.defineScopes(scopes);
+            this.defineScopeDescriptions(scopes);
 
             let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
             descriptors.createHandlersTable();
 
-            // Ensures metrics are initialized before creating adapter
-            // because metrics can declare endpoints (e.g promotheus)
-            if(this.container.get(DefaultServiceNames.Metrics, true) === null) {
-                this.container.injectInstance(new MetricsWrapper(this.container), DefaultServiceNames.Metrics);
-            }
-            if(this.container.get(DefaultServiceNames.RequestTracer, true) === null) {
-                this.container.injectSingleton(ZipkinInstrumentation, DefaultServiceNames.RequestTracer);
-            }
-
-            this.adapter = this.container.get<AbstractAdapter>(DefaultServiceNames.ServerAdapter, true);
-            if (!this.adapter) {
-                this.adapter = new ExpressAdapter(this.domain.name, this._container, this);
-                this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter);
-                this.initializeServerAdapter(this.adapter);
-                this.adapter.initialize();
-            }
-            this.startHystrixStream();
-            this.adapter.start(port);
+            let server = new VulcainServer(this.domain.name, this._container);
+            server.start(port);
         }
         catch (err) {
-            System.log.error(null, err, ()=>"ERROR when starting application");
+            System.log.error(null, err, () => "ERROR when starting application");
             process.exit(2);
         }
     }
 
     private registerComponents() {
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/models"));
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/handlers"));
-        this.registerRecursive(Path.join(this._vulcainExecutablePath, "defaults/services"));
+        this.registerRecursive(Path.join(vulcainExecutablePath, "defaults"));
 
-        let path = Conventions.instance.defaultApplicationFolder;
-        this.registerRecursive(Path.join(this._basePath, path));
+        //let path = Conventions.instance.defaultApplicationFolder;
+        //this.registerRecursive(Path.join(applicationPath, path));
+        this.registerRecursive(applicationPath);
     }
 
     /**
@@ -265,7 +168,7 @@ export class Application {
      */
     private registerRecursive(path: string) {
         if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
+            path = Path.join(applicationPath, path);
         }
         Files.traverse(path);
 
@@ -277,45 +180,13 @@ export class Application {
      *
      * @protected
      * @param {string} path Folder path
-     * @returns The current container
+     * @returns The current application
      */
-    protected injectFrom(path: string) {
+    public injectFrom(path: string) {
         if (!Path.isAbsolute(path)) {
-            path = Path.join(this._basePath, path);
+            path = Path.join(applicationPath, path);
         }
         this._container.injectFrom(path);
-        return this._container;
-    }
-}
-
-export class ApplicationBuilder {
-    private app: Application;
-
-    constructor(domain: string) {
-        this.app = new Application(domain);
-    }
-
-    public useMongo(address?: string) {
-        this.app.container.useMongoProvider(address);
         return this;
-    }
-
-    public enableHystrixStream() {
-        this.app.enableHystrixStream = true;
-        return this;
-    }
-
-    enableApiKeyAuthentication(apiKeyServiceName: string, version = "1.0") {
-        this.app.enableApiKeyAuthentication(apiKeyServiceName, version);
-        return this;
-    }
-
-     protected useService(name: string, service: Function, lifeTime?: LifeTime) {
-        this.app.container.inject(name, service, lifeTime);
-        return this;
-    }
-
-    runAsync(port = 8080) {
-        return this.app.start(port);
     }
 }

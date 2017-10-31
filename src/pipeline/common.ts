@@ -1,93 +1,91 @@
-import {IContainer} from '../di/resolvers';
-import {LifeTime} from '../di/annotations';
-import {Domain} from '../schemas/schema';
-import {UserContext} from '../servers/requestContext';
-import { HttpResponse } from './response';
+import { SecurityContext, UserContext } from '../security/securityContext';
+import { IContainer } from '../di/resolvers';
+import { ICommand } from "../commands/abstractCommand";
+import { HttpRequest } from "./vulcainPipeline";
+import { ISpanTracker } from '../trace/common';
+import { DefaultCRUDCommand } from '../defaults/crudHandlers';
+import { TrackerInfo } from '../trace/common';
 
-export interface ValidationError {
-    id?: string;
-    field?: string;
-    message: string;
+export enum Pipeline {
+    Event,
+    AsyncTask,
+    HttpRequest,
+    Test
 }
 
-export interface ErrorResponse {
-    message:string;
-    errors?: Array<ValidationError>;
-}
-
-export interface CommonRequestData {
-    correlationId: string;
+/**
+ * Internal use
+ *
+ * @export
+ * @interface ICustomEvent
+ */
+export interface ICustomEvent {
     action: string;
-    domain: string;
-    schema: string;
-    inputSchema?: string;
-    userContext?: UserContext;
+    schema?: string;
     params?: any;
 }
 
-export interface CommonRequestResponse<T> {
-    tenant: string;
-    userContext: UserContext;
-    domain: string;
-    action: string;
-    schema: string;
-    error?: ErrorResponse;
-    value?: T;
-    inputSchema?: string;
-    correlationId: string;
-}
-
-export interface CommonActionMetadata {
-    description: string;
-    action?: string;
-    scope?: string;
-    schema?: string;
-    inputSchema?: string;
-}
-
-export interface CommonMetadata {
-    description?: string;
-    schema?: string;
-}
-
-export interface CommonHandlerMetadata extends CommonMetadata {
-    scope: string;
-}
-
-export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
-    serviceName?: string;
-    serviceLifeTime?: LifeTime;
-    enableOnTestOnly?: boolean;
-}
-
-export interface IManager {
+export interface IRequestContext extends ISpanTracker {
+    getTrackerId(): TrackerInfo;
+    /**
+     * Current user or null
+     *
+     * @type {UserContext}
+     */
+    user: UserContext;
+    /**
+     * Scoped container
+     *
+     * @type {IContainer}
+     */
     container: IContainer;
-    getInfoHandler(command: CommonRequestData, container?: IContainer): { verb: string, handler: Function, metadata: CommonActionMetadata, method: string, kind: "query" | "action" | "event" };
-    runAsync(command: CommonRequestData, ctx): Promise<HttpResponse>;
+
+    /**
+     * Current locale
+     *
+     * @type {string}
+     * @memberOf RequestContext
+     */
+    locale: string;
+
+    /**
+     * Request host name
+     *
+     * @type {string}
+     * @memberOf RequestContext
+     */
+    hostName: string;
+    requestData: RequestData;
+    request?: HttpRequest;
+
+    /**
+     * Send custom event from current service
+     *
+     * @param {string} action action event
+     * @param {*} [params] action parameters
+     * @param {string} [schema] optional schema
+     */
+    sendCustomEvent(action: string, params?: any, schema?: string);
+
+    /**
+     * Create a new command
+     * Throws an exception if the command is unknown
+     *
+     * @param {string} name Command name
+     * @returns {ICommand} A command
+     */
+    getCommand<T = ICommand>(name: string, ...args): T;
 }
 
-export class HandlerFactory {
-
-    static obfuscateSensibleData(domain: Domain, container: IContainer, result) {
-        if (result) {
-            if (Array.isArray(result)) {
-                let outputSchema;
-                result.forEach(v => {
-                    if (v.__schema) {
-                        if (!outputSchema || outputSchema.name !== v.__schema)
-                            outputSchema = domain.getSchema(v.__schema);
-                        if (outputSchema && outputSchema.description.hasSensibleData)
-                            domain.obfuscate(v, outputSchema);
-                    }
-                });
-            }
-            else if (result.__schema) {
-                let outputSchema = domain.getSchema(result.__schema);
-                if (outputSchema && outputSchema.description.hasSensibleData)
-                    domain.obfuscate(result, outputSchema);
-            }
-        }
-
-        return result;
-    }
+export interface RequestData {
+    vulcainVerb: string;
+    correlationId: string;
+    action: string;
+    domain: string;
+    schema: string;
+    params?: any;
+    maxByPage?: number;
+    page?: number;
+    inputSchema?: string;
+    body?: any;
 }

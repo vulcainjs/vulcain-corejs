@@ -1,7 +1,8 @@
 import * as amqp from 'amqplib';
-import {EventData, ActionData} from '../pipeline/actions';
-import { System } from './../configurations/globals/system';
+import { System } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
+import { EventData } from "../pipeline/handlers/messageBus";
+import { RequestData } from "../pipeline/common";
 
 export /**
  * RabbitAdapter
@@ -19,7 +20,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             this.address = "amqp://" + address;
     }
 
-    startAsync() {
+    start() {
         let self = this;
         return new Promise((resolve, reject) => {
             if (self.initialized)
@@ -69,7 +70,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    consumeEvents(domain: string, handler: Function) {
+    consumeEvents(domain: string, handler:  (event: EventData) => void) {
         if (!this.channel)
             return;
         let self = this;
@@ -107,7 +108,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    publishTask(domain:string, serviceId:string, command:ActionData) {
+    publishTask(domain:string, serviceId:string, command:RequestData) {
         if (!this.channel)
             return;
         domain = domain.toLowerCase();
@@ -125,7 +126,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @memberOf RabbitAdapter
      */
-    consumeTask(domain: string, serviceId: string, handler: Function) {
+    consumeTask(domain: string, serviceId: string, handler:  (event: RequestData) => void) {
         if (!this.channel)
             return;
         let self = this;

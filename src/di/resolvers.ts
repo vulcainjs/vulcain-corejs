@@ -1,6 +1,6 @@
 import { Container } from './containers';
 import { LifeTime } from './annotations';
-import { IHttpAdapterRequest } from "../servers/abstractAdapter";
+import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
 
 export enum BusUsage {
@@ -10,19 +10,24 @@ export enum BusUsage {
 }
 
 export interface IContainer {
-    registerEndpoint(path: string, handler: Function, httpVerb?:string);
-    getCustomEndpoints():{verb:string, path:string, handler: (req:IHttpAdapterRequest)=>HttpResponse}[];
+
+    registerEndpoint(route: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
+    getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
 
     injectInstance(fn, name: string): IContainer;
+
     injectSingleton(fn, ...args): IContainer;
     injectSingleton(fn, name?: string, ...args): IContainer;
     injectSingleton(fn, nameOrArray: string | Array<any>, ...args): IContainer;
+
     injectTransient(fn, ...args): IContainer;
     injectTransient(fn, name?: string, ...args): IContainer;
     injectTransient(fn, nameOrArray: string | Array<any>, ...args): IContainer;
+
     injectScoped(fn, ...args): IContainer;
     injectScoped(fn, name?: string, ...args): IContainer;
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
+
     /**
      * Inject all components founded recursivly in a folder.
      *
@@ -40,6 +45,9 @@ export interface IContainer {
      * @returns {T} A component
      */
     get<T>(name: string, optional?: boolean, assertLifeTime?: LifeTime): T;
+
+    getList<T>(name: string): T[];
+
     /**
      * Create a new component resolving all its dependencies
      *
@@ -171,7 +179,7 @@ export class ScopedResolver extends Resolver {
             if (name && instance)
                 container.scope.set(name, instance);
         }
-        instance.requestContext = container.scope.requestContext;
+        instance.context = container.scope.context;
         return instance;
     }
 }
