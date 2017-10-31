@@ -7,4 +7,4 @@
 
 A backend micro-service framework for nodejs writing in typescript.
 
-See [web site](http://www.vulcainjs.org) for more details.
+See [web site](http://www.vulcainjs.org) for more details or try [the samples](https://github.com/vulcainjs/vulcain-samples)
