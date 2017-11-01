@@ -1,4 +1,4 @@
-import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
+//import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
 import { StatsdMetrics } from './statsdMetrics';
 import { PrometheusMetrics } from './prometheusMetrics';
 import { IContainer } from '../di/resolvers';
@@ -44,7 +44,7 @@ export interface IMetrics {
 export class MetricsFactory {
     static create(container: IContainer) {
         return container.get<IMetrics>(DefaultServiceNames.Metrics, true)  ||
-               ApplicationInsightsMetrics.create() ||
+         //      ApplicationInsightsMetrics.create() ||
                StatsdMetrics.create() ||
                new PrometheusMetrics(container);
     }

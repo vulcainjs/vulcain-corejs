@@ -7,7 +7,7 @@ import { IRequestTracker, IRequestTrackerFactory } from "./trackers/index";
 import { IRequestContext } from "./../pipeline/common";
 import * as url from 'url';
 import { TrackerInfo, SpanKind } from "../trace/common";
-
+/*
 const appInsights = require('applicationinsights');
 class Tracker implements IRequestTracker {
     private error: Error;
@@ -61,9 +61,6 @@ class Tracker implements IRequestTracker {
         this.ctx = null;
     }
 
-    /**
- * Convert ms to c# time span format
- */
     private msToTimeSpan(totalms) {
         if (isNaN(totalms) || totalms < 0) {
             totalms = 0;
@@ -123,7 +120,7 @@ export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFact
      * @param metric Metric name
      * @param customTags Object containing contextuel key value tags
      * @param delta Increment value
-     */
+     /
     increment(metric: string, customTags?: any, delta: number = 1) {
     }
 
@@ -132,7 +129,8 @@ export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFact
      * @param metric Metric name
      * @param duration duration is ms
      * @param customTags Object containing contextuel key value tags
-     */
+     /
     timing(metric: string, duration: number, customTags?: any) {
     }
 }
+*/

@@ -7,6 +7,7 @@
         "module": "commonjs",
         "target": "es6",
         "watch": false,
+        "strictFunctionTypes": true,
         "noUnusedParameters": false,
         "noUnusedLocals": false,
         "skipLibCheck": true

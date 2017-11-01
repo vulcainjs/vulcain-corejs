@@ -4,7 +4,6 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
-import { ApplicationInsightsMetrics } from '../applicationInsightsMetrics';
 import { TrackerInfo, SpanKind } from '../../trace/common';
 
 export interface IRequestTracker {
@@ -18,7 +17,6 @@ export interface IRequestTrackerFactory {
 
 export class TrackerFactory {
     static create(container: IContainer): IRequestTrackerFactory {
-        return ApplicationInsightsMetrics.create() ||
-            ZipkinInstrumentation.create();
+        return /*ApplicationInsightsMetrics.create() || */ZipkinInstrumentation.create();
     }
 }
