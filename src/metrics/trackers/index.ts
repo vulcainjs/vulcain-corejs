@@ -4,19 +4,23 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerInfo, SpanKind } from '../../trace/common';
+import { TrackerId, SpanKind } from '../../trace/common';
+import { JaegerInstrumentation } from './JaegerInstrumentation';
 
 export interface IRequestTracker {
     trackError(error);
-    dispose(duration: number, tags);
+    addTag(name: string, value: string);
+    finish();
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( ctx: IRequestContext, id: TrackerInfo, name: string, kind: SpanKind, action: string): IRequestTracker;
+    startSpan( ctx: IRequestContext, id: TrackerId, name: string, kind: SpanKind, action: string): IRequestTracker;
 }
 
 export class TrackerFactory {
     static create(container: IContainer): IRequestTrackerFactory {
-        return /*ApplicationInsightsMetrics.create() || */ZipkinInstrumentation.create();
+        return ZipkinInstrumentation.create() ||
+        /*ApplicationInsightsMetrics.create() || */
+        JaegerInstrumentation.create();
     }
 }

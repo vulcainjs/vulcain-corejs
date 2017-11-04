@@ -262,7 +262,7 @@ export class CommandManager implements IManager {
 
         let res;
         try {
-            ctx.trackAction(command.vulcainVerb, {params: command.params});
+            ctx.tracker.trackAction(command.vulcainVerb, {params: command.params});
             info.handler.context = ctx;
             let result = await info.handler[info.method](Object.assign({}, command.params));
 
@@ -338,7 +338,7 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.trackAction(evt.vulcainVerb, {params: ctx.requestData.params, source: evt.source});
+                        ctx.tracker.trackAction(evt.vulcainVerb, {params: ctx.requestData.params, source: evt.source});
                         ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.context = ctx;

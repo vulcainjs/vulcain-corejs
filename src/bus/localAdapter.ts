@@ -11,6 +11,8 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         return Promise.resolve(this);
     }
 
+    stopReception() { }
+
     sendEvent(domain: string, event: EventData) {
         // console.log("Event: %j", event);
         let self = this;

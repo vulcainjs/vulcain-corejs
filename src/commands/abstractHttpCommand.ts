@@ -37,7 +37,7 @@ export abstract class AbstractHttpCommand {
         System.manifest.registerExternal(uri);
 
         if(uri && verb)
-            this.context.addTrackerTags({ uri: uri, verb: verb });
+            this.context.tracker.addHttpRequestTags( uri, verb );
     }
 
     post(url: string, data) {
@@ -67,7 +67,7 @@ export abstract class AbstractHttpCommand {
      */
     protected async sendRequest(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
-        this.context.trackAction(verb);
+        this.context.tracker.trackAction(verb);
         this.setMetricTags(verb, url);
 
         const mocks = System.getMocksManager(this.container);

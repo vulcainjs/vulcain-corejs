@@ -3,5 +3,9 @@
     "editor.renderWhitespace": "boundary",
     "files.trimTrailingWhitespace": true,
     "lcov.path": "coverage/lcov.info",
-    "tsimporter.filesToExclude": [".dist/**", "./test/**"]
+    "tsimporter.filesToExclude": [
+        ".dist/**",
+        "./test/**"
+    ],
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

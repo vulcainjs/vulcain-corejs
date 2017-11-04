@@ -7,17 +7,16 @@ import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics"
 import { Pipeline } from './../pipeline/common';
 import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
-import { ISpanTracker, TrackerInfo, SpanKind, ISpanHasId } from "./common";
+import { ISpanTracker, TrackerId, SpanKind } from "./common";
 
-export class Span implements ISpanTracker, ISpanHasId {
-    private initialized: boolean;
+export class Span implements ISpanTracker {
     private _logger: Logger;
     private tags: { [name: string]: string } = {};
     private startTick: [number, number];
     private startTime: number;
     private error: Error;
     private metrics: IMetrics;
-    private _id: TrackerInfo;
+    private _id: TrackerId;
     private tracker: IRequestTracker;
     private action: string;
 
@@ -25,15 +24,15 @@ export class Span implements ISpanTracker, ISpanHasId {
         return this._id;
     }
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: string|TrackerInfo) {
+    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: TrackerId) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
-        this._id = <TrackerInfo>{
-            correlationId: !parentId || typeof parentId === "string" ? null : parentId.correlationId,
+        this._id = <TrackerId>{
+            correlationId:  parentId.correlationId,
             spanId: this.randomTraceId(),
-            parentId: !parentId || typeof parentId === "string" ? parentId : parentId.spanId
+            parentId: parentId.spanId
         };
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
@@ -41,7 +40,7 @@ export class Span implements ISpanTracker, ISpanHasId {
         this.convertKind();
     }
 
-    static createRequestTracker(context: RequestContext, parentId: string) {
+    static createRequestTracker(context: RequestContext, parentId: TrackerId) {
         return new Span(context, SpanKind.Request, System.fullServiceName, parentId);
     }
 
@@ -49,40 +48,34 @@ export class Span implements ISpanTracker, ISpanHasId {
         return new Span(context, SpanKind.Command, commandName, this._id);
     }
 
-    trackAction(action: string, tags?: any) {
+    trackAction(action: string, tags?: {[index:string]:string}) {
         if (!action || action.startsWith('_'))
             return;
         this.action = action;
-        this.ensuresInitialized();
-        if (tags) {
-            this.addTrackerTags(tags);
-        }
+        tags && this.addTags(tags);
         this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
-    }
 
-    private ensuresInitialized() {
-        if (!this.initialized && this.action) {
-            this.initialized = true;
-            let info = this.context.getTrackerId(); // Ensures correlationId is initialized
+        let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
+        if (trackerFactory) {
+            this.tracker = trackerFactory.startSpan(this.context, this._id, this.name, this.kind, this.action);
+            this.addTag('correlationId', this._id.correlationId);
+        }
 
-            let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
-            if (trackerFactory) {
-                this.tracker = trackerFactory.startSpan(this.context, this._id, this.name, this.kind, this.action);
-                this.addTag('correlationId', info.correlationId);
-            }
-
-            if (this.kind === SpanKind.Command) {
-                this.logAction("BC", `Command: ${this.name}`);
-            }
-            else if (this.kind === SpanKind.Request) {
-                this.logAction("RR", `Request: ${this.name}`);
-            }
-            else if (this.kind === SpanKind.Task) {
-                this.logAction("RT", `Async task: ${this.name}`);
-            }
-            else if (this.kind === SpanKind.Event) {
-                this.logAction("RE", `Event: ${this.name}`);
-            }
+        if (this.kind === SpanKind.Command) {
+            this.addTag("span.kind", "client");
+            this.logAction("BC", `Command: ${this.name}`);
+        }
+        else if (this.kind === SpanKind.Request) {
+            this.addTag("span.kind", "server");
+            this.logAction("RR", `Request: ${this.name}`);
+        }
+        else if (this.kind === SpanKind.Task) {
+            this.addTag("span.kind", "server");
+            this.logAction("RT", `Async task: ${this.name}`);
+        }
+        else if (this.kind === SpanKind.Event) {
+            this.addTag("span.kind", "consumer");
+            this.logAction("RE", `Event: ${this.name}`);
         }
     }
 
@@ -124,7 +117,7 @@ export class Span implements ISpanTracker, ISpanHasId {
             this.endCommand();
 
         if (this.tracker) {
-            this.tracker.dispose(this.durationInMs, this.tags);
+            this.tracker.finish();
             this.tracker = null;
         }
         this.context = null;
@@ -183,16 +176,33 @@ export class Span implements ISpanTracker, ISpanHasId {
         //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
     }
 
+    addHttpRequestTags(uri: string, verb: string) {
+        this.addTag("http.url", uri);
+        this.addTag("http.method", verb);
+        // http.status_code
+    }
+
+    addProviderCommandTags(address: string, schema: string, tenant: string) {
+        this.addTag("db.instance",  System.removePasswordFromUrl(address));
+        this.addTag("db.schema", schema);
+        this.addTag("db.tenant", tenant);
+    }
+
+    addServiceCommandTags(serviceName: string, serviceVersion: string) {
+        this.addTag("peer.address", System.createContainerEndpoint(serviceName, serviceVersion));
+        this.addTag("peer.service", "vulcain");
+        this.addTag("peer.service_version", serviceVersion);
+        this.addTag("peer.service_name", serviceName);
+    }
+
     addTag(name: string, value: string) {
-        // This method can be raised before span is initialized (with setAction)
-        // Calling ensuresInitialized ensures tracker is initialized
-        this.ensuresInitialized();
         if (name && value) {
             try {
                 if (typeof value === "object") {
                     value = JSON.stringify(value);
                 }
                 this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
+                this.tracker.addTag(name, value);
             }
             catch (e) {
                 this.context.logError(e);
@@ -201,7 +211,7 @@ export class Span implements ISpanTracker, ISpanHasId {
         }
     }
 
-    addTrackerTags(tags) {
+    addTags(tags) {
         if (!tags)
             return;
 
@@ -221,10 +231,6 @@ export class Span implements ISpanTracker, ISpanHasId {
      *
      */
     logError(error: Error, msg?: () => string) {
-        // This method can be raised before span is initialized (with setAction)
-        // Calling ensuresInitialized ensures tracker is initialized
-        this.ensuresInitialized();
-
         if (!this.error) this.error = error; // Catch only first error
         if (this.tracker) {
             this.tracker.trackError(error);
@@ -240,9 +246,6 @@ export class Span implements ISpanTracker, ISpanHasId {
      *
      */
     logInfo(msg: () => string) {
-        // This method can be raised before span is initialized (with setAction)
-        // Calling ensuresInitialized ensures tracker is initialized
-        this.ensuresInitialized();
         this._logger.info(this.context, msg);
     }
 
@@ -255,9 +258,6 @@ export class Span implements ISpanTracker, ISpanHasId {
      *
      */
     logVerbose(msg: () => string) {
-        // This method can be raised before span is initialized (with setAction)
-        // Calling ensuresInitialized ensures tracker is initialized
-        this.ensuresInitialized();
         this._logger.verbose(this.context, msg);
     }
 

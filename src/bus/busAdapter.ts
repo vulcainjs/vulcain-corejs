@@ -17,6 +17,12 @@ export interface IActionBusAdapter {
      * @memberOf IActionBusAdapter
      */
     start();
+
+    /**
+     * Gracefully stop message consumption
+     */
+    stopReception();
+
     /**
      * Publish an async action
      *
@@ -47,6 +53,10 @@ export interface IActionBusAdapter {
  */
 export interface IEventBusAdapter {
     start();
+    /**
+     * Gracefully stop message consumption
+     */
+    stopReception();
     sendEvent(domain: string, event: EventData);
     consumeEvents(domain: string, handler: (event: EventData) => void);
 }

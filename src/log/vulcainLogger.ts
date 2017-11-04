@@ -107,12 +107,12 @@ export class VulcainLogger implements Logger{
     }
 
     private prepareEntry(context: IRequestContext|null) {
-        let trackInfo = context && context.getTrackerId();
+        let trackerId = context && context.tracker.id;
         if (System.isDevelopment) {
             return <LogEntry>{
-                correlationId: (trackInfo && trackInfo.correlationId) || undefined,
-                parentId: (trackInfo && trackInfo.parentId) || undefined,
-                traceId: (trackInfo && trackInfo.spanId) || undefined
+                correlationId: (trackerId && trackerId.correlationId) || undefined,
+                parentId: (trackerId && trackerId.parentId) || undefined,
+                traceId: (trackerId && trackerId.spanId) || undefined
             };
         }
 
@@ -122,9 +122,9 @@ export class VulcainLogger implements Logger{
             kind: "Log",
             source: this._hostname,
             timestamp: Date.now() * 1000, // TODO
-            correlationId: (trackInfo && trackInfo.correlationId) || undefined,
-            parentId: (trackInfo && trackInfo.parentId) || undefined,
-            traceId: (trackInfo && trackInfo.spanId) || undefined
+            correlationId: (trackerId && trackerId.correlationId) || undefined,
+            parentId: (trackerId && trackerId.parentId) || undefined,
+            traceId: (trackerId && trackerId.spanId) || undefined
         };
     }
 

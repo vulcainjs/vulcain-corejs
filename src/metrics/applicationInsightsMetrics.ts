@@ -6,7 +6,7 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from "./trackers/index";
 import { IRequestContext } from "./../pipeline/common";
 import * as url from 'url';
-import { TrackerInfo, SpanKind } from "../trace/common";
+import { TrackerId, SpanKind } from "../trace/common";
 /*
 const appInsights = require('applicationinsights');
 class Tracker implements IRequestTracker {

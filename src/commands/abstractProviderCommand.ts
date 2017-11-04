@@ -63,9 +63,8 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected setMetricTags(address: string, schema: string, tenant?: string) {
-        address = System.removePasswordFromUrl(address);
         System.manifest.registerProvider(address, schema);
-        this.context.addTrackerTags({ address: address, schema: schema, tenant: (tenant || this.context.user.tenant) });
+        this.context.tracker.addProviderCommandTags( address,  schema, (tenant || this.context.user.tenant) );
     }
 
     // Must be defined in command
