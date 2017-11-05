@@ -4,17 +4,18 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
 import { JaegerInstrumentation } from './JaegerInstrumentation';
 
 export interface IRequestTracker {
-    trackError(error);
+    log(msg: string);
+    trackError(error, msg?: string);
     addTag(name: string, value: string);
     finish();
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( ctx: IRequestContext, id: TrackerId, name: string, kind: SpanKind, action: string): IRequestTracker;
+    startSpan( span: ISpanTracker, name: string, action: string): IRequestTracker;
 }
 
 export class TrackerFactory {

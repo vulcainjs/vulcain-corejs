@@ -17,21 +17,31 @@ export class Span implements ISpanTracker {
     private error: Error;
     private metrics: IMetrics;
     private _id: TrackerId;
-    private tracker: IRequestTracker;
-    private action: string;
+    private _tracker: IRequestTracker;
+    public action: string;
 
     get id() {
         return this._id;
     }
 
-    private constructor(private context: RequestContext, private kind: SpanKind, private name: string, parentId: TrackerId) {
+    get tracker() {
+        return this._tracker;
+    }
+
+    private constructor(public context: RequestContext, public kind: SpanKind, private name: string, parent: TrackerId | ISpanTracker) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now() * 1000;
         this.startTick = process.hrtime();
+
+        let parentId = <TrackerId>parent;
+        if ((<ISpanTracker>parent).id) {
+            parentId = (<ISpanTracker>parent).id;
+        }
+
         this._id = <TrackerId>{
             correlationId:  parentId.correlationId,
-            spanId: this.randomTraceId(),
+            spanId: !parentId.spanId ? parentId.correlationId : this.randomTraceId(),
             parentId: parentId.spanId
         };
 
@@ -45,21 +55,22 @@ export class Span implements ISpanTracker {
     }
 
     createCommandTracker(context: RequestContext, commandName: string) {
-        return new Span(context, SpanKind.Command, commandName, this._id);
+        return new Span(context, SpanKind.Command, commandName, this);
     }
 
     trackAction(action: string, tags?: {[index:string]:string}) {
         if (!action || action.startsWith('_'))
             return;
         this.action = action;
-        tags && this.addTags(tags);
-        this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
 
         let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
         if (trackerFactory) {
-            this.tracker = trackerFactory.startSpan(this.context, this._id, this.name, this.kind, this.action);
+            this._tracker = trackerFactory.startSpan(this, this.name, this.action);
             this.addTag('correlationId', this._id.correlationId);
         }
+
+        tags && this.addTags(tags);
+        this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
 
         if (this.kind === SpanKind.Command) {
             this.addTag("span.kind", "client");
@@ -116,9 +127,9 @@ export class Span implements ISpanTracker {
         else
             this.endCommand();
 
-        if (this.tracker) {
-            this.tracker.finish();
-            this.tracker = null;
+        if (this._tracker) {
+            this._tracker.finish();
+            this._tracker = null;
         }
         this.context = null;
         this._logger = null;
@@ -202,7 +213,7 @@ export class Span implements ISpanTracker {
                     value = JSON.stringify(value);
                 }
                 this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
-                this.tracker.addTag(name, value);
+                this._tracker && this._tracker.addTag(name, value);
             }
             catch (e) {
                 this.context.logError(e);
@@ -231,9 +242,11 @@ export class Span implements ISpanTracker {
      *
      */
     logError(error: Error, msg?: () => string) {
-        if (!this.error) this.error = error; // Catch only first error
-        if (this.tracker) {
-            this.tracker.trackError(error);
+        if (!this.error) {
+            this.error = error; // Catch only first error
+            if (this._tracker) {
+                this._tracker.trackError(error, msg && msg());
+            }
         }
         this._logger.error(this.context, error, msg);
     }
@@ -247,6 +260,9 @@ export class Span implements ISpanTracker {
      */
     logInfo(msg: () => string) {
         this._logger.info(this.context, msg);
+        if (this._tracker) {
+            this._tracker.log(msg());
+        }
     }
 
     /**
@@ -258,7 +274,10 @@ export class Span implements ISpanTracker {
      *
      */
     logVerbose(msg: () => string) {
-        this._logger.verbose(this.context, msg);
+        const ok = this._logger.verbose(this.context, msg);
+        if (ok && this._tracker) {
+            this._tracker.log(msg());
+        }
     }
 
     get now() {

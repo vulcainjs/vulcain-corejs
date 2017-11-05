@@ -62,8 +62,9 @@ export abstract class AbstractProviderCommand<T> {
         }
     }
 
-    protected setMetricTags(address: string, schema: string, tenant?: string) {
+    protected setMetricTags(verb: string, address: string, schema: string, tenant?: string) {
         System.manifest.registerProvider(address, schema);
+        this.context.tracker.trackAction(verb);
         this.context.tracker.addProviderCommandTags( address,  schema, (tenant || this.context.user.tenant) );
     }
 

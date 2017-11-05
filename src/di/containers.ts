@@ -70,6 +70,9 @@ export class Container implements IContainer {
             this.injectInstance(TrackerFactory.create(this), DefaultServiceNames.RequestTracker);
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
             this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
+
+            // Try to initalize Mongo provider if there is a 'mongo' environment variable
+            this.useMongoProvider();
         }
     }
 
@@ -137,7 +140,7 @@ export class Container implements IContainer {
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
         if (!uri) {
-            System.log.info(null, () => "no value found for mongo address. Ignore adapter");
+//                System.log.info(null, () => "no value found for mongo address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("mongodb://")) {
@@ -358,7 +361,7 @@ export class Container implements IContainer {
 
     getList<T>(name: string): T[] {
         let resolvers = this.findResolvers(name);
-        var list: T[] = [];
+        let list: T[] = [];
         for(let item of resolvers) {
             let component = this._resolve(item && item.container, item.resolver, name, true);
             if(component) {

@@ -61,7 +61,7 @@ export interface IRequestContext {
     hostName: string;
     requestData: RequestData;
     request?: HttpRequest;
-
+    parent: IRequestContext;
     /**
      * Send custom event from current service
      *

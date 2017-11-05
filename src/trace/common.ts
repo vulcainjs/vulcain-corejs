@@ -1,4 +1,5 @@
 import { IRequestContext } from "../pipeline/common";
+import { IRequestTracker } from "../metrics/trackers/index";
 
 export enum SpanKind {
     Request,
@@ -9,15 +10,17 @@ export enum SpanKind {
 
 export interface TrackerId {
     correlationId?: string;
-    parentId: string;
-    spanId?: string;
+    parentId?: string;
+    spanId: string;
 }
 
 export interface ISpanTracker {
+    context: IRequestContext;
     id: TrackerId;
     durationInMs: number;
     now: number;
-
+    tracker: IRequestTracker;
+    kind: SpanKind;
     trackAction(name: string, tags?: {[index:string]:string});
     addTag(name: string, value: string);
 
@@ -63,10 +66,15 @@ export interface ISpanRequestTracker extends ISpanTracker {
 export class DummySpanTracker implements ISpanRequestTracker {
     durationInMs: number = 0;
     now: number;
+    tracker: IRequestTracker;
+    kind: SpanKind;
 
     get id(): TrackerId {
         return {spanId: "0", parentId: "0"};
     }
+
+    constructor(public context: IRequestContext) { }
+    
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker {
         return this;
     }

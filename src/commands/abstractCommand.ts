@@ -53,7 +53,9 @@ export abstract class AbstractCommand<T> {
     constructor() {
     }
 
-    protected setMetricsTags(tags: { [key: string]: string }) {
+    protected setMetricsTags(command: string, tags: { [key: string]: string }) {
+        this.context.tracker.trackAction(command);
+
         Object.keys(tags)
             .forEach(key =>
             this.context.tracker.addTag(key, tags[key]));

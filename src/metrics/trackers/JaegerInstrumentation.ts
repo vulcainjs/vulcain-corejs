@@ -1,10 +1,11 @@
-const jaeger = require('jaeger-client')
+import * as jaeger from 'jaeger-client';
 const UDPSender = require('jaeger-client/dist/src/reporters/udp_sender').default
 import * as opentracing from 'opentracing';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
+import { System } from '../../globals/system';
 
 export class JaegerInstrumentation implements IRequestTrackerFactory {
 
@@ -15,56 +16,75 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
                 jaegerAddress = "http://" + jaegerAddress;
             }
             if (!/:[0-9]+/.test(jaegerAddress)) {
-                jaegerAddress = jaegerAddress + ':9411;
+                jaegerAddress = jaegerAddress + ':9411';
             }
 
-            return new JaegerInstrumentation();
+            const sender = new UDPSender();
+            const tracer = new jaeger.Tracer(System.fullServiceName,
+                new jaeger.RemoteReporter(sender),
+                new jaeger.RateLimitingSampler(1));
+
+            return new JaegerInstrumentation(tracer);
         }
         return null;
     }
 
-    constructor() {
+    constructor(private tracer) {
     }
 
-    startSpan(ctx: IRequestContext, id: TrackerId, name: string, kind: SpanKind, action: string): IRequestTracker {
-        return new JaegerRequestTracker(name, id, kind, action);
+    startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
+        const parentId = span.context.tracker && span.context.tracker.id;
+        const parent = new jaeger.SpanContext(null, null, null, parentId.correlationId, parentId.spanId, parentId.parentId, 0x01);
+        return new JaegerRequestTracker(this.tracer, span.id, span.kind, name, action, parent);
     }
 }
 
 export class JaegerRequestTracker implements IRequestTracker {
-    private _tracer: any;
+    private rootSpan;
 
-    constructor(serviceName: string, id: TrackerId, kind: SpanKind, action: string) {
-        let options: any = {};
-        if (id.parentId)
-            options.childOf = id.parentId;
+    get context() {
+        return this.rootSpan.context();
+    }
 
-        this._tracer = new jaeger.Tracer(serviceName, new jaeger.RemoteReporter(new UDPSender()), new jaeger.RateLimitingSampler(1), options);
+    constructor(tracer, id: TrackerId, kind: SpanKind, name: string, action: string, parent: any) {
+        if (kind === SpanKind.Command) {
+            this.rootSpan = tracer.startSpan(name + " " + action, {childOf: parent});
+            this.rootSpan.setTag("event", "cs");
+        }
+        else if (kind === SpanKind.Event) {
+            this.rootSpan = tracer.startSpan("Event " + action, { childOf: parent });
+            this.rootSpan.setTag("event", "sr");
+        }
+        else if (kind === SpanKind.Task) {
+            this.rootSpan = tracer.startSpan("Async " + action, { childOf: parent });
+            this.rootSpan.setTag("event", "sr");
+        }
+        else if (kind === SpanKind.Request) {
+            this.rootSpan = tracer.startSpan(action, { childOf: parent });
+            this.rootSpan.setTag("event", "sr");
+        }
+        this.rootSpan._spanContext = new jaeger.SpanContext(null, null, null, id.correlationId, id.spanId, id.parentId, 0x01);
+    }
 
-        this.addTag("action", action);
-
-        if (kind === SpanKind.Command)
-            this._tracer.setTag("event", "cs");
-        else if (kind === SpanKind.Event)
-            this._tracer.setTag("event", "sr");
-        else if (kind === SpanKind.Task)
-            this._tracer.setTag("event", "sr");
-        else if (kind === SpanKind.Request)
-            this._tracer.setTag("event", "sr");
+    log(msg: string) {
+        this.rootSpan.log({ message: msg });
     }
 
     addTag(name: string, value: string) {
-        this._tracer.setTag(name, value);
+        this.rootSpan.setTag(name, value);
     }
 
-    trackError(error: Error) {
-        this._tracer.setTag(opentracing.Tags.ERROR, true);
-        this._tracer.setTag("message", error.message);
-        this._tracer.setTag("stack", error.stack);
-        this._tracer.setTag("event", "error");
+    trackError(error: Error, msg: string) {
+        this.rootSpan.setTag(opentracing.Tags.ERROR, true);
+        this.rootSpan.setTag("message", error.message);
+        this.rootSpan.setTag("stack", error.stack);
+        this.rootSpan.setTag("event", "error");
+        if (msg) {
+            this.log(msg);
+        }
     }
 
     finish() {
-        this._tracer.finish();
+        this.rootSpan.finish();
     }
 }

@@ -25,14 +25,16 @@ export class PrometheusMetrics implements IMetrics {
         if (!tags)
             return PrometheusMetrics.Empty;
 
-        Object.keys(tags)
-            .forEach(key => key + '="' + (tags[key] || '').replace(/[:|,\.?&]/g, '_') + '"');
-        return tags;
+        let result = {};
+        Object
+            .keys(tags)
+            .forEach(key => result[key.replace(/[:|,\.?&]/g, '_')] = tags[key]);
+        return result;
     }
 
     increment(metric: string, customTags?: any, delta = 1) {
         metric = 'vulcain_' + metric.replace(/[:|,\.?&-]/g, '_');
-        let labels = Object.assign({}, this.tags, customTags);
+        let labels = Object.assign({}, this.tags, this.encodeTags(customTags));
 
         let counter:Prometheus.Counter = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
@@ -49,7 +51,7 @@ export class PrometheusMetrics implements IMetrics {
 
     timing(metric: string, duration: number, customTags?: any) {
         metric = 'vulcain_' + metric.replace(/[:|,\.?&-]/g, '_'); // TODO
-        let labels = Object.assign({}, this.tags, customTags);
+        let labels = Object.assign({}, this.tags, this.encodeTags(customTags));
         let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
             counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels) });

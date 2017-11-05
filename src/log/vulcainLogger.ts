@@ -8,6 +8,7 @@ import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError } from '../pipeline/errors/applicationRequestError';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import * as ms from 'moment';
+import { TrackerId } from '../trace/common';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
@@ -95,8 +96,11 @@ export class VulcainLogger implements Logger{
      * @memberOf VulcainLogger
      */
     verbose(context: IRequestContext|null, msg: ()=>string) {
-        if (VulcainLogger.enableInfo || System.isDevelopment)
+        if (VulcainLogger.enableInfo || System.isDevelopment) {
             this.info(context, msg);
+            return true;
+        }
+        return false;
     }
 
     logAction(context: IRequestContext, kind: EntryKind, message?: string) {
@@ -107,7 +111,14 @@ export class VulcainLogger implements Logger{
     }
 
     private prepareEntry(context: IRequestContext|null) {
-        let trackerId = context && context.tracker.id;
+        let trackerId: TrackerId;
+        let ctx = context;
+        while (ctx) {
+            if (ctx.tracker)
+                trackerId = ctx.tracker.id;
+            ctx = ctx.parent;
+        }
+
         if (System.isDevelopment) {
             return <LogEntry>{
                 correlationId: (trackerId && trackerId.correlationId) || undefined,

@@ -5,7 +5,7 @@ import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import * as os from 'os';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
 
 const {
     Annotation,
@@ -43,8 +43,8 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(ctx: IRequestContext, id: TrackerId, name: string, kind: SpanKind, action: string): IRequestTracker {
-        return new ZipkinRequestTracker(this.recorder, id, kind, name, action);
+    startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
+        return new ZipkinRequestTracker(this.recorder, span.id, span.kind, name, action);
     }
 }
 
@@ -52,7 +52,7 @@ class ZipkinRequestTracker implements IRequestTracker {
     private tracer;
     private id: any;
 
-    constructor(recorder, spanId: TrackerId, private kind: SpanKind, private name: string, private action: string) {
+    constructor(recorder, spanId: TrackerId, private kind: SpanKind, name: string, private action: string) {
         this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
 
         this.id = new TraceId({
@@ -80,11 +80,14 @@ class ZipkinRequestTracker implements IRequestTracker {
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
     }
 
+    log(msg: string) {
+    }
+
     addTag(name: string, value: string) {
         this.tracer.recordBinary(name, value.replace(/[:|,\.?&]/g, '-'));
     }
 
-    trackError(error) {
+    trackError(error, msg: string) {
         this.tracer.recordBinary("error", error.message || error);
     }
 

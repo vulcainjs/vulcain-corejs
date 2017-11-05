@@ -19,6 +19,7 @@ import {  SpanKind, ISpanRequestTracker, DummySpanTracker } from '../trace/commo
 import { Span } from '../trace/span';
 import { DefaultCRUDCommand } from '../defaults/crudHandlers';
 import { TrackerId } from '../trace/common';
+import { Conventions } from '../utils/conventions';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -35,19 +36,19 @@ export class VulcainHeaderNames {
 }
 
 export class CommandRequest implements IRequestContext {
-    _tracker: ISpanRequestTracker;
-    private context: RequestContext;
-    get user() { return this.context.user; }
-    get container() { return this.context.container; }
-    get locale() { return this.context.locale; }
-    get hostName() { return this.context.hostName; }
-    get requestData() { return this.context.requestData; }
-    get request() { return this.context.request; }
-    get publicPath() { return this.context.publicPath; }
+    private _tracker: ISpanRequestTracker;
+    public parent: RequestContext;
+    get user() { return this.parent.user; }
+    get container() { return this.parent.container; }
+    get locale() { return this.parent.locale; }
+    get hostName() { return this.parent.hostName; }
+    get requestData() { return this.parent.requestData; }
+    get request() { return this.parent.request; }
+    get publicPath() { return this.parent.publicPath; }
 
     constructor(context: IRequestContext, commandName: string) {
-        this.context = <RequestContext>context;
-        this._tracker = this.context.tracker.createCommandTracker(this, commandName);
+        this.parent = <RequestContext>context;
+        this._tracker = this.parent.tracker.createCommandTracker(this, commandName);
     }
 
     get tracker() {
@@ -62,30 +63,49 @@ export class CommandRequest implements IRequestContext {
         this.user.bearer = token;
     }
     get now() {
-        return this.context.now;
+        return this.parent.now;
     }
     createCommandRequest(commandName: string) {
         return new CommandRequest(this, commandName);
     }
 
     getRequestDataObject() {
-        return this.context.getRequestDataObject();
+        return this.parent.getRequestDataObject();
     }
     sendCustomEvent(action: string, params?: any, schema?: string) {
-        return this.context.sendCustomEvent(action, params, schema);
+        return this.parent.sendCustomEvent(action, params, schema);
     }
     getCommand<T = ICommand>(name: string, ...args): T {
-        return this.context.getCommand<T>(name, ...args);
+        return this.parent.getCommand<T>(name, ...args);
     }
+
     logError(error: Error, msg?: () => string) {
-        return this._tracker.logError(error, msg);
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logError(error, msg);
+        }
     }
+
     logInfo(msg: () => string) {
-        return this._tracker.logInfo(msg);
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logInfo(msg);
+        }
     }
+
     logVerbose(msg: () => string) {
-        return this._tracker.logVerbose(msg);
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logVerbose(msg);
+        }
     }
+
     dispose() {
         this._tracker.dispose();
         this._tracker = null;
@@ -93,6 +113,7 @@ export class CommandRequest implements IRequestContext {
 }
 
 export class RequestContext implements IRequestContext {
+    parent: IRequestContext;
     container: IContainer;
     locale: string;
     requestData: RequestData;
@@ -113,7 +134,7 @@ export class RequestContext implements IRequestContext {
         this.container = new Container(container, this);
         if (!data) {
             this.requestData = <any>{};
-            this._tracker = new DummySpanTracker();
+            this._tracker = new DummySpanTracker(this);
             return;
         }
 
@@ -137,17 +158,17 @@ export class RequestContext implements IRequestContext {
             }
         }
 
-        this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || RequestContext.createUniqueId();
+        this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || Conventions.getRandomId();
 
         if (this.pipeline !== Pipeline.Test) {
             // For event we do not use parentId to chain traces.
             // However all traces can be aggredated with the correlationId tag.
             const parentId = this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
-            const trackerId: TrackerId = { parentId, correlationId: this.requestData.correlationId }
+            const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId }
             this._tracker = Span.createRequestTracker(this, trackerId);
         }
         else {
-            this._tracker = new DummySpanTracker();
+            this._tracker = new DummySpanTracker(this);
         }
     }
 
@@ -228,8 +249,13 @@ export class RequestContext implements IRequestContext {
      * @param {string} [msg] Additional message
      *
      */
-    logError(error: Error, msg?: ()=>string) {
-        this._tracker.logError(error, msg);
+    logError(error: Error, msg?: () => string) {
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logError(error, msg);
+        }
     }
 
     /**
@@ -239,8 +265,13 @@ export class RequestContext implements IRequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logInfo(msg: ()=>string) {
-        this._tracker.logInfo(msg);
+    logInfo(msg: () => string) {
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logInfo(msg);
+        }
     }
 
     /**
@@ -251,17 +282,18 @@ export class RequestContext implements IRequestContext {
      * @param {...Array<string>} params Message parameters
      *
      */
-    logVerbose(msg: ()=>string) {
-        this._tracker.logVerbose(msg);
+    logVerbose(msg: () => string) {
+        // tracker can be null in case of command timeout
+        // then the context has been disposed.
+        // This method can be however called when the request ends
+        if (this._tracker) {
+            this._tracker.logVerbose(msg);
+        }
     }
 
     get hostName() {
         let host = <string>this.request.headers['X-Forwarded-Host'];
         return host || <string>this.request.headers["Host"];
-    }
-
-    static createUniqueId() {
-        return guid.v4().replace(/-/g, '');
     }
 
     /**
