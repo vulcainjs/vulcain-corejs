@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { System } from './../globals/system';
+const Utils = require('jaeger-client/dist/src/util').default;
 
 /**
  * Conventions values
@@ -11,6 +12,10 @@ import { System } from './../globals/system';
 export class Conventions {
 
     private static _instance: Conventions;
+
+    static getRandomId() {
+        return Utils.getRandom64().toString("hex");
+    }
 
     static clone(source, target?) {
         if (!source || !(typeof source === "object")) {
@@ -41,7 +46,7 @@ export class Conventions {
                 }
             }
             catch (e) {
-                System.log.error(null, e, ()=> "Error when reading vulcain.conventions file. Custom conventions are ignored.");
+                System.log.error(null, e, () => "Error when reading vulcain.conventions file. Custom conventions are ignored.");
             }
         }
         return Conventions._instance;

@@ -94,7 +94,7 @@ export class VulcainManifest {
             }
         }
         catch (e) {
-            console.log("Can not read packages version. Skip it", e.message);
+            //console.info("Can not read packages version. Skip it", e.message);
         }
     }
 }

@@ -67,16 +67,22 @@ export abstract class AbstractServiceCommand {
      * @param {any} providerFactory
      */
     constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
+        this.setMetricTags();
     }
 
-    protected setMetricTags(serviceName: string, serviceVersion: string) {
-//        let dep = this.constructor["$dependency:service"];
-//        if (dep) {
-//            this.setMetricTags(dep.targetServiceName, dep.targetServiceVersion);
-//        }
+    protected setMetricTags(verb?: string, serviceName?: string, serviceVersion?: string) {
+        if (!verb) {
+            let dep = this.constructor["$dependency:service"];
+            if (dep) {
+                System.manifest.registerService(dep.targetServiceName, dep.targetServiceVersion);
+            }
+        }
+        else {
+            this.context.tracker.trackAction(verb);
 
-        this.context.addTrackerTags({ targetServiceName: serviceName, targetServiceVersion: serviceVersion });
-        System.manifest.registerService(serviceName, serviceVersion);
+            this.context.tracker.addServiceCommandTags(serviceName, serviceVersion);
+            System.manifest.registerService(serviceName, serviceVersion);
+        }
     }
 
     /**
@@ -99,8 +105,6 @@ export abstract class AbstractServiceCommand {
     }
 
     private async createServiceName(serviceName: string, serviceVersion: string,) {
-        this.setMetricTags(serviceName, serviceVersion);
-
         let alias = System.resolveAlias(serviceName, serviceVersion);
         if (alias)
             return alias;
@@ -135,7 +139,7 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
-        this.context.trackAction("get");
+        this.setMetricTags("get", serviceName, serviceVersion);
         let res = this.sendRequest("get", url);
         return res;
     }
@@ -166,7 +170,7 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
-        this.context.trackAction("Query");
+        this.setMetricTags("query", serviceName, serviceVersion);
 
         let res = this.sendRequest("get", url);
         return res;
@@ -191,7 +195,7 @@ export abstract class AbstractServiceCommand {
 
         let service = await this.createServiceName(serviceName, serviceVersion);
         let url = System.createUrl(`http://${service}`, 'api', verb, args);
-        this.context.trackAction(verb);
+        this.setMetricTags(verb, serviceName, serviceVersion);
         let res = <any>this.sendRequest("post", url, (req) => req.json(data));
         return res;
     }
@@ -236,7 +240,7 @@ export abstract class AbstractServiceCommand {
         let ctx = this.context as RequestContext;
         await this.setUserContext(request);
 
-        this.context.injectHeaders(request.header);
+        this.context.tracker.injectHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 

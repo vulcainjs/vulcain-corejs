@@ -5,7 +5,7 @@ import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import * as os from 'os';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerInfo, SpanKind } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
 
 const {
     Annotation,
@@ -16,7 +16,7 @@ const {
 const {HttpLogger} = require('zipkin-transport-http');
 
 /**
- * Needs a property named : zipkinAgent
+ * Needs a property named : zipkin
  */
 export class ZipkinInstrumentation implements IRequestTrackerFactory {
 
@@ -43,8 +43,8 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(ctx: IRequestContext, id: TrackerInfo, name: string, kind: SpanKind, action: string): IRequestTracker {
-        return new ZipkinRequestTracker(this.recorder, id, kind, name, action);
+    startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
+        return new ZipkinRequestTracker(this.recorder, span.id, span.kind, name, action);
     }
 }
 
@@ -52,7 +52,7 @@ class ZipkinRequestTracker implements IRequestTracker {
     private tracer;
     private id: any;
 
-    constructor(recorder, spanId: TrackerInfo, private kind: SpanKind, private name: string, private action: string) {
+    constructor(recorder, spanId: TrackerId, private kind: SpanKind, name: string, private action: string) {
         this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
 
         this.id = new TraceId({
@@ -80,20 +80,19 @@ class ZipkinRequestTracker implements IRequestTracker {
             this.tracer.recordAnnotation(new Annotation.ServerRecv());
     }
 
-    private setTags(tags) {
-        Object.keys(tags).forEach(k => {
-            this.tracer.recordBinary(k, tags[k]);
-        });
+    log(msg: string) {
     }
 
-    trackError(error) {
+    addTag(name: string, value: string) {
+        this.tracer.recordBinary(name, value.replace(/[:|,\.?&]/g, '-'));
+    }
+
+    trackError(error, msg: string) {
         this.tracer.recordBinary("error", error.message || error);
     }
 
-    dispose(duration: number, tags) {
+    finish() {
       //  console.log(`End span ${this.name}, action ${this.action}, id: ${this.id}; kind: ${this.kind}`);
-      this.setTags(tags);
-
         if (this.kind === SpanKind.Command)
             this.tracer.recordAnnotation(new Annotation.ClientRecv());
         else if (this.kind === SpanKind.Event)

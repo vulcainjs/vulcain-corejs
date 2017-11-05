@@ -7,6 +7,7 @@ import { RequestData } from "../../pipeline/common";
 import { RequestContext } from "../../pipeline/requestContext";
 import { CommonMetadata } from "./common";
 import { UserContextData } from "../../security/securityContext";
+import { Conventions } from '../../utils/conventions';
 
 export interface EventData extends RequestData {
     value?: any;
@@ -77,13 +78,13 @@ export class MessageBus {
 
     pushTask(command: AsyncTaskData) {
         command.status = "Pending";
-        command.taskId = RequestContext.createUniqueId();
+        command.taskId = Conventions.getRandomId();
         this.commandBus && this.commandBus.publishTask(command.domain, System.fullServiceName, command);
     }
 
     sendEvent(event: EventData) {
         event.inputSchema = null;
-        (<any>event).eventId = RequestContext.createUniqueId();
+        (<any>event).eventId = Conventions.getRandomId();
         this.eventBus.sendEvent(event.domain, event);
     }
 }

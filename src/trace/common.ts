@@ -1,5 +1,5 @@
 import { IRequestContext } from "../pipeline/common";
-
+import { IRequestTracker } from "../metrics/trackers/index";
 
 export enum SpanKind {
     Request,
@@ -8,17 +8,25 @@ export enum SpanKind {
     Event
 }
 
-export interface TrackerInfo {
+export interface TrackerId {
     correlationId?: string;
-    parentId: string;
+    parentId?: string;
     spanId: string;
 }
 
 export interface ISpanTracker {
-    trackAction(name: string, tags?: any);
+    context: IRequestContext;
+    id: TrackerId;
     durationInMs: number;
     now: number;
-    addTrackerTags(tags: any);
+    tracker: IRequestTracker;
+    kind: SpanKind;
+    trackAction(name: string, tags?: {[index:string]:string});
+    addTag(name: string, value: string);
+
+    addHttpRequestTags(uri:string, verb:string);
+    addProviderCommandTags(address:string, schema: string, tenant: string );
+    addServiceCommandTags(serviceName: string, serviceVersion:string);
     injectHeaders(headers: (name: string | any, value?: string) => any);
     /**
      * Log an error
@@ -51,35 +59,34 @@ export interface ISpanTracker {
     dispose();
 }
 
-export interface ISpanHasId {
-    id: TrackerInfo;
-}
-
-export interface ISpanRequestTracker extends ISpanTracker, ISpanHasId {
+export interface ISpanRequestTracker extends ISpanTracker {
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker;
 }
 
 export class DummySpanTracker implements ISpanRequestTracker {
     durationInMs: number = 0;
     now: number;
+    tracker: IRequestTracker;
+    kind: SpanKind;
 
-    get id(): TrackerInfo {
+    get id(): TrackerId {
         return {spanId: "0", parentId: "0"};
     }
 
+    constructor(public context: IRequestContext) { }
+    
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker {
         return this;
     }
-
-    trackAction(name: string, tags?: any) {
-
+    trackAction(name: string, tags?: {[index:string]:string}) {
     }
-    addTrackerTags(tags: any) {
-
+    addHttpRequestTags(uri:string, verb:string){}
+    addProviderCommandTags(address:string, schema: string, tenant: string ){}
+    addServiceCommandTags(serviceName: string, serviceVersion:string) {}
+    addTag(key: string, value: string) {
     }
     injectHeaders(headers: (name: any, value?: string)=> any) {
     }
-
     logError(error: Error, msg?: () => string) {
     }
     logInfo(msg: () => string) {
@@ -88,5 +95,4 @@ export class DummySpanTracker implements ISpanRequestTracker {
     }
     dispose() {
     }
-
 }

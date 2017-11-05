@@ -8,6 +8,7 @@ import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError } from '../pipeline/errors/applicationRequestError';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import * as ms from 'moment';
+import { TrackerId } from '../trace/common';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log
@@ -95,8 +96,11 @@ export class VulcainLogger implements Logger{
      * @memberOf VulcainLogger
      */
     verbose(context: IRequestContext|null, msg: ()=>string) {
-        if (VulcainLogger.enableInfo || System.isDevelopment)
+        if (VulcainLogger.enableInfo || System.isDevelopment) {
             this.info(context, msg);
+            return true;
+        }
+        return false;
     }
 
     logAction(context: IRequestContext, kind: EntryKind, message?: string) {
@@ -107,12 +111,19 @@ export class VulcainLogger implements Logger{
     }
 
     private prepareEntry(context: IRequestContext|null) {
-        let trackInfo = context && context.getTrackerId();
+        let trackerId: TrackerId;
+        let ctx = context;
+        while (ctx) {
+            if (ctx.tracker)
+                trackerId = ctx.tracker.id;
+            ctx = ctx.parent;
+        }
+
         if (System.isDevelopment) {
             return <LogEntry>{
-                correlationId: (trackInfo && trackInfo.correlationId) || undefined,
-                parentId: (trackInfo && trackInfo.parentId) || undefined,
-                traceId: (trackInfo && trackInfo.spanId) || undefined
+                correlationId: (trackerId && trackerId.correlationId) || undefined,
+                parentId: (trackerId && trackerId.parentId) || undefined,
+                traceId: (trackerId && trackerId.spanId) || undefined
             };
         }
 
@@ -122,9 +133,9 @@ export class VulcainLogger implements Logger{
             kind: "Log",
             source: this._hostname,
             timestamp: Date.now() * 1000, // TODO
-            correlationId: (trackInfo && trackInfo.correlationId) || undefined,
-            parentId: (trackInfo && trackInfo.parentId) || undefined,
-            traceId: (trackInfo && trackInfo.spanId) || undefined
+            correlationId: (trackerId && trackerId.correlationId) || undefined,
+            parentId: (trackerId && trackerId.parentId) || undefined,
+            traceId: (trackerId && trackerId.spanId) || undefined
         };
     }
 

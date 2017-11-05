@@ -63,7 +63,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         const url = ctx.request.url;
         const body = ctx.request.body;
 
-        ctx.requestData = <any>{  };
         ctx.requestData.body = body;
 
         // Try to get schema and action from path
@@ -149,7 +148,9 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         else if(id) {
             ctx.requestData.params.id = id;
         }
+
         ctx.requestData.vulcainVerb = ctx.requestData.schema ?  `${ctx.requestData.schema}.${ctx.requestData.action}` : ctx.requestData.action;
-        ctx.trackAction(ctx.requestData.vulcainVerb, {params: ctx.requestData.params});
+
+        ctx.tracker.trackAction(ctx.requestData.vulcainVerb, { params: ctx.requestData.params });
     }
 }

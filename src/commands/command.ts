@@ -40,7 +40,7 @@ export class HystrixCommand {
         command.container = container;
         this.command.context =  context.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
-        this.command.context.addTrackerTags({ hystrixProperties: this.properties.toString() });
+        this.command.context.tracker.addTag("hystrixProperties", this.properties.toString());
     }
 
     get circuitBreaker() {
@@ -105,7 +105,7 @@ export class HystrixCommand {
 
                         // Execution complete correctly
                         this.hystrixMetrics.markSuccess();
-                        this.hystrixMetrics.addExecutionTime(this.command.context.durationInMs);
+                        this.hystrixMetrics.addExecutionTime(this.command.context.tracker.durationInMs);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
 
@@ -140,7 +140,7 @@ export class HystrixCommand {
         }
         finally {
             if (recordTotalTime) {
-                this.recordTotalExecutionTime(this.command.context.durationInMs);
+                this.recordTotalExecutionTime(this.command.context.tracker.durationInMs);
             }
 
             this.command.context.dispose();
@@ -225,7 +225,7 @@ export class HystrixCommand {
         e = e || new Error("Unknow error");
 
         if (e instanceof BadRequestError) {
-            this.hystrixMetrics.markBadRequest(this.command.context.durationInMs);
+            this.hystrixMetrics.markBadRequest(this.command.context.tracker.durationInMs);
             this.command.context.logError(e);
             throw e;
         }

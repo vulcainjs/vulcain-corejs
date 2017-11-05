@@ -96,6 +96,18 @@ export class Application {
         process.on('unhandledRejection', (reason, p) => {
             System.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
         });
+
+        // Stop to receive inputs
+        process.once('SIGTERM', () => {
+            let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
+            if (eventBus) {
+                eventBus.stopReception();
+            }
+            let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+            if (commandBus) {
+                commandBus.stopReception();
+            }
+        });
     }
 
     /**

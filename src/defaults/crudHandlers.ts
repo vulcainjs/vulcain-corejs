@@ -11,8 +11,7 @@ import { System } from '../globals/system';
 
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     create(entity: any) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
-        this.context.trackAction("create");
+        this.setMetricTags("create", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         return this.provider.create( this.schema, entity);
     }
 
@@ -26,8 +25,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     async update(entity: any) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
-        this.context.trackAction("update");
+        this.setMetricTags("update", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.get(this.schema, entity[keyProperty]);
         if (!old)
@@ -50,15 +48,13 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     delete(entity: any) {
-        this.context.trackAction("delete");
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
+        this.setMetricTags("delete", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
         return this.provider.delete(this.schema, entity[keyProperty]);
     }
 
     async get(id: any) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
-        this.context.trackAction("get");
+        this.setMetricTags("get", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         let keyProperty = this.schema.getIdProperty();
         let query = {};
         query[keyProperty] = id;
@@ -73,8 +69,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     getAll(options: any) {
-        this.setMetricTags(this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
-        this.context.trackAction("getAll");
+        this.setMetricTags("getAll", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         return this.provider.getAll(this.schema, options);
     }
 

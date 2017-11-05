@@ -8,9 +8,10 @@ export /**
  * RabbitAdapter
  */
 class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
-    private domainHandlers = new Map<string, Function>();
+    private eventHandlers = new Map<string, { queue, domain: string, handlers: Function[], args: string }>();
     private channel: amqp.Channel;
     private initialized = false;
+    private ignoreInputMessages = false;
 
     constructor(private address: string) {
         if (!this.address)
@@ -42,6 +43,20 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
                 resolve(self);
             });
         });
+    }
+
+    pauseReception() {
+        this.ignoreInputMessages = true;
+    }
+
+    resumeReception() {
+        this.ignoreInputMessages = false;
+    }
+
+    stopReception() {
+        this.pauseReception();
+        this.eventHandlers.forEach(eh => { this.channel.unbindQueue(eh.queue, eh.domain, eh.args) });
+        this.eventHandlers.clear();
     }
 
     /**
@@ -78,22 +93,25 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
         // Since this method can be called many times for a same domain
         // all handlers are aggragated on only one binding
         domain = domain.toLowerCase() + "_events";
-        let handlers = this.domainHandlers.get[domain];
-        if (handlers) {
-            handlers.push(handler);
+        let handlerInfo = this.eventHandlers.get(domain);
+        if (handlerInfo) {
+            handlerInfo.handlers.push(handler);
             return;
         }
 
         // First time for this domain, create the binding
-        handlers = [handler];
-        this.domainHandlers.set(domain, handlers);
-
         this.channel.assertExchange(domain, 'fanout', { durable: false });
         this.channel.assertQueue('', { exclusive: true }).then(queue => {
+            const handlers = [handler];
+            this.eventHandlers.set(domain, {queue: queue.queue, domain, handlers, args: ''});
+
             self.channel.bindQueue(queue.queue, domain, '');
             self.channel.consume(queue.queue, async (msg) => {
+                if (this.ignoreInputMessages) return;
                 let obj = JSON.parse(msg.content.toString());
-                handlers.forEach(h=>h(obj));
+
+                let handlerInfo = self.eventHandlers.get(domain);
+                handlerInfo && handlerInfo.handlers.forEach(h => h(obj));
             }, { noAck: true });
         });
     }
@@ -129,16 +147,20 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     consumeTask(domain: string, serviceId: string, handler:  (event: RequestData) => void) {
         if (!this.channel)
             return;
+
         let self = this;
         domain = domain.toLowerCase();
 
         this.channel.assertExchange(domain, 'direct', { durable: false });
         this.channel.assertQueue(domain, { durable: true }).then(queue => {
+            this.eventHandlers.set("Async:" + domain, {queue: queue.queue, domain, handlers: [handler], args: serviceId});
+
             // Channel name = serviceId
             self.channel.bindQueue(queue.queue, domain, serviceId);
             self.channel.prefetch(1);
 
             self.channel.consume(queue.queue, async (msg) => {
+                if (this.ignoreInputMessages) return;
                 await handler(JSON.parse(msg.content.toString()));
                 self.channel.ack(msg);
             }, { noAck: false });

@@ -4,7 +4,6 @@ import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
 import { ISpanTracker } from '../trace/common';
 import { DefaultCRUDCommand } from '../defaults/crudHandlers';
-import { TrackerInfo } from '../trace/common';
 
 export enum Pipeline {
     Event,
@@ -25,14 +24,19 @@ export interface ICustomEvent {
     params?: any;
 }
 
-export interface IRequestContext extends ISpanTracker {
-    getTrackerId(): TrackerInfo;
+export interface IRequestContext {
+    /**
+     * Span tracker
+     */
+    tracker: ISpanTracker;
+
     /**
      * Current user or null
      *
      * @type {UserContext}
      */
     user: UserContext;
+
     /**
      * Scoped container
      *
@@ -57,7 +61,7 @@ export interface IRequestContext extends ISpanTracker {
     hostName: string;
     requestData: RequestData;
     request?: HttpRequest;
-
+    parent: IRequestContext;
     /**
      * Send custom event from current service
      *
@@ -75,6 +79,35 @@ export interface IRequestContext extends ISpanTracker {
      * @returns {ICommand} A command
      */
     getCommand<T = ICommand>(name: string, ...args): T;
+    /**
+      * Log an error
+      *
+      * @param {Error} error Error instance
+      * @param {string} [msg] Additional message
+      *
+      */
+    logError(error: Error, msg?: () => string);
+
+    /**
+     * Log a message info
+     *
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logInfo(msg: () => string);
+
+    /**
+     * Log a verbose message. Verbose message are enable by service configuration property : enableVerboseLog
+     *
+     * @param {any} context Current context
+     * @param {string} msg Message format (can include %s, %j ...)
+     * @param {...Array<string>} params Message parameters
+     *
+     */
+    logVerbose(msg: () => string);
+
+    dispose();
 }
 
 export interface RequestData {
