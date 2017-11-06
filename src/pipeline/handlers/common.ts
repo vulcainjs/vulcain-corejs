@@ -1,7 +1,6 @@
 import {IContainer} from '../../di/resolvers';
 import {LifeTime} from '../../di/annotations';
 import {Domain} from '../../schemas/schema';
-import { UserContext } from "../../security/securityContext";
 import { RequestData } from "../../pipeline/common";
 import { ValidationError } from "../../pipeline/errors/validationError";
 import { HttpResponse } from "../response";

@@ -2,12 +2,12 @@ const rest = require('unirest');
 import * as types from './types';
 import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
-import { IMetrics, MetricsConstant } from '../metrics/metrics';
+import { IMetrics } from '../instrumentations/metrics';
 import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
 import { IRequestContext } from "../pipeline/common";
-import { Span } from '../trace/span';
+import { Span } from '../instrumentations/span';
 
 
 export abstract class AbstractHttpCommand {

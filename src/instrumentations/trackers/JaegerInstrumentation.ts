@@ -4,7 +4,7 @@ import * as opentracing from 'opentracing';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 import { System } from '../../globals/system';
 
 export class JaegerInstrumentation implements IRequestTrackerFactory {

@@ -10,7 +10,7 @@ import { TimeoutError } from "../pipeline/errors/timeoutError";
 import { CommandRuntimeError } from "../pipeline/errors/commandRuntimeError";
 import { BadRequestError } from "../pipeline/errors/badRequestError";
 import { RequestContext, CommandRequest } from '../pipeline/requestContext';
-import { Span } from '../trace/span';
+import { Span } from '../instrumentations/span';
 
 export interface CommandInfo {
     commandKey: string;

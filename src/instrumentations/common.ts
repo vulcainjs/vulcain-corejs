@@ -1,5 +1,5 @@
 import { IRequestContext } from "../pipeline/common";
-import { IRequestTracker } from "../metrics/trackers/index";
+import { IRequestTracker } from "../instrumentations/trackers/index";
 
 export enum SpanKind {
     Request,
@@ -74,7 +74,7 @@ export class DummySpanTracker implements ISpanRequestTracker {
     }
 
     constructor(public context: IRequestContext) { }
-    
+
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker {
         return this;
     }

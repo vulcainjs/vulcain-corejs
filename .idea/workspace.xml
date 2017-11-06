@@ -1,21 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7b91a520-9c6c-42bc-bfe6-edf7553776d2" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gulpFile.js" afterPath="$PROJECT_DIR$/gulpFile.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/application.ts" afterPath="$PROJECT_DIR$/src/application.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/di/testContext.ts" afterPath="$PROJECT_DIR$/src/di/testContext.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/metrics/prometheusMetrics.ts" afterPath="$PROJECT_DIR$/src/metrics/prometheusMetrics.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/servers/abstractAdapter.ts" afterPath="$PROJECT_DIR$/src/servers/abstractAdapter.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/command/command.spec.ts" afterPath="$PROJECT_DIR$/test/command/command.spec.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/command/commands.ts" afterPath="$PROJECT_DIR$/test/command/commands.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/defaultHandlers/defaultHandlers.spec.ts" afterPath="$PROJECT_DIR$/test/defaultHandlers/defaultHandlers.spec.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/http/hystrixSSEStream.spec.ts" afterPath="$PROJECT_DIR$/test/http/hystrixSSEStream.spec.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/schema/bindData.ts" afterPath="$PROJECT_DIR$/test/schema/bindData.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/schema/sensibleData.ts" afterPath="$PROJECT_DIR$/test/schema/sensibleData.ts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/schema/validateData.ts" afterPath="$PROJECT_DIR$/test/schema/validateData.ts" />
-    </list>
+    <list default="true" id="7b91a520-9c6c-42bc-bfe6-edf7553776d2" name="Default" comment="" />
     <list id="5a366a1d-e652-44f6-9508-b20d4974cfb2" name="Local" comment="" />
     <ignored path="$PROJECT_DIR$/node_modules/" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -37,20 +23,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="system.ts" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/configurations/globals/system.ts">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="371">
-              <caret line="386" column="0" lean-forward="false" selection-start-line="386" selection-start-column="0" selection-end-line="386" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="counterBucket.spec.ts" pinned="false" current-in-tab="false">
+      <file leaf-file-name="counterBucket.spec.ts" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/metrics/counterBucket.spec.ts">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
+            <state relative-caret-position="345">
               <caret line="23" column="72" lean-forward="false" selection-start-line="23" selection-start-column="67" selection-end-line="23" selection-end-column="72" />
               <folding>
                 <element signature="e#0#71#0" expanded="true" />
@@ -181,6 +157,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -195,8 +173,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -209,6 +185,18 @@
     <property name="editor.config.accepted" value="true" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
     <property name="nodejs.mocha.mocha_node_package_dir" value="$PROJECT_DIR$/node_modules/mocha" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
   </component>
   <component name="RunManager" selected="Mocha.Test">
     <configuration default="false" name="compile-test" type="js.build_tools.gulp" factoryName="Gulp.js" temporary="true">
@@ -379,6 +367,7 @@
       <workItem from="1479975748378" duration="701000" />
       <workItem from="1480449474859" duration="36000" />
       <workItem from="1490526239334" duration="56000" />
+      <workItem from="1509904919668" duration="14000" />
     </task>
     <task id="LOCAL-00001" summary=" best management on createUrl with queryString and path">
       <created>1479917670352</created>
@@ -423,15 +412,13 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13631000" />
+    <option name="totallyTimeSpent" value="13645000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="821" extended-state="6" />
-    <editor active="false" />
     <layout>
-      <window_info id="Gulp" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2611111" sideWeight="0.4507979" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="TypeScript" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2611111" sideWeight="0.54920214" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Gulp" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2611111" sideWeight="0.45611703" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2611111" sideWeight="0.54388297" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33333334" sideWeight="0.5234313" order="9" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32978722" sideWeight="0.47021446" order="1" side_tool="false" content_ui="tabs" />
@@ -445,6 +432,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="TypeScript" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.49722" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -484,13 +472,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pipeline/abstractHandlers.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="22" column="0" lean-forward="true" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pipeline/abstractHandlers.ts" />
     <entry file="file://$PROJECT_DIR$/src/defaults/crudHandlers.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="104">
@@ -498,20 +480,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pipeline/actions.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-45">
-          <caret line="11" column="8" lean-forward="false" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/commands/command/commandProperties.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pipeline/actions.ts" />
+    <entry file="file://$PROJECT_DIR$/src/commands/command/commandProperties.ts" />
     <entry file="file://$PROJECT_DIR$/TODO.md" />
     <entry file="file://$PROJECT_DIR$/test/schema/validatorModel.spec.ts" />
     <entry file="file://$PROJECT_DIR$/.vscode/launch.json">
@@ -586,14 +556,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tsconfig.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/tsconfig.json" />
     <entry file="file://$PROJECT_DIR$/typings/index.d.ts" />
     <entry file="file://$PROJECT_DIR$/typings.json" />
     <entry file="file://$PROJECT_DIR$/.gitignore">
@@ -624,13 +587,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dist/schemas/schema.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-615">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/dist/schemas/schema.js" />
     <entry file="file://$PROJECT_DIR$/src/schemas/schema.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="186">
@@ -645,20 +602,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dist/schemas/standards.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="246">
-          <caret line="175" column="58" lean-forward="false" selection-start-line="175" selection-start-column="38" selection-end-line="175" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dist/schemas/schema.d.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="142">
-          <caret line="50" column="28" lean-forward="true" selection-start-line="50" selection-start-column="28" selection-end-line="50" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/dist/schemas/standards.js" />
+    <entry file="file://$PROJECT_DIR$/dist/schemas/schema.d.ts" />
     <entry file="file://$PROJECT_DIR$/src/schemas/validator.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="127">
@@ -666,24 +611,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dist/schemas/validator.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="57" lean-forward="false" selection-start-line="3" selection-start-column="57" selection-end-line="3" selection-end-column="57" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/dist/schemas/validator.js" />
     <entry file="file://$PROJECT_DIR$/src/auth/apiKeyStrategy.ts" />
     <entry file="file://$PROJECT_DIR$/src/auth/authenticationStrategies.ts" />
     <entry file="file://$PROJECT_DIR$/src/auth/bearerStrategy.ts" />
-    <entry file="file://$PROJECT_DIR$/dist/configurations/globals/system.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="308" column="11" lean-forward="false" selection-start-line="308" selection-start-column="11" selection-end-line="308" selection-end-column="11" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/dist/configurations/globals/system.js" />
     <entry file="file://$PROJECT_DIR$/package.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
@@ -722,13 +654,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dist/commands/metrics/hystrix/counterBucket.d.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="23" lean-forward="true" selection-start-line="4" selection-start-column="23" selection-end-line="4" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/dist/commands/metrics/hystrix/counterBucket.d.ts" />
     <entry file="file://$PROJECT_DIR$/src/commands/metrics/hystrix/counterBucket.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
@@ -739,7 +665,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/metrics/counterBucket.spec.ts">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
+        <state relative-caret-position="345">
           <caret line="23" column="72" lean-forward="false" selection-start-line="23" selection-start-column="67" selection-end-line="23" selection-end-column="72" />
           <folding>
             <element signature="e#0#71#0" expanded="true" />
@@ -749,13 +675,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/configurations/system.spec.ts" />
     <entry file="file://$PROJECT_DIR$/dist-test/configurations/system.spec.js" />
-    <entry file="file://$PROJECT_DIR$/src/configurations/globals/system.ts">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="371">
-          <caret line="386" column="0" lean-forward="false" selection-start-line="386" selection-start-column="0" selection-end-line="386" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/configurations/globals/system.ts" />
   </component>
 </project>

@@ -1,9 +1,8 @@
-import { SecurityContext, UserContext } from '../security/securityContext';
+import { UserContext } from '../security/securityContext';
 import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
-import { ISpanTracker } from '../trace/common';
-import { DefaultCRUDCommand } from '../defaults/crudHandlers';
+import { ISpanTracker } from '../instrumentations/common';
 
 export enum Pipeline {
     Event,

@@ -4,12 +4,12 @@ import { DefaultServiceNames } from '../di/annotations';
 import { IContainer } from '../di/resolvers';
 import { Domain } from '../schemas/schema';
 import { Inject } from '../di/annotations';
-import { IMetrics, MetricsConstant } from '../metrics/metrics';
+import { IMetrics } from '../instrumentations/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
 import { System } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
-import { Span } from '../trace/span';
+import { Span } from '../instrumentations/span';
 
 /**
  *

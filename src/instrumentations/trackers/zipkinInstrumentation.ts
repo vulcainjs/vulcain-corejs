@@ -5,7 +5,7 @@ import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import * as os from 'os';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 
 const {
     Annotation,

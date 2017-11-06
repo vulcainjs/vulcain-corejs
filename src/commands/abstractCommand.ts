@@ -2,10 +2,10 @@ import { ExecutionResult } from './executionResult';
 import { DefaultServiceNames } from '../di/annotations';
 import { IContainer, IInjectionNotification } from '../di/resolvers';
 import { Inject } from '../di/annotations';
-import { IMetrics, MetricsConstant } from '../metrics/metrics';
+import { IMetrics } from '../instrumentations/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
-import { Span } from '../trace/span';
+import { Span } from '../instrumentations/span';
 
 /**
  * command

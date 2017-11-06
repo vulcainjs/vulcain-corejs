@@ -3,9 +3,9 @@ import { System } from "../globals/system";
 import { IContainer } from '../di/resolvers';
 import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
-import { MetricsConstant, IMetrics, MetricsFactory } from "./../metrics/metrics";
+import { IMetrics, MetricsFactory } from "../instrumentations/metrics";
 import { Pipeline } from './../pipeline/common';
-import { IRequestTracker, IRequestTrackerFactory } from '../metrics/trackers/index';
+import { IRequestTracker, IRequestTrackerFactory } from '../instrumentations/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
 import { ISpanTracker, TrackerId, SpanKind } from "./common";
 
@@ -47,6 +47,8 @@ export class Span implements ISpanTracker {
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
+        this.tags["name"] = name;
+
         this.convertKind();
     }
 
@@ -69,23 +71,28 @@ export class Span implements ISpanTracker {
             this.addTag('correlationId', this._id.correlationId);
         }
 
+        this.tags["action"] = action;
         tags && this.addTags(tags);
         this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
 
         if (this.kind === SpanKind.Command) {
             this.addTag("span.kind", "client");
+            this.tags["type"] = "Command";
             this.logAction("BC", `Command: ${this.name}`);
         }
         else if (this.kind === SpanKind.Request) {
             this.addTag("span.kind", "server");
+            this.tags["type"] = "Service";
             this.logAction("RR", `Request: ${this.name}`);
         }
         else if (this.kind === SpanKind.Task) {
             this.addTag("span.kind", "server");
+            this.tags["type"] = "Task";
             this.logAction("RT", `Async task: ${this.name}`);
         }
         else if (this.kind === SpanKind.Event) {
             this.addTag("span.kind", "consumer");
+            this.tags["type"] = "Event";
             this.logAction("RE", `Event: ${this.name}`);
         }
     }
@@ -136,9 +143,9 @@ export class Span implements ISpanTracker {
     }
 
     endCommand() {
-        this.metrics.timing(this.name + MetricsConstant.duration, this.durationInMicroseconds, this.tags);
+        this.metrics.timing(System.domainName + "_command_duration_ms", this.durationInMicroseconds, this.tags);
         if (this.error)
-            this.metrics.increment(this.name + MetricsConstant.failure, this.tags);
+            this.metrics.increment(System.domainName + "_command_failures", this.tags);
 
         // End Command trace
         this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
@@ -146,28 +153,18 @@ export class Span implements ISpanTracker {
 
     private endRequest() {
         let hasError = false;
-        let prefix: string = "";
 
         let value = this.context.response && this.context.response.content;
         hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
 
-        if (this.context.requestData.schema) {
-            prefix = this.context.requestData.schema.toLowerCase() + "_" + this.context.requestData.action.toLowerCase();
-        }
-        else if (this.context.requestData.action) {
-            prefix = this.context.requestData.action.toLowerCase();
-        }
-
         const duration = this.durationInMicroseconds;
 
         // Duration
-        this.metrics.timing(prefix + MetricsConstant.duration, duration);
-        this.metrics.timing(MetricsConstant.allRequestsDuration, duration);
+        this.metrics.timing(System.domainName + "_service_duration_ms", duration, this.tags);
 
         // Failure
         if (hasError) {
-            this.metrics.increment(prefix + MetricsConstant.failure);
-            this.metrics.increment(MetricsConstant.allRequestsFailure);
+            this.metrics.increment(System.domainName + "_service_failures", this.tags);
         }
 
         // Always remove userContext
@@ -212,7 +209,7 @@ export class Span implements ISpanTracker {
                 if (typeof value === "object") {
                     value = JSON.stringify(value);
                 }
-                this.tags[name] = value.replace(/[:|,\.?&]/g, '-');
+                this.tags[name] = value;
                 this._tracker && this._tracker.addTag(name, value);
             }
             catch (e) {

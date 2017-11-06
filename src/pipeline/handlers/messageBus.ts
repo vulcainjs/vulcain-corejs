@@ -4,7 +4,6 @@ import {DefaultServiceNames} from '../../di/annotations';
 import * as RX from 'rxjs';
 import { System } from '../../globals/system';
 import { RequestData } from "../../pipeline/common";
-import { RequestContext } from "../../pipeline/requestContext";
 import { CommonMetadata } from "./common";
 import { UserContextData } from "../../security/securityContext";
 import { Conventions } from '../../utils/conventions';

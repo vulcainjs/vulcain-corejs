@@ -2,7 +2,7 @@ import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
 import { System } from './../globals/system';
 import { DynamicConfiguration } from './../configurations/dynamicConfiguration';
-import { IMetrics, MetricsConstant } from '../metrics/metrics';
+import { IMetrics } from '../instrumentations/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IServiceResolver } from '../di/serviceResolver';
 import * as types from './types';
@@ -15,7 +15,7 @@ import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 import { IAuthenticationStrategy } from "../security/securityContext";
 import { QueryResult } from "../pipeline/handlers/query";
 import { ActionResult } from "../pipeline/handlers/actions";
-import { Span } from '../trace/span';
+import { Span } from '../instrumentations/span';
 import { TokenService } from '../security/services/tokenService';
 
 

@@ -1,16 +1,12 @@
-import { Domain, Schema, SchemaDescription as schDesc } from '../../schemas/schema';
+import { Domain, SchemaDescription as schDesc } from '../../schemas/schema';
 import { ActionMetadata } from './actions';
 import { LifeTime, Inject, DefaultServiceNames } from '../../di/annotations';
 import { Model } from '../../schemas/annotations';
 import { IContainer } from '../../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata } from './common';
 import { QueryActionMetadata } from './query';
-import { RuntimeError } from './../errors/runtimeError';
 import { System } from '../../globals/system';
-import * as Path from 'path';
-import { BadRequestError } from '../errors/badRequestError';
 import { ApplicationError } from '../errors/applicationRequestError';
-import { AbstractHandler } from "./abstractHandlers";
 import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
 
 export interface HandlerItem {

@@ -4,7 +4,7 @@
 import { ZipkinInstrumentation } from './zipkinInstrumentation';
 import { IContainer } from '../../di/resolvers';
 import { IRequestContext } from "../../pipeline/common";
-import { TrackerId, SpanKind, ISpanTracker } from '../../trace/common';
+import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 import { JaegerInstrumentation } from './JaegerInstrumentation';
 
 export interface IRequestTracker {

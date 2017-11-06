@@ -1,9 +1,7 @@
-import { RequestContext, VulcainHeaderNames } from "../requestContext";
+import { RequestContext } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
 import { BadRequestError } from "../errors/badRequestError";
 import { Conventions } from "../../utils/conventions";
-import { DefaultServiceNames } from "../../di/annotations";
-import { VulcainLogger } from "../../log/vulcainLogger";
 import { ApplicationError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
 import { System } from "../../globals/system";

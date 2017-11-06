@@ -5,7 +5,6 @@ import { Conventions } from '../utils/conventions';
 import http = require('http');
 import url = require('url');
 import Router = require('router');
-import { DefaultServiceNames } from '../index';
 import { ISerializer } from "./serializers/serializer";
 import { DefaultSerializer } from "./serializers/defaultSerializer";
 

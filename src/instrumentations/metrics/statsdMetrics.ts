@@ -1,8 +1,8 @@
-import { Conventions } from '../utils/conventions';
+import { Conventions } from '../../utils/conventions';
 const Statsd = require("statsd-client");
-import { System } from './../globals/system';
-import { IMetrics, MetricsConstant } from './metrics';
-import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
+import { System } from '../../globals/system';
+import { IMetrics } from '../metrics';
+import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 
 /**
  * Default metrics adapter

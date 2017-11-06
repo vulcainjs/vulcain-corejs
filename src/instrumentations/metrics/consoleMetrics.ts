@@ -1,5 +1,5 @@
-import { System } from '../globals/system';
-import { IMetrics } from './metrics';
+import { System } from '../../globals/system';
+import { IMetrics } from '../metrics';
 
 /**
  * Metrics adapter for testing

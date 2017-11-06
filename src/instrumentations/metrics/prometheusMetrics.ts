@@ -1,18 +1,15 @@
-import { System } from './../globals/system';
-import { IMetrics, MetricsConstant } from './metrics';
+import { System } from '../../globals/system';
+import { IMetrics } from '../metrics';
 import * as Prometheus from 'prom-client';
-import { IContainer } from "../di/resolvers";
-import { HttpRequest } from "../pipeline/vulcainPipeline";
-import { HttpResponse } from "../pipeline/response";
-import { DefaultServiceNames } from '../di/annotations';
-import { VulcainLogger } from '../log/vulcainLogger';
+import { IContainer } from "../../di/resolvers";
+import { HttpRequest } from "../../pipeline/vulcainPipeline";
+import { HttpResponse } from "../../pipeline/response";
+import { DefaultServiceNames } from '../../di/annotations';
+import { VulcainLogger } from '../../log/vulcainLogger';
 
 export class PrometheusMetrics implements IMetrics {
-    private tags: any;
-    private static Empty = {};
 
     constructor(private container: IContainer) {
-        this.tags = this.encodeTags({ service: System.serviceName, version: System.serviceVersion });
 
         container.registerEndpoint( '/metrics', (req: HttpRequest) => {
             let res = new HttpResponse(Prometheus.register.metrics());
@@ -22,19 +19,15 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     private encodeTags(tags: { [key: string] : string }): any {
-        if (!tags)
-            return PrometheusMetrics.Empty;
-
-        let result = {};
+        let result = { service: System.serviceName, version: System.serviceVersion }
         Object
             .keys(tags)
-            .forEach(key => result[key.replace(/[:|,\.?&]/g, '_')] = tags[key]);
+            .forEach(key => result[key.replace(/[^a-zA-Z_]/g, '_')] = tags[key]);
         return result;
     }
 
     increment(metric: string, customTags?: any, delta = 1) {
-        metric = 'vulcain_' + metric.replace(/[:|,\.?&-]/g, '_');
-        let labels = Object.assign({}, this.tags, this.encodeTags(customTags));
+        let labels = this.encodeTags(customTags);
 
         let counter:Prometheus.Counter = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
@@ -50,8 +43,7 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     timing(metric: string, duration: number, customTags?: any) {
-        metric = 'vulcain_' + metric.replace(/[:|,\.?&-]/g, '_'); // TODO
-        let labels = Object.assign({}, this.tags, this.encodeTags(customTags));
+        let labels = this.encodeTags(customTags);
         let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
             counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels) });

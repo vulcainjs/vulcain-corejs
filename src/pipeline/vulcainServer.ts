@@ -1,20 +1,13 @@
 import { IContainer } from '../di/resolvers';
 import { Conventions } from '../utils/conventions';
-import { Pipeline, IRequestContext, RequestData } from './common';
-import { RequestContext, VulcainHeaderNames } from './requestContext';
 import { DefaultServiceNames } from '../di/annotations';
-import { IMetrics, MetricsConstant } from '../metrics/metrics';
-import { VulcainLogger } from '../log/vulcainLogger';
-import http = require('http');
-import url = require('url');
+import { IMetrics } from '../instrumentations/metrics';
 import { HystrixSSEStream as hystrixStream } from '../commands/http/hystrixSSEStream';
 import { System } from "../globals/system";
-import { VulcainPipeline, HttpRequest } from "./vulcainPipeline";
+import { VulcainPipeline } from "./vulcainPipeline";
 import { NormalizeDataMiddleware } from "./middlewares/normalizeDataMiddleware";
 import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware";
 import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
-import { HttpResponse } from "./response";
-import Router = require('router');
 import { IServerAdapter, HttpAdapter } from './serverAdapter';
 
 export class VulcainServer {

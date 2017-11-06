@@ -1,4 +1,4 @@
-import { RequestContext, VulcainHeaderNames } from "../requestContext";
+import { RequestContext } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
 import { System } from "../../globals/system";
 import { ActionMetadata, CommandManager } from "../handlers/actions";

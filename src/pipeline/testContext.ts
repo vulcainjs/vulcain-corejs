@@ -1,8 +1,7 @@
 import { System } from '../globals/system';
-import { ConfigurationManager } from '../configurations/configurationManager';
 import { Domain } from '../schemas/schema';
 import { Preloader } from '../preloader';
-import { ConsoleMetrics } from "../metrics/consoleMetrics";
+import { ConsoleMetrics } from "../instrumentations/metrics/consoleMetrics";
 import { IContainer } from "../di/resolvers";
 import { UserContext } from "../security/securityContext";
 import { Container } from "../di/containers";

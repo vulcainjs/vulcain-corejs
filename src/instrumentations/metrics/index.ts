@@ -1,17 +1,8 @@
 //import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
 import { StatsdMetrics } from './statsdMetrics';
 import { PrometheusMetrics } from './prometheusMetrics';
-import { IContainer } from '../di/resolvers';
-import { DefaultServiceNames } from "./../di/annotations";
-
-export class MetricsConstant {
-    static duration = "_duration";
-    static failure = "_failure";
-    static total = "_total";
-    static allRequestsFailure = "requests_failure";
-    static allRequestsDuration = "requests_duration";
-    static allRequestsTotal = "requests_total";
-}
+import { IContainer } from '../../di/resolvers';
+import { DefaultServiceNames } from "../../di/annotations";
 
 /**
  * Metrics adapter interface

@@ -2,12 +2,8 @@ import { MessageBus, EventNotificationMode, ConsumeEventMetadata, EventData } fr
 import { IContainer } from '../../di/resolvers';
 import { Domain } from '../../schemas/schema';
 import { DefaultServiceNames } from '../../di/annotations';
-import { VulcainLogger } from '../../log/vulcainLogger';
-import { HandlerFactory, CommonMetadata, ErrorResponse, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
-import * as os from 'os';
-import * as RX from 'rxjs';
+import { HandlerFactory, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import { EventHandlerFactory } from './eventHandlerFactory';
-import { Conventions } from '../../utils/conventions';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { System } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";

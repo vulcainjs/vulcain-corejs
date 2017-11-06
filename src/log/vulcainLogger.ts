@@ -8,7 +8,7 @@ import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError } from '../pipeline/errors/applicationRequestError';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import * as ms from 'moment';
-import { TrackerId } from '../trace/common';
+import { TrackerId } from '../instrumentations/common';
 
 export type EntryKind = "RR"  // receive request
     | "Log"     // normal log

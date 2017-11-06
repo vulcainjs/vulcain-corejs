@@ -26,10 +26,10 @@ export {IAuthorizationPolicy} from './security/authorizationPolicy'
 // Core
 export * from './application'
 export { Conventions } from './utils/conventions';
-export { IMetrics } from './metrics/metrics';
+export { IMetrics } from './instrumentations/metrics';
 export { IMockManager } from './mocks/imockManager';
 export { MockManager } from './mocks/mockManager';
-export { IRequestTracker } from './metrics/trackers/index';
+export { IRequestTracker } from './instrumentations/trackers/index';
 export { ServerAdapter } from './pipeline/serverAdapter';
 
 // Pipeline
@@ -48,7 +48,7 @@ export { HttpRequest } from './pipeline/vulcainPipeline';
 export { Logger } from './log/logger'
 export { UserContextData, } from './security/securityContext'
 export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
-export { TrackerId } from './trace/common';
+export { TrackerId } from './instrumentations/common';
 
 // Bus adapter
 export * from './bus/busAdapter'

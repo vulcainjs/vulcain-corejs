@@ -1,12 +1,10 @@
 import { IContainer } from '../../di/resolvers';
-import { Inject, DefaultServiceNames, IScopedComponent } from '../../di/annotations';
+import { Inject, IScopedComponent } from '../../di/annotations';
 import 'reflect-metadata';
 import { RequestContext } from "../../pipeline/requestContext";
 import { Pipeline, IRequestContext } from "../../pipeline/common";
-import { ICommand } from "../../commands/abstractCommand";
 import { EventNotificationMode, EventData } from "./messageBus";
 const symMetadata = Symbol.for("handler:metadata");
-const symActions = Symbol.for("handler:actions");
 
 export interface IActionMetadata {
     eventMode?: EventNotificationMode;
