@@ -4,7 +4,7 @@ import { Command } from '../../dist/commands/commandFactory';
 @Command()
 export class TestCommand extends AbstractCommand<any> {
     foo(args:string) {
-        this.setMetricsTags({"test":"true"});
+        this.setMetricsTags("verb", {"test":"true"});
         return Promise.resolve<string>(args);
     }
 }
@@ -12,7 +12,7 @@ export class TestCommand extends AbstractCommand<any> {
 @Command({ executionTimeoutInMilliseconds: 100 })
 export class TestCommandTimeout extends AbstractCommand<any> {
     runAsync(args) {
-        this.setMetricsTags({"test":"true"});
+        this.setMetricsTags("verb", {"test":"true"});
         return new Promise((resolve, reject) => { setTimeout(resolve, 300); });
     }
 }
@@ -20,7 +20,7 @@ export class TestCommandTimeout extends AbstractCommand<any> {
 @Command({ executionTimeoutInMilliseconds: 100 })
 export class TestCommandFallback extends AbstractCommand<any> {
     runAsync(args) {
-        this.setMetricsTags({"test":"true"});
+        this.setMetricsTags("verb", {"test":"true"});
         return new Promise((resolve, reject) => {
             throw new Error("rejected");
         });
@@ -34,7 +34,7 @@ export class TestCommandFallback extends AbstractCommand<any> {
 @Command({ executionTimeoutInMilliseconds: 100, circuitBreakerForceOpened: true })
 export class TestCommandCircuitOpen extends AbstractCommand<any> {
     runAsync(args) {
-        this.setMetricsTags({test:"true"});
+        this.setMetricsTags("verb", {test:"true"});
         return Promise.resolve(args);
     }
 
