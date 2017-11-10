@@ -9,6 +9,7 @@ import { IRequestTracker, IRequestTrackerFactory } from '../instrumentations/tra
 import { EntryKind } from "../log/vulcainLogger";
 import { ISpanTracker, TrackerId, SpanKind } from "./common";
 
+// Metrics use the RED method https://www.weave.works/blog/prometheus-and-kubernetes-monitoring-your-applications/
 export class Span implements ISpanTracker {
     private _logger: Logger;
     private tags: { [name: string]: string } = {};
@@ -31,7 +32,7 @@ export class Span implements ISpanTracker {
     private constructor(public context: RequestContext, public kind: SpanKind, private name: string, parent: TrackerId | ISpanTracker) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
-        this.startTime = Date.now() * 1000;
+        this.startTime = Date.now();
         this.startTick = process.hrtime();
 
         let parentId = <TrackerId>parent;
@@ -48,6 +49,7 @@ export class Span implements ISpanTracker {
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.tags["name"] = name;
+        this.tags["domain"] = System.domainName;
 
         this.convertKind();
     }
@@ -63,6 +65,7 @@ export class Span implements ISpanTracker {
     trackAction(action: string, tags?: {[index:string]:string}) {
         if (!action || action.startsWith('_'))
             return;
+
         this.action = action;
 
         let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
@@ -129,6 +132,8 @@ export class Span implements ISpanTracker {
     }
 
     dispose() {
+        this.tags["tenant"] = this.context.user.tenant;
+
         if (this.kind === SpanKind.Request)
             this.endRequest();
         else
@@ -143,9 +148,8 @@ export class Span implements ISpanTracker {
     }
 
     endCommand() {
-        this.metrics.timing(System.domainName + "_command_duration_ms", this.durationInMicroseconds, this.tags);
-        if (this.error)
-            this.metrics.increment(System.domainName + "_command_failures", this.tags);
+        this.tags["error"] = this.error ? "true" : "false";
+        this.metrics.timing("vulcain_command_duration_seconds", this.durationInMs/1000, this.tags);
 
         // End Command trace
         this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
@@ -157,15 +161,11 @@ export class Span implements ISpanTracker {
         let value = this.context.response && this.context.response.content;
         hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
 
-        const duration = this.durationInMicroseconds;
+        const duration = this.durationInMs;
 
         // Duration
-        this.metrics.timing(System.domainName + "_service_duration_ms", duration, this.tags);
-
-        // Failure
-        if (hasError) {
-            this.metrics.increment(System.domainName + "_service_failures", this.tags);
-        }
+        this.tags["error"] = hasError ? "true" : "false";
+        this.metrics.timing("vulcain_service_duration_seconds", duration/1000, this.tags);
 
         // Always remove userContext
         if (typeof (value) === "object") {
@@ -180,8 +180,6 @@ export class Span implements ISpanTracker {
         else if (this.kind === SpanKind.Event) {
             this.logAction("EE", `Event ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
         }
-
-        //        metricsInfo.tracer && metricsInfo.tracer.finish(this.context.response);
     }
 
     addHttpRequestTags(uri: string, verb: string) {
@@ -278,14 +276,10 @@ export class Span implements ISpanTracker {
     }
 
     get now() {
-        return this.startTime + this.durationInMicroseconds;
+        return this.startTime + this.durationInMs;
     }
 
     get durationInMs() {
-        return this.durationInMicroseconds / 1000;
-    }
-
-    private get durationInMicroseconds() {
         const hrtime = process.hrtime(this.startTick);
         const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
         return elapsedMicros;

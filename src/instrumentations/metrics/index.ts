@@ -11,6 +11,7 @@ import { DefaultServiceNames } from "../../di/annotations";
  * @interface IMetrics
  */
 export interface IMetrics {
+    gauge(metric: string, value: number, customTags?: any);
     /**
      * Increment a gauge
      *
@@ -19,7 +20,7 @@ export interface IMetrics {
      *
      * @memberOf IMetrics
      */
-    increment(metric: string, customTags?: any, delta?: number): void;
+    count(metric: string, customTags?: any, delta?: number): void;
 
     /**
      * Set a duration
