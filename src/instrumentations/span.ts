@@ -149,7 +149,7 @@ export class Span implements ISpanTracker {
 
     endCommand() {
         this.tags["error"] = this.error ? "true" : "false";
-        this.metrics.timing("vulcain_command_duration_seconds", this.durationInMs/1000, this.tags);
+        this.metrics.timing("vulcain_command_duration_ms", this.durationInMs, this.tags);
 
         // End Command trace
         this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
@@ -165,12 +165,8 @@ export class Span implements ISpanTracker {
 
         // Duration
         this.tags["error"] = hasError ? "true" : "false";
-        this.metrics.timing("vulcain_service_duration_seconds", duration/1000, this.tags);
+        this.metrics.timing("vulcain_service_duration_ms", duration, this.tags);
 
-        // Always remove userContext
-        if (typeof (value) === "object") {
-            value.userContext = undefined; // TODO ???
-        }
         if (this.kind === SpanKind.Request) {
             this.logAction("ER", `End request status: ${(this.context.response  && this.context.response.statusCode) || 200}`);
         }

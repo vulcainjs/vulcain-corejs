@@ -18,8 +18,12 @@ export class ConsoleMetrics implements IMetrics {
     private log(msg: string) {
     }
 
-    increment(metric: string, customTags?: any, delta?: number) {
-        this.log(`METRICS: incr    ${metric + this.tags + customTags} : ${delta||1}`);
+    gauge(metric: string, customTags?: any, delta?: number) {
+        this.log(`METRICS: gauge    ${metric + this.tags + customTags} : ${delta || 1}`);
+    }
+
+    count(metric: string, customTags?: any, delta?: number) {
+        this.log(`METRICS: counter    ${metric + this.tags + customTags} : ${delta||1}`);
     }
 
     timing(metric:string, duration:number, customTags?: string) {
