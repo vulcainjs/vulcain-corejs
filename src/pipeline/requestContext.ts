@@ -19,7 +19,7 @@ export class VulcainHeaderNames {
     static X_VULCAIN_PARENT_ID = "x-vulcain-parent-id";
     static X_VULCAIN_SERVICE_NAME = "x-vulcain-service-name";
     static X_VULCAIN_SERVICE_VERSION = "x-vulcain-service-version";
-    static X_VULCAIN_ENV = "x-vulcain-env";
+    static X_VULCAIN_STAGE = "x-vulcain-stage";
     static X_VULCAIN_CONTAINER = "x-vulcain-container";
     static X_VULCAIN_PUBLICPATH = "x-vulcain-publicpath";
     static X_VULCAIN_USE_STUB = 'x-vulcain-use-stub-session';

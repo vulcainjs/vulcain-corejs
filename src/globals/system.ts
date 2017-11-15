@@ -24,7 +24,6 @@ export class System {
     private static _vulcainServer: string;
     private static _vulcainToken: string;
     private static logger: VulcainLogger;
-    private static _environment: string;
     private static _serviceName: string;
     private static _serviceVersion: string;
     private static _domainName: string;
@@ -36,10 +35,11 @@ export class System {
     public static get settings() {
         if (!System._settings) {
             System._settings = new Settings();
-            System.log.info(null, () => `Running in ${System._settings.environmentMode} mode`);
+            System.log.info(null, () => `Running in ${System._settings.stage} staging environment.`);
         }
         return System._settings;
     }
+
     /**
      * Get the application manifest when the application runs in developement mode
      *
@@ -185,24 +185,15 @@ export class System {
     }
 
     /**
-     * Get current environment
+     * Get current stage
      *
      * @readonly
      * @static
      *
      * @memberOf System
      */
-    static get environment() {
-        if (!System._environment) {
-            let env = process.env[Conventions.instance.ENV_VULCAIN_ENV];
-            if (env)
-                System._environment = env;
-            else {
-                System.log.info(null, ()=> "Environment variable " + Conventions.instance.ENV_VULCAIN_ENV + " is not defined. Using 'dev' by default.");
-                System._environment = "dev";
-            }
-        }
-        return System._environment;
+    static get stagingEnvironment() {
+        return System.settings.stage;
     }
 
     /**

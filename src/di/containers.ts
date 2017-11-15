@@ -71,8 +71,15 @@ export class Container implements IContainer {
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
             this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
 
-            // Try to initalize Mongo provider if there is a 'mongo' environment variable
-            this.useMongoProvider();
+            // Try to initalize Rabbit provider if there is a 'mongo' environment variable
+            let rabbitAddress = DynamicConfiguration.getPropertyValue<string>("rabbit");
+            if(rabbitAddress)
+                this.useRabbitBusAdapter(rabbitAddress);
+
+                // Try to initalize Mongo provider if there is a 'mongo' environment variable
+            let mongoAddress = DynamicConfiguration.getPropertyValue<string>("mongo");
+            if(mongoAddress)
+                this.useMongoProvider(mongoAddress);
         }
     }
 
@@ -118,7 +125,7 @@ export class Container implements IContainer {
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address;
         if (!uri) {
-           // System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
+            System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("amqp://")) {
@@ -140,7 +147,7 @@ export class Container implements IContainer {
     useMongoProvider(address?: string, mongoOptions?) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
         if (!uri) {
-//                System.log.info(null, () => "no value found for mongo address. Ignore adapter");
+            System.log.info(null, () => "no value found for mongo address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("mongodb://")) {

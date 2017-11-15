@@ -12,13 +12,14 @@ import * as Path from 'path';
 import { System } from './system';
 
 /**
- * Static class providing service helper methods
+ * Manage local file settings
  *
- * @export
- * @class System
+ * {
+ *
+ * }
  */
 export class Settings {
-    private _environmentMode: "local" | "test" | "production";
+    private _stage: "local" | "test" | "production";
     private _stubs: { [name: string]: string };
     private _config: { [name: string]: string };
     private _alias: { [name: string]: string };
@@ -27,8 +28,8 @@ export class Settings {
         this.readContext();
     }
 
-    public get environmentMode() {
-        return this._environmentMode;
+    public get stage() {
+        return this._stage;
     }
 
     public get stubSessions() {
@@ -46,7 +47,7 @@ export class Settings {
                 return;
             fs.writeFileSync(path, JSON.stringify(
                 {
-                    mode: this._environmentMode,
+                    mode: this._stage,
                     alias: this._alias,
                     config: this._config,
                     stubs: this._stubs
@@ -70,8 +71,8 @@ export class Settings {
         this._stubs = {};
 
         // Default mode is local
-        this._environmentMode = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE] || "local";
-        if (this._environmentMode === "production") {
+        this._stage = <any>process.env[Conventions.instance.ENV_VULCAIN_STAGE] || "local";
+        if (this._stage === "production") {
             // Settings are ignored in production
             return;
         }
@@ -85,7 +86,7 @@ export class Settings {
                     this._alias = data.alias || this._alias;
                     this._config = data.config || this._config;
                     this._stubs = data.stubs || this._stubs;
-                    this._environmentMode = (data.mode || this._environmentMode).toLowerCase();
+                    this._stage = (data.mode || this._stage).toLowerCase();
                 }
             }
         }
@@ -93,14 +94,13 @@ export class Settings {
             throw new Error("VULCAIN MANIFEST : Loading error");
         }
 
-        if ( this._environmentMode !== "test" && this._environmentMode !== "local") {
-            throw new Error("Invalid environment mode. Should be 'production', 'test' or 'local'");
+        if ( this._stage !== "test" && this._stage !== "local") {
+            throw new Error("Invalid staging environment. Should be 'production', 'test' or 'local'");
         }
     }
 
     /**
-     * Check if the service is running in local mode (on developper desktop)
-     * by checking if a '.vulcain' file exists in the working directory
+     * Check if the service is running in local mode
      *
      * @readonly
      * @static
@@ -108,7 +108,7 @@ export class Settings {
      * @memberOf System
      */
     get isDevelopment() {
-        return this._environmentMode === "local";
+        return this._stage === "local";
     }
 
     /**
@@ -120,7 +120,7 @@ export class Settings {
      * @memberOf System
      */
     get isTestEnvironnment() {
-        return this.isDevelopment || this._environmentMode === "test";
+        return this.isDevelopment || this._stage === "test";
     }
 
     /**

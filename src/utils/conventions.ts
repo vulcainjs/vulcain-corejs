@@ -69,11 +69,10 @@ export class Conventions {
     TOKEN_ISSUER = "vulcainTokenIssuer";
     TOKEN_EXPIRATION = "vulcainTokenExpiration";
     ENV_VULCAIN_TENANT = "VULCAIN_TENANT";
-    ENV_VULCAIN_ENV = "VULCAIN_ENV";            // staging, prod, test...
     ENV_VULCAIN_DOMAIN = "VULCAIN_DOMAIN";
     ENV_SERVICE_NAME = "VULCAIN_SERVICE_NAME";
     ENV_SERVICE_VERSION = "VULCAIN_SERVICE_VERSION";
-    ENV_VULCAIN_ENV_MODE = "VULCAIN_ENV_MODE"; // 'production', 'test' or 'local'
+    ENV_VULCAIN_STAGE = "VULCAIN_STAGE"; // 'production', 'test' or 'local'
 
     hystrix = {
         "hystrix.health.snapshot.validityInMilliseconds": 500,
