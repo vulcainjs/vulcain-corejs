@@ -38,7 +38,7 @@ export class StatsdMetrics implements IMetrics {
         return ',' + Object.keys(tags).map(key => key + '=' + tags[key].replace(/[:|,]/g, '-')).join(',');
     }
 
-    increment(metric: string, customTags?: any, delta?: number) {
+    count(metric: string, customTags?: any, delta?: number) {
         const tags = this.tags + this.encodeTags(customTags);
         this.statsd && this.statsd.increment(metric.toLowerCase() + tags, delta);
     }

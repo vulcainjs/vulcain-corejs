@@ -6,7 +6,7 @@ import { VulcainManifest } from './manifest';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IContainer } from '../di/resolvers';
-import { IMockManager, DummyMockManager } from "../mocks/imockManager";
+import { IStubManager, DummyStubManager } from "../stubs/istubManager";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { Files } from '../utils/files';
@@ -30,7 +30,7 @@ export class System {
     private static _domainName: string;
     private static crypter: CryptoHelper;
     private static _manifest: VulcainManifest;
-    private static _mocksManager: IMockManager;
+    private static _stubManager: IStubManager;
     static defaultDomainName: string;
 
     public static get settings() {
@@ -104,17 +104,17 @@ export class System {
         return process.env[Conventions.instance.ENV_VULCAIN_TENANT] || 'vulcain';
     }
 
-    static getMocksManager(container: IContainer) {
-        if (!System._mocksManager) {
+    static getStubManager(container: IContainer): IStubManager {
+        if (!System._stubManager) {
             if (System.isTestEnvironnment) {
-                let manager = System._mocksManager = container.get<IMockManager>(DefaultServiceNames.MockManager);
-                manager.initialize && manager.initialize(System.settings.mockSessions, System.settings.saveMocks.bind(System.settings));
+                let manager = System._stubManager = container.get<IStubManager>(DefaultServiceNames.StubManager);
+                manager.initialize && manager.initialize(System.settings.stubSessions, System.settings.saveStubSessions.bind(System.settings));
             }
             else {
-                System._mocksManager = new DummyMockManager();
+                System._stubManager = new DummyStubManager();
             }
         }
-        return System._mocksManager; // TODO as service
+        return System._stubManager; // TODO as service
     }
 
     /**

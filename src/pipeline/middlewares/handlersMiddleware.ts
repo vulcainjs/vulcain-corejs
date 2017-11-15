@@ -38,13 +38,13 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
         // Process handler
         let result: HttpResponse;
-        const mocks = System.getMocksManager(ctx.container);
+        const stubs = System.getStubManager(ctx.container);
         let params = Object.assign({}, command.params || {});
         let metadata = <ActionMetadata>info.metadata;
         let useMockResult = false;
-        result = mocks.enabled && await mocks.tryGetMockValue(ctx, metadata, info.verb, params);
+        result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
 
-        if (!mocks.enabled || result === undefined) {
+        if (!stubs.enabled || result === undefined) {
             result = await manager.run(command, ctx);
         }
         else {
@@ -57,7 +57,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
         ctx.response = result;
 
-        !useMockResult && mocks.enabled && await mocks.saveMockValue(ctx, metadata, info.verb, params, result);
+        !useMockResult && stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
         return super.invoke(ctx);
     }
 }

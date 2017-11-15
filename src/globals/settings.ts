@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IContainer } from '../di/resolvers';
-import { IMockManager, DummyMockManager } from "../mocks/imockManager";
+import { IStubManager, DummyStubManager } from "../stubs/istubManager";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { Files } from '../utils/files';
@@ -19,7 +19,7 @@ import { System } from './system';
  */
 export class Settings {
     private _environmentMode: "local" | "test" | "production";
-    private _mocks: { [name: string]: string };
+    private _stubs: { [name: string]: string };
     private _config: { [name: string]: string };
     private _alias: { [name: string]: string };
 
@@ -31,16 +31,16 @@ export class Settings {
         return this._environmentMode;
     }
 
-    public get mockSessions() {
-        return this._mocks;
+    public get stubSessions() {
+        return this._stubs;
     }
 
-    public async saveMocks(mockSessions: any): Promise<any> {
-        if (!this._mocks) // production
+    public async saveStubSessions(stubSessions: any): Promise<any> {
+        if (!this._stubs) // production
             return;
 
         try {
-            this._mocks.sessions = mockSessions;
+            this._stubs.sessions = stubSessions;
             let path = Files.findConfigurationFile();
             if (!path)
                 return;
@@ -49,12 +49,12 @@ export class Settings {
                     mode: this._environmentMode,
                     alias: this._alias,
                     config: this._config,
-                    mocks: this._mocks
+                    stubs: this._stubs
                 }
             ));
         }
         catch (e) {
-            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings mock sessions.");
+            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings stub sessions.");
         }
     }
 
@@ -67,7 +67,7 @@ export class Settings {
     private readContext() {
         this._alias = {};
         this._config = {};
-        this._mocks = {};
+        this._stubs = {};
 
         // Default mode is local
         this._environmentMode = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV_MODE] || "local";
@@ -83,8 +83,8 @@ export class Settings {
                 data = data && JSON.parse(data);
                 if (data) {
                     this._alias = data.alias || this._alias;
-                    this._config = data._config || this._config;
-                    this._mocks = data._mocks || this._mocks;
+                    this._config = data.config || this._config;
+                    this._stubs = data.stubs || this._stubs;
                     this._environmentMode = (data.mode || this._environmentMode).toLowerCase();
                 }
             }

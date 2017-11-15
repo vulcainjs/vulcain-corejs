@@ -1,4 +1,4 @@
-import { IMockManager } from "./imockManager";
+import { IStubManager } from "./istubManager";
 import { Conventions } from '../utils/conventions';
 import { System } from '../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
@@ -7,15 +7,15 @@ import { ActionMetadata } from "../pipeline/handlers/actions";
 import { HttpResponse } from "../pipeline/response";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 
-export class MockManager implements IMockManager {
-    private mocks: any;
+export class StubManager implements IStubManager {
+    private stubs: any;
     private sessions: any;
     useMockProperty: IDynamicProperty<string>;
     registerMockProperty: IDynamicProperty<string>;
     private saveSessions: (sessions:any) => Promise<any>;
 
     get enabled() {
-        return System.isTestEnvironnment && (!this.mocks || !this.mocks.disabled);
+        return System.isTestEnvironnment && (!this.stubs || !this.stubs.disabled);
     }
 
     constructor() {
@@ -23,10 +23,10 @@ export class MockManager implements IMockManager {
         this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession");
     }
 
-    initialize(mocks:any, saveSessions?: (sessions:any) => Promise<any>) {
+    initialize(stubs:any, saveSessions?: (sessions:any) => Promise<any>) {
         this.saveSessions = saveSessions;
-        this.mocks = mocks;
-        this.sessions = (mocks && mocks.sessions) || {};
+        this.stubs = stubs;
+        this.sessions = (stubs && stubs.sessions) || {};
     }
 
     private sleep(ms: number) {
@@ -84,35 +84,35 @@ export class MockManager implements IMockManager {
         return true;
     }
 
-    public async applyMockHttp(url: string, verb: string) {
-        if (!this.mocks || !this.mocks.http) {
+    public async applyHttpStub(url: string, verb: string) {
+        if (!this.stubs || !this.stubs.http) {
             return undefined;
         }
-        let mock = this.mocks.http[url && url.toLowerCase()];
-        mock = (mock && verb && mock[verb.toLowerCase()]) || mock;
-        const res = (mock && mock.output) || mock || undefined;
-        if (res !== undefined && mock.output && mock.latency) {
-            await this.sleep(mock.latency);
+        let stub = this.stubs.http[url && url.toLowerCase()];
+        stub = (stub && verb && stub[verb.toLowerCase()]) || stub;
+        const res = (stub && stub.output) || stub || undefined;
+        if (res !== undefined && stub.output && stub.latency) {
+            await this.sleep(stub.latency);
         }
         return res;
     }
 
-    public applyMockService(serviceName: string, serviceVersion: string, verb: string, data:any) {
-        if (!this.mocks || !serviceName || !this.mocks.services) {
+    public applyServiceStub(serviceName: string, serviceVersion: string, verb: string, data:any) {
+        if (!this.stubs || !serviceName || !this.stubs.services) {
             return undefined;
         }
 
         // Find on service name
-        let mockService = this.mocks.services[serviceName.toLowerCase()];
+        let stubService = this.stubs.services[serviceName.toLowerCase()];
         // And optionaly on service version
-        mockService = (mockService && mockService[serviceVersion]) || mockService;
-        if (!mockService) {
+        stubService = (stubService && stubService[serviceVersion]) || stubService;
+        if (!stubService) {
             return;
         }
 
         // Verb is optional
-        let mock = verb && mockService[verb.toLowerCase()];
-        return this.getMockResult(mock, data);
+        let stub = verb && stubService[verb.toLowerCase()];
+        return this.getStubOutput(stub, data);
     }
 
     private CreateResponse(content:any) {
@@ -128,16 +128,16 @@ export class MockManager implements IMockManager {
         return res;
     }
 
-    private async getMockResult(mock:any|null, data:any): Promise<HttpResponse|undefined> {
-        if (!mock) {
+    private async getStubOutput(stub:any|null, data:any): Promise<HttpResponse|undefined> {
+        if (!stub) {
             return;
         }
-        if (!Array.isArray(mock)) {
-            return this.CreateResponse(mock)
+        if (!Array.isArray(stub)) {
+            return this.CreateResponse(stub)
         }
 
         // Iterate over data input filter
-        for (let item of mock) {
+        for (let item of stub) {
             let input = item.input; // Input filter
             if (this.deepCompare(data, input)) {
                 if (item.latency) {
@@ -149,12 +149,12 @@ export class MockManager implements IMockManager {
         }
     }
 
-    protected async readMockSessions(session: string, verb: string): Promise<any> {
+    protected async readStubSessions(session: string, verb: string): Promise<any> {
         let serviceSessions = this.sessions && this.sessions[session];
         return serviceSessions && serviceSessions[verb];
     }
 
-    protected writeMockSessions(sessionName: string, verb: string, data:any): Promise<any> {
+    protected writeStubSessions(sessionName: string, verb: string, data:any): Promise<any> {
         let serviceSessions = this.sessions[sessionName] = this.sessions[sessionName] || {};
         let session: any[] = serviceSessions[verb] = serviceSessions[verb] || [];
 
@@ -206,18 +206,18 @@ export class MockManager implements IMockManager {
     }
 
     async tryGetMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any) {
-        const setting = this.useMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK];
+        const setting = this.useMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_USE_STUB];
         const session = this.splitAndTestSession(setting);
         if (!session) {
             return undefined;
         }
 
-        let result = await this.getMockResult(await this.readMockSessions(session, verb), params);
+        let result = await this.getStubOutput(await this.readStubSessions(session, verb), params);
         return result;
     }
 
-    saveMockValue(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
-        const setting = this.registerMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK];
+    saveStub(ctx: RequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
+        const setting = this.registerMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_STUB];
         const session = this.splitAndTestSession(setting);
         if (!session) {
             return undefined;
@@ -226,6 +226,6 @@ export class MockManager implements IMockManager {
             input: params,
             output: { content: result.content, contentType: result.contentType, statusCode: result.statusCode }
         };
-        return this.writeMockSessions(session, verb, data);
+        return this.writeStubSessions(session, verb, data);
     }
 }

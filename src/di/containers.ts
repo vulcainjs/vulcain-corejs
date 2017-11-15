@@ -19,7 +19,7 @@ import { DefaultTenantPolicy } from "../pipeline/policies/defaultTenantPolicy";
 import { ProviderFactory } from "../providers/providerFactory";
 import { MetricsFactory } from "../instrumentations/metrics";
 import { ServiceDescriptors } from "../pipeline/handlers/serviceDescriptions";
-import { MockManager } from "../mocks/mockManager";
+import { StubManager } from "../stubs/stubManager";
 import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";
 import { TrackerFactory } from "../instrumentations/trackers/index";
@@ -63,7 +63,7 @@ export class Container implements IContainer {
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
             this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
-            this.injectSingleton(MockManager, DefaultServiceNames.MockManager);
+            this.injectSingleton(StubManager, DefaultServiceNames.StubManager);
             this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
             this.injectSingleton(TokenService, DefaultServiceNames.AuthenticationStrategy);
             this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
@@ -118,7 +118,7 @@ export class Container implements IContainer {
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
         let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address;
         if (!uri) {
-            System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
+           // System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("amqp://")) {

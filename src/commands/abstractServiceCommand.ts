@@ -130,10 +130,10 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<QueryResponse<T>>}
      */
     protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<QueryResult> {
-        const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
+        const stubs = System.getStubManager(this.container);
+        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using mock database result for ${serviceName}`);
+            System.log.info(this.context, ()=>`Using stub database result for ${serviceName}`);
             return result;
         }
 
@@ -161,10 +161,10 @@ export abstract class AbstractServiceCommand {
         data.$maxByPage = maxByPage;
         data.$page = page;
         data.$query = query && JSON.stringify(query);
-        const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, verb, data);
+        const stubs = System.getStubManager(this.container);
+        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 
@@ -186,10 +186,10 @@ export abstract class AbstractServiceCommand {
      */
     protected async sendAction<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
         let command = { params: data, correlationId: this.context.requestData.correlationId };
-        const mocks=System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockService(serviceName, serviceVersion, verb, data);
+        const stubs=System.getStubManager(this.container);
+        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using mock database result for (${verb}) ${serviceName}`);
+            System.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 

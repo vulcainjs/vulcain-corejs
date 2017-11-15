@@ -27,8 +27,8 @@ export {IAuthorizationPolicy} from './security/authorizationPolicy'
 export * from './application'
 export { Conventions } from './utils/conventions';
 export { IMetrics } from './instrumentations/metrics';
-export { IMockManager } from './mocks/imockManager';
-export { MockManager } from './mocks/mockManager';
+export { IStubManager } from './stubs/istubManager';
+export { StubManager } from './stubs/stubManager';
 export { IRequestTracker } from './instrumentations/trackers/index';
 export { ServerAdapter } from './pipeline/serverAdapter';
 

@@ -30,7 +30,7 @@ export class DefaultServiceNames {
     static Container = "Container";
     static ProviderFactory = "ProviderFactory";
     static Metrics = "Metrics";
-    static MockManager = "MockManager";
+    static StubManager = "StubManager";
     static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
     static BearerTokenService = "BearerTokenService";

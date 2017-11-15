@@ -123,11 +123,11 @@ export class Span implements ISpanTracker {
 //        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
 
         // TODO move this code
-        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_MOCK]);
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_STUB]) {
+            headers(VulcainHeaderNames.X_VULCAIN_REGISTER_STUB, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_STUB]);
         }
-        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]) {
-            headers(VulcainHeaderNames.X_VULCAIN_USE_MOCK, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_MOCK]);
+        if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_STUB]) {
+            headers(VulcainHeaderNames.X_VULCAIN_USE_STUB, <string>this.context.request.headers[VulcainHeaderNames.X_VULCAIN_USE_STUB]);
         }
     }
 

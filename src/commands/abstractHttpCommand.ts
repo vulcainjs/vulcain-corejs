@@ -71,10 +71,10 @@ export abstract class AbstractHttpCommand {
 
         this.setMetricTags(verb, url);
 
-        const mocks = System.getMocksManager(this.container);
-        let result = System.isDevelopment && mocks.enabled && await mocks.applyMockHttp(url, verb);
+        const stubs = System.getStubManager(this.container);
+        let result = System.isDevelopment && stubs.enabled && await stubs.applyHttpStub(url, verb);
         if (result) {
-            System.log.info(this.context, ()=>`Using mock output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+            System.log.info(this.context, ()=>`Using stub output for (${verb}) ${System.removePasswordFromUrl(url)}`);
             return result;
         }
 
