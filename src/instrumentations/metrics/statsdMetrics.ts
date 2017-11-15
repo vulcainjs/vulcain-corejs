@@ -38,6 +38,11 @@ export class StatsdMetrics implements IMetrics {
         return ',' + Object.keys(tags).map(key => key + '=' + tags[key].replace(/[:|,]/g, '-')).join(',');
     }
 
+    gauge(metric: string, customTags?: any, delta?: number) {
+        const tags = this.tags + this.encodeTags(customTags);
+        this.statsd && this.statsd.increment(metric.toLowerCase() + tags, delta);
+    }
+
     count(metric: string, customTags?: any, delta?: number) {
         const tags = this.tags + this.encodeTags(customTags);
         this.statsd && this.statsd.increment(metric.toLowerCase() + tags, delta);
