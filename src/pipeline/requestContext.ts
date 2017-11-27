@@ -19,7 +19,7 @@ export class VulcainHeaderNames {
     static X_VULCAIN_PARENT_ID = "x-vulcain-parent-id";
     static X_VULCAIN_SERVICE_NAME = "x-vulcain-service-name";
     static X_VULCAIN_SERVICE_VERSION = "x-vulcain-service-version";
-    static X_VULCAIN_STAGE = "x-vulcain-stage";
+    static X_VULCAIN_ENV = "x-vulcain-env";
     static X_VULCAIN_CONTAINER = "x-vulcain-container";
     static X_VULCAIN_PUBLICPATH = "x-vulcain-publicpath";
     static X_VULCAIN_USE_STUB = 'x-vulcain-use-stub-session';
@@ -65,9 +65,6 @@ export class CommandRequest implements IRequestContext {
     }
     sendCustomEvent(action: string, params?: any, schema?: string) {
         return this.parent.sendCustomEvent(action, params, schema);
-    }
-    getCommand<T = ICommand>(name: string, ...args): T {
-        return this.parent.getCommand<T>(name, ...args);
     }
 
     logError(error: Error, msg?: () => string) {
@@ -220,17 +217,6 @@ export class RequestContext implements IRequestContext {
             this._customEvents = [];
         }
         this._customEvents.push({ action, schema, params });
-    }
-
-  /**
-     * Create a new command
-     * Throws an exception if the command is unknown
-     *
-     * @param {string} name Command name
-     * @returns {ICommand} A command
-     */
-    getCommand<T = ICommand>(name: string, ...args): T {
-        return CommandFactory.getCommand<T>(name, this, ...args);
     }
 
     /**

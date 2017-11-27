@@ -35,7 +35,7 @@ export class System {
     public static get settings() {
         if (!System._settings) {
             System._settings = new Settings();
-            System.log.info(null, () => `Running in ${System._settings.stage} staging environment.`);
+            System.log.info(null, () => `Running in ${System._settings.environment} environment.`);
         }
         return System._settings;
     }
@@ -185,15 +185,15 @@ export class System {
     }
 
     /**
-     * Get current stage
+     * Get current environment
      *
      * @readonly
      * @static
      *
      * @memberOf System
      */
-    static get stagingEnvironment() {
-        return System.settings.stage;
+    static get environment() {
+        return System.settings.environment;
     }
 
     /**

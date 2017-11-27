@@ -11,6 +11,7 @@ import { DynamicConfiguration } from '../../configurations/dynamicConfiguration'
  * @export
  * @class StatsdMetrics
  */
+/*
 export class StatsdMetrics implements IMetrics {
     private static EmptyString = "";
     private tags: any;
@@ -52,4 +53,4 @@ export class StatsdMetrics implements IMetrics {
         const tags = this.tags + this.encodeTags(customTags);
         this.statsd && this.statsd.timing(metric.toLowerCase() + tags, duration);
     }
-}
+}*/

@@ -28,7 +28,7 @@ export class ConfigurationSourceBuilder {
             else {
                 let uri = `http://${System.vulcainServer}/api/configforservice`;
                 let options = {
-                    environment: System.stagingEnvironment,
+                    environment: System.environment,
                     service: System.serviceName,
                     version: System.serviceVersion,
                     domain: System.domainName

@@ -26,7 +26,8 @@ export interface ISpanTracker {
 
     addHttpRequestTags(uri:string, verb:string);
     addProviderCommandTags(address:string, schema: string, tenant: string );
-    addServiceCommandTags(serviceName: string, serviceVersion:string);
+    addServiceCommandTags(serviceName: string, serviceVersion: string);
+    addCustomCommandTags(commandType: string, tags: { [key: string]: string });
     injectHeaders(headers: (name: string | any, value?: string) => any);
     /**
      * Log an error
@@ -82,7 +83,8 @@ export class DummySpanTracker implements ISpanRequestTracker {
     }
     addHttpRequestTags(uri:string, verb:string){}
     addProviderCommandTags(address:string, schema: string, tenant: string ){}
-    addServiceCommandTags(serviceName: string, serviceVersion:string) {}
+    addServiceCommandTags(serviceName: string, serviceVersion: string) { }
+    addCustomCommandTags(commandType: string, tags: { [key: string]: string }) {}
     addTag(key: string, value: string) {
     }
     injectHeaders(headers: (name: any, value?: string)=> any) {

@@ -20,6 +20,7 @@ export class Span implements ISpanTracker {
     private _id: TrackerId;
     private _tracker: IRequestTracker;
     public action: string;
+    private commandType: string;
 
     get id() {
         return this._id;
@@ -148,24 +149,22 @@ export class Span implements ISpanTracker {
     }
 
     endCommand() {
-        this.tags["error"] = this.error ? "true" : "false";
-        this.metrics.timing("vulcain_command_duration_ms", this.durationInMs, this.tags);
+        if (this.action) { // for ignored requests like _servicedependecy
+            this.tags["error"] = this.error ? "true" : "false";
+            let metricsName = `vulcain_${this.commandType.toLowerCase()}command_duration_ms`;
+            this.metrics.timing(metricsName, this.durationInMs, this.tags);
+        }
 
         // End Command trace
         this._logger && this._logger.logAction(this.context, "EC", `Command: ${this.name} completed with ${this.error ? this.error.message : 'success'}`);
     }
 
     private endRequest() {
-        let hasError = false;
-
-        let value = this.context.response && this.context.response.content;
-        hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;// || !value;
-
-        const duration = this.durationInMs;
-
-        // Duration
-        this.tags["error"] = hasError ? "true" : "false";
-        this.metrics.timing("vulcain_service_duration_ms", duration, this.tags);
+        if (this.action) { // for ignored requests like _servicedependecy
+            let hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;
+            this.tags["error"] = hasError ? "true" : "false";
+            this.metrics.timing("vulcain_service_duration_ms", this.durationInMs, this.tags);
+        }
 
         if (this.kind === SpanKind.Request) {
             this.logAction("ER", `End request status: ${(this.context.response  && this.context.response.statusCode) || 200}`);
@@ -179,22 +178,29 @@ export class Span implements ISpanTracker {
     }
 
     addHttpRequestTags(uri: string, verb: string) {
+        this.commandType = "Http";
         this.addTag("http.url", uri);
         this.addTag("http.method", verb);
         // http.status_code
     }
 
     addProviderCommandTags(address: string, schema: string, tenant: string) {
+        this.commandType = "Database";
         this.addTag("db.instance",  System.removePasswordFromUrl(address));
         this.addTag("db.schema", schema);
         this.addTag("db.tenant", tenant);
     }
 
     addServiceCommandTags(serviceName: string, serviceVersion: string) {
+        this.commandType = "Service";
         this.addTag("peer.address", System.createContainerEndpoint(serviceName, serviceVersion));
         this.addTag("peer.service", "vulcain");
         this.addTag("peer.service_version", serviceVersion);
         this.addTag("peer.service_name", serviceName);
+    }
+    addCustomCommandTags(commandType: string, tags: { [key: string]: string }) {
+        this.commandType = commandType;
+        this.addTags(tags);
     }
 
     addTag(name: string, value: string) {
