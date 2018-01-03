@@ -13,13 +13,9 @@ import { System } from './system';
 
 /**
  * Manage local file settings
- *
- * {
- *
- * }
  */
 export class Settings {
-    private _stage: "local" | "test" | "production";
+    private _environment: "local" | "test" | "production";
     private _stubs: { [name: string]: string };
     private _config: { [name: string]: string };
     private _alias: { [name: string]: string };
@@ -28,8 +24,8 @@ export class Settings {
         this.readContext();
     }
 
-    public get stage() {
-        return this._stage;
+    public get environment() {
+        return this._environment;
     }
 
     public get stubSessions() {
@@ -47,7 +43,7 @@ export class Settings {
                 return;
             fs.writeFileSync(path, JSON.stringify(
                 {
-                    mode: this._stage,
+                    mode: this._environment,
                     alias: this._alias,
                     config: this._config,
                     stubs: this._stubs
@@ -60,8 +56,8 @@ export class Settings {
     }
 
     /**
-     * Read configurations from .vulcain file
-     * Set env type from environment variable then .vulcain config
+     * Read configurations from vulcain file
+     * Set env type from environment variable then vulcain config
      *
      * @private
      */
@@ -71,8 +67,8 @@ export class Settings {
         this._stubs = {};
 
         // Default mode is local
-        this._stage = <any>process.env[Conventions.instance.ENV_VULCAIN_STAGE] || "local";
-        if (this._stage === "production") {
+        this._environment = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV] || "local";
+        if (this._environment === "production") {
             // Settings are ignored in production
             return;
         }
@@ -86,7 +82,7 @@ export class Settings {
                     this._alias = data.alias || this._alias;
                     this._config = data.config || this._config;
                     this._stubs = data.stubs || this._stubs;
-                    this._stage = (data.mode || this._stage).toLowerCase();
+                    this._environment = (<any>process.env[Conventions.instance.ENV_VULCAIN_ENV] || data.env || this._environment).toLowerCase();
                 }
             }
         }
@@ -94,8 +90,8 @@ export class Settings {
             throw new Error("VULCAIN MANIFEST : Loading error");
         }
 
-        if ( this._stage !== "test" && this._stage !== "local") {
-            throw new Error("Invalid staging environment. Should be 'production', 'test' or 'local'");
+        if ( this._environment !== "test" && this._environment !== "local") {
+            throw new Error("Invalid environment. Should be 'production', 'test' or 'local'");
         }
     }
 
@@ -108,11 +104,11 @@ export class Settings {
      * @memberOf System
      */
     get isDevelopment() {
-        return this._stage === "local";
+        return this._environment === "local";
     }
 
     /**
-     * Check if the current service is running in a test environnement (VULCAIN_TEST=true)
+     * Check if the current service is running in test environnement
      *
      * @static
      * @returns
@@ -120,11 +116,11 @@ export class Settings {
      * @memberOf System
      */
     get isTestEnvironnment() {
-        return this.isDevelopment || this._stage === "test";
+        return this.isDevelopment || this._environment === "test";
     }
 
     /**
-     * Resolve un alias (configuration key shared/$alternates/name-version)
+     * Resolve service alias
      *
      * @param {string} name
      * @param {string} [version]

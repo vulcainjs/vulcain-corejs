@@ -71,14 +71,6 @@ export interface IRequestContext {
     sendCustomEvent(action: string, params?: any, schema?: string);
 
     /**
-     * Create a new command
-     * Throws an exception if the command is unknown
-     *
-     * @param {string} name Command name
-     * @returns {ICommand} A command
-     */
-    getCommand<T = ICommand>(name: string, ...args): T;
-    /**
       * Log an error
       *
       * @param {Error} error Error instance

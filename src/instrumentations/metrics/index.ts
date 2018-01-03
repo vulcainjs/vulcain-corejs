@@ -1,5 +1,5 @@
 //import { ApplicationInsightsMetrics } from './applicationInsightsMetrics';
-import { StatsdMetrics } from './statsdMetrics';
+//import { StatsdMetrics } from './statsdMetrics';
 import { PrometheusMetrics } from './prometheusMetrics';
 import { IContainer } from '../../di/resolvers';
 import { DefaultServiceNames } from "../../di/annotations";
@@ -37,7 +37,7 @@ export class MetricsFactory {
     static create(container: IContainer) {
         return container.get<IMetrics>(DefaultServiceNames.Metrics, true)  ||
          //      ApplicationInsightsMetrics.create() ||
-               StatsdMetrics.create() ||
+         //      StatsdMetrics.create() ||
                new PrometheusMetrics(container);
     }
 }

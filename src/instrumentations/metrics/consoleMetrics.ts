@@ -12,7 +12,7 @@ export class ConsoleMetrics implements IMetrics {
     private tags: string;
 
     constructor(address?: string) {
-        this.tags = ",stage=" + System.stagingEnvironment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+        this.tags = ",env=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
     }
 
     private log(msg: string) {

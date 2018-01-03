@@ -49,7 +49,9 @@ interface CommandCache {
 }
 
 export class CommandFactory {
-
+    /**
+     * Register a new command
+     */
     static registerCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {
         commandGroup = commandGroup || System.fullServiceName;
         commandKey = commandKey || command.name;
@@ -63,14 +65,19 @@ export class CommandFactory {
     }
 
     /**
-     * Get a new command
-     * @param commandKey Command name
-     * @param contextCurrent request context
-     * @param args Optional command arguments
+     * Create a new command instance
+     * Throws an exception if the command is unknown
+     *
+     * @param {IRequestContext} context current context
+     * @param {string} name Command name
+     * @param {any} args Command constructor arguments
+     * @returns {ICommand} A command
      */
-    static getCommand<T=ICommand>(commandKey: string, context: IRequestContext, ...args): T {
+    static createCommand<T=ICommand>(context: IRequestContext, commandName: string, ...args): T {
+        if (!context)
+            throw new Error("Command can be used only within a context");
 
-        let cache = hystrixCommandsCache.get(commandKey);
+        let cache = hystrixCommandsCache.get(commandName);
         if (cache) {
             let container = context.container;
 
@@ -91,9 +98,5 @@ export class CommandFactory {
                 }
             });
         }
-    }
-
-    static resetCache() {
-        hystrixCommandsCache.clear();
     }
 }

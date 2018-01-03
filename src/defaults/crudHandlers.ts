@@ -95,12 +95,12 @@ function createCommandName(metadata, kind) {
 
 export class DefaultActionHandler extends AbstractActionHandler {
 
-    private defineCommand(metadata) {
+    protected defineCommand(metadata) {
         CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Action"));
     }
 
-    protected getDefaultCommand<T>() {
-        return this.context.getCommand<T>(createCommandName(this.metadata, "Action"), this.metadata.schema);
+    protected createDefaultCommand<T>() {
+        return CommandFactory.createCommand<T>(this.context, createCommandName(this.metadata, "Action"), this.metadata.schema);
     }
 
     constructor( @Inject("Container") container: IContainer) {
@@ -111,7 +111,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async create(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
         return cmd.createWithSensibleData(entity);
     }
 
@@ -119,7 +119,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async update(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
         return cmd.updateWithSensibleData( entity);
     }
 
@@ -128,7 +128,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         if (!entity)
             throw new ApplicationError("Entity is required");
 
-        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
         return cmd.deleteWithSensibleData( entity);
     }
 }
@@ -139,8 +139,8 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Query"));
     }
 
-    protected getDefaultCommand<T>() {
-        return this.context.getCommand<T>(createCommandName(this.metadata, "Query"), this.metadata.schema);
+    protected createDefaultCommand<T>() {
+        return CommandFactory.createCommand<T>(this.context, createCommandName(this.metadata, "Query"), this.metadata.schema);
     }
 
     constructor( @Inject("Container") container: IContainer ) {
@@ -149,7 +149,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     @Query({ action: "get", description: "Get an entity by id" })
     async get(id: any): Promise<T> {
-        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
         return await cmd.getWithSensibleData(id);
     }
 
@@ -160,7 +160,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
             page: page || this.context.requestData.page || 0,
             query: query || {}
         };
-        let cmd = this.getDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
         return await cmd.getAllWithSensibleData(options);
     }
 }

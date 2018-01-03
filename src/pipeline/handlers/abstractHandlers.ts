@@ -37,6 +37,8 @@ export abstract class AbstractHandler implements IScopedComponent {
 }
 
 export abstract class AbstractActionHandler extends AbstractHandler {
+    protected defineCommand?(metadata);
+    protected createDefaultCommand?<T>();
 }
 
 export abstract class AbstractEventHandler extends AbstractHandler {
