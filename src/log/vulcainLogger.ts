@@ -1,4 +1,4 @@
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
 import * as util from 'util';
 import * as os from 'os';
@@ -43,7 +43,7 @@ export class VulcainLogger implements Logger{
 
     private static get enableInfo() {
         if (!VulcainLogger._enableInfo)
-            VulcainLogger._enableInfo = System && DynamicConfiguration.getChainedConfigurationProperty("enableVerboseLog", false);
+            VulcainLogger._enableInfo = Service && DynamicConfiguration.getChainedConfigurationProperty("enableVerboseLog", false);
         return VulcainLogger._enableInfo.value;
     }
 
@@ -63,7 +63,7 @@ export class VulcainLogger implements Logger{
     error(context: IRequestContext|null, error: Error, msg?: ()=>string) {
         if (!error) return;
         let entry = this.prepareEntry(context);
-        entry.message = (msg && msg()) || "Error occured";
+        entry.message = (msg && msg()) || "Error occurred";
         entry.error = error.message;
         if(!(error instanceof ApplicationError))
             entry.stack = (error.stack || "").replace(/[\r\n]/g, '↵');
@@ -96,7 +96,7 @@ export class VulcainLogger implements Logger{
      * @memberOf VulcainLogger
      */
     verbose(context: IRequestContext|null, msg: ()=>string) {
-        if (VulcainLogger.enableInfo || System.isDevelopment) {
+        if (VulcainLogger.enableInfo || Service.isDevelopment) {
             this.info(context, msg);
             return true;
         }
@@ -119,7 +119,7 @@ export class VulcainLogger implements Logger{
             ctx = ctx.parent;
         }
 
-        if (System.isDevelopment) {
+        if (Service.isDevelopment) {
             return <LogEntry>{
                 correlationId: (trackerId && trackerId.correlationId) || undefined,
                 parentId: (trackerId && trackerId.parentId) || undefined,
@@ -128,8 +128,8 @@ export class VulcainLogger implements Logger{
         }
 
         return <LogEntry>{
-            service: System.serviceName,
-            version: System.serviceVersion,
+            service: Service.serviceName,
+            version: Service.serviceVersion,
             kind: "Log",
             source: this._hostname,
             timestamp: Date.now() * 1000, // TODO
@@ -141,7 +141,7 @@ export class VulcainLogger implements Logger{
 
     private writeEntry(entry: LogEntry) {
 
-        if (System.isDevelopment) {
+        if (Service.isDevelopment) {
             if (entry.kind === "RR")
                 console.log("======================");
             const msg = entry.message;

@@ -1,4 +1,4 @@
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { IMetrics } from '../metrics';
 import * as Prometheus from 'prom-client';
 import { IContainer } from "../../di/resolvers";
@@ -25,7 +25,7 @@ export class PrometheusMetrics implements IMetrics {
     }
 
     private encodeTags(tags: { [key: string] : string }): any {
-        let result = { service: System.serviceName, version: System.serviceVersion, serviceFullName: System.fullServiceName };
+        let result = { service: Service.serviceName, version: Service.serviceVersion, serviceFullName: Service.fullServiceName };
         Object
             .keys(tags)
             .forEach(key => {

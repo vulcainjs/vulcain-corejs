@@ -2,7 +2,7 @@ import { CommandManager, AsyncTaskData } from './actions';
 import {IActionBusAdapter, IEventBusAdapter} from '../../bus/busAdapter';
 import {DefaultServiceNames} from '../../di/annotations';
 import * as RX from 'rxjs';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { RequestData } from "../../pipeline/common";
 import { CommonMetadata } from "./common";
 import { UserContextData } from "../../security/securityContext";
@@ -56,7 +56,7 @@ export class MessageBus {
         this.commandBus = manager.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter);
         if ( this.commandBus && hasAsyncActions ) // Register for async tasks only if necessary
         {
-            this.commandBus.consumeTask(manager.domain.name, System.fullServiceName, manager.processAsyncTask.bind(manager));
+            this.commandBus.consumeTask(manager.domain.name, Service.fullServiceName, manager.processAsyncTask.bind(manager));
         }
 
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
@@ -67,7 +67,7 @@ export class MessageBus {
             (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).next(event);
         }
         catch (e) {
-            System.log.error(
+            Service.log.error(
                 null,
                 e,
                 ()=>`Consume event action: ${event.action} ${event.schema ? "schema: " + event.schema : ""} tenant: ${event.userContext.tenant}`
@@ -78,7 +78,7 @@ export class MessageBus {
     pushTask(command: AsyncTaskData) {
         command.status = "Pending";
         command.taskId = Conventions.getRandomId();
-        this.commandBus && this.commandBus.publishTask(command.domain, System.fullServiceName, command);
+        this.commandBus && this.commandBus.publishTask(command.domain, Service.fullServiceName, command);
     }
 
     sendEvent(event: EventData) {

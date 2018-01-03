@@ -1,4 +1,4 @@
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { Domain } from '../schemas/schema';
 import { Preloader } from '../preloader';
 import { ConsoleMetrics } from "../instrumentations/metrics/consoleMetrics";
@@ -17,7 +17,7 @@ export class TestContext extends RequestContext {
 
     constructor(...components: Function[]) {
         super(new Container(), Pipeline.Test);
-        let domain = new Domain(System.domainName, this.container);
+        let domain = new Domain(Service.domainName, this.container);
         this.container.injectInstance(domain, DefaultServiceNames.Domain);
         this.container.injectInstance(new ConsoleMetrics(), DefaultServiceNames.Metrics);
         Preloader.instance.runPreloads(this.container, domain);

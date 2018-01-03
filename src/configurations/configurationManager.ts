@@ -4,7 +4,7 @@ import { DynamicProperty } from './properties/dynamicProperty';
 import { PrioritizedSourceValue } from './sources/PrioritizedSourceValue';
 import { ChainedDynamicProperty } from './properties/chainedPropertyValue';
 import { FileConfigurationSource, ConfigurationDataType } from './sources/fileConfigurationSource';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { MockConfigurationSource } from './sources/memoryConfigurationSource';
 import { EnvironmentVariableSource } from "./sources/environmentVariableSource";
 import { Conventions } from '../utils/conventions';
@@ -119,14 +119,14 @@ export class ConfigurationManager {
 
             tries--;
             if (tries)
-                System.log.info(null, () => "CONFIG: Some dynamic properties sources failed. Retry polling.");
+                Service.log.info(null, () => "CONFIG: Some dynamic properties sources failed. Retry polling.");
         }
 
-        if (!System.isDevelopment) {
+        if (!Service.isDevelopment) {
             throw new Error("CONFIG: Cannot read properties from sources. Program is stopped.");
         }
         else {
-            System.log.info(null, () => "CONFIG: Cannot read properties from sources.");
+            Service.log.info(null, () => "CONFIG: Cannot read properties from sources.");
         }
     }
 
@@ -184,7 +184,7 @@ export class ConfigurationManager {
         }
         catch (e) {
             ok = false;
-            System.log.error(null, e, () => "CONFIG: Error when polling sources");
+            Service.log.error(null, e, () => "CONFIG: Error when polling sources");
         }
 
         // Restart

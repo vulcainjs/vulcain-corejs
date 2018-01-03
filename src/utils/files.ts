@@ -1,6 +1,6 @@
 import * as Path from 'path';
 import * as fs from 'fs';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { Conventions } from './conventions';
 
 export class Files
@@ -42,7 +42,7 @@ export class Files
                      }
                      catch(err)
                      {
-                         System.log.error(null, err, ()=> `ERROR when trying to load component ${fn}`);
+                         Service.log.error(null, err, ()=> `ERROR when trying to load component ${fn}`);
                          process.exit(1);
                      }
                  }

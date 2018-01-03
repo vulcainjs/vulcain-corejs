@@ -3,7 +3,7 @@ import { DefaultServiceNames } from '../di/annotations';
 import { Schema } from '../schemas/schema';
 import { IProvider } from './provider';
 import { IContainer } from '../di/resolvers';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { IRequestContext } from "../pipeline/common";
 
 interface PoolItem {
@@ -26,7 +26,7 @@ export class ProviderFactory {
     }
 
     private addToPool(context: IRequestContext, key: string, item: PoolItem) {
-        System.log.info(context, () => `Adding a new provider pool item : ${key}`);
+        Service.log.info(context, () => `Adding a new provider pool item : ${key}`);
         if (this.pool.size >= this.maxPoolSize) {
             // remove the least used
             let keyToRemove;
@@ -40,7 +40,7 @@ export class ProviderFactory {
             let item = this.pool.get(keyToRemove);
             item.dispose && item.dispose();
             this.pool.delete(keyToRemove);
-            System.log.info(context, () => `Ejecting ${keyToRemove} from provider pool item.`);
+            Service.log.info(context, () => `Ejecting ${keyToRemove} from provider pool item.`);
         }
         item.count = 1;
         this.pool.set(key, item);

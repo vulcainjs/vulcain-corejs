@@ -1,7 +1,7 @@
 import { IDynamicProperty } from "./abstractions";
 import { ConfigurationManager } from "./configurationManager";
 import { ConfigurationSourceBuilder } from "./configurationSourceBuilder";
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 import * as rx from 'rxjs';
 
 /**
@@ -63,20 +63,20 @@ export class DynamicConfiguration {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
         if (p)
             return p;
-        System.registerPropertyAsDependency(name, defaultValue);
+        Service.registerPropertyAsDependency(name, defaultValue);
 
         let fullName = commandName ? commandName + "." + name : name;
         let chain = [
-            System.serviceName + "." + System.serviceVersion + "." + fullName,
-            System.serviceName + "." + fullName,
+            Service.serviceName + "." + Service.serviceVersion + "." + fullName,
+            Service.serviceName + "." + fullName,
         ];
 
         if (commandName) {
             chain.push(fullName);
         }
 
-        if (System.domainName)
-            chain.push(System.domainName + "." + name);
+        if (Service.domainName)
+            chain.push(Service.domainName + "." + name);
 
         chain.push(name);
 

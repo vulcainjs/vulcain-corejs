@@ -126,7 +126,7 @@ export class Resolver implements IResolver {
                 component[info.property] = container.get<any>(info.name, info.optional);
             }
             catch (e) {
-                throw new Error(`Error when instanciating component ${name} on injected property ${info.property} : ${e.message}`);
+                throw new Error(`Error when instantiating component ${name} on injected property ${info.property} : ${e.message}`);
             }
         }
     }
@@ -143,7 +143,7 @@ export class Resolver implements IResolver {
                 }
             }
             catch (e) {
-                throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`);
+                throw new Error(`Error when instantiating component ${name} on injected parameter : ${e.message}`);
             }
         }
     }

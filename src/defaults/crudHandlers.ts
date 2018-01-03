@@ -7,7 +7,8 @@ import { ICommand } from "../commands/abstractCommand";
 import { Command } from "../commands/commandFactory";
 import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 import { CommandFactory } from '../commands/commandFactory';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
+import { GetAllResult } from '../providers/provider';
 
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     create(entity: any) {
@@ -68,24 +69,24 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    getAll(options: any) {
+    getAll(options: any): Promise<GetAllResult> {
         this.setMetricTags("getAll", this.provider.address, this.schema && this.schema.name, this.context && this.context.user.tenant);
         return this.provider.getAll(this.schema, options);
     }
 
     async getAllWithSensibleData(options: any) {
-        let list = await this.getAll(options);
-        if (list && list.length > 0 && this.schema.description.hasSensibleData) {
-            let result = [];
-            for (let entity of list) {
+        let result = await this.getAll(options);
+        if (result && result.values && result.values.length > 0 && this.schema.description.hasSensibleData) {
+            let list = [];
+            for (let entity of result.values) {
                 if (entity) {
                     entity = this.schema.decrypt(entity) || entity;
-                    result.push(entity);
+                    list.push(entity);
                 }
             }
-            return result;
+            result.values = list;
         }
-        return list;
+        return result;
     }
 }
 
@@ -154,7 +155,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ action: "all", description: "Get all entities" })
-    async getAll(query?: any,  maxByPage?:number, page?:number) : Promise<Array<T>> {
+    async getAll(query?: any,  maxByPage?:number, page?:number) : Promise<GetAllResult> {
         let options = {
             maxByPage: maxByPage || this.context.requestData.maxByPage || 0,
             page: page || this.context.requestData.page || 0,

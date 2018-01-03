@@ -6,7 +6,7 @@ import { Domain } from '../schemas/schema';
 import { Inject } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
 import { Span } from '../instrumentations/span';
@@ -63,7 +63,7 @@ export abstract class AbstractProviderCommand<T> {
     }
 
     protected setMetricTags(verb: string, address: string, schema: string, tenant?: string) {
-        System.manifest.registerProvider(address, schema);
+        Service.manifest.registerProvider(address, schema);
         this.context.tracker.trackAction(verb);
         this.context.tracker.addProviderCommandTags( address,  schema, (tenant || this.context.user.tenant) );
     }

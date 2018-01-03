@@ -11,7 +11,7 @@ export { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './globals/manifest';
 export { VulcainLogger } from './log/vulcainLogger';
-export { System } from './globals/system';
+export { Service } from './globals/system';
 export { IServiceResolver } from './di/serviceResolver';
 
 // Schemas
@@ -55,7 +55,7 @@ export * from './bus/busAdapter'
 export * from './bus/rabbitAdapter'
 
 // Providers
-export { IProvider, ListOptions } from './providers/provider'
+export { IProvider, ListOptions, GetAllResult } from './providers/provider'
 export * from './providers/memory/provider'
 export * from './providers/mongo/provider'
 export { ProviderFactory } from './providers/providerFactory';

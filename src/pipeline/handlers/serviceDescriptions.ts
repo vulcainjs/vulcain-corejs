@@ -5,7 +5,7 @@ import { Model } from '../../schemas/annotations';
 import { IContainer } from '../../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata } from './common';
 import { QueryActionMetadata } from './query';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { ApplicationError } from '../errors/applicationRequestError';
 import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
 
@@ -105,7 +105,7 @@ export class ServiceDescriptors {
             return { handler: handler, metadata: item.metadata, method: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
-            System.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);
+            Service.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);
             throw new Error(`Unable to create handler for action ${action}, schema ${schema}`);
         }
     }
@@ -138,8 +138,8 @@ export class ServiceDescriptors {
             services: [],
             schemas: new Array<SchemaDescription>(),
             domain: this.domain.name,
-            serviceName: System.serviceName || "unknow",
-            serviceVersion: System.serviceVersion || "",
+            serviceName: Service.serviceName || "unknown",
+            serviceVersion: Service.serviceVersion || "",
             alternateAddress: undefined,
             hasAsyncTasks: false,
             scopes: scopes.getScopes().map(d => { return { name: d.name, description: d.description }; })
@@ -156,7 +156,7 @@ export class ServiceDescriptors {
             if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for action ${item.metadata.action} for handler ${item.handler.name}`);
 
-            System.log.info(null, ()=> `Handler registered for action verb ${verb}`);
+            Service.log.info(null, ()=> `Handler registered for action verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
@@ -195,7 +195,7 @@ export class ServiceDescriptors {
             if (this.routes.has(verb))
                 throw new Error(`*** Duplicate handler for query ${item.metadata.action} for handler ${item.handler.name}`);
 
-            System.log.info(null, ()=> `Handler registered for query verb ${verb}`);
+            Service.log.info(null, ()=> `Handler registered for query verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
@@ -235,7 +235,7 @@ export class ServiceDescriptors {
         if (!scope || scope === "?" || scope === "*") return scope;
 
         if (scope === '.') {
-            scope = System.domainName + ":" + verb.replace('.', ':');
+            scope = Service.domainName + ":" + verb.replace('.', ':');
             if (!scopes.getScopes().find(s => s.name === scope)) {
                 scopes.defineScope(scope, metadata.description);
             }
@@ -245,7 +245,7 @@ export class ServiceDescriptors {
         let parts = scope.split(',');
         let result = [];
         for (let sc of parts) {
-            sc = System.domainName + ":" + sc.trim();
+            sc = Service.domainName + ":" + sc.trim();
             if (!scopes.getScopes().find(s => s.name === sc)) {
                 //throw new Error(`${sc} not found in scopes descriptor for ${verb}. You must define it in (Startup)application.defineScopes.`);
                 scopes.defineScope(sc, 'Generated description for ' + metadata.description);
@@ -270,7 +270,7 @@ export class ServiceDescriptors {
                     return type.name;
             }
             if (!schema)
-                throw new Error("Unknow schema " + schemaName);
+                throw new Error("Unknown schema " + schemaName);
         }
 
         let desc: SchemaDescription = schemas.get(schema.name);

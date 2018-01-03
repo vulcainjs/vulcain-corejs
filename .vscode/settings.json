@@ -7,5 +7,13 @@
         ".dist/**",
         "./test/**"
     ],
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "cSpell.words": [
+        "Injectable",
+        "Metadatas",
+        "jaeger",
+        "opentracing",
+        "preloader",
+        "zipkin"
+    ]
 }

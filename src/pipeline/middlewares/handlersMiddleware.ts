@@ -1,6 +1,6 @@
 import { RequestContext } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
-import { System } from "../../globals/system";
+import { Service } from "../../globals/system";
 import { ActionMetadata, CommandManager } from "../handlers/actions";
 import { IContainer } from "../../di/resolvers";
 import { UnauthorizedRequestError } from "../errors/applicationRequestError";
@@ -27,18 +27,18 @@ export class HandlersMiddleware extends VulcainMiddleware {
         // Ensure schema name (casing) is valid
         ctx.requestData.schema = info.metadata.schema || ctx.requestData.schema;
 
-        System.log.info(ctx, () => `Request input   : ${JSON.stringify(command.params)}`);
-        System.log.info(ctx, () => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
+        Service.log.info(ctx, () => `Request input   : ${JSON.stringify(command.params)}`);
+        Service.log.info(ctx, () => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
 
         // Verify authorization
         if (!ctx.user.hasScope(info.metadata.scope)) {
-            System.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+            Service.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
             throw new UnauthorizedRequestError();
         }
 
         // Process handler
         let result: HttpResponse;
-        const stubs = System.getStubManager(ctx.container);
+        const stubs = Service.getStubManager(ctx.container);
         let params = Object.assign({}, command.params || {});
         let metadata = <ActionMetadata>info.metadata;
         let useMockResult = false;

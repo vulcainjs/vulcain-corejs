@@ -3,7 +3,7 @@ import { CircuitBreakerFactory } from "./circuitBreaker";
 import { AbstractCommand, ICommand } from './abstractCommand';
 import { SemaphoreFactory, Semaphore } from './semaphore';
 import { EventType, FailureType, ExecutionResult } from './executionResult';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { IContainer } from '../di/resolvers';
 import { ICommandMetrics, CommandMetricsFactory } from "./metrics/commandMetricsFactory";
 import { TimeoutError } from "../pipeline/errors/timeoutError";
@@ -222,7 +222,7 @@ export class HystrixCommand {
     }
 
     private onExecutionError(e: Error): Promise<any> {
-        e = e || new Error("Unknow error");
+        e = e || new Error("Unknown error");
 
         if (e instanceof BadRequestError) {
             this.hystrixMetrics.markBadRequest(this.command.context.tracker.durationInMs);

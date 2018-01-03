@@ -1,6 +1,6 @@
 
 import { Injectable, DefaultServiceNames, LifeTime } from "../di/annotations";
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 
 export class ScopeDescription {
     name: string;
@@ -17,6 +17,6 @@ export class ScopesDescriptor {
     }
 
     defineScope(name: string, description: string) {
-        this.scopes.push({ name: System.domainName + ":" + name, description, domain: System.domainName });
+        this.scopes.push({ name: Service.domainName + ":" + name, description, domain: Service.domainName });
     }
 }

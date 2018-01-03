@@ -3,7 +3,7 @@ import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
 import { HystrixSSEStream as hystrixStream } from '../commands/http/hystrixSSEStream';
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 import { VulcainPipeline } from "./vulcainPipeline";
 import { NormalizeDataMiddleware } from "./middlewares/normalizeDataMiddleware";
 import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware";
@@ -40,7 +40,7 @@ export class VulcainServer {
                         response.write('data: ' + sseData + '\n\n');
                     },
                     function onError(error) {
-                        System.log.error(null, error, () => "hystrixstream: error");
+                        Service.log.error(null, error, () => "hystrixstream: error");
                     },
                     function onComplete() {
                    //     System.log.info(null, () => "end hystrix.stream");
@@ -59,6 +59,6 @@ export class VulcainServer {
             this.adapter.registerRoute(e.verb, e.path, e.handler);
         });
 
-        this.adapter.start(port, (err) => System.log.info(null, () => 'Listening on port ' + port));
+        this.adapter.start(port, (err) => Service.log.info(null, () => 'Listening on port ' + port));
     }
 }

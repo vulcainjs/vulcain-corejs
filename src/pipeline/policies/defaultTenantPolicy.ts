@@ -1,4 +1,4 @@
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { RequestContext, VulcainHeaderNames } from "../../pipeline/requestContext";
 
 export interface ITenantPolicy {
@@ -51,7 +51,7 @@ export class DefaultTenantPolicy {
     resolveTenant(ctx: RequestContext): string {
         let tenant: string;
         // 1 - tenant in url (test only)
-        tenant = (System.isTestEnvironnment && ctx.requestData.params.$tenant);
+        tenant = (Service.isTestEnvironment && ctx.requestData.params.$tenant);
         if (tenant) {
             return tenant;
         }
@@ -63,6 +63,6 @@ export class DefaultTenantPolicy {
         }
 
         // 3 - default
-        return System.defaultTenant;
+        return Service.defaultTenant;
     }
 }

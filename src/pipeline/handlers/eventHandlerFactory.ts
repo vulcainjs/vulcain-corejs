@@ -1,7 +1,7 @@
 import { HandlerItem } from './serviceDescriptions';
 import { IContainer } from '../../di/resolvers';
 import {Domain} from '../../schemas/schema';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import * as util from 'util';
 import { EventMetadata, ConsumeEventMetadata } from "./messageBus";
 
@@ -70,7 +70,7 @@ export class EventHandlerFactory {
             };
 
             bySchemas.push(item);
-            System.log.info(null, ()=> util.format("Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema));
+            Service.log.info(null, ()=> util.format("Event handler registered for domain %s action %s schema %s", domainName, actionMetadata.subscribeToAction, schema));
         }
     }
 

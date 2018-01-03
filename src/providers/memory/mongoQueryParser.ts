@@ -69,107 +69,102 @@ export class MongoQueryParser {
 
         let val = query[k];
         if (typeof val !== "object") {
-            return this.evaluate("$eq", left, val);
+            return this.evaluate({ "$eq": val }, left);
         }
 
         let v = this.getExpressionValue(val);
-        if (v.op === "$not") {
-            v = this.getExpressionValue(v.val);
-            return !this.evaluate(v.op, left, v.val);
+        if (v["$not"]) {
+            v = this.getExpressionValue(v["$not"]);
+            return !this.evaluate(v, left);
         }
-        return this.evaluate(v.op, left, v.val);
+        return this.evaluate(v, left);
     }
 
     private getExpressionValue(val) {
         if (!val || typeof val !== "object") {
-            return { op: "$eq", val };
+            return {"$eq": val };
         }
         if (Object.prototype.toString.call(val) === '[object RegExp]') {
-            return { op: "$regex", val };
+            return { "$regex": val };
         }
-        let keys = Object.keys(val);
-        if (keys.length !== 1)
-            throw new Error("Syntax error");
-        let op = keys[0];
-        return { op, val: val[op] };
+        return val;
     }
 
-    private evaluate(op, left, right): boolean {
-
-        switch (op) {
-            case "$eq":
-                if (Array.isArray(left))
-                    return left.indexOf(right) >= 0;
-                return (left === right);
-            case "$comment":
-                return true;
-            case "$lt":
-                return (left < right);
-            case "$gt":
-                return (left > right);
-            case "$lte":
-                return (left <= right);
-            case "$gte":
-                return (left >= right);
-            case "$ne":
-                return (left !== right);
-            case "$exists":
-                return (left !== undefined) === right;
-            case "$regex":
-                return left && left.match(RegExp(right)) !== null;
-            case "$in":
-                if (!Array.isArray(right))
-                    throw new Error("Syntax error for $in");
-                let arr: Array<any> = Array.isArray(left) ? left : [left];
-                for (let i of arr) {
-                    if (right.indexOf(i) >= 0)
-                        return true;
-                }
-                return false;
-            case "$nin":
-                if (!Array.isArray(right))
-                    throw new Error("Syntax error for $nin");
-                let arr2: Array<any> = Array.isArray(left) ? left : [left];
-                for (let i of arr2) {
-                    if (right.indexOf(i) >= 0)
-                        return false;
-                }
-                return true;
-            case "$startsWith":
-                return left && ((<string>left).startsWith(right));
-            case "$mod":
-                if (!Array.isArray(right))
-                    throw new Error("Syntax error for $mod");
-                let divider = parseInt(right[0]);
-                let remainder = parseInt(right[1]);
-                return left % divider === remainder;
-            case "$elemMatch":
-                if (!left) return false;
-                if (!Array.isArray(left))
-                    throw new Error("Syntax error for $elemMatch");
-                for (let elem of left) {
-                    if (this.executeExpression(elem, right))
-                        return true;
-                }
-                return false;
-            case "$all":
-                if (!left) return false;
-                if (!Array.isArray(right) && !Array.isArray(left))
-                    throw new Error("Syntax error for $all");
-                for (let elem of left) {
-                    if (right.indexOf(elem) <= 0)
-                        return false;
-                }
-                return true;
-            case "$size":
-                if (!left) return false;
-                if (!Array.isArray(left))
-                    throw new Error("Syntax error for $size");
-                return left.length === right;
-            default:
-                throw new Error("Operator not implemented");
-        }
+    private evaluate(op, left): boolean {
+        let opval;
+        if (opval = op["$eq"]) {
+            if (Array.isArray(left))
+                return left.indexOf(opval) >= 0;
+            return (left === opval);
+        } else if (opval = op["$comment"]) {
+            return true;
+        } else if (opval = op["$lt"]) {
+            return (left < opval);
+        } else if (opval = op["$gt"]) {
+            return (left > opval);
+        } else if (opval = op["$lte"]) {
+            return (left <= opval);
+        } else if (opval = op["$gte"]) {
+            return (left >= opval);
+        } else if (opval = op["$ne"]) {
+            return (left !== opval);
+        } else if (opval = op["$exists"]) {
+            return (left !== undefined) === opval;
+        } else if (opval = op["$regex"]) {
+            return left && (<string>left).match(RegExp(opval, op.$options)) !== null;
+        } else if (opval = op["$in"]) {
+            if (!Array.isArray(opval))
+                throw new Error("Syntax error for $in");
+            let arr: Array<any> = Array.isArray(left) ? left : [left];
+            for (let i of arr) {
+                if (opval.indexOf(i) >= 0)
+                    return true;
+            }
+            return false;
+        } else if (opval = op["$nin"]) {
+            if (!Array.isArray(opval))
+                throw new Error("Syntax error for $nin");
+            let arr2: Array<any> = Array.isArray(left) ? left : [left];
+            for (let i of arr2) {
+                if (opval.indexOf(i) >= 0)
+                    return false;
+            }
+            return true;
+            //}    else if(opval = op["$startsWith":
+            //        return left && ((<string>left).startsWith(right));
+        } else if (opval = op["$mod"]) {
+            if (!Array.isArray(opval))
+                throw new Error("Syntax error for $mod");
+            let divider = parseInt(opval[0]);
+            let remainder = parseInt(opval[1]);
+            return left % divider === remainder;
+        } else if (opval = op["$elemMatch"]) {
+            if (!left) return false;
+            if (!Array.isArray(left))
+                throw new Error("Syntax error for $elemMatch");
+            for (let elem of left) {
+                if (this.executeExpression(elem, opval))
+                    return true;
+            }
+            return false;
+        } else if (opval = op["$all"]) {
+            if (!left) return false;
+            if (!Array.isArray(opval) && !Array.isArray(left))
+                throw new Error("Syntax error for $all");
+            for (let elem of left) {
+                if (opval.indexOf(elem) <= 0)
+                    return false;
+            }
+            return true;
+        } else if (opval = op["$size"]) {
+            if (!left) return false;
+            if (!Array.isArray(left))
+                throw new Error("Syntax error for $size");
+            return left.length === opval;
+        } else
+            throw new Error("Operator not implemented");
     }
+
 
     private getFieldValue(entity, path: string) {
         let current = entity;

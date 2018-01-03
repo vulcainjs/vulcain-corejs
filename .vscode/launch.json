@@ -39,10 +39,10 @@
             "runtimeArgs": [
             ],
             "env": {
-				"VULCAIN_ENV": "vulcain",
+				"VULCAIN_ENV": "test",
 				"VULCAIN_SERVICE_NAME": "core",
 				"VULCAIN_SERVICE_VERSION": "1.0",
-				"VULCAIN_DOMAIN": "test",
+				"VULCAIN_DOMAIN": "vulcain",
 				"NODE_ENV": "development"
             },
 			"console": "internalConsole",

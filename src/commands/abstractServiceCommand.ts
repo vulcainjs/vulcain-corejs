@@ -1,6 +1,6 @@
 import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { DynamicConfiguration } from './../configurations/dynamicConfiguration';
 import { IMetrics } from '../instrumentations/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
@@ -74,14 +74,14 @@ export abstract class AbstractServiceCommand {
         if (!verb) {
             let dep = this.constructor["$dependency:service"];
             if (dep) {
-                System.manifest.registerService(dep.targetServiceName, dep.targetServiceVersion);
+                Service.manifest.registerService(dep.targetServiceName, dep.targetServiceVersion);
             }
         }
         else {
             this.context.tracker.trackAction(verb);
 
             this.context.tracker.addServiceCommandTags(serviceName, serviceVersion);
-            System.manifest.registerService(serviceName, serviceVersion);
+            Service.manifest.registerService(serviceName, serviceVersion);
         }
     }
 
@@ -105,13 +105,13 @@ export abstract class AbstractServiceCommand {
     }
 
     private async createServiceName(serviceName: string, serviceVersion: string,) {
-        let alias = System.resolveAlias(serviceName, serviceVersion);
+        let alias = Service.resolveAlias(serviceName, serviceVersion);
         if (alias)
             return alias;
 
-        if (System.isDevelopment) {
+        if (Service.isDevelopment) {
             try {
-                let deps = System.manifest.dependencies.services.find(svc => svc.service === serviceName && svc.version === serviceVersion);
+                let deps = Service.manifest.dependencies.services.find(svc => svc.service === serviceName && svc.version === serviceVersion);
                 if (deps && deps.discoveryAddress) {
                     const url = URL.parse(deps.discoveryAddress);
                     return url.host;
@@ -130,15 +130,15 @@ export abstract class AbstractServiceCommand {
      * @returns {Promise<QueryResponse<T>>}
      */
     protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<QueryResult> {
-        const stubs = System.getStubManager(this.container);
-        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
+        const stubs = Service.getStubManager(this.container);
+        let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using stub database result for ${serviceName}`);
+            Service.log.info(this.context, ()=>`Using stub database result for ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
-        let url = System.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
+        let url = Service.createUrl(`http://${service}`, 'api', schema, 'get', id, args);
         this.setMetricTags("get", serviceName, serviceVersion);
         let res = this.sendRequest("get", url);
         return res;
@@ -161,15 +161,15 @@ export abstract class AbstractServiceCommand {
         data.$maxByPage = maxByPage;
         data.$page = page;
         data.$query = query && JSON.stringify(query);
-        const stubs = System.getStubManager(this.container);
-        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
+        const stubs = Service.getStubManager(this.container);
+        let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
+            Service.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
-        let url = System.createUrl(`http://${service}/api/${verb}`, args, data);
+        let url = Service.createUrl(`http://${service}/api/${verb}`, args, data);
         this.setMetricTags("query", serviceName, serviceVersion);
 
         let res = this.sendRequest("get", url);
@@ -186,15 +186,15 @@ export abstract class AbstractServiceCommand {
      */
     protected async sendAction<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
         let command = { params: data, correlationId: this.context.requestData.correlationId };
-        const stubs=System.getStubManager(this.container);
-        let result = System.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
+        const stubs=Service.getStubManager(this.container);
+        let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            System.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
+            Service.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 
         let service = await this.createServiceName(serviceName, serviceVersion);
-        let url = System.createUrl(`http://${service}`, 'api', verb, args);
+        let url = Service.createUrl(`http://${service}`, 'api', verb, args);
         this.setMetricTags(verb, serviceName, serviceVersion);
         let res = <any>this.sendRequest("post", url, (req) => req.json(data));
         return res;
@@ -265,26 +265,26 @@ export abstract class AbstractServiceCommand {
                             }
                         }
                         else {
-                            err = new ApplicationError((response.error && response.error.message) || "Unknow error", response.status);
+                            err = new ApplicationError((response.error && response.error.message) || "Unknown error", response.status);
                         }
-                        System.log.error(this.context, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        Service.log.error(this.context, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;
                     }
                     let vulcainResponse = response.body;
                     if (vulcainResponse.error) {
-                        System.log.info(this.context, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        Service.log.info(this.context, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(new ApplicationError(vulcainResponse.error.message, response.status, vulcainResponse.error.errors));
                     }
                     else {
-                        System.log.info(this.context, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
+                        Service.log.info(this.context, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
                         resolve(vulcainResponse);
                     }
                 });
             }
             catch (err) {
                 let msg = ()=>`Service request ${verb} ${url} failed`;
-                System.log.error(this.context, err, msg);
+                Service.log.error(this.context, err, msg);
                 if (!(err instanceof Error)) {
                     let tmp = err;
                     err = new Error(msg());
