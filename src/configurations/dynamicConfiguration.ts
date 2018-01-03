@@ -102,7 +102,7 @@ export class DynamicConfiguration {
     }
 
     /// <summary>
-    /// Initialise dynamic properties configuration. Can be call only once and before any call to DynamicProperties.instance.
+    /// Initialize dynamic properties configuration. Can be call only once and before any call to DynamicProperties.instance.
     /// </summary>
     /// <param name="pollingIntervalInSeconds">Polling interval in seconds (default 60)</param>
     /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>

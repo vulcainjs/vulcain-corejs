@@ -67,19 +67,6 @@ export class System {
     }
 
     /**
-     * Calculate a diff with a date from now in seconds using moment
-     *
-     * @static
-     * @param {string} date in utc string format
-     * @returns
-     *
-     * @memberOf System
-     */
-    static diffFromNow(date: string) {
-        return moment.utc().diff(moment(date), "second");
-    }
-
-    /**
      * Acces to logger
      *
      * @static

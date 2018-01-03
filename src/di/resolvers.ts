@@ -29,7 +29,7 @@ export interface IContainer {
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
 
     /**
-     * Inject all components founded recursivly in a folder.
+     * Inject all components founded recursively in a folder.
      *
      * @param {string} path Root folder relative to current folder
      * @returns {IContainer}

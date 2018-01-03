@@ -8,6 +8,7 @@ import { Pipeline } from './../pipeline/common';
 import { IRequestTracker, IRequestTrackerFactory } from '../instrumentations/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
 import { ISpanTracker, TrackerId, SpanKind } from "./common";
+import * as os from 'os';
 
 // Metrics use the RED method https://www.weave.works/blog/prometheus-and-kubernetes-monitoring-your-applications/
 export class Span implements ISpanTracker {
@@ -50,6 +51,7 @@ export class Span implements ISpanTracker {
 
         this.tags["name"] = name;
         this.tags["domain"] = System.domainName;
+        this.tags["host"] = os.hostname();
 
         this.convertKind();
     }

@@ -5,11 +5,9 @@ const rest = require('unirest');
 const moment = require('moment');
 
 export class VulcainConfigurationSource extends HttpConfigurationSource {
-    private token: string;
 
     constructor(uri: string, private options) {
         super(uri);
-        this.token = System.vulcainToken;
     }
 
     protected prepareRequest(request) {
