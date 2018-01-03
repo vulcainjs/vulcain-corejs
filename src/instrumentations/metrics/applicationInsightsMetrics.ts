@@ -1,7 +1,7 @@
 import { IMetrics } from "../metrics";
 import { Inject, DefaultServiceNames } from "../../di/annotations";
 import { IContainer } from "../../di/resolvers";
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { IRequestTracker, IRequestTrackerFactory } from "../trackers/index";
 import { IRequestContext } from "../../pipeline/common";
@@ -118,7 +118,7 @@ export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFact
     /**
      * Increment a counter metric
      * @param metric Metric name
-     * @param customTags Object containing contextuel key value tags
+     * @param customTags Object containing contextual key value tags
      * @param delta Increment value
      /
     increment(metric: string, customTags?: any, delta: number = 1) {
@@ -128,7 +128,7 @@ export class ApplicationInsightsMetrics implements IMetrics, IRequestTrackerFact
      * Track a timing value
      * @param metric Metric name
      * @param duration duration is ms
-     * @param customTags Object containing contextuel key value tags
+     * @param customTags Object containing contextual key value tags
      /
     timing(metric: string, duration: number, customTags?: any) {
     }

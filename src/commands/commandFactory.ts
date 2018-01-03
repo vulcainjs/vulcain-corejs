@@ -6,7 +6,7 @@ import { IContainer } from '../di/resolvers';
 import { IRequestContext } from "../pipeline/common";
 import { RequestContext } from "../pipeline/requestContext";
 import { CommandMetricsFactory } from "./metrics/commandMetricsFactory";
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { Preloader } from "../preloader";
 import { Domain } from '../schemas/schema';
 import { Pipeline } from "../pipeline/common";
@@ -53,7 +53,7 @@ export class CommandFactory {
      * Register a new command
      */
     static registerCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {
-        commandGroup = commandGroup || System.fullServiceName;
+        commandGroup = commandGroup || Service.fullServiceName;
         commandKey = commandKey || command.name;
 
         if (!hystrixCommandsCache.has(commandKey)) {

@@ -1,5 +1,5 @@
 import { LifeTime } from '../di/annotations';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { VulcainManifest } from '../globals/manifest';
 import { QueryHandler } from "../pipeline/handlers/annotations.handlers";
 import { Query } from "../pipeline/handlers/annotations";
@@ -18,6 +18,6 @@ export class DependencyExplorer {
         if (ctx.publicPath)
             throw new ForbiddenRequestError();
 
-        return System.manifest;
+        return Service.manifest;
     }
 }

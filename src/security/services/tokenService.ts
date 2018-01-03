@@ -1,6 +1,6 @@
 import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { IDynamicProperty } from '../../configurations/abstractions';
 import { ConfigurationProperty } from '../../globals/manifest';
 import { IAuthenticationStrategy, UserContextData } from "../securityContext";

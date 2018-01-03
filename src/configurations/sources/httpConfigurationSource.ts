@@ -1,6 +1,6 @@
 import { IRemoteConfigurationSource, DataSource, ConfigurationItem } from "../abstractions";
 import { AbstractRemoteSource } from "./abstractRemoteSource";
-import { System } from "../../globals/system";
+import { Service } from "../../globals/system";
 
 const rest = require('unirest');
 const moment = require('moment');
@@ -41,8 +41,8 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
                 request.end(function (response) {
                     if (response.status === 200 && response.body) {
                         if (response.body.error) {
-                            if (!System.isDevelopment) {
-                                System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
+                            if (!Service.isDevelopment) {
+                                Service.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${response.body.error.message}`);
                             }
                         }
                         else {
@@ -54,13 +54,13 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
                         }
                     }
                     else {
-                        System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
+                        Service.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${(response.error && response.error.message) || response.status}`);
                     }
                     resolve(values && new DataSource(values.values()));
                 });
             }
             catch (e) {
-                System.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
+                Service.log.info(null, () => `HTTP CONFIG : error when polling properties on ${uri} - ${e.message}`);
                 resolve(null);
             }
         });

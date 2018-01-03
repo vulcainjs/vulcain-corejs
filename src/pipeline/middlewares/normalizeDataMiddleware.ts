@@ -4,7 +4,7 @@ import { BadRequestError } from "../errors/badRequestError";
 import { Conventions } from "../../utils/conventions";
 import { ApplicationError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
-import { System } from "../../globals/system";
+import { Service } from "../../globals/system";
 
 /**
  * Populate requestData property with action or query context
@@ -44,7 +44,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         }
 
         // Inject request context in response
-        if( System.isTestEnvironnment)
+        if( Service.isTestEnvironment)
             ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
 
         if (typeof (ctx.response.content) === "object") {
@@ -119,17 +119,17 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
 
         if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {
             ctx.requestData.page = 0;
-            ctx.requestData.maxByPage = 100;
+            ctx.requestData.maxByPage = 20;
         }
         // Normalize option values
         Object.keys(url.query).forEach(name => {
             try {
-                switch (name) {
+                switch (name.toLowerCase()) {
                     case "$page":
                         ctx.requestData.page = (url.query.$page && parseInt(url.query.$page)) || ctx.requestData.page;
                         break;
-                    case "$maxByPage":
-                        ctx.requestData.maxByPage = (url.query.$maxByPage && parseInt(url.query.$maxByPage)) || ctx.requestData.maxByPage;
+                    case "$maxbypage":
+                        ctx.requestData.maxByPage = (url.query[name] && parseInt(url.query[name])) || ctx.requestData.maxByPage;
                         break;
                     case "$query":
                         ctx.requestData.params = url.query.$query && JSON.parse(url.query.$query);

@@ -19,7 +19,7 @@ import { ServiceDescriptors } from "./pipeline/handlers/serviceDescriptions";
 import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
 import { LocalAdapter } from "./bus/localAdapter";
-import { System } from './globals/system';
+import { Service } from './globals/system';
 import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
 const vulcainExecutablePath = __dirname;
@@ -80,21 +80,21 @@ export class Application {
             throw new Error("Domain name is required.");
         }
 
-        System.defaultDomainName = this.domainName;
+        Service.defaultDomainName = this.domainName;
         this._container = this._container || new Container();
     }
 
     private async init() {
         await DynamicConfiguration.getBuilder().startPolling();
 
-        System.log.info(null, () => "Starting application");
+        Service.log.info(null, () => "Starting application");
 
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
 
         process.on('unhandledRejection', (reason, p) => {
-            System.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
+            Service.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
         });
 
         // Stop to receive inputs
@@ -160,7 +160,7 @@ export class Application {
             server.start(port);
         }
         catch (err) {
-            System.log.error(null, err, () => "ERROR when starting application");
+            Service.log.error(null, err, () => "ERROR when starting application");
             process.exit(2);
         }
     }

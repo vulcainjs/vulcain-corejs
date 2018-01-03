@@ -3,7 +3,7 @@ import * as types from './types';
 import { DefaultServiceNames, Inject } from './../di/annotations';
 import { IContainer } from './../di/resolvers';
 import { IMetrics } from '../instrumentations/metrics';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
 import { IRequestContext } from "../pipeline/common";
@@ -33,8 +33,8 @@ export abstract class AbstractHttpCommand {
     protected setMetricTags(verb: string, uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
-        uri = System.removePasswordFromUrl(uri);
-        System.manifest.registerExternal(uri);
+        uri = Service.removePasswordFromUrl(uri);
+        Service.manifest.registerExternal(uri);
 
         if (uri && verb) {
             this.context.tracker.trackAction(verb);
@@ -71,23 +71,23 @@ export abstract class AbstractHttpCommand {
 
         this.setMetricTags(verb, url);
 
-        const stubs = System.getStubManager(this.container);
-        let result = System.isDevelopment && stubs.enabled && await stubs.applyHttpStub(url, verb);
+        const stubs = Service.getStubManager(this.container);
+        let result = Service.isDevelopment && stubs.enabled && await stubs.applyHttpStub(url, verb);
         if (result) {
-            System.log.info(this.context, ()=>`Using stub output for (${verb}) ${System.removePasswordFromUrl(url)}`);
+            Service.log.info(this.context, ()=>`Using stub output for (${verb}) ${Service.removePasswordFromUrl(url)}`);
             return result;
         }
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
-        System.log.info(this.context, ()=>`Calling (${verb}) ${System.removePasswordFromUrl(url)}`);
+        Service.log.info(this.context, ()=>`Calling (${verb}) ${Service.removePasswordFromUrl(url)}`);
 
         return new Promise<types.IHttpCommandResponse>((resolve, reject) => {
             request.end((response) => {
                 if (response.status >= 400) {
                     let msg = ()=> `Http request ${verb} ${url} failed with status code ${response.status}`;
-                    System.log.info(this.context, msg);
+                    Service.log.info(this.context, msg);
                     reject(new HttpCommandError(msg(), response));
                     return;
                 }
@@ -98,14 +98,14 @@ export abstract class AbstractHttpCommand {
                     return;
                 }
 
-                System.log.info(this.context, ()=>`Http request ${verb} ${url} completed succesfully (code:${response.status}).`);
+                Service.log.info(this.context, ()=>`Http request ${verb} ${url} completed successfully (code:${response.status}).`);
                 resolve(response);
             });
         });
     }
 
     private handleError(msg: ()=>string, err?) {
-        System.log.error(this.context, err, msg);
+        Service.log.error(this.context, err, msg);
         if (err && !(err instanceof Error)) {
             let tmp = err;
             err = new Error(msg());

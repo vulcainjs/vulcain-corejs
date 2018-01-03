@@ -1,4 +1,4 @@
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import * as fs from 'fs';
 import * as Path from 'path';
 import { Files } from "../utils/files";
@@ -40,7 +40,7 @@ export class VulcainManifest {
     domain: string;
 
     constructor(public serviceName: string, public serviceVersion: string) {
-        this.domain = System.domainName;
+        this.domain = Service.domainName;
         this.dependencies = {
             services: [],
             externals: [],
@@ -100,7 +100,7 @@ export class VulcainManifest {
 }
 
 /**
- * Declare a vulcain service dependencie for the current service
+ * Declare a vulcain service dependencies for the current service
  *
  * @export
  * @param {string} service Name of the called service
@@ -112,15 +112,15 @@ export function ServiceDependency(service: string, version: string, discoveryAdd
     return (target: Function) => {
         target["$dependency:service"] = { targetServiceName: service, targetServiceVersion: version };
 
-        let exists = System.manifest.dependencies.services.find(svc => svc.service === service && svc.version === version);
+        let exists = Service.manifest.dependencies.services.find(svc => svc.service === service && svc.version === version);
         if (!exists) {
-            System.manifest.dependencies.services.push({ service, version, discoveryAddress });
+            Service.manifest.dependencies.services.push({ service, version, discoveryAddress });
         }
     };
 }
 
 /**
- * Declare an external http call dependencie for the current service
+ * Declare an external http call dependencies for the current service
  *
  * @export
  * @param {string} uri External uri
@@ -129,9 +129,9 @@ export function ServiceDependency(service: string, version: string, discoveryAdd
 export function HttpDependency(uri: string) {
     return (target: Function) => {
         target["$dependency:external"] = { uri };
-        let exists = System.manifest.dependencies.externals.find(ex => ex.uri === uri);
+        let exists = Service.manifest.dependencies.externals.find(ex => ex.uri === uri);
         if (!exists) {
-            System.manifest.dependencies.externals.push({ uri });
+            Service.manifest.dependencies.externals.push({ uri });
         }
     };
 }
@@ -153,12 +153,12 @@ export function ConfigurationProperty(propertyName: string, schema: string) {
             throw new Error("Invalid property schema");
 
         schema = schema.toLowerCase();
-        let existingSchema = System.manifest.configurations[propertyName];
+        let existingSchema = Service.manifest.configurations[propertyName];
         if(existingSchema && existingSchema !== "any") {
             if (existingSchema !== schema)
-                throw new Error(`Inconsistant schema (${schema} <> ${existingSchema}) for configuration property ${propertyName}`);
+                throw new Error(`Inconsistent schema (${schema} <> ${existingSchema}) for configuration property ${propertyName}`);
             return;
         }
-        System.manifest.configurations[propertyName] = schema;
+        Service.manifest.configurations[propertyName] = schema;
     };
 }

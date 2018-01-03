@@ -17,9 +17,9 @@ import { Settings } from './settings';
  * Static class providing service helper methods
  *
  * @export
- * @class System
+ * @class Service
  */
-export class System {
+export class Service {
     private static _settings: Settings;
     private static _vulcainServer: string;
     private static _vulcainToken: string;
@@ -33,15 +33,15 @@ export class System {
     static defaultDomainName: string;
 
     public static get settings() {
-        if (!System._settings) {
-            System._settings = new Settings();
-            System.log.info(null, () => `Running in ${System._settings.environment} environment.`);
+        if (!Service._settings) {
+            Service._settings = new Settings();
+            Service.log.info(null, () => `Running in ${Service._settings.environment} environment.`);
         }
-        return System._settings;
+        return Service._settings;
     }
 
     /**
-     * Get the application manifest when the application runs in developement mode
+     * Get the application manifest when the application runs in development mode
      *
      * @readonly
      * @static
@@ -49,9 +49,9 @@ export class System {
      * @memberOf System
      */
     public static get manifest() {
-        if (!System._manifest)
-            System._manifest = new VulcainManifest(System.serviceName, System.serviceVersion);
-        return System._manifest;
+        if (!Service._manifest)
+            Service._manifest = new VulcainManifest(Service.serviceName, Service.serviceVersion);
+        return Service._manifest;
     }
 
     /**
@@ -67,29 +67,16 @@ export class System {
     }
 
     /**
-     * Calculate a diff with a date from now in seconds using moment
-     *
-     * @static
-     * @param {string} date in utc string format
-     * @returns
-     *
-     * @memberOf System
-     */
-    static diffFromNow(date: string) {
-        return moment.utc().diff(moment(date), "second");
-    }
-
-    /**
-     * Acces to logger
+     * Access to logger
      *
      * @static
      *
      * @memberOf System
      */
     static get log() {
-        if (!System.logger)
-            System.logger = new VulcainLogger();
-        return System.logger;
+        if (!Service.logger)
+            Service.logger = new VulcainLogger();
+        return Service.logger;
     }
 
     /**
@@ -105,20 +92,20 @@ export class System {
     }
 
     static getStubManager(container: IContainer): IStubManager {
-        if (!System._stubManager) {
-            if (System.isTestEnvironnment) {
-                let manager = System._stubManager = container.get<IStubManager>(DefaultServiceNames.StubManager);
-                manager.initialize && manager.initialize(System.settings.stubSessions, System.settings.saveStubSessions.bind(System.settings));
+        if (!Service._stubManager) {
+            if (Service.isTestEnvironment) {
+                let manager = Service._stubManager = container.get<IStubManager>(DefaultServiceNames.StubManager);
+                manager.initialize && manager.initialize(Service.settings.stubSessions, Service.settings.saveStubSessions.bind(Service.settings));
             }
             else {
-                System._stubManager = new DummyStubManager();
+                Service._stubManager = new DummyStubManager();
             }
         }
-        return System._stubManager; // TODO as service
+        return Service._stubManager; // TODO as service
     }
 
     /**
-     * Check if the service is running in local mode (on developper desktop)
+     * Check if the service is running in local mode (on developer desktop)
      * by checking if a '.vulcain' file exists in the working directory
      *
      * @readonly
@@ -127,7 +114,7 @@ export class System {
      * @memberOf System
      */
     static get isDevelopment() {
-        return System.settings.isDevelopment;
+        return Service.settings.isDevelopment;
     }
 
     /**
@@ -138,8 +125,8 @@ export class System {
      *
      * @memberOf System
      */
-    static get isTestEnvironnment() {
-        return System.settings.isTestEnvironnment;
+    static get isTestEnvironment() {
+        return Service.settings.isTestEnvironment;
     }
 
     /**
@@ -156,7 +143,7 @@ export class System {
             return null;
 
         // Try to find an alternate uri
-        let alias = System.settings.getAlias(name, version);
+        let alias = Service.settings.getAlias(name, version);
         if (alias)
             return alias;
 
@@ -169,7 +156,7 @@ export class System {
             if (!prop.value.serviceName && !prop.value.version) return prop.value;
             name = prop.value.serviceName || name;
             version = prop.value.version || version;
-            return System.createContainerEndpoint(name, version);
+            return Service.createContainerEndpoint(name, version);
         }
         return null;
     }
@@ -193,7 +180,7 @@ export class System {
      * @memberOf System
      */
     static get environment() {
-        return System.settings.environment;
+        return Service.settings.environment;
     }
 
     /**
@@ -205,11 +192,11 @@ export class System {
      * @memberOf System
      */
     static get vulcainServer() {
-        if (System._vulcainServer === undefined) {
+        if (Service._vulcainServer === undefined) {
             let env = DynamicConfiguration.getPropertyValue<string>("vulcainServer") ;
-            System._vulcainServer = env || null; // for dev
+            Service._vulcainServer = env || null; // for dev
         }
-        return System._vulcainServer;
+        return Service._vulcainServer;
     }
 
     /**
@@ -221,10 +208,10 @@ export class System {
      * @memberOf System
      */
     static get vulcainToken() {
-        if (System._vulcainToken === undefined) {
-            System._vulcainToken = DynamicConfiguration.getPropertyValue<string>("vulcainToken") || null;
+        if (Service._vulcainToken === undefined) {
+            Service._vulcainToken = DynamicConfiguration.getPropertyValue<string>("vulcainToken") || null;
         }
-        return System._vulcainToken;
+        return Service._vulcainToken;
     }
 
     /**
@@ -236,14 +223,14 @@ export class System {
      * @memberOf System
      */
     static get serviceName() {
-        if (!System._serviceName) {
+        if (!Service._serviceName) {
             let env = process.env[Conventions.instance.ENV_SERVICE_NAME];
             if (env)
-                System._serviceName = env;
+                Service._serviceName = env;
             else
                 return null;
         }
-        return System._serviceName;
+        return Service._serviceName;
     }
 
     /**
@@ -255,14 +242,14 @@ export class System {
      * @memberOf System
      */
     static get serviceVersion() {
-        if (!System._serviceVersion) {
+        if (!Service._serviceVersion) {
             let env = process.env[Conventions.instance.ENV_SERVICE_VERSION];
             if (env)
-                System._serviceVersion = env;
+                Service._serviceVersion = env;
             else
                 return null;
         }
-        return System._serviceVersion;
+        return Service._serviceVersion;
     }
 
     static get fullServiceName() {
@@ -278,21 +265,21 @@ export class System {
      * @memberOf System
      */
     static get domainName() {
-        if (!System._domainName) {
+        if (!Service._domainName) {
             let env = process.env[Conventions.instance.ENV_VULCAIN_DOMAIN];
             if (env)
-                System._domainName = env;
+                Service._domainName = env;
             else
-                System._domainName = System.defaultDomainName;
+                Service._domainName = Service.defaultDomainName;
         }
-        return System._domainName;
+        return Service._domainName;
     }
 
     private static get crypto() {
-        if (!System.crypter) {
-            System.crypter = new CryptoHelper();
+        if (!Service.crypter) {
+            Service.crypter = new CryptoHelper();
         }
-        return System.crypter;
+        return Service.crypter;
     }
 
     /**
@@ -305,7 +292,7 @@ export class System {
      * @memberOf System
      */
     static encrypt(value): string {
-        return System.crypto.encrypt(value);
+        return Service.crypto.encrypt(value);
     }
 
     /**
@@ -318,25 +305,25 @@ export class System {
      * @memberOf System
      */
     static decrypt(value: string) {
-        return System.crypto.decrypt(value);
+        return Service.crypto.decrypt(value);
     }
 
     static registerPropertyAsDependency(name: string, defaultValue) {
-        let prefix = (System.serviceName + "." + System.serviceVersion);
+        let prefix = (Service.serviceName + "." + Service.serviceVersion);
 
-        let p = System.manifest.configurations[name];
+        let p = Service.manifest.configurations[name];
         if (p && p !== "any")
             return;
         let schema = "any";
         if (typeof defaultValue === "number" || defaultValue) {
             schema = typeof defaultValue;
         }
-        System.manifest.configurations[name] = schema;
+        Service.manifest.configurations[name] = schema;
     }
 
     /**
      * create an url from segments
-     * Segments of type string are concatened to provide the path
+     * Segments of type string are concatenated to provide the path
      * Segments of type object are appending in the query string
      * Null segments are ignored.
      * @protected

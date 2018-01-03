@@ -9,7 +9,7 @@ import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { Files } from '../utils/files';
 import * as Path from 'path';
-import { System } from './system';
+import { Service } from './system';
 
 /**
  * Manage local file settings
@@ -51,7 +51,7 @@ export class Settings {
             ));
         }
         catch (e) {
-            System.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings stub sessions.");
+            Service.log.error(null, e, ()=> "VULCAIN MANIFEST : Error when savings stub sessions.");
         }
     }
 
@@ -115,7 +115,7 @@ export class Settings {
      *
      * @memberOf System
      */
-    get isTestEnvironnment() {
+    get isTestEnvironment() {
         return this.isDevelopment || this._environment === "test";
     }
 
@@ -129,7 +129,7 @@ export class Settings {
      * @memberOf System
      */
     getAlias(name: string, version?: string): string {
-        if (!name || !System.isDevelopment)
+        if (!name || !Service.isDevelopment)
             return null;
 
         // Try to find an alternate uri

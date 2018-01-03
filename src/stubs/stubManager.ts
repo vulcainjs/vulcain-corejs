@@ -1,6 +1,6 @@
 import { IStubManager } from "./istubManager";
 import { Conventions } from '../utils/conventions';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
 import { ActionMetadata } from "../pipeline/handlers/actions";
@@ -15,7 +15,7 @@ export class StubManager implements IStubManager {
     private saveSessions: (sessions:any) => Promise<any>;
 
     get enabled() {
-        return System.isTestEnvironnment && (!this.stubs || !this.stubs.disabled);
+        return Service.isTestEnvironment && (!this.stubs || !this.stubs.disabled);
     }
 
     constructor() {
@@ -104,7 +104,7 @@ export class StubManager implements IStubManager {
 
         // Find on service name
         let stubService = this.stubs.services[serviceName.toLowerCase()];
-        // And optionaly on service version
+        // And optionally on service version
         stubService = (stubService && stubService[serviceVersion]) || stubService;
         if (!stubService) {
             return;
@@ -199,7 +199,7 @@ export class StubManager implements IStubManager {
         }
 
         const regex = new RegExp(filter, 'i');
-        if (regex.test(System.fullServiceName)) {
+        if (regex.test(Service.fullServiceName)) {
             return session;
         }
         return null;

@@ -1,10 +1,10 @@
 import * as fs from 'fs';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 const Utils = require('jaeger-client/dist/src/util').default;
 
 /**
  * Conventions values
- * You can override this values before instanciating application
+ * You can override this values before instantiating application
  *
  * @export
  * @class Conventions
@@ -46,7 +46,7 @@ export class Conventions {
                 }
             }
             catch (e) {
-                System.log.error(null, e, () => "Error when reading vulcain.conventions file. Custom conventions are ignored.");
+                Service.log.error(null, e, () => "Error when reading vulcain.conventions file. Custom conventions are ignored.");
             }
         }
         return Conventions._instance;

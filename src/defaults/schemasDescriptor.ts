@@ -1,5 +1,5 @@
 import { LifeTime, DefaultServiceNames } from '../di/annotations';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { VulcainManifest } from '../globals/manifest';
 import { QueryHandler } from "../pipeline/handlers/annotations.handlers";
 import { Query } from "../pipeline/handlers/annotations";
@@ -23,7 +23,7 @@ export class SchemasDescriptor {
         if (name) {
             let schema = domain.getSchema(name, true);
             if (!schema)
-                throw new NotFoundError("Unknow schema");
+                throw new NotFoundError("Unknown schema");
             return schema.description
         }
         else {

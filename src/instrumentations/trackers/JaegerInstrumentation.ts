@@ -5,7 +5,7 @@ import { DynamicConfiguration } from '../../configurations/dynamicConfiguration'
 import { IRequestTracker, IRequestTrackerFactory } from './index';
 import { IRequestContext } from "../../pipeline/common";
 import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 
 export class JaegerInstrumentation implements IRequestTrackerFactory {
 
@@ -20,7 +20,7 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
             }
 
             const sender = new UDPSender();
-            const tracer = new jaeger.Tracer(System.fullServiceName,
+            const tracer = new jaeger.Tracer(Service.fullServiceName,
                 new jaeger.RemoteReporter(sender),
                 new jaeger.RateLimitingSampler(1));
 

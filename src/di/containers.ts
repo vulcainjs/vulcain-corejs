@@ -6,7 +6,7 @@ import { LifeTime, DefaultServiceNames } from './annotations';
 import { Files } from '../utils/files';
 import { Conventions } from '../utils/conventions';
 import { VulcainLogger } from './../log/vulcainLogger';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { ConsoleMetrics } from '../instrumentations/metrics/consoleMetrics';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { ServiceResolver } from '../di/serviceResolver';
@@ -71,12 +71,12 @@ export class Container implements IContainer {
             this.injectSingleton(ScopesDescriptor, DefaultServiceNames.ScopesDescriptor);
             this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
 
-            // Try to initalize Rabbit provider if there is a 'mongo' environment variable
+            // Try to initialize Rabbit provider if there is a 'mongo' environment variable
             let rabbitAddress = DynamicConfiguration.getPropertyValue<string>("rabbit");
             if(rabbitAddress)
                 this.useRabbitBusAdapter(rabbitAddress);
 
-                // Try to initalize Mongo provider if there is a 'mongo' environment variable
+                // Try to initialize Mongo provider if there is a 'mongo' environment variable
             let mongoAddress = DynamicConfiguration.getPropertyValue<string>("mongo");
             if(mongoAddress)
                 this.useMongoProvider(mongoAddress);
@@ -123,9 +123,9 @@ export class Container implements IContainer {
      * @param {any} [usage=BusUsage.all]
      */
     useRabbitBusAdapter(address?: string, usage = BusUsage.all) {
-        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address;
+        let uri = Service.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("rabbit") || address;
         if (!uri) {
-            System.log.info(null, () => "no value found for rabbit address. Ignore adapter");
+            Service.log.info(null, () => "no value found for rabbit address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("amqp://")) {
@@ -145,9 +145,9 @@ export class Container implements IContainer {
      * @param {any} [mongoOptions] Mongodb options
      */
     useMongoProvider(address?: string, mongoOptions?) {
-        let uri = System.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
+        let uri = Service.resolveAlias(address) || DynamicConfiguration.getPropertyValue<string>("mongo") || address;
         if (!uri) {
-            System.log.info(null, () => "no value found for mongo address. Ignore adapter");
+            Service.log.info(null, () => "no value found for mongo address. Ignore adapter");
             return;
         }
         if (!uri.startsWith("mongodb://")) {
@@ -187,7 +187,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Name is required.");
         this.addResolver(name, new InstanceResolver(fn));
         if (name !== "Container" && fn.name)
-            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            Service.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -216,7 +216,7 @@ export class Container implements IContainer {
         this.addResolver(name, new SingletonResolver(fn, Array.from(args)));
 
         if (fn.name)
-            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            Service.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
 
         return this;
     }
@@ -247,7 +247,7 @@ export class Container implements IContainer {
             return;
         this.addResolver(name, new Resolver(fn, LifeTime.Transient, Array.from(args)));
         if (fn.name)
-            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            Service.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -276,7 +276,7 @@ export class Container implements IContainer {
         if (!name) throw new Error("Cannot find a name when injecting component. Use @Export.");
         this.addResolver(name, new ScopedResolver(fn, Array.from(args)));
         if (fn.name)
-            System.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
+            Service.log.verbose(null, () => "INFO: Register instance component " + name + " as " + fn.name);
         return this;
     }
 
@@ -309,7 +309,7 @@ export class Container implements IContainer {
 
     /**
      *
-     * Instanciate a component and resolve all its dependencies
+     * Instantiate a component and resolve all its dependencies
      * @param fn Component constructor
      * @param args List of optional arguments
      * @returns {null}

@@ -29,7 +29,7 @@ export interface IContainer {
     injectScoped(fn, nameOrArray: string | Array<any>, ...args): IContainer;
 
     /**
-     * Inject all components founded recursivly in a folder.
+     * Inject all components founded recursively in a folder.
      *
      * @param {string} path Root folder relative to current folder
      * @returns {IContainer}
@@ -126,7 +126,7 @@ export class Resolver implements IResolver {
                 component[info.property] = container.get<any>(info.name, info.optional);
             }
             catch (e) {
-                throw new Error(`Error when instanciating component ${name} on injected property ${info.property} : ${e.message}`);
+                throw new Error(`Error when instantiating component ${name} on injected property ${info.property} : ${e.message}`);
             }
         }
     }
@@ -143,7 +143,7 @@ export class Resolver implements IResolver {
                 }
             }
             catch (e) {
-                throw new Error(`Error when instanciating component ${name} on injected parameter : ${e.message}`);
+                throw new Error(`Error when instantiating component ${name} on injected parameter : ${e.message}`);
             }
         }
     }

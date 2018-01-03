@@ -1,5 +1,5 @@
 import { SecurityContext } from './securityContext';
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 
 export interface IAuthorizationPolicy {
     /**
@@ -55,7 +55,7 @@ export class DefaultAuthorizationPolicy {
      * @returns {number}
      */
     hasScope(sec: SecurityContext, handlerScope: string): boolean {
-        if (!handlerScope || handlerScope === "?" || System.isDevelopment) {
+        if (!handlerScope || handlerScope === "?" || Service.isDevelopment) {
             return true;
         }
         if (!sec || !sec.name) {
@@ -81,7 +81,7 @@ export class DefaultAuthorizationPolicy {
                 continue; // malformed
             }
 
-            if (parts[0] !== System.domainName) {
+            if (parts[0] !== Service.domainName) {
                 continue;
             }
             for (let sc of handlerScopes) {

@@ -1,20 +1,18 @@
 import { HttpConfigurationSource } from './httpConfigurationSource';
 import { DataSource } from '../abstractions';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 const rest = require('unirest');
 const moment = require('moment');
 
 export class VulcainConfigurationSource extends HttpConfigurationSource {
-    private token: string;
 
     constructor(uri: string, private options) {
         super(uri);
-        this.token = System.vulcainToken;
     }
 
     protected prepareRequest(request) {
-        if(System.vulcainToken)
-            request = request.headers({ Authorization: 'ApiKey ' + System.vulcainToken });
+        if(Service.vulcainToken)
+            request = request.headers({ Authorization: 'ApiKey ' + Service.vulcainToken });
         return request;
     }
 
@@ -24,7 +22,7 @@ export class VulcainConfigurationSource extends HttpConfigurationSource {
     }
 
     pollProperties(timeoutInMs: number) {
-        if (!System.vulcainToken && !System.isTestEnvironnment) {
+        if (!Service.vulcainToken && !Service.isTestEnvironment) {
             return Promise.resolve(null);
         }
 

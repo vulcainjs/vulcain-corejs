@@ -5,7 +5,7 @@ import { QueryMetadata, QueryActionMetadata } from './query';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { DefaultServiceNames } from '../../di/annotations';
 import { IContainer } from '../../di/resolvers';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { DefaultQueryHandler, DefaultActionHandler } from "../../defaults/crudHandlers";
 import { EventMetadata } from "./messageBus";
 
@@ -40,7 +40,7 @@ function getMetadata(key, target) {
  */
 export function ActionHandler(metadata: ActionHandlerMetadata) {
     return function (target: Function) {
-        if (metadata.enableOnTestOnly && !System.isTestEnvironnment)
+        if (metadata.enableOnTestOnly && !Service.isTestEnvironment)
             return;
         metadata.scope = metadata.scope || "?";
 
@@ -73,7 +73,7 @@ export function ActionHandler(metadata: ActionHandlerMetadata) {
  */
 export function QueryHandler(metadata: QueryMetadata) {
     return function (target: Function) {
-        if (metadata.enableOnTestOnly && !System.isTestEnvironnment)
+        if (metadata.enableOnTestOnly && !Service.isTestEnvironment)
             return;
         metadata.scope = metadata.scope || "?";
 

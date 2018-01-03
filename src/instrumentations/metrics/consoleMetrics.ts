@@ -1,4 +1,4 @@
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { IMetrics } from '../metrics';
 
 /**
@@ -12,7 +12,7 @@ export class ConsoleMetrics implements IMetrics {
     private tags: string;
 
     constructor(address?: string) {
-        this.tags = ",env=" + System.environment + ",service=" + System.serviceName + ',version=' + System.serviceVersion;
+        this.tags = ",env=" + Service.environment + ",service=" + Service.serviceName + ',version=' + Service.serviceVersion;
     }
 
     private log(msg: string) {

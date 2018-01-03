@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { IProvider, ListOptions } from "../provider";
+import { IProvider, ListOptions, GetAllResult } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
@@ -15,7 +15,7 @@ interface AstNode {
 }
 
 interface ISchemaData {
-    data?: any;
+    data?: { count: number, entities: any };
     saveToFile?: string;
 }
 /**
@@ -61,7 +61,7 @@ export class MemoryProvider implements IProvider<any>
     private ensureSchema(schema: Schema) {
         let schemaInfo = this.state.schemas.get(schema.name);
         if (!schemaInfo) {
-            schemaInfo = { data: {} };
+            schemaInfo = { data: { entities: {}, count: 0 } };
             if (this.state.folder) {
                 schemaInfo.saveToFile = this.state.folder + "/" + schema.description.storageName + ".json";
                 if (fs.existsSync(schemaInfo.saveToFile)) {
@@ -71,7 +71,7 @@ export class MemoryProvider implements IProvider<any>
 
             this.state.schemas.set(schema.name, schemaInfo);
         }
-        return schemaInfo.data;
+        return schemaInfo;
     }
 
     private save(schema: Schema) {
@@ -81,20 +81,19 @@ export class MemoryProvider implements IProvider<any>
         fs.writeFileSync(schemaInfo.saveToFile, JSON.stringify(schemaInfo.data), { encoding: "UTF-8" });
     }
 
-
     /**
      * Return a list of entities
      * @param options
      * @returns {Promise}
      */
-    getAll(schema: Schema, options: ListOptions): Promise<Array<any>> {
-        let data = this.ensureSchema(schema);
+    getAll(schema: Schema, options: ListOptions): Promise<GetAllResult> {
+        let data = this.ensureSchema(schema).data;
 
         options = options || { maxByPage: -1 };
         return new Promise((resolve, reject) => {
             try {
-                let result = Array.from(this.take(schema, data[schema.description.storageName], options));
-                options.length = result.length;
+                const elements = Array.from(this.filter(schema, data.entities, options));
+                let result = new GetAllResult(Array.from(this.take(elements, options)), elements.length);
                 resolve(result);
             }
             catch (err) {
@@ -104,19 +103,30 @@ export class MemoryProvider implements IProvider<any>
         );
     }
 
-    public *take(schema: Schema, list, options: ListOptions) {
-        let take = options.maxByPage || -1;
-        let skip = take * (options.page > 0 ? options.page-1 : 0 || 0);
+    public *filter(schema: Schema, list, options: ListOptions) {
         let cx = 0;
-        let query = new MongoQueryParser( (options.query && options.query.filter) || options.query);
+        let query = new MongoQueryParser((options.query && options.query.filter) || options.query);
         if (list) {
             for (let k in list) {
                 let v = list[k];
                 if (!v || !query.execute(v)) continue;
+                cx++;
+                yield Conventions.clone(v);
+            }
+        }
+    }
+
+    public *take(list, options: ListOptions) {
+        if (list) {
+            let take = options.maxByPage || -1;
+            let skip = take * (options.page > 0 ? options.page-1 : 0 || 0);
+            let cx = 0;
+            for (let k in list) {
+                let v = list[k];
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {
                     cx++;
-                    yield Conventions.clone(v);
+                    yield v;
                 }
                 else
                     break;
@@ -124,11 +134,11 @@ export class MemoryProvider implements IProvider<any>
         }
     }
 
-
     async findOne(schema: Schema, query) {
         let options = <ListOptions>{};
         options.query = query;
-        let list = await this.getAll(schema, options);
+        let result = await this.getAll(schema, options);
+        let list = result && result.values;
         return list && list.length > 0 ? list[0] : null;
     }
 
@@ -138,12 +148,12 @@ export class MemoryProvider implements IProvider<any>
      * @returns {Promise}
      */
     get(schema: Schema, name: string) {
-        let data = this.ensureSchema(schema);
+        let data = this.ensureSchema(schema).data;
 
         const self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = data[schema.description.storageName];
+                let list = data.entities;
                 resolve(list && Conventions.clone(list[name]));
             }
             catch (err) {
@@ -160,7 +170,7 @@ export class MemoryProvider implements IProvider<any>
     delete(schema: Schema, old: string | any) {
         if (!old)
             throw new Error("Argument is required");
-        let data = this.ensureSchema(schema);
+        let data = this.ensureSchema(schema).data;
 
         let self = this;
         return new Promise<boolean>((resolve, reject) => {
@@ -171,9 +181,10 @@ export class MemoryProvider implements IProvider<any>
                 else
                     id = schema.getId(old);
 
-                let list = data[schema.description.storageName];
+                let list = data.entities;
                 if (list && list[id]) {
                     delete list[id];
+                    data.count--;
                     self.save(schema);
                     resolve(true);
                 }
@@ -195,18 +206,14 @@ export class MemoryProvider implements IProvider<any>
     create(schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
-        let data = this.ensureSchema(schema);
+        let data = this.ensureSchema(schema).data;
 
         const self = this;
         entity._created = new Date().toUTCString();
 
         return new Promise((resolve, reject) => {
             try {
-                let list = data[schema.description.storageName];
-                if (!list) {
-                    list = {};
-                    data[schema.description.storageName] = list;
-                }
+                let list = data.entities;
                 let name = schema.getId(entity);
                 if (!name)
                     throw new Error(`Can not create a ${schema.name} entity with undefined id : ${schema.getIdProperty()} `);
@@ -217,6 +224,7 @@ export class MemoryProvider implements IProvider<any>
                 }
 
                 list[name] = Conventions.clone(entity);
+                data.count++;
                 self.save(schema);
                 resolve(entity);
             }
@@ -235,14 +243,14 @@ export class MemoryProvider implements IProvider<any>
     update(schema: Schema, entity, old) {
         if (!entity)
             throw new Error("Entity is required");
-        let data = this.ensureSchema(schema);
+        let data = this.ensureSchema(schema).data;
 
         entity._updated = new Date().toUTCString();
 
         let self = this;
         return new Promise((resolve, reject) => {
             try {
-                let list = data[schema.description.storageName];
+                let list = data.entities;
                 let name = schema.getId(entity);
                 if (!list || !list[name]) {
                     reject("Entity doesn't exist. " + name);

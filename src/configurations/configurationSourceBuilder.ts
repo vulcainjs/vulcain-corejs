@@ -2,7 +2,7 @@ import { ConfigurationManager } from './configurationManager';
 import { IConfigurationSource, IRemoteConfigurationSource } from './abstractions';
 import { ConfigurationDataType, FileConfigurationSource } from './sources/fileConfigurationSource';
 import { VulcainConfigurationSource } from './sources/vulcainConfigurationSource';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 
 /**
  * Helper for adding configuration source providing by DynamicConfiguration.init
@@ -21,17 +21,17 @@ export class ConfigurationSourceBuilder {
     }
 
     private addVulcainSource() {
-        if (System.vulcainServer) {
-            if (!System.vulcainToken && !System.isTestEnvironnment) {
-                System.log.info(null, () => "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
+        if (Service.vulcainServer) {
+            if (!Service.vulcainToken && !Service.isTestEnvironment) {
+                Service.log.info(null, () => "No token defined for reading configuration properties. Vulcain configuration source is ignored.");
             }
             else {
-                let uri = `http://${System.vulcainServer}/api/configforservice`;
+                let uri = `http://${Service.vulcainServer}/api/configforservice`;
                 let options = {
-                    environment: System.environment,
-                    service: System.serviceName,
-                    version: System.serviceVersion,
-                    domain: System.domainName
+                    environment: Service.environment,
+                    service: Service.serviceName,
+                    version: Service.serviceVersion,
+                    domain: Service.domainName
                 };
                 this.addSource(new VulcainConfigurationSource(uri, options));
             }

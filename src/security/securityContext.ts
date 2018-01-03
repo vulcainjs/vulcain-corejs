@@ -1,5 +1,5 @@
 import { IAuthorizationPolicy } from './authorizationPolicy';
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError, UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";
 import { VulcainLogger } from "../log/vulcainLogger";
@@ -130,7 +130,7 @@ export class SecurityContext implements UserContext {
     private _scopes: string[];
     private _isAnonymous: boolean;
     public tenant: string;
-    
+
     // For context propagation
     bearer: string;
 
@@ -151,7 +151,7 @@ export class SecurityContext implements UserContext {
             this.claims = tenantOrCtx.claims;
         }
         else
-            this.tenant = System.defaultTenant;
+            this.tenant = Service.defaultTenant;
     }
 
     async process(ctx: RequestContext) {
@@ -201,7 +201,7 @@ export class SecurityContext implements UserContext {
                     if (strategy instanceof TokenService)
                         this.bearer = token;
 
-                    ctx.logInfo(() => `User ${this.name} authentified with tenant ${this.tenant}, scopes ${this.scopes}`);
+                    ctx.logInfo(() => `User ${this.name} authenticated with tenant ${this.tenant}, scopes ${this.scopes}`);
                     return;
                 }
             }

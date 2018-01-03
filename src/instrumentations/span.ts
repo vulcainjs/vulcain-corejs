@@ -1,5 +1,5 @@
 import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
-import { System } from "../globals/system";
+import { Service } from "../globals/system";
 import { IContainer } from '../di/resolvers';
 import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
@@ -8,6 +8,7 @@ import { Pipeline } from './../pipeline/common';
 import { IRequestTracker, IRequestTrackerFactory } from '../instrumentations/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
 import { ISpanTracker, TrackerId, SpanKind } from "./common";
+import * as os from 'os';
 
 // Metrics use the RED method https://www.weave.works/blog/prometheus-and-kubernetes-monitoring-your-applications/
 export class Span implements ISpanTracker {
@@ -50,13 +51,14 @@ export class Span implements ISpanTracker {
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
         this.tags["name"] = name;
-        this.tags["domain"] = System.domainName;
+        this.tags["domain"] = Service.domainName;
+        this.tags["host"] = os.hostname();
 
         this.convertKind();
     }
 
     static createRequestTracker(context: RequestContext, parentId: TrackerId) {
-        return new Span(context, SpanKind.Request, System.fullServiceName, parentId);
+        return new Span(context, SpanKind.Request, Service.fullServiceName, parentId);
     }
 
     createCommandTracker(context: RequestContext, commandName: string) {
@@ -135,10 +137,10 @@ export class Span implements ISpanTracker {
     dispose() {
         this.tags["tenant"] = this.context.user.tenant;
 
-        if (this.kind === SpanKind.Request)
-            this.endRequest();
-        else
+        if (this.kind === SpanKind.Command)
             this.endCommand();
+        else
+            this.endRequest();
 
         if (this._tracker) {
             this._tracker.finish();
@@ -149,7 +151,7 @@ export class Span implements ISpanTracker {
     }
 
     endCommand() {
-        if (this.action) { // for ignored requests like _servicedependecy
+        if (this.action) { // for ignored requests like _servicedependency
             this.tags["error"] = this.error ? "true" : "false";
             let metricsName = `vulcain_${this.commandType.toLowerCase()}command_duration_ms`;
             this.metrics.timing(metricsName, this.durationInMs, this.tags);
@@ -160,7 +162,7 @@ export class Span implements ISpanTracker {
     }
 
     private endRequest() {
-        if (this.action) { // for ignored requests like _servicedependecy
+        if (this.action) { // for ignored requests like _servicedependency
             let hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;
             this.tags["error"] = hasError ? "true" : "false";
             this.metrics.timing("vulcain_service_duration_ms", this.durationInMs, this.tags);
@@ -186,14 +188,14 @@ export class Span implements ISpanTracker {
 
     addProviderCommandTags(address: string, schema: string, tenant: string) {
         this.commandType = "Database";
-        this.addTag("db.instance",  System.removePasswordFromUrl(address));
+        this.addTag("db.instance",  Service.removePasswordFromUrl(address));
         this.addTag("db.schema", schema);
         this.addTag("db.tenant", tenant);
     }
 
     addServiceCommandTags(serviceName: string, serviceVersion: string) {
         this.commandType = "Service";
-        this.addTag("peer.address", System.createContainerEndpoint(serviceName, serviceVersion));
+        this.addTag("peer.address", Service.createContainerEndpoint(serviceName, serviceVersion));
         this.addTag("peer.service", "vulcain");
         this.addTag("peer.service_version", serviceVersion);
         this.addTag("peer.service_name", serviceName);

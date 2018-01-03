@@ -10,6 +10,7 @@ import { CommandRuntimeError } from "../errors/commandRuntimeError";
 import { HttpResponse } from "../response";
 import { BadRequestError } from "../errors/badRequestError";
 import { ApplicationError } from "../errors/applicationRequestError";
+import { GetAllResult } from '../../providers/provider';
 
 
 export interface QueryResult {
@@ -118,10 +119,17 @@ export class QueryManager implements IManager {
             let result = await info.handler[info.method](query.params);
 
             if (!(result instanceof HttpResponse)) {
-                let res: QueryResult = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, result) };
+                let values = result;
+                let total = 0;
+                if (result instanceof GetAllResult) {
+                    values = result.values;
+                    total = result.total;
+                }
 
+                let res: QueryResult = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, values) };
+                res.meta.total = total;
                 if (result && Array.isArray(result)) {
-                    res.meta.total = result.length;
+                    res.meta.total = res.meta.total || result.length;
                     res.meta.maxByPage = query.maxByPage;
                     res.meta.page = query.page;
                 }

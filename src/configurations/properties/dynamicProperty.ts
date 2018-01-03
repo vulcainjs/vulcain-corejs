@@ -1,7 +1,7 @@
 import { ConfigurationItem, IDynamicProperty } from "../abstractions";
 import { ConfigurationManager } from "../configurationManager";
 import * as rx from 'rxjs';
-import { System } from "../../globals/system";
+import { Service } from "../../globals/system";
 
 export interface IUpdatableProperty { // Internal interface
     updateValue(val: ConfigurationItem);
@@ -40,15 +40,15 @@ export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProper
     updateValue(item: ConfigurationItem) {
         if (item.deleted) {
             this.removed = true;
-            System.log.info(null, () => `CONFIG: Removing property value for key ${this.name}`);
+            Service.log.info(null, () => `CONFIG: Removing property value for key ${this.name}`);
             this.onPropertyChanged();
             return;
         }
 
         if (this.val !== item.value) {
-            this.val = item.encrypted ? System.decrypt(item.value) : item.value;
+            this.val = item.encrypted ? Service.decrypt(item.value) : item.value;
             let v = item.encrypted ? "********" : item.value;
-            System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${this.name}`);
+            Service.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${this.name}`);
             this.onPropertyChanged();
             return;
         }
@@ -72,5 +72,6 @@ export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProper
         this.onPropertyChanged();
         //this._propertyChanged.dispose();
         this._propertyChanged = null;
+        this.removed = true;
     }
 }

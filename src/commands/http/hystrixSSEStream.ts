@@ -4,7 +4,7 @@ import { HystrixCommandMetrics } from '../metrics/hystrix/hystrixCommandMetrics'
 import {Observable} from 'rxjs';
 import ActualTime from "../../utils/actualTime";
 import { CircuitBreakerFactory } from "../circuitBreaker";
-import { System } from "../../globals/system";
+import { Service } from "../../globals/system";
 
 export class HystrixSSEStream {
     static toObservable(delay=2000) {
@@ -24,7 +24,7 @@ export class HystrixSSEStream {
         let json:any = {};
         json.type = "HystrixCommand";
         json.name =  metrics.commandName;
-        json.group = System.fullServiceName;
+        json.group = Service.fullServiceName;
         json.currentTime = ActualTime.getCurrentTime();
 
         let circuitBreaker = CircuitBreakerFactory.get(metrics.commandName);

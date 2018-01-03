@@ -5,7 +5,7 @@ import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
 import { ModelPropertyOptions } from './annotations';
 import { ReferenceOptions } from './annotations';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 
 export interface ErrorMessage {
@@ -92,7 +92,7 @@ export class Schema {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
             visitProperty(val, prop) {
                 if (val && prop.sensible) {
-                    this.current[prop.name] = System.encrypt(val);
+                    this.current[prop.name] = Service.encrypt(val);
                 }
             }
         };
@@ -110,7 +110,7 @@ export class Schema {
             visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
             visitProperty(val, prop) {
                 if (val && prop.sensible) {
-                    this.current[prop.name] = System.decrypt(val);
+                    this.current[prop.name] = Service.decrypt(val);
                 }
             }
         };

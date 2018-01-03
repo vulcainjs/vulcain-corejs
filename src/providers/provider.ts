@@ -27,6 +27,9 @@ export interface ListOptions {
     query?:any;
 }
 
+export class GetAllResult {
+    constructor(public values: Array<any>, public total?: number) {}
+}
 
 /**
  * Persistance provider for a schema
@@ -69,7 +72,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    getAll(schema: Schema, options: ListOptions): Promise<Array<T>>;
+    getAll(schema: Schema, options: ListOptions): Promise<GetAllResult>;
     /**
      * Get an entity by id
      *

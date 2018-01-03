@@ -1,6 +1,6 @@
 import { Conventions } from '../../utils/conventions';
 const Statsd = require("statsd-client");
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { IMetrics } from '../metrics';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 

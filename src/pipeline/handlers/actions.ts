@@ -5,7 +5,7 @@ import { DefaultServiceNames } from '../../di/annotations';
 import { HandlerFactory, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import { EventHandlerFactory } from './eventHandlerFactory';
 import { ServiceDescriptors } from './serviceDescriptions';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
 import { CommandRuntimeError } from "../errors/commandRuntimeError";
@@ -157,8 +157,8 @@ export class CommandManager implements IManager {
             correlationId: ctx.requestData.correlationId,
             action: ctx.requestData.action,
             schema: ctx.requestData.schema,
-            source: System.fullServiceName,
-            startedAt: System.nowAsString(),
+            source: Service.fullServiceName,
+            startedAt: Service.nowAsString(),
             value: result && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
             userContext: ctx.user.getUserContext(),
@@ -223,7 +223,7 @@ export class CommandManager implements IManager {
             else {
                 // Asynchronous task
                 let pendingTask: AsyncTaskData = Object.assign({}, ctx.getRequestDataObject(), {
-                    startedAt: System.nowAsString(),
+                    startedAt: Service.nowAsString(),
                     status: "Pending"
                 });
 
@@ -268,7 +268,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
                 result = result && HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
                 let event = this.createEvent(ctx, "Success", result);
-                event.completedAt = System.nowAsString();
+                event.completedAt = Service.nowAsString();
                 if (metadata.eventFactory)
                     event = metadata.eventFactory(ctx, event);
                 if(event)
@@ -281,7 +281,7 @@ export class CommandManager implements IManager {
             if (eventMode === EventNotificationMode.always) {
                 let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
                 let event = this.createEvent(ctx, "Error", null, error);
-                event.completedAt = System.nowAsString();
+                event.completedAt = Service.nowAsString();
                 if (metadata.eventFactory)
                     event = metadata.eventFactory(ctx, event);
                 if(event)
@@ -291,7 +291,7 @@ export class CommandManager implements IManager {
             command.status = "Error";
         }
         finally {
-            command.completedAt = System.nowAsString();
+            command.completedAt = Service.nowAsString();
             let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
             if (taskManager)
                 await taskManager.updateTask(command);

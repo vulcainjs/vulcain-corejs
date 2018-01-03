@@ -1,5 +1,5 @@
 import * as amqp from 'amqplib';
-import { System } from './../globals/system';
+import { Service } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 import { EventData } from "../pipeline/handlers/messageBus";
 import { RequestData } from "../pipeline/common";
@@ -31,7 +31,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
             // TODO connection error
             self.initialized = true;
-            System.log.info(null, ()=>"Open rabbitmq connexion on " + System.removePasswordFromUrl(this.address)); // TODO remove password
+            Service.log.info(null, ()=>"Open rabbitmq connection on " + Service.removePasswordFromUrl(this.address)); // TODO remove password
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;
@@ -39,7 +39,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
                 });
             })
             .catch(err => {
-                System.log.error(null, err, ()=>`Unable to open rabbit connexion. Verify if virtualHost ${System.environment} exists.`);
+                Service.log.error(null, err, ()=>`Unable to open rabbit connection. Verify if virtualHost ${Service.environment} exists.`);
                 resolve(self);
             });
         });
@@ -91,7 +91,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
         let self = this;
 
         // Since this method can be called many times for a same domain
-        // all handlers are aggragated on only one binding
+        // all handlers are aggregated on only one binding
         domain = domain.toLowerCase() + "_events";
         let handlerInfo = this.eventHandlers.get(domain);
         if (handlerInfo) {

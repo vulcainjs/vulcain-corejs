@@ -1,6 +1,6 @@
 import { CommandConfiguration } from './commandFactory';
 import { Conventions } from './../utils/conventions';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 

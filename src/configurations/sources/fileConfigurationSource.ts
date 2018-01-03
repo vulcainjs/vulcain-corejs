@@ -1,7 +1,7 @@
 import { ILocalConfigurationSource, ConfigurationItem, DataSource } from '../abstractions';
 import * as fs from 'fs';
 import * as readline from 'readline';
-import { System } from '../../globals/system';
+import { Service } from '../../globals/system';
 import * as Path from 'path';
 import { Files } from '../../utils/files';
 
@@ -23,12 +23,12 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
 
         try {
             if (!fs.existsSync(this.path)) {
-                System.log.info(null, () => "CONFIGURATIONS : File " + path + " doesn't exist.");
+                Service.log.info(null, () => "CONFIGURATIONS : File " + path + " doesn't exist.");
                 this._disabled = true;
             }
         }
         catch (e) {
-            System.log.error(null, e, () => "Invalid path when reading file configuration source at " + this.path + ". Are you using an unmounted docker volume ?");
+            Service.log.error(null, e, () => "Invalid path when reading file configuration source at " + this.path + ". Are you using an unmounted docker volume ?");
         }
     }
 
@@ -63,7 +63,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
                         err = e;
                     }
                 }
-                System.log.error(null, err, () => "File configuration source - Error when reading json values");
+                Service.log.error(null, err, () => "File configuration source - Error when reading json values");
                 resolve(false);
             });
         });
@@ -93,7 +93,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
                             }
                         }
                         catch (err) {
-                            System.log.error(null, err, () => `File configuration source - Error when reading key values line ${line}`);
+                            Service.log.error(null, err, () => `File configuration source - Error when reading key values line ${line}`);
                         }
                     }
                 });
@@ -102,16 +102,16 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
 
             }
             catch (err) {
-                System.log.error(null, err, () => "File configuration source - Error when reading key values");
+                Service.log.error(null, err, () => "File configuration source - Error when reading key values");
                 resolve(false);
             }
         });
     }
 
     protected updateValue(name: string, value, encrypted: boolean) {
-        this._values.set(name, { value: encrypted ? System.decrypt(value) : value, encrypted, key: name });
+        this._values.set(name, { value: encrypted ? Service.decrypt(value) : value, encrypted, key: name });
         let v = encrypted ? "********" : value;
-        System.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${name}`);
+        Service.log.info(null, () => `CONFIG: Setting property value '${v}' for key ${name}`);
     }
 
     readProperties() {

@@ -7,6 +7,7 @@ import url = require('url');
 import Router = require('router');
 import { ISerializer } from "./serializers/serializer";
 import { DefaultSerializer } from "./serializers/defaultSerializer";
+import { Service } from '../globals/system';
 
 export interface IServerAdapter {
     init(container: IContainer, pipeline: VulcainPipeline);
@@ -97,7 +98,7 @@ export class HttpAdapter extends ServerAdapter {
 
     start(port: number, callback: (err) => void) {
 
-        this.srv = http.createServer((req, resp) => {
+        this.srv = http.createServer((req, resp: http.ServerResponse) => {
             // Actions and query
             // POST/GET /api/...
             if (req.url.startsWith(Conventions.instance.defaultUrlprefix) && (req.method === "GET" || req.method === "POST")) {
@@ -117,7 +118,16 @@ export class HttpAdapter extends ServerAdapter {
                 return;
             }
 
-            resp.statusCode = 404;
+            if (req.method === "OPTIONS" && Service.isTestEnvironment) {
+                resp.setHeader("Access-Control-Allow-Origin", "*");
+                resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
+                resp.setHeader("Access-Control-Allow-Headers", "*");
+                resp.setHeader('Content-Length', '0');
+                resp.statusCode = 204;
+            }
+            else {
+                resp.statusCode = 404;
+            }
             resp.end();
         });
 

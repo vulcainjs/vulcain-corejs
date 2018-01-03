@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
-import { System } from '../globals/system';
+import { Service } from '../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 import { IRequestContext } from "../pipeline/common";
 
@@ -115,7 +115,7 @@ export function Inject(nameOrBool?: string | boolean, optional?: boolean) {
  */
 export function Injectable(lifeTime: LifeTime, name?: string, enableOnTestOnly?: boolean) {
     return function (target) {
-        if (enableOnTestOnly && !System.isTestEnvironnment)
+        if (enableOnTestOnly && !Service.isTestEnvironment)
             return;
         name = name || target.name;
         Preloader.instance.registerService(target, (container, domain) => {
