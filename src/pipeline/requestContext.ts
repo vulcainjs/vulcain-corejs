@@ -269,8 +269,8 @@ export class RequestContext implements IRequestContext {
     }
 
     get hostName() {
-        let host = <string>this.request.headers['X-Forwarded-Host'];
-        return host || <string>this.request.headers["Host"];
+        let host = <string>this.request.headers['x-forwarded-host'];
+        return host || <string>this.request.headers["host"];
     }
 
     /**
