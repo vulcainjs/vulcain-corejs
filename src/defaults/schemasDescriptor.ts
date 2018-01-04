@@ -13,7 +13,7 @@ export class SchemasDescriptor {
     }
 
     @Query({ description: "Get schema description", action: "_schemas" })
-    getDependencies() {
+    geSchemaDescription() {
         let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)
             throw new ForbiddenRequestError();

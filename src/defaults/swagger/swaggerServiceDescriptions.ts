@@ -28,7 +28,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         descriptions.host = this.context.hostName;
         descriptions.basePath = Conventions.instance.defaultUrlprefix;
 
-        descriptions.definitions['_errorResponse'] = this.createResponseDefinition({
+        descriptions.definitions['_errorResponse'] = this.createResponseDefinition(false, {
             error: {
                 type: "object",
                 properties: {
@@ -112,7 +112,6 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 return;
             let operationObject: OperationObject = {};
 
-            //TODO : put this split hack into method
             operationObject.tags = [service.verb.split('.')[0]];
             operationObject.summary = service.description;
             operationObject.description = service.description;
@@ -130,21 +129,25 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         return paths;
     }
 
-    createResponseDefinition(payload?: any): any {
+    createResponseDefinition(listResponse: boolean, payload?: any): any {
         let res = {
             type: 'object',
             properties: {
                 meta: {
                     type: "object",
                     properties: {
-                        correlationId: { type: 'string' },
-                        total: {type: 'number'},
-                        maxByPage: { type: 'number' },
-                        page: { type: 'number' }
+                        correlationId: { type: 'string' }
                     }
                 }
             }
         };
+
+        if (listResponse) {
+            (<any>res.properties.meta.properties).total = { type: 'number' };
+            (<any>res.properties.meta.properties).maxByPage= { type: 'number' };
+            (<any>res.properties.meta.properties).page= { type: 'number' };
+        }
+
         if( payload)
             res.properties = Object.assign(res.properties, payload);
         return res;
@@ -166,7 +169,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         if (service.async) {
             operationObject.responses['200'] = {
                 description: 'Processing task',
-                schema: this.createResponseDefinition({
+                schema: this.createResponseDefinition(service.kind === "query" && service.verb === "all", {
                     meta: {
                         type: "object",
                         properties: { status: { type: "string" }, taskId: { type: "string" } }
@@ -177,7 +180,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         else {
             operationObject.responses['200'] = {
                 description: 'Successful operation',
-                schema: this.createResponseDefinition()
+                schema: this.createResponseDefinition(service.kind === "query" && service.verb === "all")
             };
             if (service.outputSchema) {
                 operationObject.responses['200'].schema.properties.value = {};

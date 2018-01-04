@@ -26,10 +26,12 @@ export class PropertyDescription {
     reference?: "no" | "many" | "one";
     metadata: any;
     order: number;
+    custom?: any
 }
 
 export class SchemaDescription {
     name: string;
+    idProperty: string;
     properties: Array<PropertyDescription>;
     dependencies: Set<string>;
 }
@@ -276,7 +278,7 @@ export class ServiceDescriptors {
         let desc: SchemaDescription = schemas.get(schema.name);
         if (desc) return desc.name;
 
-        desc = { name: schema.name, properties: [], dependencies: new Set<string>() };
+        desc = { name: schema.name, properties: [], idProperty: schema.description.idProperty, dependencies: new Set<string>() };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
         let sd = schema.description;
@@ -307,7 +309,8 @@ export class ServiceDescriptors {
                     required: p.required,
                     description: p.description,
                     typeDescription: type.description,
-                    metadata
+                    metadata,
+                    custom: p.custom
                 };
                 this.addDescription(desc, pdesc);
             }
