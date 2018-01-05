@@ -290,11 +290,14 @@ export class ServiceDescriptors {
     }
 
     private addDescription(desc: SchemaDescription, pdesc: PropertyDescription) {
-        // Insert required at the beginning
-        if (!pdesc.required)
+        // find position
+        let idx = desc.properties.findIndex(p => p.order > pdesc.order);
+        if (idx === -1) {
             desc.properties.push(pdesc);
-        else
-            desc.properties.unshift(pdesc);
+        }
+        else {
+            desc.properties.splice(idx, 0, pdesc);
+        }
     }
 
     private updateDescription(schemas: Map<string, SchemaDescription>, schema: schDesc, desc: SchemaDescription) {

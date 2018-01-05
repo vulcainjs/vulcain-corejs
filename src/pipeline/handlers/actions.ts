@@ -62,7 +62,7 @@ export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
  * @extends {CommonActionMetadata}
  */
 export interface ActionMetadata extends CommonActionMetadata {
-
+    skipDataValidation?: boolean;
     async?: boolean;
     eventMode?: EventNotificationMode;
     outputSchema: string;
@@ -112,7 +112,7 @@ export class CommandManager implements IManager {
         (<any>ctx)._customEvents = null;
     }
 
-    private async validateRequestData(ctx: RequestContext, info:any, command: RequestData) {
+    private async validateRequestData(ctx: RequestContext, info:any, command: RequestData, skipValidation: boolean) {
         let errors;
         let inputSchema = info.metadata.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -121,14 +121,22 @@ export class CommandManager implements IManager {
                 command.inputSchema = schema.name;
 
                 // Custom binding if any
-                command.params = schema && schema.bind(command.params);
-
-                errors = await schema.validate(ctx, command.params);
-                if (errors && !Array.isArray(errors))
-                    errors = [errors];
+                try {
+                    command.params = schema && schema.bind(command.params);
+                }
+                catch (ex) {
+                    if (!skipValidation) {
+                        return [{ message: "Binding error : " + ex.message }];
+                    }
+                }
+                if (!skipValidation) {
+                    errors = await schema.validate(ctx, command.params);
+                    if (errors && !Array.isArray(errors))
+                        errors = [errors];
+                }
             }
 
-            if (!errors || errors.length === 0) {
+            if (!skipValidation && (!errors || errors.length === 0)) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
@@ -177,7 +185,8 @@ export class CommandManager implements IManager {
         let eventMode = metadata.eventMode || EventNotificationMode.successOnly;
 
         try {
-            let errors = await this.validateRequestData(ctx, info, command);
+            let skipValidation = metadata.skipDataValidation || (metadata.action === "delete" && metadata.skipDataValidation === undefined);
+            let errors = await this.validateRequestData(ctx, info, command, skipValidation);
             if (errors && errors.length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }

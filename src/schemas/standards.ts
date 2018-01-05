@@ -202,7 +202,7 @@ export let standards = {
         }
     },
     'date-iso8601': {
-        description: "Must be a ISO8061 date",
+        description: "Must be an ISO8061 date",
         type: "string",
         message: "Property '{$propertyName}' must be an date on ISO8601 format.",
         validate: function (val, ctx = { locale: 'en-US' }) {

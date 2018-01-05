@@ -124,7 +124,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         return cmd.updateWithSensibleData( entity);
     }
 
-    @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean" })
+    @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean", skipDataValidation: true })
     async delete(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
