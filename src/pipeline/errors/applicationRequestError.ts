@@ -6,24 +6,15 @@
  * @class ApplicationError
  * @extends {Error}
  */
-
-import { ValidationError } from "./validationError";
-
 export class ApplicationError extends Error {
-    /**
-     *
-     *
-     * @private
-     * @type {Array<ValidationError>}
-     */
-    public errors: Array<ValidationError>|undefined;
+    public errors: {[propertyName: string]: string}|undefined;
 
     /**
      * Creates an instance of ApplicationRequestError.
      *
      * @param {ErrorResponse} error
      */
-    constructor(public message: string, public statusCode = 500, errors?: Array<ValidationError>) {
+    constructor(public message: string, public statusCode = 500, errors?: { [propertyName: string]: string }) {
         super();
         this.errors = errors;
     }

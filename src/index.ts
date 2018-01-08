@@ -42,7 +42,6 @@ export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } fro
 export { RequestData, IRequestContext, Pipeline } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
-export { ValidationError } from './pipeline/errors/validationError';
 export { ISerializer } from './pipeline/serializers/serializer';
 export { HttpRequest } from './pipeline/vulcainPipeline';
 export { Logger } from './log/logger'

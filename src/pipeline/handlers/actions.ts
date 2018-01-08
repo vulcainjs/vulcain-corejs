@@ -131,20 +131,16 @@ export class CommandManager implements IManager {
                 }
                 if (!skipValidation) {
                     errors = await schema.validate(ctx, command.params);
-                    if (errors && !Array.isArray(errors))
-                        errors = [errors];
                 }
             }
 
-            if (!skipValidation && (!errors || errors.length === 0)) {
+            if (!skipValidation && !errors) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
                 errors = info.handler[methodName] && info.handler[methodName](command.params, command.action);
                 if (!errors)
                     errors = info.handler[altMethodName] && await info.handler[altMethodName](command.params, command.action);
-                if (errors && !Array.isArray(errors))
-                    errors = [errors];
             }
         }
 
@@ -187,7 +183,7 @@ export class CommandManager implements IManager {
         try {
             let skipValidation = metadata.skipDataValidation || (metadata.action === "delete" && metadata.skipDataValidation === undefined);
             let errors = await this.validateRequestData(ctx, info, command, skipValidation);
-            if (errors && errors.length > 0) {
+            if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }
 

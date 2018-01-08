@@ -2,14 +2,13 @@ import {IContainer} from '../../di/resolvers';
 import {LifeTime} from '../../di/annotations';
 import {Domain} from '../../schemas/schema';
 import { RequestData } from "../../pipeline/common";
-import { ValidationError } from "../../pipeline/errors/validationError";
 import { HttpResponse } from "../response";
 import { RequestContext } from '../requestContext';
 import { Schema } from '../../index';
 
 export interface ErrorResponse {
-    message:string;
-    errors?: Array<ValidationError>;
+    message: string;
+    errors?: { [propertyName: string]: string };
 }
 
 export interface CommonActionMetadata {

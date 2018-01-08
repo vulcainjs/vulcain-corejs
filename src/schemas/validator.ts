@@ -1,4 +1,4 @@
-import { Domain, SchemaDescription, ErrorMessage } from './schema';
+import { Domain, SchemaDescription } from './schema';
 import { IContainer } from '../di/resolvers';
 import { RequestContext } from "../pipeline/requestContext";
 
@@ -7,14 +7,15 @@ export class Validator {
     constructor(private domain: Domain, private container: IContainer) {
     }
 
-    async validate(ctx: RequestContext, schemaDesc: SchemaDescription, val) {
-        let errors: Array<ErrorMessage> = [];
+    async validate(ctx: RequestContext, schemaDesc: SchemaDescription, val:any): Promise<{ [propertyName: string]: string }> {
+        let errors: { [propertyName: string]: string } = {};
         if (!schemaDesc || !val) return errors;
 
         if (schemaDesc.extends) {
             let base = this.domain.resolveSchemaDescription(schemaDesc.extends);
             if (base) {
-                (await this.validate(ctx, base, val)).forEach(e => { errors.push(e); });
+                let errorList = (await this.validate(ctx, base, val));
+                errors = Object.assign(errors, errorList);
             }
         }
 
@@ -31,11 +32,11 @@ export class Validator {
             try {
                 let err = await this.validateProperty(ctx, formatContext, schemaDesc.properties[ps], val[ps], val);
                 if (err) {
-                    errors.push({ message: err, property: ps, id: formatContext.id });
+                    errors[ps] = err;
                 }
             }
             catch (e) {
-                errors.push({ message: this.__formatMessage("Validation error for property {$propertyName} : " + e, formatContext), id: formatContext.id, property: ps });
+                errors[ps] = this.__formatMessage("Validation error for property {$propertyName} : " + e, formatContext);
             }
         }
 
@@ -52,16 +53,18 @@ export class Validator {
                     if (ref && ref.dependsOn && !ref.dependsOn(val)) continue;
                     let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
                     if (!schema) continue;
-                    errors = errors.concat(await this.validate(ctx, schema.description, formatContext.propertyValue));
+                    let errors2 = await this.validate(ctx, schema.description, formatContext.propertyValue);
+                    if (errors2)
+                        errors = Object.assign(errors, errors2);
                 }
                 else {
                     let errors2 = await this.validateReference(ctx, formatContext, ref, val[rs], val);
-                    if(errors2)
-                        errors = errors.concat(errors2);
+                    if (errors2)
+                        errors = Object.assign(errors, errors2);
                 }
             }
             catch (e) {
-                errors.push({ message: this.__formatMessage("Validation error for reference {$propertyName} : " + e, formatContext), id: formatContext.id, property: rs });
+                errors[rs] = this.__formatMessage("Validation error for reference {$propertyName} : " + e, formatContext);
             }
         }
 
@@ -71,52 +74,51 @@ export class Validator {
             try {
                 let err = await schemaDesc.validate(val, ctx);
                 if (err)
-                    errors.push({ message: this.__formatMessage(err, formatContext, schemaDesc), id: formatContext.id });
+                    errors[schemaDesc.name] = this.__formatMessage(err, formatContext, schemaDesc);
             }
             catch (e) {
-                errors.push({ message: this.__formatMessage("Validation error for element {__schema} : " + e, formatContext), id: formatContext.id });
+                errors[schemaDesc.name] = this.__formatMessage("Validation error for element {__schema} : " + e, formatContext);
             }
         }
         return errors;
     }
 
-    private async validateReference(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<Array<ErrorMessage>> {
+    private async validateReference(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<{ [propertyName: string]: string }> {
+        let errors = {};
+
         if (!schema)
-            return;
+            return errors;
 
         if (schema.dependsOn && !schema.dependsOn(entity))
-            return;
+            return errors;
 
         if (!val) {
             if (schema.required) {
-                return [{
-                    message: this.__formatMessage(`Reference '{$propertyName}' is required on schema ${schema.name}.`, formatContext, schema),
-                    id: formatContext.id,
-                    property: formatContext.propertyName
-                }];
+                errors[formatContext.propertyName] = this.__formatMessage(`Reference '{$propertyName}' is required.`, formatContext, schema);
+                return errors;
             }
             return null;
         }
 
         if (schema.validators) {
             for (let validator of schema.validators) {
-                let msg = validator.validate && await validator.validate( val, ctx );
-                if (msg)
-                return [{
-                    message: this.__formatMessage(msg, formatContext, schema),
-                    id: formatContext.id,
-                    property: formatContext.propertyName
-                }];
+                let msg = validator.validate && await validator.validate(val, ctx);
+                if (msg) {
+                    errors[formatContext.propertyName] = this.__formatMessage(msg, formatContext, schema);
+                    return errors;
+                }
             }
         }
 
         let err = schema.validate && await schema.validate(val, ctx);
-        if (err) return [err];
+        if (err) {
+            errors[formatContext.propertyName] = err;
+            return errors;
+        }
 
         let values = schema.cardinality === "one" ? [val] : <Array<any>>val;
 
         let baseItemSchema = schema.item && schema.item !== "any" && this.domain.getSchema(schema.item, true);
-        let errors = [];
 
         for (let val of values) {
             if (val) {
@@ -127,7 +129,7 @@ export class Validator {
                         baseItemSchema = currentItemSchema;
                 }
                 if (currentItemSchema) {
-                    errors = errors.concat(await this.validate(ctx, currentItemSchema.description, val));
+                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema.description, val));
                 }
             }
         }
@@ -147,7 +149,7 @@ export class Validator {
 
         if (val === undefined || val === null) {
             if (schema.required) {
-                return this.__formatMessage(`Property '{$propertyName}' is required on schema ${schema.name}`, formatContext, schema);
+                return this.__formatMessage(`Property '{$propertyName}' is required`, formatContext, schema);
             }
             return null;
         }
@@ -159,7 +161,7 @@ export class Validator {
         }
 
         if (schema.validate) {
-            let err = await schema.validate( val, ctx );
+            let err = await schema.validate(val, ctx);
             if (err) return this.__formatMessage(err, formatContext, schema);
         }
     }

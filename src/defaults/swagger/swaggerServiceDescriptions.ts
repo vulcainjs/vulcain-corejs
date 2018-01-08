@@ -36,12 +36,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                     errors: {
                         type: "array",
                         items: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                                id: { type: "string" },
-                                field: { type: "string" }
-                            }
+                            type: "object"
                         }
                     }
                 }

@@ -82,19 +82,15 @@ export class QueryManager implements IManager {
                 query.params = schema.bind(query.params);
 
                 errors = await schema.validate(ctx, query.params);
-                if (errors && !Array.isArray(errors))
-                    errors = [errors];
             }
 
-            if (!errors || errors.length === 0) {
+            if (!errors) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
                 let altMethodName = methodName + 'Async';
                 errors = info.handler[methodName] && info.handler[methodName](query.params, query.action);
                 if (!errors)
                     errors = info.handler[altMethodName] && await info.handler[altMethodName](query.params, query.action);
-                if (errors && !Array.isArray(errors))
-                    errors = [errors];
             }
         }
         return errors;
@@ -109,7 +105,7 @@ export class QueryManager implements IManager {
 
         try {
             let errors = await this.validateRequestData(ctx, info, query);
-            if (errors && errors.length > 0) {
+            if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }
 

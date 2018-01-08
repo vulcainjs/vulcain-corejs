@@ -8,12 +8,6 @@ import { ReferenceOptions } from './annotations';
 import { Service } from './../globals/system';
 import { RequestContext } from "../pipeline/requestContext";
 
-export interface ErrorMessage {
-    message: string;
-    id: string;
-    property?: string;
-}
-
 export interface SchemaDescription {
     name: string;
     properties: { [index: string]: ModelPropertyOptions };
@@ -466,7 +460,7 @@ export class Domain {
      * @returns Array<string> : A list of errors
      */
     validate(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
-        if (!val) { return Promise.resolve([]); }
+        if (!val) { return Promise.resolve(null); }
         let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
         let validator = new Validator(this, this.container);
         return validator.validate(ctx, schema, val);

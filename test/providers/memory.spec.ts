@@ -16,8 +16,6 @@ describe("MemoryProvider", function () {
         expect(p.execute(entity)).to.be.true;
         p = new MongoQueryParser({ name: "entity", num: 12 });
         expect(p.execute(entity)).to.be.false;
-        p = new MongoQueryParser({ "address.city": { $startsWith: "P" } });
-        expect(p.execute(entity)).to.be.true;
         p = new MongoQueryParser({ key: /shared\./, system: { "$ne": true }, deleted: { "$ne": true } });
         expect(p.execute(entity)).to.be.false;
     });
