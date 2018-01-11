@@ -33,8 +33,8 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
     }
 
     startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
-        const parentId = span.context.tracker && span.context.tracker.id;
-        const parent = new jaeger.SpanContext(null, null, null, parentId.correlationId, parentId.spanId, parentId.parentId, 0x01);
+        const parentId = (span.context.tracker && span.context.tracker.id) || null;
+        const parent = (parentId && new jaeger.SpanContext(null, null, null, parentId.correlationId, parentId.spanId, parentId.parentId, 0x01)) || null;
         return new JaegerRequestTracker(this.tracer, span.id, span.kind, name, action, parent);
     }
 }

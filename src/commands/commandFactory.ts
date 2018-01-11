@@ -81,7 +81,7 @@ export class CommandFactory {
         if (cache) {
             let container = context.container;
 
-            let schema = args && args.length > 0 && args[0];
+            let schema = (args && args.length > 0 && args[0]) || null;
             let resolvedCommand = container.resolve(cache.command, args);
 
             return new Proxy(resolvedCommand, {

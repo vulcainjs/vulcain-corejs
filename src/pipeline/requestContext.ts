@@ -146,12 +146,13 @@ export class RequestContext implements IRequestContext {
             }
         }
 
-        this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || Conventions.getRandomId();
+        if(!this.requestData.correlationId)
+            this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || Conventions.getRandomId();
 
         if (this.pipeline !== Pipeline.Test) {
             // For event we do not use parentId to chain traces.
-            // However all traces can be aggredated with the correlationId tag.
-            const parentId = this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID];
+            // However all traces can be aggregated with the correlationId tag.
+            const parentId = (this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null;
             const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId }
             this._tracker = Span.createRequestTracker(this, trackerId);
         }
@@ -270,7 +271,7 @@ export class RequestContext implements IRequestContext {
 
     get hostName() {
         let host = <string>this.request.headers['x-forwarded-host'];
-        return host || <string>this.request.headers["host"];
+        return (host || <string>this.request.headers["host"]) || null;
     }
 
     /**
@@ -281,7 +282,7 @@ export class RequestContext implements IRequestContext {
      * @memberOf RequestContext
      */
     get publicPath() {
-        return this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH];
+        return (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_PUBLICPATH]) || null;
     }
 
     dispose() {

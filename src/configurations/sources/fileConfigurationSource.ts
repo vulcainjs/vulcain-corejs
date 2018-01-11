@@ -84,7 +84,7 @@ export class FileConfigurationSource implements ILocalConfigurationSource {
                             let m = line.match(re);
                             if (m) {
                                 let encrypted = false;
-                                let val = m[2] && m[2].trim().replace(/^"|"$/g, '');
+                                let val = (m[2] && m[2].trim().replace(/^"|"$/g, '')) || null;
                                 if (val && val[0] === "!") {
                                     val = val.substr(1);
                                     encrypted = true;

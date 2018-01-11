@@ -160,7 +160,7 @@ export abstract class AbstractServiceCommand {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
-        data.$query = query && JSON.stringify(query);
+        data.$query = (query && JSON.stringify(query)) || null;
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {

@@ -7,7 +7,7 @@ export abstract class AbstractRemoteSource implements IRemoteConfigurationSource
 
     get(name: string) {
         let v = this._values.get(name);
-        return v && v.value;
+        return (v && v.value) || undefined;
     }
 
     protected mergeChanges(changes: Map<string, ConfigurationItem>) {

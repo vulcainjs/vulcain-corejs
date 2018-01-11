@@ -18,7 +18,7 @@ export class MemoryConfigurationSource implements ILocalConfigurationSource {
 
     get(name: string) {
         let v = this._values.get(name);
-        return v && v.value;
+        return (v && v.value) || undefined;
     }
 }
 
