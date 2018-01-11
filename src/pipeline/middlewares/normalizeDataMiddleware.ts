@@ -109,10 +109,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         }
 
         // Or can be forced in the url query
-        if (url.query.$action)
-            action = url.query.$action;
-        if (url.query.__schema)
-            schema = url.query.__schema;
+        if (url.query["$action"])
+            action = url.query["$action"];
+        if (url.query["__schema"])
+            schema = url.query["__schema"];
 
         ctx.requestData.action = action || !body && "all";
         ctx.requestData.schema = schema;
@@ -126,13 +126,13 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             try {
                 switch (name.toLowerCase()) {
                     case "$page":
-                        ctx.requestData.page = (url.query.$page && parseInt(url.query.$page)) || ctx.requestData.page;
+                        ctx.requestData.page = (url.query["$page"] && parseInt(url.query["$page"])) || ctx.requestData.page;
                         break;
                     case "$maxbypage":
                         ctx.requestData.maxByPage = (url.query[name] && parseInt(url.query[name])) || ctx.requestData.maxByPage;
                         break;
                     case "$query":
-                        ctx.requestData.params = url.query.$query && JSON.parse(url.query.$query);
+                        ctx.requestData.params = url.query["$query"] && JSON.parse(url.query["$query"]);
                         break;
                 }
             }
