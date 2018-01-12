@@ -34,6 +34,7 @@ export class SchemaDescription {
     idProperty: string;
     properties: Array<PropertyDescription>;
     dependencies: Set<string>;
+    custom?: any;
 }
 
 export class ActionDescription {
@@ -278,7 +279,13 @@ export class ServiceDescriptors {
         let desc: SchemaDescription = schemas.get(schema.name);
         if (desc) return desc.name;
 
-        desc = { name: schema.name, properties: [], idProperty: schema.description.idProperty, dependencies: new Set<string>() };
+        desc = {
+            name: schema.name,
+            properties: [],
+            idProperty: schema.description.idProperty,
+            dependencies: new Set<string>(),
+            custom: schema.description.custom
+        };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
         let sd = schema.description;

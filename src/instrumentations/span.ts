@@ -74,7 +74,6 @@ export class Span implements ISpanTracker {
         let trackerFactory = this.context.container.get<IRequestTrackerFactory>(DefaultServiceNames.RequestTracker, true);
         if (trackerFactory) {
             this._tracker = trackerFactory.startSpan(this, this.name, this.action);
-            this.addTag('correlationId', this._id.correlationId);
         }
 
         this.tags["action"] = action;
@@ -284,9 +283,14 @@ export class Span implements ISpanTracker {
     }
 
     get durationInMs() {
-        const hrtime = process.hrtime(this.startTick);
-        const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
-        return elapsedMicros;
+        const endTime = process.hrtime();
+     //   const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
+     //   return elapsedMicros;
+        const secondDiff = endTime[0] - this.startTick[0]
+        const nanoSecondDiff = endTime[1] - this.startTick[1]
+        const diffInNanoSecond = secondDiff * 1e9 + nanoSecondDiff
+
+        return diffInNanoSecond / 1e6
     }
 
     private randomTraceId() {

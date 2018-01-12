@@ -19,6 +19,7 @@ export interface SchemaDescription {
     storageName?: string;
     idProperty?: string;
     schemaType: () => void;
+    custom?: any;
 }
 
 /**

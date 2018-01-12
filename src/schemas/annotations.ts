@@ -35,6 +35,7 @@ export interface ModelOptions {
     validate?: (entity, ctx?: RequestContext) => string;
     storageName?: string;
     hasSensibleData?: boolean;
+    custom?: any;
 }
 
 export function Model(options?: ModelOptions) {
