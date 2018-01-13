@@ -65,7 +65,6 @@ export interface ActionMetadata extends CommonActionMetadata {
     skipDataValidation?: boolean;
     async?: boolean;
     eventMode?: EventNotificationMode;
-    outputSchema: string;
     eventFactory?: (context: IRequestContext, event: EventData)=>EventData;
 }
 

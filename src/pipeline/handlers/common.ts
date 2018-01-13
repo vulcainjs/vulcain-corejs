@@ -17,6 +17,8 @@ export interface CommonActionMetadata {
     scope?: string;
     schema?: string;
     inputSchema?: string;
+    outputSchema?: string;
+    outputType?: "one" | "many";
 }
 
 export interface CommonMetadata {

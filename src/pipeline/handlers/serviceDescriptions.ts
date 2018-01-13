@@ -173,6 +173,7 @@ export class ServiceDescriptors {
                 kind: "action",
                 async: metadata.async,
                 verb: verb,
+                outputType: metadata.outputType,
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,

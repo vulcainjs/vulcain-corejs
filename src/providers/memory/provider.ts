@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { IProvider, ListOptions, GetAllResult } from "../provider";
+import { IProvider, ListOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
@@ -7,6 +7,7 @@ import { SchemaBuilder } from '../../schemas/schemaBuilder';
 import { Conventions } from '../../utils/conventions';
 import { IRequestContext } from "../../pipeline/common";
 import { ApplicationError } from '../../pipeline/errors/applicationRequestError';
+import { QueryResult } from '../../pipeline/handlers/query';
 
 interface AstNode {
     op: string;
@@ -86,14 +87,14 @@ export class MemoryProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAll(schema: Schema, options: ListOptions): Promise<GetAllResult> {
+    getAll(schema: Schema, options: ListOptions): Promise<QueryResult> {
         let data = this.ensureSchema(schema).data;
 
         options = options || { maxByPage: -1 };
         return new Promise((resolve, reject) => {
             try {
                 const elements = Array.from(this.filter(schema, data.entities, options));
-                let result = new GetAllResult(Array.from(this.take(elements, options)), elements.length);
+                let result = new QueryResult(Array.from(this.take(elements, options)), elements.length);
                 resolve(result);
             }
             catch (err) {
@@ -138,7 +139,7 @@ export class MemoryProvider implements IProvider<any>
         let options = <ListOptions>{};
         options.query = query;
         let result = await this.getAll(schema, options);
-        let list = result && result.values;
+        let list = result && result.value;
         return list && list.length > 0 ? list[0] : null;
     }
 

@@ -50,10 +50,6 @@ export class HandlersMiddleware extends VulcainMiddleware {
         else {
             useMockResult = true;
         }
-        // TODO
-        if (result && command.correlationId) {
-        //    result.addHeader(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, command.correlationId);
-        }
 
         ctx.response = result;
 

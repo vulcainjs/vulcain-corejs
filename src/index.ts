@@ -37,7 +37,7 @@ export * from './pipeline/handlers/annotations';
 export { QueryHandler, ActionHandler, EventHandler } from './pipeline/handlers/annotations.handlers';
 export { ActionMetadata, ActionHandlerMetadata } from './pipeline/handlers/actions';
 export { EventNotificationMode,  ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/handlers/messageBus';
-export { QueryActionMetadata, QueryMetadata } from './pipeline/handlers/query';
+export { QueryActionMetadata, QueryMetadata, QueryResult } from './pipeline/handlers/query';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
 export { RequestData, IRequestContext, Pipeline } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
@@ -54,7 +54,7 @@ export * from './bus/busAdapter'
 export * from './bus/rabbitAdapter'
 
 // Providers
-export { IProvider, ListOptions, GetAllResult } from './providers/provider'
+export { IProvider, ListOptions } from './providers/provider'
 export * from './providers/memory/provider'
 export * from './providers/mongo/provider'
 export { ProviderFactory } from './providers/providerFactory';

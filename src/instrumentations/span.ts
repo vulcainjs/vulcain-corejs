@@ -50,9 +50,9 @@ export class Span implements ISpanTracker {
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
-        this.tags["name"] = name;
-        this.tags["domain"] = Service.domainName;
-        this.tags["host"] = os.hostname();
+        this.addTag("name",name);
+        this.addTag("domain", Service.domainName);
+        this.addTag("host", os.hostname());
 
         this.convertKind();
     }
@@ -76,28 +76,28 @@ export class Span implements ISpanTracker {
             this._tracker = trackerFactory.startSpan(this, this.name, this.action);
         }
 
-        this.tags["action"] = action;
+        this.addTag("action", action);
         tags && this.addTags(tags);
         this.logAction("Log", `...Action : ${action}, ${(tags && JSON.stringify(tags)) || ""}`);
 
         if (this.kind === SpanKind.Command) {
             this.addTag("span.kind", "client");
-            this.tags["type"] = "Command";
+            this.addTag("type", "Command");
             this.logAction("BC", `Command: ${this.name}`);
         }
         else if (this.kind === SpanKind.Request) {
             this.addTag("span.kind", "server");
-            this.tags["type"] = "Service";
+            this.addTag("type", "Service");
             this.logAction("RR", `Request: ${this.name}`);
         }
         else if (this.kind === SpanKind.Task) {
             this.addTag("span.kind", "server");
-            this.tags["type"] = "Task";
+            this.addTag("type", "Task");
             this.logAction("RT", `Async task: ${this.name}`);
         }
         else if (this.kind === SpanKind.Event) {
             this.addTag("span.kind", "consumer");
-            this.tags["type"] = "Event";
+            this.addTag("type", "Event");
             this.logAction("RE", `Event: ${this.name}`);
         }
     }
@@ -134,7 +134,7 @@ export class Span implements ISpanTracker {
     }
 
     dispose() {
-        this.tags["tenant"] = this.context.user.tenant;
+        this.addTag("tenant", this.context.user.tenant);
 
         if (this.kind === SpanKind.Command)
             this.endCommand();
@@ -151,7 +151,7 @@ export class Span implements ISpanTracker {
 
     endCommand() {
         if (this.action) { // for ignored requests like _servicedependency
-            this.tags["error"] = this.error ? "true" : "false";
+            this.addTag("error", this.error ? "true" : "false");
             let metricsName = `vulcain_${this.commandType.toLowerCase()}command_duration_ms`;
             this.metrics.timing(metricsName, this.durationInMs, this.tags);
         }
@@ -163,7 +163,7 @@ export class Span implements ISpanTracker {
     private endRequest() {
         if (this.action) { // for ignored requests like _servicedependency
             let hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;
-            this.tags["error"] = hasError ? "true" : "false";
+            this.addTag("error", hasError ? "true" : "false");
             this.metrics.timing("vulcain_service_duration_ms", this.durationInMs, this.tags);
         }
 
@@ -284,8 +284,6 @@ export class Span implements ISpanTracker {
 
     get durationInMs() {
         const endTime = process.hrtime();
-     //   const elapsedMicros = Math.floor(hrtime[0] * 1000 + hrtime[1] / 1000000);
-     //   return elapsedMicros;
         const secondDiff = endTime[0] - this.startTick[0]
         const nanoSecondDiff = endTime[1] - this.startTick[1]
         const diffInNanoSecond = secondDiff * 1e9 + nanoSecondDiff

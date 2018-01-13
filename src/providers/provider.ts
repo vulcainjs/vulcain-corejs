@@ -1,6 +1,7 @@
 
 import {Schema} from "../schemas/schema";
 import { IRequestContext } from "../pipeline/common";
+import { QueryResult } from "../index";
 
 export interface ListOptions {
     /**
@@ -25,10 +26,6 @@ export interface ListOptions {
      */
     length?:number;
     query?:any;
-}
-
-export class GetAllResult {
-    constructor(public values: Array<any>, public total?: number) {}
 }
 
 /**
@@ -72,7 +69,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    getAll(schema: Schema, options: ListOptions): Promise<GetAllResult>;
+    getAll(schema: Schema, options: ListOptions): Promise<QueryResult>;
     /**
      * Get an entity by id
      *

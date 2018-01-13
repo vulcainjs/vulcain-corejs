@@ -47,7 +47,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         if( Service.isTestEnvironment)
             ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
 
-        if (typeof (ctx.response.content) === "object") {
+        if (Object.getOwnPropertyDescriptor(ctx.response.content, "value")) {
             ctx.response.content.meta = ctx.response.content.meta || {};
             ctx.response.content.meta.correlationId = ctx.requestData.correlationId;
         }

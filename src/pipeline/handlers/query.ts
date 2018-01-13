@@ -10,16 +10,10 @@ import { CommandRuntimeError } from "../errors/commandRuntimeError";
 import { HttpResponse } from "../response";
 import { BadRequestError } from "../errors/badRequestError";
 import { ApplicationError } from "../errors/applicationRequestError";
-import { GetAllResult } from '../../providers/provider';
 
 
-export interface QueryResult {
-    meta: {
-        maxByPage?: number;
-        page?: number;
-        total?: number;
-    };
-    value?;
+export class QueryResult {
+    constructor(public value: Array<any>, public total?: number) { }
 }
 
 /**
@@ -40,8 +34,6 @@ export interface QueryMetadata extends ServiceHandlerMetadata {
  * @extends {CommonActionMetadata}
  */
 export interface QueryActionMetadata extends CommonActionMetadata {
-    outputSchema?: string;
-    outputType?: "one" | "many";
 }
 
 export class QueryManager implements IManager {
@@ -117,12 +109,12 @@ export class QueryManager implements IManager {
             if (!(result instanceof HttpResponse)) {
                 let values = result;
                 let total = 0;
-                if (result instanceof GetAllResult) {
-                    values = result.values;
+                if (result instanceof QueryResult) {
+                    values = result.value;
                     total = result.total;
                 }
 
-                let res: QueryResult = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, values) };
+                let res:any = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, values) };
                 res.meta.total = total;
                 if (result && Array.isArray(result)) {
                     res.meta.total = res.meta.total || result.length;

@@ -7,6 +7,7 @@ import { IScopedComponent } from '../../di/annotations';
 import { IRequestContext } from '../../pipeline/common';
 import { ServiceDescription, ActionDescription, SchemaDescription, PropertyDescription } from '../../pipeline/handlers/serviceDescriptions';
 import { Conventions } from '../../utils/conventions';
+import { Service } from '../../index';
 
 
 export class SwaggerServiceDescriptor implements IScopedComponent {
@@ -27,22 +28,6 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         descriptions.paths = this.computePaths(serviceDescription);
         descriptions.host = this.context.hostName;
         descriptions.basePath = Conventions.instance.defaultUrlprefix;
-
-        descriptions.definitions['_errorResponse'] = this.createResponseDefinition(false, {
-            error: {
-                type: "object",
-                properties: {
-                    message: { type: 'string' },
-                    errors: {
-                        type: "array",
-                        items: {
-                            type: "object"
-                        }
-                    }
-                }
-            }
-        });
-
         return descriptions;
     }
 
@@ -51,7 +36,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             swagger: '2.0',
             info: {
                 'version': '1.0.0',
-                'title': this.domain.name
+                'title': Service.fullServiceName
             },
             schemes: [
                 'http'
@@ -152,19 +137,67 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         operationObject.responses = {};
 
-        operationObject.responses['400'] = { description: 'Invalid input', schema: { $ref: '#/definitions/_errorResponse' } };
+        operationObject.responses['400'] = {
+            description: 'Invalid input',
+            schema: {
+                type: 'object',
+                properties: {
+                    meta: {
+                        type: "object",
+                        properties: {
+                            correlationId: { type: 'string' }
+                        }
+                    },
+                    error: {
+                        type: "object",
+                        properties: {
+                            message: { type: 'string' },
+                            errors: {
+                                type: "object",
+                                additionalProperties: {
+                                    type: 'string'
+                                },
+                                example: {
+                                    firstName: "FirstName is required",
+                                    lastName: "lastName must be in upper case"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
         if (service.scope !== '?') {
             operationObject.responses['401'] = { description: 'Not authentified' };
             operationObject.responses['403'] = { description: 'Not authorized' };
         }
 
-        operationObject.responses['500'] = { description: 'Handler exception', schema: { $ref: '#/definitions/_errorResponse' } };
+        operationObject.responses['500'] = {
+            description: 'Invalid input',
+            schema: {
+                type: 'object',
+                properties: {
+                    meta: {
+                        type: "object",
+                        properties: {
+                            correlationId: { type: 'string' }
+                        }
+                    },
+                    error: {
+                        type: "object",
+                        properties: {
+                            message: { type: 'string' }
+                        }
+                    }
+                }
+            }
+        };
 
         if (service.async) {
             operationObject.responses['200'] = {
                 description: 'Processing task',
-                schema: this.createResponseDefinition(service.kind === "query" && service.verb === "all", {
+                schema: this.createResponseDefinition(false, {
                     meta: {
                         type: "object",
                         properties: { status: { type: "string" }, taskId: { type: "string" } }
@@ -175,8 +208,9 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         else {
             operationObject.responses['200'] = {
                 description: 'Successful operation',
-                schema: this.createResponseDefinition(service.kind === "query" && service.verb === "all")
+                schema: this.createResponseDefinition(service.kind === "query" && service.action === "all")
             };
+
             if (service.outputSchema) {
                 operationObject.responses['200'].schema.properties.value = {};
                 this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema, service.outputType);
@@ -191,13 +225,16 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
      */
     private computeParameters(schemas: SchemaDescription[], service: ActionDescription): Parameters {
         if (service.kind === 'get') {
-            let parameters: ParameterObject = {};
-            parameters.name = 'id';
-            parameters.description = "Unique id",
-            parameters.in = 'query';
-            parameters['schema'] = { 'type': 'string' };
-            parameters.required = true;
-            return [parameters];
+            let params = [
+                {
+                    name: 'id',
+                    description: "Unique id",
+                    in: 'path',
+                    type: 'string',
+                    required: true
+                }
+            ]
+            return params;
         }
         else if (service.kind === 'query') {
             let parms = [];
@@ -205,31 +242,39 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 let schema = schemas.find(sch => sch.name === service.inputSchema);
                 if (schema) {
                     schema.properties.forEach((property: PropertyDescription) => {
-                        let parameters: ParameterObject = {};
-                        parameters.name = property.name;
-                        parameters.description = property.description || property.typeDescription;
-                        parameters['in'] = 'query';
-                        parameters.required = property.required;
-                        parameters['schema'] = { type: property.type, description: property.typeDescription };
-                        parms.push(parameters);
+                        let param: ParameterObject = {};
+                        param.name = property.name;
+                        param.description = property.description || property.typeDescription;
+                        param['in'] = 'query';
+                        param.required = property.required;
+                        param['schema'] = { type: property.type, description: property.typeDescription };
+                        parms.push(param);
                     });
                 }
             }
             return parms.concat([
-            {
-                name: '$page',
-                in: 'query',
-                description: "Skip to page",
-                schema: { 'type': 'number'},
-                required: false
-            },
-            {
-                name: '$maxByPage',
-                in: 'query',
-                description: "Max items by page",
-                schema : { 'type': 'number' },
-                required : false
-            }]);
+                {
+                    name: '$query',
+                    in: 'query',
+                    description: "Filter query",
+                    type: 'string',
+                    required: false
+                },
+                {
+                    name: '$page',
+                    in: 'query',
+                    description: "Skip to page",
+                    type: 'number',
+                    required: false
+                },
+                {
+                    name: '$maxByPage',
+                    in: 'query',
+                    description: "Max items by page",
+                    type: 'number',
+                    required: false
+                }
+            ]);
         }
         else if (service.inputSchema) {
             let parameters: ParameterObject = {};
@@ -257,17 +302,18 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
             currentDef[schema.name] = {
                 type: SwaggerServiceDescriptor.defaultDefinitionType,
-                properties: this.createDefinition(schema)
+                ...this.createDefinition(schema)
             };
         });
         return currentDef;
     }
 
     private createDefinition(schema: SchemaDescription) {
-        let jsonSchema = {
+        let jsonSchema:any = {
             properties: {}
         };
 
+        let required = [];
         schema.properties.forEach((property: PropertyDescription) => {
             jsonSchema.properties[property.name] = {
                 type: property.type,
@@ -283,11 +329,13 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
             }
 
             if (property.required) {
-                jsonSchema.properties[property.name].required = property.required;
+                required.push(property.name);
             }
-
         });
-        return jsonSchema.properties;
+        if (required.length)
+            jsonSchema.required = required;
+
+        return jsonSchema;
     }
 
     private setReferenceDefinition(desc, definitionName: string, propertyReference = 'one') {
@@ -297,7 +345,6 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 if (this.isFundamentalObject(definitionName)) {
                     desc['type'] = definitionName;
                 } else {
-                    desc['type'] = 'object';
                     desc['$ref'] = `#/definitions/${definitionName}`;
                 }
             }
@@ -314,9 +361,11 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 if (this.isFundamentalObject(def)) {
                     items['type'] = def;
                 } else {
-                    items['type'] = 'object';
                     items['$ref'] = `#/definitions/${def}`;
                 }
+            }
+            else {
+                desc.items = { type: 'object' };
             }
         }
     }

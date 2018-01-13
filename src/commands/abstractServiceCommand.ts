@@ -129,7 +129,7 @@ export abstract class AbstractServiceCommand {
      * @param schema - optional element schema
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<QueryResult> {
+    protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<any> {
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
@@ -156,7 +156,7 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<QueryResult> {
+    protected async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<any> {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
