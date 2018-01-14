@@ -39,7 +39,7 @@ export { ActionMetadata, ActionHandlerMetadata } from './pipeline/handlers/actio
 export { EventNotificationMode,  ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/handlers/messageBus';
 export { QueryActionMetadata, QueryMetadata, QueryResult } from './pipeline/handlers/query';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
-export { RequestData, IRequestContext, Pipeline } from './pipeline/common';
+export { RequestData, IRequestContext, Pipeline, VulcainResponse } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
 export { ISerializer } from './pipeline/serializers/serializer';

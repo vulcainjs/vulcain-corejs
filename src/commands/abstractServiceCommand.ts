@@ -17,7 +17,7 @@ import { QueryResult } from "../pipeline/handlers/query";
 import { ActionResult } from "../pipeline/handlers/actions";
 import { Span } from '../instrumentations/span';
 import { TokenService } from '../security/services/tokenService';
-
+import { VulcainResponse } from '../pipeline/common';
 
 export class HttpCommandError extends ApplicationError {
     response: types.IHttpCommandResponse;
@@ -129,7 +129,7 @@ export abstract class AbstractServiceCommand {
      * @param schema - optional element schema
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<any> {
+    private async getRequest<T>(serviceName: string, serviceVersion: string, id: string, args?, schema?: string): Promise<VulcainResponse<T>>{
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
@@ -147,7 +147,6 @@ export abstract class AbstractServiceCommand {
     /**
      *
      *
-     * @protected
      * @template T
      * @param {string} action
      * @param {*} [query]
@@ -156,7 +155,7 @@ export abstract class AbstractServiceCommand {
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    protected async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<any> {
+    private async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<VulcainResponse<T>> {
         let data: any = {};
         data.$maxByPage = maxByPage;
         data.$page = page;
@@ -179,12 +178,11 @@ export abstract class AbstractServiceCommand {
     /**
      *
      *
-     * @protected
      * @param {string} action
      * @param {*} data
      * @returns {Promise<ActionResponse<T>>}
      */
-    protected async sendAction<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<ActionResult> {
+    private async sendAction<T>(serviceName: string, serviceVersion: string, verb: string, data: any, args?): Promise<VulcainResponse<T>> {
         let command = { params: data, correlationId: this.context.requestData.correlationId };
         const stubs=Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
@@ -227,13 +225,12 @@ export abstract class AbstractServiceCommand {
     /**
      * Send a http request
      *
-     * @protected
      * @param {string} http verb to use
      * @param {string} url
      * @param {(req:types.IHttpCommandRequest) => void} [prepareRequest] Callback to configure request before sending
      * @returns request response
      */
-    protected async sendRequest(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+    private async sendRequest(verb: string, url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
@@ -295,22 +292,22 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    async execGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<T> {
+    async execGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<VulcainResponse<T>>{
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.getRequest(serviceName, serviceVersion, data, args);
-        return response.value;
+        let response = await this.getRequest<T>(serviceName, serviceVersion, data, args);
+        return response;
     }
 
-    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<T> {
+    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<VulcainResponse<T>> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.getQuery(serviceName, serviceVersion, verb, data, args, page, maxByPage);
-        return response.value;
+        let response = await this.getQuery<T>(serviceName, serviceVersion, verb, data, args, page, maxByPage);
+        return response;
     }
 
-    async execAction<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<T> {
+    async execAction<T>(serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<VulcainResponse<T>> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.sendAction(serviceName, serviceVersion, verb, data, args);
-        return response.value;
+        let response = await this.sendAction<T>(serviceName, serviceVersion, verb, data, args);
+        return response;
     }
 
     // Must be defined in command

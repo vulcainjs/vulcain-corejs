@@ -4,6 +4,17 @@ import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
 import { ISpanTracker } from '../instrumentations/common';
 
+export interface VulcainResponse<T=any> {
+    meta: {
+        correlationId: string;
+        taskId?: string;
+        status?: string;
+        total?: number;
+        page?: number;
+        maxByPage?: number;
+    },
+    value: T;
+}
 export enum Pipeline {
     Event,
     AsyncTask,

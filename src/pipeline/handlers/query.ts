@@ -12,8 +12,8 @@ import { BadRequestError } from "../errors/badRequestError";
 import { ApplicationError } from "../errors/applicationRequestError";
 
 
-export class QueryResult {
-    constructor(public value: Array<any>, public total?: number) { }
+export class QueryResult<T=any> {
+    constructor(public value: Array<T>, public total?: number) { }
 }
 
 /**
