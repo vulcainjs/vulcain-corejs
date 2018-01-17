@@ -74,10 +74,10 @@ export class Validator {
             try {
                 let err = await schemaDesc.validate(val, ctx);
                 if (err)
-                    errors[schemaDesc.name] = this.__formatMessage(err, formatContext, schemaDesc);
+                    errors["_"] = this.__formatMessage(err, formatContext, schemaDesc);
             }
             catch (e) {
-                errors[schemaDesc.name] = this.__formatMessage("Validation error for element {__schema} : " + e, formatContext);
+                errors["_"] = this.__formatMessage("Validation error for element {__schema} : " + e, formatContext);
             }
         }
         return errors;
