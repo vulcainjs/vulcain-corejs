@@ -72,7 +72,7 @@ export class PrometheusMetrics implements IMetrics {
         let labels = this.encodeTags(customTags);
         let counter:Prometheus.Histogram = (<any>Prometheus.register).getSingleMetric(metric);
         if (!counter) {
-            counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels) });
+            counter = new Prometheus.Histogram({ name: metric, help: metric, labelNames: Object.keys(labels), buckets: [50,100,250,500,1000,1500,2000,5000], });
         }
         try {
             counter.observe(labels, duration);

@@ -119,10 +119,6 @@ export class Span implements ISpanTracker {
     injectHeaders(headers: (name: string | any, value?: string) => any) {
         headers(VulcainHeaderNames.X_VULCAIN_PARENT_ID, this._id.spanId);
         headers(VulcainHeaderNames.X_VULCAIN_CORRELATION_ID, this._id.correlationId);
-//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_NAME, System.serviceName);
-//        headers(VulcainHeaderNames.X_VULCAIN_SERVICE_VERSION, System.serviceVersion);
-//        headers(VulcainHeaderNames.X_VULCAIN_ENV, System.environment);
-//        headers(VulcainHeaderNames.X_VULCAIN_CONTAINER, os.hostname());
 
         // TODO move this code
         if (this.context.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_STUB]) {
