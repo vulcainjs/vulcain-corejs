@@ -10,7 +10,6 @@ export class SchemaStandardTypes {
     static "enum" = "enum";
     static "uid" = "uid";
     static "arrayOf" = "arrayOf";
-    static "range" = "range";
     static "email" = "email";
     static "url" = "url";
     static "alphanumeric" = "alphanumeric";
@@ -18,6 +17,7 @@ export class SchemaStandardTypes {
 }
 
 export class SchemaStandardValidators {
+    static "range" = "range";
     static "patternValidator" = "pattern";
     static "lengthValidator" = "length";
 }
@@ -166,7 +166,7 @@ export let standards = {
         $max: 1,
         message: "Invalid value '{$value}' for '{$propertyName}', value must be between {$min} and {$max}",
         validate: function (val) {
-            if (val < this.min || val > this.max) return this.message;
+            if (val < this.$min || val > this.$max) return this.message;
         }
     },
     email: {
