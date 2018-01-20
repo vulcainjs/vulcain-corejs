@@ -142,6 +142,10 @@ export interface PropertyOptions {
      * Property sequence order
      */
     order?: number;
+    /**
+     * This property is not exposed by service description
+     */
+    private?:boolean
 }
 
 /**
@@ -204,6 +208,7 @@ export interface ReferenceOptions {
     validators?: Array<any>;
     type?: string;
     order?: number;
+    private?: boolean;
 }
 
 export function Reference(info: ReferenceOptions) {

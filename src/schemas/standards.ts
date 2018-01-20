@@ -18,8 +18,8 @@ export class SchemaStandardTypes {
 
 export class SchemaStandardValidators {
     static "range" = "range";
-    static "patternValidator" = "pattern";
-    static "lengthValidator" = "length";
+    static "pattern" = "pattern";
+    static "len" = "length";
 }
 
 export let standards = {

@@ -311,6 +311,8 @@ export class ServiceDescriptors {
     private updateDescription(schemas: Map<string, SchemaDescription>, schema: schDesc, desc: SchemaDescription) {
         for (let k of Object.keys(schema.properties)) {
             const p = schema.properties[k];
+            if (p.private)
+                continue;
             let type = this.getPropertyType(p.items || p.type);
             if (type) {
                 let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description, isKey: p.isKey };
@@ -328,6 +330,8 @@ export class ServiceDescriptors {
         }
         for (let k of Object.keys(schema.references)) {
             const r = schema.references[k];
+            if (r.private)
+                continue;
             if (schemas.has(k)) return k;
             this.getSchemaDescription(schemas, r.item);
 
