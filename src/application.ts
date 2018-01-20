@@ -147,8 +147,8 @@ export class Application {
             this.registerComponents();
             Preloader.instance.runPreloads(this.container, this._domain);
 
-            await eventBus.start();
-            await commandBus.start();
+            await eventBus.open();
+            await commandBus.open();
 
             let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
             this.defineScopeDescriptions(scopes);

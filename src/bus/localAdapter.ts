@@ -7,8 +7,8 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
     private eventHandler: (event: EventData) => void;
     private commandHandler:  (event: RequestData) => void;
 
-    start() {
-        return Promise.resolve(this);
+    open() {
+        return Promise.resolve();
     }
 
     stopReception() { }

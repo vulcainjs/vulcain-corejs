@@ -160,7 +160,7 @@ describe("Validate data", function () {
         let schema = domain.getSchema("ReferenceModel");
         let errors = await schema.validate(null, refs);
 
-        expect(Object.keys(errors).length).equals(1); // TODO really expected
+        expect(Object.keys(errors).length).equals(1); // TODO really expected ?
     });
 
     it("should validate required reference", async () => {

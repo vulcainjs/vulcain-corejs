@@ -21,26 +21,26 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             this.address = "amqp://" + address;
     }
 
-    start() {
+    open() {
         let self = this;
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             if (self.initialized)
             {
-                return resolve(self);
+                return resolve();
             }
 
-            // TODO connection error
             self.initialized = true;
-            Service.log.info(null, ()=>"Open rabbitmq connection on " + Service.removePasswordFromUrl(this.address)); // TODO remove password
+            Service.log.info(null, ()=>"Open rabbitmq connection on " + Service.removePasswordFromUrl(this.address));
+
             amqp.connect(this.address).then((conn: amqp.Connection) => {
                 conn.createChannel().then((ch: amqp.Channel) => {
                     self.channel = ch;
-                    resolve(self);
+                    resolve();
                 });
             })
             .catch(err => {
-                Service.log.error(null, err, ()=>`Unable to open rabbit connection. Verify if virtualHost ${Service.environment} exists.`);
-                resolve(self);
+                Service.log.error(null, err, ()=>`Unable to open rabbit connection.`);
+                reject();
             });
         });
     }
@@ -57,6 +57,11 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
         this.pauseReception();
         this.eventHandlers.forEach(eh => { this.channel.unbindQueue(eh.queue, eh.domain, eh.args) });
         this.eventHandlers.clear();
+    }
+
+    dispose() {
+        this.stopReception();
+        this.channel.close();
     }
 
     /**
@@ -118,7 +123,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
     /**
      * Task = asynchronous action
-     * Shared by service instances
+     * Shared by the current service instances
      *
      * @param {string} domain
      * @param {string} serviceId

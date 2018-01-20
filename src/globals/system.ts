@@ -101,7 +101,7 @@ export class Service {
                 Service._stubManager = new DummyStubManager();
             }
         }
-        return Service._stubManager; // TODO as service
+        return Service._stubManager;
     }
 
     /**

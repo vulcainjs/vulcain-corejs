@@ -22,7 +22,7 @@ export abstract class AbstractHandler implements IScopedComponent {
 
     get context(): IRequestContext {
         if (!this._requestContext) {
-            this._requestContext = new RequestContext(this.container, Pipeline.HttpRequest); // TODO init metrics...
+            this._requestContext = new RequestContext(this.container, Pipeline.HttpRequest);
         }
         return this._requestContext;
     }

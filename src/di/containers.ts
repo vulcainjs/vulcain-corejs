@@ -25,6 +25,7 @@ import { HttpResponse } from "../pipeline/response";
 import { TrackerFactory } from "../instrumentations/trackers/index";
 import { ScopesDescriptor } from "../defaults/scopeDescriptors";
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
+import { RabbitAdapter } from '../bus/rabbitAdapter';
 
 /**
  * Component container for dependency injection
@@ -131,7 +132,7 @@ export class Container implements IContainer {
         if (!uri.startsWith("amqp://")) {
             uri = "amqp://" + uri;
         }
-        let bus;// = new RabbitAdapter(uri);
+        let bus = new RabbitAdapter(uri);
         if (usage === BusUsage.all || usage === BusUsage.eventOnly)
             this.injectInstance(bus, DefaultServiceNames.EventBusAdapter);
         if (usage === BusUsage.all || usage === BusUsage.commandOnly)

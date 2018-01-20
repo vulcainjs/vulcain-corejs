@@ -1,3 +1,5 @@
+import { RequestData } from "../pipeline/common";
+import { EventData } from "../pipeline/handlers/messageBus";
 
 /**
  * Async actions dispatcher
@@ -6,17 +8,12 @@
  * @export
  * @interface IActionBusAdapter
  */
-import { RequestData } from "../pipeline/common";
-import { EventData } from "../pipeline/handlers/messageBus";
-
 export interface IActionBusAdapter {
     /**
-     * Start a new topic
+     * Open bus
      *
-     *
-     * @memberOf IActionBusAdapter
      */
-    start();
+    open(): Promise<void>;
 
     /**
      * Gracefully stop message consumption
@@ -28,9 +25,7 @@ export interface IActionBusAdapter {
      *
      * @param {string} domain
      * @param {string} serviceId
-     * @param {ActionData} command
-     *
-     * @memberOf IActionBusAdapter
+     * @param {RequestData} command
      */
     publishTask(domain: string, serviceId: string, command: RequestData);
     /**
@@ -47,16 +42,27 @@ export interface IActionBusAdapter {
 
 /**
  * Global event bus
+ * Events are shared by all service instance.
+ * Event is sent when action complete
  *
  * @export
  * @interface IEventBusAdapter
  */
 export interface IEventBusAdapter {
-    start();
+    /**
+     * Open bus
+     */
+    open();
     /**
      * Gracefully stop message consumption
      */
     stopReception();
+    /**
+     * send event
+     */
     sendEvent(domain: string, event: EventData);
+    /**
+     * Consume events
+     */
     consumeEvents(domain: string, handler: (event: EventData) => void);
 }

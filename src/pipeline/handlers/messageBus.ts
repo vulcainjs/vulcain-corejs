@@ -42,7 +42,10 @@ export class MessageBus {
     private eventBus: IEventBusAdapter;
     private _events: Map<string,RX.Subject<EventData>> = new Map<string, RX.Subject<EventData>>();
 
-    public getEventsQueue(domain:string): RX.Observable<EventData> {
+    /**
+     * Get event queue for a domain
+     */
+    public getEventQueue(domain:string): RX.Observable<EventData> {
         let events = this._events.get(domain);
         if (!events) {
             events = new RX.Subject<EventData>();
@@ -64,7 +67,7 @@ export class MessageBus {
 
     private consumeEvent(event: EventData) {
         try {
-            (<RX.Subject<EventData>>this.getEventsQueue(event.domain)).next(event);
+            (<RX.Subject<EventData>>this.getEventQueue(event.domain)).next(event);
         }
         catch (e) {
             Service.log.error(

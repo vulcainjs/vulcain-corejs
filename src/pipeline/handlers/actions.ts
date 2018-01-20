@@ -318,7 +318,7 @@ export class CommandManager implements IManager {
     private bindEventHandler(metadata: ConsumeEventMetadata) {
         // Subscribe to events for a domain, a schema and an action
         // Get event stream for a domain
-        let events = this.messageBus.getEventsQueue(metadata.subscribeToDomain || this.domain.name);
+        let events = this.messageBus.getEventQueue(metadata.subscribeToDomain || this.domain.name);
         // Filtered by schema
         if (metadata.subscribeToSchema !== '*') {
             events = events.filter(e => e.schema === metadata.subscribeToSchema);
