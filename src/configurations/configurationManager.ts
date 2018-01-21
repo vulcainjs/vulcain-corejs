@@ -43,6 +43,8 @@ export class ConfigurationManager {
     }
 
     createDynamicProperty<T>(name: string, defaultValue?: T) {
+        Service.registerPropertyAsDependency(name, defaultValue);
+
         let dp = new DynamicProperty<T>(this, name, defaultValue);
         if (name) {
             dp.set(this.getValueInSources(name));
@@ -52,6 +54,8 @@ export class ConfigurationManager {
     }
 
     createChainedDynamicProperty<T>(name: string, properties: Array<string>, defaultValue?: T) {
+        Service.registerPropertyAsDependency(name, defaultValue);
+
         properties = properties && properties.filter(n => !!n); // remove null property
         if (!properties || properties.length === 0)
             return this.createDynamicProperty(name, defaultValue);

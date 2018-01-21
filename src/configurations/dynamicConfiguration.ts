@@ -63,7 +63,6 @@ export class DynamicConfiguration {
         let p = DynamicConfiguration.manager.getProperty<T>(name);
         if (p)
             return p;
-        Service.registerPropertyAsDependency(name, defaultValue);
 
         let fullName = commandName ? commandName + "." + name : name;
         let chain = [

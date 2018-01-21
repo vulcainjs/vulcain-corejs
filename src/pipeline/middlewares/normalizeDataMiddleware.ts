@@ -114,7 +114,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         if (url.query["__schema"])
             schema = url.query["__schema"];
 
-        ctx.requestData.action = action || !body && "all";
+        ctx.requestData.action = action || (!body && "all") || null;
         ctx.requestData.schema = schema;
 
         if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {

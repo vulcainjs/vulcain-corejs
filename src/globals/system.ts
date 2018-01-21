@@ -314,8 +314,9 @@ export class Service {
         let p = Service.manifest.configurations[name];
         if (p && p !== "any")
             return;
+
         let schema = "any";
-        if (typeof defaultValue === "number" || defaultValue) {
+        if (typeof defaultValue === "number" || typeof defaultValue === "boolean" || defaultValue) {
             schema = typeof defaultValue;
         }
         Service.manifest.configurations[name] = schema;

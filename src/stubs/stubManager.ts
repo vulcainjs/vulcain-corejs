@@ -19,8 +19,8 @@ export class StubManager implements IStubManager {
     }
 
     constructor() {
-        this.useMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("UseMockSession");
-        this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession");
+        this.useMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("UseMockSession", "");
+        this.registerMockProperty = DynamicConfiguration.getChainedConfigurationProperty<string>("SaveMockSession", "");
     }
 
     initialize(stubs:any, saveSessions?: (sessions:any) => Promise<any>) {
