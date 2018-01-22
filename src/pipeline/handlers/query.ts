@@ -79,10 +79,7 @@ export class QueryManager implements IManager {
             if (!errors) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
-                let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && info.handler[methodName](query.params, query.action);
-                if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](query.params, query.action);
+                errors = info.handler[methodName] && await info.handler[methodName](query.params, query.action);
             }
         }
         return errors;

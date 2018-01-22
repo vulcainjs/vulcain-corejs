@@ -28,7 +28,7 @@ export class TestContext extends RequestContext {
         return this;
     }
 
-    getService<T>(name: string) {
+    getService<T>(name: string): T {
         return this.context.container.get<T>(name);
     }
 

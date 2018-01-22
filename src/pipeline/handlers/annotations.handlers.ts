@@ -12,23 +12,19 @@ import { EventMetadata } from "./messageBus";
 const symActions = Symbol.for("handler:actions");
 const symMetadata = Symbol.for("handler:metadata");
 
+// Get registered metadata by reverse hierarchy order
+// to override base metadata
 function getMetadata(key, target) {
-    let metadata = {};
-    while (target) {
+    let metadata;
+    if (target) {
+        metadata = getMetadata(key, Object.getPrototypeOf(target))
         let tmp = Reflect.getOwnMetadata(key, target);
         if (tmp) {
-            // merge by action
-            Object.keys(tmp).forEach(p => {
-                let pv = tmp[p];
-                // Do not override action
-                if (!pv.action || Object.keys(metadata).findIndex(pm => metadata[pm].action === pv.action) < 0) {
-                    metadata[p] = Object.assign({}, pv); // clone
-                }
-            });
+            // merge
+            metadata = Object.assign(metadata, tmp);
         }
-        target = Object.getPrototypeOf(target);
     }
-    return metadata;
+    return metadata || {};
 }
 
 /**

@@ -134,12 +134,9 @@ export class CommandManager implements IManager {
             }
 
             if (!skipValidation && !errors) {
-                // Search if a method naming validate<schema>[Async] exists
+                // Search if a method naming validate<schema> exists
                 let methodName = 'validate' + inputSchema;
-                let altMethodName = methodName + 'Async';
-                errors = info.handler[methodName] && info.handler[methodName](command.params, command.action);
-                if (!errors)
-                    errors = info.handler[altMethodName] && await info.handler[altMethodName](command.params, command.action);
+                errors = info.handler[methodName] && await info.handler[methodName](command.params, command.action);
             }
         }
 
@@ -202,7 +199,7 @@ export class CommandManager implements IManager {
                     this.messageBus.pushTask(task);
                     };
                 **/
-                let resultRaw = await info.handler[info.method](Object.assign({}, command.params));
+                let resultRaw = await info.handler[info.method](command.params);
                 let result = resultRaw && HandlerFactory.obfuscateSensibleData(this.domain, this.container, resultRaw);
 
                 if (!(result instanceof HttpResponse)) {
@@ -264,7 +261,7 @@ export class CommandManager implements IManager {
         try {
             ctx.tracker.trackAction(command.vulcainVerb);
             info.handler.context = ctx;
-            let result = await info.handler[info.method](Object.assign({}, command.params));
+            let result = await info.handler[info.method](command.params);
 
             if (result instanceof HttpResponse) {
                 throw new Error("Custom Http Response is not valid in an async action");
