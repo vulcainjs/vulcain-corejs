@@ -10,6 +10,11 @@ import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystr
 import { TestContext } from '../../dist/pipeline/testContext';
 import { TestCommand, TestCommandTimeout, TestCommandFallback, TestCommandCircuitOpen } from "./commands";
 
+try {
+    DynamicConfiguration.getBuilder();
+}
+catch (e) { }
+
 let context = new TestContext();
 
 describe("Command", function () {

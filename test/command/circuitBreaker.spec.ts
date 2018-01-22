@@ -3,8 +3,10 @@ import { CommandProperties } from "../../dist/commands/commandProperties";
 import { ICommandMetrics, CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
+import ActualTime from "../../dist/utils/actualTime";
 
 try {
+    ActualTime.enableVirtualTimer();
     DynamicConfiguration.getBuilder();
 }
 catch (e) { }
@@ -40,6 +42,14 @@ describe("CircuitBreaker", function () {
         let cb = CircuitBreakerFactory.getOrCreate(options);
         let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
         metrics.markFailure();
         expect(cb.isOpen()).to.be.true;
     });
@@ -60,18 +70,25 @@ describe("CircuitBreaker", function () {
         expect(cb.isOpen()).to.be.true;
     });
 
-    it("should retry after a configured sleep time, if the circuit was open", function (done) {
+    it("should retry after a configured sleep time, if the circuit was open", function () {
         let options = getCBOptions("Test3");
         let cb = CircuitBreakerFactory.getOrCreate(options);
         let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
         metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+
         expect(cb.allowRequest()).to.be.false;
-        setTimeout(function () {
-            expect(cb.isOpen()).to.be.true;
-            expect(cb.allowRequest()).to.be.true;
-            done();
-        }, 1001);
+        ActualTime.fastForwardActualTime(10000);
+        expect(cb.isOpen()).to.be.true;
+        expect(cb.allowRequest()).to.be.true;
     });
 
     it("should reset metrics after the circuit was closed again", function () {
@@ -79,8 +96,18 @@ describe("CircuitBreaker", function () {
         let cb = CircuitBreakerFactory.getOrCreate(options);
         let metrics = CommandMetricsFactory.getOrCreate(options);
         metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
+        metrics.markSuccess();
         metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+        metrics.markFailure();
+
         expect(cb.allowRequest()).to.be.false;
+        
         cb.markSuccess();
         expect(cb.allowRequest()).to.be.true;
     });
