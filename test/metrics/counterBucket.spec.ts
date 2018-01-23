@@ -3,7 +3,7 @@ import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumbe
 import { expect } from 'chai';
 
 describe("CounterBucket", function () {
-    var underTest;
+    let underTest;
 
     beforeEach(function () {
         underTest = new Bucket();

@@ -1,5 +1,10 @@
 import { AbstractCommand } from '../../dist/commands/abstractCommand';
 import { Command } from '../../dist/commands/commandFactory';
+import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
+import { CommandFactory } from '../../dist/commands/commandFactory';
+
+DynamicConfiguration.reset();
+CommandFactory.reset();
 
 @Command()
 export class TestCommand extends AbstractCommand<any> {

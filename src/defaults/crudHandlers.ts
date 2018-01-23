@@ -140,8 +140,8 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Query"));
     }
 
-    protected createDefaultCommand<T>() {
-        return CommandFactory.createCommand<T>(this.context, createCommandName(this.metadata, "Query"), this.metadata.schema);
+    protected createDefaultCommand() {
+        return CommandFactory.createCommand<DefaultCRUDCommand>(this.context, createCommandName(this.metadata, "Query"), this.metadata.schema);
     }
 
     constructor( @Inject("Container") container: IContainer ) {
@@ -150,7 +150,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     @Query({ action: "get", description: "Get an entity by id" })
     async get(id: any): Promise<T> {
-        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand();
         return await cmd.getWithSensibleData(id);
     }
 
@@ -161,7 +161,7 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
             page: page || this.context.requestData.page || 0,
             query: query || {}
         };
-        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand();
         return await cmd.getAllWithSensibleData(options);
     }
 }

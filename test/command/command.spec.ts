@@ -9,11 +9,11 @@ import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeEr
 import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
 import { TestContext } from '../../dist/pipeline/testContext';
 import { TestCommand, TestCommandTimeout, TestCommandFallback, TestCommandCircuitOpen } from "./commands";
+import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 
-try {
-    DynamicConfiguration.getBuilder();
-}
-catch (e) { }
+beforeEach(function () {
+    DynamicConfiguration.reset();
+});
 
 let context = new TestContext();
 

@@ -85,7 +85,7 @@ export class Application {
     }
 
     private async init() {
-        await DynamicConfiguration.getBuilder().startPolling();
+        await DynamicConfiguration.init().startPolling();
 
         Service.log.info(null, () => "Starting application");
 

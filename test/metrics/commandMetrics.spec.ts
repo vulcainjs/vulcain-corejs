@@ -7,8 +7,8 @@ import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystr
 
 describe("CommandMetrics", function () {
 
-    var underTest;
-    var props = new CommandProperties("TestCommandMetrics", "defaultGroup", <any>{});
+    let underTest;
+    let props = new CommandProperties("TestCommandMetrics", "defaultGroup", <any>{});
 
     beforeEach(function () {
         ActualTime.enableVirtualTimer();

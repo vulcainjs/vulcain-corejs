@@ -50,6 +50,15 @@ interface CommandCache {
 
 export class CommandFactory {
     /**
+     * for test only
+     */
+    static reset() {
+        hystrixCommandsCache.clear();
+        CommandMetricsFactory.resetCache();
+        CircuitBreakerFactory.resetCache();
+    }
+
+    /**
      * Register a new command
      */
     static registerCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {

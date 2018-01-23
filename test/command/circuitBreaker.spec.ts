@@ -5,11 +5,10 @@ import { expect } from 'chai';
 import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
 import ActualTime from "../../dist/utils/actualTime";
 
-try {
+beforeEach(function () {
     ActualTime.enableVirtualTimer();
-    DynamicConfiguration.getBuilder();
-}
-catch (e) { }
+    DynamicConfiguration.reset();
+});
 
 function getCBOptions(commandKey) {
 
@@ -107,7 +106,7 @@ describe("CircuitBreaker", function () {
         metrics.markFailure();
 
         expect(cb.allowRequest()).to.be.false;
-        
+
         cb.markSuccess();
         expect(cb.allowRequest()).to.be.true;
     });

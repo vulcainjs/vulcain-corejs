@@ -60,11 +60,11 @@ export class DynamicConfiguration {
      * @returns {IDynamicProperty<T>}
      */
     public static getChainedConfigurationProperty<T>(name: string, defaultValue?: T, commandName?: string) {
-        let p = DynamicConfiguration.manager.getProperty<T>(name);
+        let fullName = commandName ? commandName + "." + name : name;
+        let p = DynamicConfiguration.manager.getProperty<T>(fullName);
         if (p)
             return p;
 
-        let fullName = commandName ? commandName + "." + name : name;
         let chain = [
             Service.serviceName + "." + Service.serviceVersion + "." + fullName,
             Service.serviceName + "." + fullName,
@@ -75,12 +75,12 @@ export class DynamicConfiguration {
         }
 
         if (Service.domainName)
-            chain.push(Service.domainName + "." + name);
+            chain.push(Service.domainName + "." + fullName);
 
         chain.push(name);
 
         return DynamicConfiguration.getChainedProperty<T>(
-            name,
+            fullName,
             defaultValue,
             ...chain);
     }
@@ -106,7 +106,7 @@ export class DynamicConfiguration {
     /// <param name="pollingIntervalInSeconds">Polling interval in seconds (default 60)</param>
     /// <param name="sourceTimeoutInMs">Max time allowed to a source to retrieve new values (Cancel the request but doesn't raise an error)</param>
     /// <returns>ConfigurationSourceBuilder</returns>
-    public static getBuilder(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
+    public static init(pollingIntervalInSeconds?: number, sourceTimeoutInMs?: number) {
         if (pollingIntervalInSeconds)
             DynamicConfiguration.manager.pollingIntervalInSeconds = pollingIntervalInSeconds;
         if (sourceTimeoutInMs)
