@@ -21,7 +21,7 @@ class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
         }, (1));
     }
 
-    consumeEvents(domain: string, handler: (event: EventData) => void) {
+    consumeEvents(domain: string, handler: (event: EventData) => void, queueName?:string) {
         this.eventHandler = handler;
     }
 

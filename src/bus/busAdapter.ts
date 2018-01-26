@@ -64,5 +64,5 @@ export interface IEventBusAdapter {
     /**
      * Consume events
      */
-    consumeEvents(domain: string, handler: (event: EventData) => void);
+    consumeEvents(domain: string, handler: (event: EventData) => void, uniqueQueueName?:string);
 }

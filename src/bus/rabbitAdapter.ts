@@ -76,10 +76,14 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     sendEvent(domain:string, event:EventData) {
         if (!this.channel)
             return;
-        domain = domain.toLowerCase() + "_events";
+        domain = this.createEventQueueName(domain);
 
         this.channel.assertExchange(domain, 'fanout', { durable: false });
         this.channel.publish(domain, '', new Buffer(JSON.stringify(event)));
+    }
+
+    private createEventQueueName(domain: string) {
+        return "vulcain_" + domain.toLowerCase() + "_events";
     }
 
     /**
@@ -87,18 +91,21 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      *
      * @param {string} domain
      * @param {Function} handler
+     * @param {string} queuename
      *
-     * @memberOf RabbitAdapter
+     * If queuename is set, event are take into account by only one instance and a ack is send if the process complete sucessfully
+     * else event is distributed to every instance with no ack
      */
-    consumeEvents(domain: string, handler:  (event: EventData) => void) {
+    consumeEvents(domain: string, handler:  (event: EventData) => void, queueName:string='') {
         if (!this.channel)
             return;
         let self = this;
 
         // Since this method can be called many times for a same domain
         // all handlers are aggregated on only one binding
-        domain = domain.toLowerCase() + "_events";
-        let handlerInfo = this.eventHandlers.get(domain);
+        domain = this.createEventQueueName(domain);
+        const handlerKey = domain + queueName;
+        let handlerInfo = this.eventHandlers.get(handlerKey);
         if (handlerInfo) {
             handlerInfo.handlers.push(handler);
             return;
@@ -106,18 +113,35 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
         // First time for this domain, create the binding
         this.channel.assertExchange(domain, 'fanout', { durable: false });
-        this.channel.assertQueue('', { exclusive: true }).then(queue => {
+
+        // For one event delivery:
+        // specific queue and exclusive=false
+        // else
+        // empty queue name and exclusive=true
+        let options = { exclusive: !queueName };
+        this.channel.assertQueue(queueName, { exclusive: true }).then(queue => {
             const handlers = [handler];
-            this.eventHandlers.set(domain, {queue: queue.queue, domain, handlers, args: ''});
+            this.eventHandlers.set(handlerKey, {queue: queue.queue, domain, handlers, args: ''});
 
             self.channel.bindQueue(queue.queue, domain, '');
             self.channel.consume(queue.queue, async (msg) => {
                 if (this.ignoreInputMessages) return;
                 let obj = JSON.parse(msg.content.toString());
 
-                let handlerInfo = self.eventHandlers.get(domain);
-                handlerInfo && handlerInfo.handlers.forEach(h => h(obj));
-            }, { noAck: true });
+                let handlerInfo = self.eventHandlers.get(handlerKey);
+                try {
+                    if (handlerInfo) {
+                        let tasks = handlerInfo.handlers.map(h => h(obj));
+                        if (queueName) {
+                            await Promise.all(tasks);
+                            self.channel.ack(msg);
+                        }
+                    }
+                }
+                catch (e) {
+                    Service.log.error(null, e, () => "Event handler failed for event " + obj.metadata.eventId);
+                }
+            }, { noAck: !!queueName });
         });
     }
 

@@ -17,8 +17,9 @@ import { ITaskManager } from "../../providers/taskManager";
 import { IRequestContext } from '../../index';
 
 export interface AsyncTaskData extends RequestData {
-    status?: "Error" | "Success" | "Pending";
+    status?: "Error" | "Success" | "Pending" | "Running";
     taskId?: string;
+    submitAt?: string;
     startedAt?: string;
     userContext?: UserContextData;
     completedAt?: string;
@@ -65,7 +66,8 @@ export interface ActionMetadata extends CommonActionMetadata {
     skipDataValidation?: boolean;
     async?: boolean;
     eventMode?: EventNotificationMode;
-    eventFactory?: (context: IRequestContext, event: EventData)=>EventData;
+    eventFactory?: (context: IRequestContext, event: EventData) => EventData;
+    eventOptions?: any;
 }
 
 export class CommandManager implements IManager {
@@ -209,7 +211,7 @@ export class CommandManager implements IManager {
                     result = new HttpResponse(res);
                 }
 
-                if (eventMode === EventNotificationMode.successOnly || eventMode === EventNotificationMode.always) {
+                if ((eventMode === EventNotificationMode.successOnly && result.statusCode === 200) || eventMode === EventNotificationMode.always) {
                     let event = this.createEvent(ctx, "Success", resultRaw);
                     if (metadata.eventFactory)
                         event = metadata.eventFactory(ctx, event);
@@ -224,12 +226,13 @@ export class CommandManager implements IManager {
             else {
                 // Asynchronous task
                 let pendingTask: AsyncTaskData = Object.assign({}, ctx.getRequestDataObject(), {
-                    startedAt: Service.nowAsString(),
+                    submitAt: Service.nowAsString(),
                     status: "Pending"
                 });
 
                 pendingTask.userContext = ctx.user.getUserContext();
                 this.messageBus.pushTask(pendingTask);
+
                 let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
                 if (taskManager)
                     await taskManager.registerTask(pendingTask);
@@ -257,8 +260,15 @@ export class CommandManager implements IManager {
         let metadata = <ActionMetadata>info.metadata;
         let eventMode = metadata.eventMode || EventNotificationMode.always;
 
+        let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
         let res;
         try {
+            command.status = "Running";
+            command.startedAt = Service.nowAsString();
+
+            if (taskManager)
+                await taskManager.updateTask(command);
+
             ctx.requestTracker.trackAction(command.vulcainVerb);
             info.handler.context = ctx;
             let result = await info.handler[info.method](command.params);
@@ -293,7 +303,6 @@ export class CommandManager implements IManager {
         }
         finally {
             command.completedAt = Service.nowAsString();
-            let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
             if (taskManager)
                 await taskManager.updateTask(command);
             ctx.dispose();
@@ -315,7 +324,8 @@ export class CommandManager implements IManager {
     private bindEventHandler(metadata: ConsumeEventMetadata) {
         // Subscribe to events for a domain, a schema and an action
         // Get event stream for a domain
-        let events = this.messageBus.getEventQueue(metadata.subscribeToDomain || this.domain.name);
+        let events = this.messageBus.getEventQueue(metadata.subscribeToDomain || this.domain.name, metadata.exclusiveQueue);
+
         // Filtered by schema
         if (metadata.subscribeToSchema !== '*') {
             events = events.filter(e => e.schema === metadata.subscribeToSchema);

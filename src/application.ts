@@ -129,6 +129,9 @@ export class Application {
      */
     async start(port: number) {
 
+        if (!port)
+            throw new Error("You must provide a port number");
+        
         try {
             await this.init();
 
