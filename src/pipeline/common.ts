@@ -2,7 +2,7 @@ import { UserContext } from '../security/securityContext';
 import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
-import { ISpanTracker } from '../instrumentations/common';
+import { ISpanTracker, ITracker } from '../instrumentations/common';
 
 export interface VulcainResponse<T=any> {
     meta: {
@@ -35,10 +35,12 @@ export interface ICustomEvent {
 }
 
 export interface IRequestContext {
+    createCustomTracker(name: string, tags?: { [index: string]: string }): ITracker;
+
     /**
      * Span tracker
      */
-    tracker: ISpanTracker;
+    requestTracker: ITracker;
 
     /**
      * Current user or null

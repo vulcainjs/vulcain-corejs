@@ -1,7 +1,7 @@
 import { Service } from '../../globals/system';
 import { Conventions } from '../../utils/conventions';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
-import { IRequestTracker, IRequestTrackerFactory } from './index';
+import { ITrackerAdapter, IRequestTrackerFactory } from './index';
 import { RequestContext } from "../../pipeline/requestContext";
 import * as os from 'os';
 import { IRequestContext } from "../../pipeline/common";
@@ -43,12 +43,12 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
     constructor(private recorder) {
     }
 
-    startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
+    startSpan(span: ISpanTracker, name: string, action: string): ITrackerAdapter {
         return new ZipkinRequestTracker(this.recorder, span.id, span.kind, name, action);
     }
 }
 
-class ZipkinRequestTracker implements IRequestTracker {
+class ZipkinRequestTracker implements ITrackerAdapter {
     private tracer;
     private id: any;
 

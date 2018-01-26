@@ -1,11 +1,12 @@
 import { IRequestContext } from "../pipeline/common";
-import { IRequestTracker } from "../instrumentations/trackers/index";
+import { ITrackerAdapter } from "../instrumentations/trackers/index";
 
 export enum SpanKind {
     Request,
     Command,
     Task,
-    Event
+    Event,
+    Custom
 }
 
 export interface TrackerId {
@@ -14,21 +15,7 @@ export interface TrackerId {
     spanId: string;
 }
 
-export interface ISpanTracker {
-    context: IRequestContext;
-    id: TrackerId;
-    durationInMs: number;
-    now: number;
-    tracker: IRequestTracker;
-    kind: SpanKind;
-    trackAction(name: string, tags?: {[index:string]:string});
-    addTag(name: string, value: string);
-
-    addHttpRequestTags(uri:string, verb:string);
-    addProviderCommandTags(address:string, schema: string, tenant: string );
-    addServiceCommandTags(serviceName: string, serviceVersion: string);
-    addCustomCommandTags(commandType: string, tags: { [key: string]: string });
-    injectHeaders(headers: (name: string | any, value?: string) => any);
+export interface ITracker {
     /**
      * Log an error
      *
@@ -58,16 +45,34 @@ export interface ISpanTracker {
     logVerbose(msg: () => string);
 
     dispose();
+    id: TrackerId;
+}
+
+export interface ISpanTracker extends ITracker {
+    context: IRequestContext;
+    durationInMs: number;
+    now: number;
+    tracker: ITrackerAdapter;
+    kind: SpanKind;
+    trackAction(name: string, tags?: {[index:string]:string});
+    addTag(name: string, value: string);
+
+    addHttpRequestTags(uri:string, verb:string);
+    addProviderCommandTags(address:string, schema: string, tenant: string );
+    addServiceCommandTags(serviceName: string, serviceVersion: string);
+    addCustomCommandTags(commandType: string, tags: { [key: string]: string });
+    injectHeaders(headers: (name: string | any, value?: string) => any);
 }
 
 export interface ISpanRequestTracker extends ISpanTracker {
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker;
+    createCustomTracker(context: IRequestContext, name: string, tags?: { [index: string]: string }): ITracker;
 }
 
 export class DummySpanTracker implements ISpanRequestTracker {
     durationInMs: number = 0;
     now: number;
-    tracker: IRequestTracker;
+    tracker: ITrackerAdapter;
     kind: SpanKind;
 
     get id(): TrackerId {
@@ -75,6 +80,10 @@ export class DummySpanTracker implements ISpanRequestTracker {
     }
 
     constructor(public context: IRequestContext) { }
+
+    createCustomTracker(context: IRequestContext, name: string, tags?: {[index:string]:string}): ITracker {
+        return null;
+    }
 
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker {
         return this;

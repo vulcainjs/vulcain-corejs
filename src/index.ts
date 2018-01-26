@@ -29,7 +29,8 @@ export { Conventions } from './utils/conventions';
 export { IMetrics } from './instrumentations/metrics';
 export { IStubManager } from './stubs/istubManager';
 export { StubManager } from './stubs/stubManager';
-export { IRequestTracker } from './instrumentations/trackers/index';
+export { ITrackerAdapter } from './instrumentations/trackers/index';
+export { ITracker } from './instrumentations/common';
 export { ServerAdapter } from './pipeline/serverAdapter';
 
 // Pipeline

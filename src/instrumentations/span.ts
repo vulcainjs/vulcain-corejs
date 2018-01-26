@@ -5,9 +5,9 @@ import { DefaultServiceNames } from '../di/annotations';
 import { Logger } from "../log/logger";
 import { IMetrics, MetricsFactory } from "../instrumentations/metrics";
 import { Pipeline } from './../pipeline/common';
-import { IRequestTracker, IRequestTrackerFactory } from '../instrumentations/trackers/index';
+import { ITrackerAdapter, IRequestTrackerFactory } from '../instrumentations/trackers/index';
 import { EntryKind } from "../log/vulcainLogger";
-import { ISpanTracker, TrackerId, SpanKind } from "./common";
+import { ISpanTracker, TrackerId, SpanKind, ITracker } from "./common";
 import * as os from 'os';
 
 // Metrics use the RED method https://www.weave.works/blog/prometheus-and-kubernetes-monitoring-your-applications/
@@ -19,7 +19,7 @@ export class Span implements ISpanTracker {
     private error: Error;
     private metrics: IMetrics;
     private _id: TrackerId;
-    private _tracker: IRequestTracker;
+    private _tracker: ITrackerAdapter;
     public action: string;
     private commandType: string;
 
@@ -63,6 +63,12 @@ export class Span implements ISpanTracker {
 
     createCommandTracker(context: RequestContext, commandName: string) {
         return new Span(context, SpanKind.Command, commandName, this);
+    }
+
+    createCustomTracker(context: RequestContext, name: string, tags?: {[index:string]:string}): ITracker {
+        let span = new Span(context, SpanKind.Custom, name, this);
+        span.trackAction(name, tags);
+        return span;
     }
 
     trackAction(action: string, tags?: {[index:string]:string}) {

@@ -8,6 +8,7 @@ import { VulcainLogger } from '../log/vulcainLogger';
 import { HttpCommandError } from "./abstractServiceCommand";
 import { IRequestContext } from "../pipeline/common";
 import { Span } from '../instrumentations/span';
+import { ISpanTracker } from '../instrumentations/common';
 
 
 export abstract class AbstractHttpCommand {
@@ -37,8 +38,9 @@ export abstract class AbstractHttpCommand {
         Service.manifest.registerExternal(uri);
 
         if (uri && verb) {
-            this.context.tracker.trackAction(verb);
-            this.context.tracker.addHttpRequestTags(uri, verb);
+            let tracker = <ISpanTracker>this.context.requestTracker;
+            tracker.trackAction(verb);
+            tracker.addHttpRequestTags(uri, verb);
         }
     }
 

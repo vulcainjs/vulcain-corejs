@@ -259,7 +259,7 @@ export class CommandManager implements IManager {
 
         let res;
         try {
-            ctx.tracker.trackAction(command.vulcainVerb);
+            ctx.requestTracker.trackAction(command.vulcainVerb);
             info.handler.context = ctx;
             let result = await info.handler[info.method](command.params);
 
@@ -335,7 +335,7 @@ export class CommandManager implements IManager {
                 let ctx = new RequestContext(this.container, Pipeline.Event, evt);
                 try {
                     try {
-                        ctx.tracker.trackAction(evt.vulcainVerb);
+                        ctx.requestTracker.trackAction(evt.vulcainVerb);
                         ctx.setSecurityManager(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.context = ctx;

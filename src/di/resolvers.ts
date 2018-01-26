@@ -123,7 +123,8 @@ export class Resolver implements IResolver {
         for (let inject in injects) {
             let info = injects[inject];
             try {
-                component[info.property] = container.get<any>(info.name, info.optional);
+                // Do not inject if property is already set
+                component[info.property] = component[info.property] || container.get<any>(info.name, info.optional);
             }
             catch (e) {
                 throw new Error(`Error when instantiating component ${name} on injected property ${info.property} : ${e.message}`);

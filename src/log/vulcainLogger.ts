@@ -114,8 +114,8 @@ export class VulcainLogger implements Logger{
         let trackerId: TrackerId;
         let ctx = context;
         while (ctx) {
-            if (ctx.tracker)
-                trackerId = ctx.tracker.id;
+            if (ctx.requestTracker)
+                trackerId = ctx.requestTracker.id;
             ctx = ctx.parent;
         }
 

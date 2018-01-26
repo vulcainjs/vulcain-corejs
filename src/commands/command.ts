@@ -11,6 +11,7 @@ import { CommandRuntimeError } from "../pipeline/errors/commandRuntimeError";
 import { BadRequestError } from "../pipeline/errors/badRequestError";
 import { RequestContext, CommandRequest } from '../pipeline/requestContext';
 import { Span } from '../instrumentations/span';
+import { ISpanTracker } from '../instrumentations/common';
 
 export interface CommandInfo {
     commandKey: string;
@@ -40,7 +41,7 @@ export class HystrixCommand {
         command.container = container;
         this.command.context =  context.createCommandRequest(this.getCommandName());
         this.hystrixMetrics = CommandMetricsFactory.getOrCreate(properties);
-        this.command.context.tracker.addTag("hystrixProperties", this.properties.toString());
+        (<ISpanTracker>this.command.context.requestTracker).addTag("hystrixProperties", this.properties.toString());
     }
 
     get circuitBreaker() {
@@ -105,7 +106,7 @@ export class HystrixCommand {
 
                         // Execution complete correctly
                         this.hystrixMetrics.markSuccess();
-                        this.hystrixMetrics.addExecutionTime(this.command.context.tracker.durationInMs);
+                        this.hystrixMetrics.addExecutionTime((<ISpanTracker>this.command.context.requestTracker).durationInMs);
                         this.circuitBreaker.markSuccess();
                         this.status.addEvent(EventType.SUCCESS);
 
@@ -140,7 +141,7 @@ export class HystrixCommand {
         }
         finally {
             if (recordTotalTime) {
-                this.recordTotalExecutionTime(this.command.context.tracker.durationInMs);
+                this.recordTotalExecutionTime((<ISpanTracker>this.command.context.requestTracker).durationInMs);
             }
 
             this.command.context.dispose();
@@ -225,7 +226,7 @@ export class HystrixCommand {
         e = e || new Error("Unknown error");
 
         if (e instanceof BadRequestError) {
-            this.hystrixMetrics.markBadRequest(this.command.context.tracker.durationInMs);
+            this.hystrixMetrics.markBadRequest((<ISpanTracker>this.command.context.requestTracker).durationInMs);
             this.command.context.logError(e);
             throw e;
         }

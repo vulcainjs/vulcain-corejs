@@ -7,7 +7,7 @@ import { IRequestContext } from "../../pipeline/common";
 import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 import { JaegerInstrumentation } from './JaegerInstrumentation';
 
-export interface IRequestTracker {
+export interface ITrackerAdapter {
     log(msg: string);
     trackError(error, msg?: string);
     addTag(name: string, value: string);
@@ -15,7 +15,7 @@ export interface IRequestTracker {
 }
 
 export interface IRequestTrackerFactory {
-    startSpan( span: ISpanTracker, name: string, action: string): IRequestTracker;
+    startSpan( span: ISpanTracker, name: string, action: string): ITrackerAdapter;
 }
 
 export class TrackerFactory {

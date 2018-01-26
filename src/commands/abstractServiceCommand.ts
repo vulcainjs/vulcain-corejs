@@ -18,6 +18,7 @@ import { ActionResult } from "../pipeline/handlers/actions";
 import { Span } from '../instrumentations/span';
 import { TokenService } from '../security/services/tokenService';
 import { VulcainResponse } from '../pipeline/common';
+import { ISpanTracker } from '../instrumentations/common';
 
 export class HttpCommandError extends ApplicationError {
     response: types.IHttpCommandResponse;
@@ -78,9 +79,9 @@ export abstract class AbstractServiceCommand {
             }
         }
         else {
-            this.context.tracker.trackAction(verb);
-
-            this.context.tracker.addServiceCommandTags(serviceName, serviceVersion);
+            let tracker = <ISpanTracker>this.context.requestTracker;
+            tracker.trackAction(verb);
+            tracker.addServiceCommandTags(serviceName, serviceVersion);
             Service.manifest.registerService(serviceName, serviceVersion);
         }
     }
@@ -237,7 +238,7 @@ export abstract class AbstractServiceCommand {
         let ctx = this.context as RequestContext;
         await this.setUserContext(request);
 
-        this.context.tracker.injectHeaders(request.header);
+        (<ISpanTracker>this.context.requestTracker).injectHeaders(request.header);
 
         prepareRequest && prepareRequest(request);
 

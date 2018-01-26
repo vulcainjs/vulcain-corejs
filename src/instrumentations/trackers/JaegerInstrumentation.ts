@@ -2,7 +2,7 @@ import * as jaeger from 'jaeger-client';
 const UDPSender = require('jaeger-client/dist/src/reporters/udp_sender').default
 import * as opentracing from 'opentracing';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
-import { IRequestTracker, IRequestTrackerFactory } from './index';
+import { ITrackerAdapter, IRequestTrackerFactory } from './index';
 import { IRequestContext } from "../../pipeline/common";
 import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 import { Service } from '../../globals/system';
@@ -32,14 +32,14 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
     constructor(private tracer) {
     }
 
-    startSpan(span: ISpanTracker, name: string, action: string): IRequestTracker {
-        const parentId = (span.context.tracker && span.context.tracker.id) || null;
+    startSpan(span: ISpanTracker, name: string, action: string): ITrackerAdapter {
+        const parentId = (span.context.requestTracker && span.context.requestTracker.id) || null;
         const parent = (parentId && new jaeger.SpanContext(null, null, null, parentId.correlationId, parentId.spanId, parentId.parentId, 0x01)) || null;
         return new JaegerRequestTracker(this.tracer, span.id, span.kind, name, action, parent);
     }
 }
 
-export class JaegerRequestTracker implements IRequestTracker {
+export class JaegerRequestTracker implements ITrackerAdapter {
     private rootSpan;
 
     get context() {

@@ -10,6 +10,7 @@ import { Service } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
 import { Span } from '../instrumentations/span';
+import { ISpanTracker } from '../instrumentations/common';
 
 /**
  *
@@ -64,8 +65,9 @@ export abstract class AbstractProviderCommand<T> {
 
     protected setMetricTags(verb: string, address: string, schema: string, tenant?: string) {
         Service.manifest.registerProvider(address, schema);
-        this.context.tracker.trackAction(verb);
-        this.context.tracker.addProviderCommandTags( address,  schema, (tenant || this.context.user.tenant) );
+        let tracker = <ISpanTracker>this.context.requestTracker;
+        tracker.trackAction(verb);
+        tracker.addProviderCommandTags(address, schema, (tenant || this.context.user.tenant));
     }
 
     // Must be defined in command

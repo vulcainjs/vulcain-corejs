@@ -3,7 +3,7 @@ import { Inject, DefaultServiceNames } from "../../di/annotations";
 import { IContainer } from "../../di/resolvers";
 import { Service } from '../../globals/system';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
-import { IRequestTracker, IRequestTrackerFactory } from "../trackers/index";
+import { ITrackerAdapter, IRequestTrackerFactory } from "../trackers/index";
 import { IRequestContext } from "../../pipeline/common";
 import * as url from 'url';
 import { TrackerId, SpanKind } from "../../instrumentations/common";

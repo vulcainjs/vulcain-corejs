@@ -6,6 +6,7 @@ import { IMetrics } from '../instrumentations/metrics';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
 import { Span } from '../instrumentations/span';
+import { ISpanTracker } from '../instrumentations/common';
 
 /**
  * command
@@ -54,11 +55,12 @@ export abstract class AbstractCommand<T> {
     }
 
     protected setMetricsTags(command: string, tags: { [key: string]: string }) {
-        this.context.tracker.trackAction(command);
+        let tracker = <ISpanTracker>this.context.requestTracker;
+        tracker.trackAction(command);
 
         Object.keys(tags)
             .forEach(key =>
-            this.context.tracker.addTag(key, tags[key]));
+            tracker.addTag(key, tags[key]));
     }
 
     // Must be defined in command

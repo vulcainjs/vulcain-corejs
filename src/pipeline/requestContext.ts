@@ -39,10 +39,10 @@ export class CommandRequest implements IRequestContext {
 
     constructor(context: IRequestContext, commandName: string) {
         this.parent = <RequestContext>context;
-        this._tracker = this.parent.tracker.createCommandTracker(this, commandName);
+        this._tracker = this.parent.requestTracker.createCommandTracker(this, commandName);
     }
 
-    get tracker() {
+    get requestTracker() {
         return this._tracker;
     }
 
@@ -59,7 +59,9 @@ export class CommandRequest implements IRequestContext {
     createCommandRequest(commandName: string) {
         return new CommandRequest(this, commandName);
     }
-
+    createCustomTracker(name: string, tags?: { [index: string]: string }) {
+        return this._tracker.createCustomTracker(this, name, tags);
+    }
     getRequestDataObject() {
         return this.parent.getRequestDataObject();
     }
@@ -161,8 +163,12 @@ export class RequestContext implements IRequestContext {
         }
     }
 
-    get tracker() {
+    get requestTracker() {
         return this._tracker;
+    }
+
+    createCustomTracker(name: string, tags?: { [index: string]: string }) {
+        return this._tracker.createCustomTracker(this, name, tags);
     }
 
     getBearerToken() {

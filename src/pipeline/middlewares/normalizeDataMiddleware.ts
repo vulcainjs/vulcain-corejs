@@ -149,6 +149,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
 
         ctx.requestData.vulcainVerb = ctx.requestData.schema ?  `${ctx.requestData.schema}.${ctx.requestData.action}` : ctx.requestData.action;
 
-        ctx.tracker.trackAction(ctx.requestData.vulcainVerb);
+        ctx.requestTracker.trackAction(ctx.requestData.vulcainVerb);
     }
 }
