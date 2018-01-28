@@ -8,4 +8,4 @@ WORKDIR /app
 COPY dist /app/
 COPY node_modules /app/node_modules/
 
-ENTRYPOINT ["node","--harmony", "index.js"]
+ENTRYPOINT ["node","index.js"]

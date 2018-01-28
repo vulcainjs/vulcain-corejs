@@ -119,7 +119,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
         // else
         // empty queue name and exclusive=true
         let options = { exclusive: !queueName };
-        this.channel.assertQueue(queueName, { exclusive: true }).then(queue => {
+        this.channel.assertQueue(queueName, options).then(queue => {
             const handlers = [handler];
             this.eventHandlers.set(handlerKey, {queue: queue.queue, domain, handlers, args: ''});
 
@@ -141,7 +141,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
                 catch (e) {
                     Service.log.error(null, e, () => "Event handler failed for event " + obj.metadata.eventId);
                 }
-            }, { noAck: !!queueName });
+            }, { noAck: !queueName });
         });
     }
 

@@ -33,7 +33,7 @@ export class SchemaBuilder {
             let propAttr: ModelPropertyOptions = properties[propertyName];
             if (propAttr) {
                 if (propAttr.type !== "any" && !this.domain._findType(propAttr.type))
-                    throw new Error(`Unknown type ${propAttr.type} for property ${propertyName} of schema ${schema.name}`);
+                    throw new Error(`Unknown type '${propAttr.type}' for property ${propertyName} of schema ${schema.name}`);
 
                 if (propAttr.isKey) {
                     if (schema.idProperty)

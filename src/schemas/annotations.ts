@@ -5,8 +5,14 @@ import { Domain } from './schema';
 import { RequestContext } from "../pipeline/requestContext";
 
 export interface SchemaTypeDefinitionOptions {
+    /**
+     * Type name
+     */
     name?: string;
-    ns?: string;
+    /**
+     * Optional namespace
+     */
+    namespace?: string;
 }
 
 export interface ISchemaTypeDefinition {
@@ -22,19 +28,46 @@ export interface ISchemaTypeDefinition {
 export function SchemaTypeDefinition(options?: SchemaTypeDefinitionOptions) {
     return function (target: any) {
         Preloader.instance.registerType(target, (container, domain: Domain) => {
-            domain.addType((options && options.name) || target.name, new target.prototype.constructor(), (options && options.ns) || "");
+            domain.addType((options && options.name) || target.name, new target.prototype.constructor(), (options && options.namespace) || "");
         });
     };
 }
 
+/**
+ * Model metadata definition
+ */
 export interface ModelOptions {
+    /**
+     * Model name (default class name)
+     */
     name?: string;
+    /**
+     * Inherited type
+     */
     extends?: string;
+    /**
+     * Model description
+     */
     description?: string;
+    /**
+     * Transform input data
+     */
     bind?: ((data) => any) | boolean;
+    /**
+     * Validatation function
+     */
     validate?: (entity, ctx?: RequestContext) => string;
+    /**
+     * Storage name (table or collection) - default = model name
+     */
     storageName?: string;
+    /**
+     * This model (or its children) has sensible data - Required if you want obfuscate sensible type data
+     */
     hasSensibleData?: boolean;
+    /**
+     * Custom metadata
+     */
     custom?: any;
 }
 
@@ -42,6 +75,7 @@ export function Model(options?: ModelOptions) {
     return function (target: Function) {
         options = options || {};
         options.name = options.name || target.name;
+        // Try to infere inherit type
         if (!options.extends) {
             let ext = Object.getPrototypeOf(target).name;
             if (ext) options.extends = ext;
@@ -177,6 +211,7 @@ export function Property(info?: PropertyOptions, customOptions?:any) {
         let data: ModelPropertyOptions = info || <any>{};
         data.custom = customOptions;
         if (!data.type) {
+            // Try to infere type
             let t = Reflect.getOwnMetadata('design:type', target, key);
             data.type = t && t.name;
             if (!data.type || ['string','number','boolean'].indexOf(data.type) < 0) {
