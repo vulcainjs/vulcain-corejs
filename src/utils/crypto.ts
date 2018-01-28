@@ -30,4 +30,10 @@ export class CryptoHelper {
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     }
+
+    static hash(str: string) {
+        if (!str)
+            throw new Error("You must provide a value to hash");
+        return crypto.createHash('md5').update(str).digest('hex');
+    }
 }

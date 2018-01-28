@@ -95,6 +95,10 @@ export function Query(actionMetadata: QueryActionMetadata) {
  */
 export function Consume(consumeMetadata?: ConsumeEventMetadata) {
     return (target, key) => {
+        if (!consumeMetadata.distributionKey) {
+            // Used if distributionMode==='once'
+            consumeMetadata.distributionKey = (target.name + ":" + key).toLowerCase();
+        }
         let actions = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = consumeMetadata || {};
         Reflect.defineMetadata(symActions, actions, target.constructor);

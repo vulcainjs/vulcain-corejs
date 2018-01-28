@@ -3,6 +3,7 @@ import { Service } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 import { EventData } from "../pipeline/handlers/messageBus";
 import { RequestData } from "../pipeline/common";
+import { CryptoHelper } from '../utils/crypto';
 
 export /**
  * RabbitAdapter
@@ -76,14 +77,24 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
     sendEvent(domain:string, event:EventData) {
         if (!this.channel)
             return;
-        domain = this.createEventQueueName(domain);
+        domain = this.createSourceName(domain);
 
         this.channel.assertExchange(domain, 'fanout', { durable: false });
         this.channel.publish(domain, '', new Buffer(JSON.stringify(event)));
     }
 
-    private createEventQueueName(domain: string) {
+    private createSourceName(domain: string) {
         return "vulcain_" + domain.toLowerCase() + "_events";
+    }
+
+    private createEventQueueName(domain: string, key?: string)
+    {
+        if (!key)
+            return '';
+
+        // Create an unique by service + handler queue name
+        // domain, service, version + hash
+        return ["vulcain", domain.toLowerCase(), Service.fullServiceName, CryptoHelper.hash(key)].join('_');
     }
 
     /**
@@ -96,14 +107,16 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
      * If queuename is set, event are take into account by only one instance and a ack is send if the process complete sucessfully
      * else event is distributed to every instance with no ack
      */
-    consumeEvents(domain: string, handler:  (event: EventData) => void, queueName:string='') {
+    consumeEvents(domain: string, handler:  (event: EventData) => void, distributionKey?:string) {
         if (!this.channel)
             return;
         let self = this;
 
+        const queueName = this.createEventQueueName(domain, distributionKey);
+
         // Since this method can be called many times for a same domain
         // all handlers are aggregated on only one binding
-        domain = this.createEventQueueName(domain);
+        domain = this.createSourceName(domain);
         const handlerKey = domain + queueName;
         let handlerInfo = this.eventHandlers.get(handlerKey);
         if (handlerInfo) {
@@ -118,7 +131,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
         // specific queue and exclusive=false
         // else
         // empty queue name and exclusive=true
-        let options = { exclusive: !queueName };
+        let options = { exclusive: !queueName, autoDelete: !!queueName };
         this.channel.assertQueue(queueName, options).then(queue => {
             const handlers = [handler];
             this.eventHandlers.set(handlerKey, {queue: queue.queue, domain, handlers, args: ''});

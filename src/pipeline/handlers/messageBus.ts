@@ -25,7 +25,11 @@ export interface ConsumeEventMetadata {
     subscribeToAction?: string;
     subscribeToSchema?: string;
     filter?: (observable: RX.Observable<EventData>) => RX.Observable<EventData>;
-    exclusiveQueue?: string; // Unique queue to ensure events are take into account once
+    /**
+     * Distribution mode: once or many (default)
+     */
+    distributionMode: "once" | "many";
+    distributionKey?: string; // Unique queue to ensure events are take into account once
 }
 
 export interface EventMetadata extends CommonMetadata {
@@ -46,12 +50,12 @@ export class MessageBus {
     /**
      * Get event queue for a domain
      */
-    public getEventQueue(domain:string, queueName: string): RX.Observable<EventData> {
+    public getEventQueue(domain: string, distributionKey: string): RX.Observable<EventData> {
         let events = this._events.get(domain);
         if (!events) {
             events = new RX.Subject<EventData>();
             this._events.set(domain, events);
-            this.eventBus.consumeEvents(domain, this.consumeEvent.bind(this), queueName);
+            this.eventBus.consumeEvents(domain, this.consumeEvent.bind(this), distributionKey);
         }
         return <RX.Observable<EventData>>events;
     }
@@ -66,9 +70,9 @@ export class MessageBus {
         this.eventBus = manager.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter);
     }
 
-    private consumeEvent(event: EventData, queueName:string) {
+    private consumeEvent(event: EventData, distributionKey:string) {
         try {
-            (<RX.Subject<EventData>>this.getEventQueue(event.domain, queueName)).next(event);
+            (<RX.Subject<EventData>>this.getEventQueue(event.domain, distributionKey)).next(event);
         }
         catch (e) {
             Service.log.error(
