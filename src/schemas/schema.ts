@@ -1,438 +1,117 @@
-import { SchemaBuilder } from './schemaBuilder';
-import { standards } from './standards';
+import { SchemaBuilder } from './builder/schemaBuilder';
 import { Validator } from './validator';
 import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
-import { ModelPropertyOptions } from './annotations';
-import { ReferenceOptions } from './annotations';
 import { Service } from './../globals/system';
-import { RequestContext } from "../pipeline/requestContext";
-
-export interface SchemaDescription {
-    name: string;
-    properties: { [index: string]: ModelPropertyOptions };
-    references: { [index: string]: ReferenceOptions };
-    extends?: string;
-    hasSensibleData?: boolean;
-    bind?: (obj) => any;
-    validate?: (val, ctx: RequestContext) => string;
-    storageName?: string;
-    idProperty?: string;
-    schemaType: () => void;
-    custom?: any;
-}
+import { IRequestContext } from "../pipeline/common";
+import { ModelPropertyInfo, SchemaInfo } from './schemaInfo';
+import { Domain } from './domain';
+import { ModelOptions } from './builder/annotations.model';
+import { ISchemaTypeDefinition } from './schemaType';
 
 /**
  * Schema definition
  */
 export class Schema {
-    public description: SchemaDescription;
-    private _domain: Domain;
+    public readonly info: SchemaInfo;
 
-    /**
-     * Current domain model
-     * @returns {Domain}
-     */
-    public get domain(): Domain {
-        return this._domain;
-    }
+    public get name() { return this.info.name; }
 
-    get extends(): SchemaDescription {
-        if (!this.description.extends) {
+    get extends(): Schema {
+        if (!this.info.extends) {
             return null;
         }
-        return this._domain.findSchemaDescription(this.description.extends);
+        return this.domain.getSchema(this.info.extends);
     }
+
     /**
      * Create a new schema
-     * @param domain : current domain model
-     * @param name : schema name or schema
      */
-    constructor(domain: Domain, public name: string) {
-        this._domain = domain;
-
-        this.description = domain.findSchemaDescription(name);
-        if (!this.description) {
-            throw new Error(`Schema ${name} not found.`);
-        }
-        name = this.description.name;
-    }
-
-    /**
-     *
-     * @param origin
-     * @returns {null|any|{}}
-     */
-    bind(origin, old?) {
-        return this.domain.bind(origin, this.description, old);
-    }
-
-    validate(ctx: RequestContext, obj) {
-        return this.domain.validate(ctx, obj, this.description);
-    }
-
-    getIdProperty() {
-        return this.domain.getIdProperty(this.description);
-    }
-
-    getId(obj) {
-        return obj[this.getIdProperty()];
-    }
-
-    encrypt(entity) {
-        if (!entity || !this.description.hasSensibleData) {
-            return entity;
-        }
-        let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
-            visitProperty(val, prop) {
-                if (val && prop.sensible) {
-                    this.current[prop.name] = Service.encrypt(val);
-                }
-            }
+    constructor(private domain: Domain, options: ModelOptions, public readonly schemaType) {
+        this.info = {
+            name: options.name,
+            storageName: options.storageName,
+            hasSensibleData: options.hasSensibleData,
+            properties: {},
+            bind: options.bind,
+            validate: options.validate,
+            custom: options.custom,
+            extends: options.extends
         };
-        let v = new SchemaVisitor(this.domain, visitor);
-        v.visit(this.description, entity);
-        return entity;
     }
 
-    decrypt(entity) {
-        if (!entity || !this.description.hasSensibleData) {
-            return entity;
-        }
-
-        let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
-            visitProperty(val, prop) {
-                if (val && prop.sensible) {
-                    this.current[prop.name] = Service.decrypt(val);
-                }
-            }
-        };
-        let v = new SchemaVisitor(this.domain, visitor);
-        v.visit(this.description, entity);
-        return entity;
+    bind(data) {
+        return this.bindInternal(data, this);
     }
 
-    /**
-     * Copy an entity to another taking into account references defined in schema
-     *
-     * @param {any} target
-     * @param {any} source
-     * @param {SchemaDescription} [schema]
-     * @returns
-     *
-     * @memberOf Schema
-     */
-    deepAssign(target, source, schema?: SchemaDescription) {
-        if (!source) {
-            return target;
-        }
-        if (!(typeof source === "object")) {
-            return source;
+    private bindInternal(data, schema: Schema, result?)
+    {
+        if (!data) { return null; }
+        if (typeof schema.info.bind === "function") {
+            return schema.info.bind(data);
         }
 
-        schema = schema || this.description;
-        for (let key of Object.keys(source)) {
-            let val = source[key];
-            if (typeof val === "object") {
-                let ref = schema.references[key];
-                if (ref) {
-                    let item = ref.item;
-                    if (item === "any" && val && val.__schema) {
-                        item = val.__schema;
-                    }
-                    let elemSchema = this.domain.findSchemaDescription(item);
-                    if (elemSchema) {
-                        if (Array.isArray(val)) {
-                            target[key] = [];
-                            val.forEach(v => target[key].push(this.deepAssign({}, v, elemSchema)));
-                        }
-                        else {
-                            target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
-                        }
-                        continue;
-                    }
-                }
-            }
-            if (val !== undefined) {
-                target[key] = val;
-            }
-        }
-        return target;
-    }
-}
-
-/**
- * Domain model
- */
-export class Domain {
-    private _schemaDescriptions: Map<string, SchemaDescription>;
-    private types: Map<string, any>;
-    private builder: SchemaBuilder;
-
-    constructor(public name: string, private container: IContainer, defaultTypes?) {
-        this.builder = new SchemaBuilder(this);
-        this._schemaDescriptions = new Map<string, SchemaDescription>();
-        this.types = new Map<string, any>();
-        this.types.set("", defaultTypes || standards);
-    }
-
-    addSchemaDescription(schema, name?: string): string {
-        let schemaName = null;
-        if (Array.isArray(schema)) {
-            schema.forEach(s => {
-                let tmp = this.addSchemaDescription(s);
-                if (!schemaName) { schemaName = tmp; }
-            }
-            );
-            return schemaName;
-        }
-        if (!schema) {
-            throw new Error("Invalid schema argument (null or empty) ");
-        }
-        if (typeof schema === "function") {
-            let tmp = this._schemaDescriptions.get(schema.name);
-            if (tmp) {
-                return schema.name;
-            }
-            schema = this.builder.build(schema);
+        if (typeof data !== "object") {
+            return data;
         }
 
-        schemaName = name || schema.name;
-        if (!schemaName) { return; }
-        // Existing Model extension
-        if (schema.extends) {
-            if (schema.extends === schema.name) {
-                throw new Error("Invalid schema extension. Can not be the same schema.");
-            }
+        result = result || new schema.schemaType(); //origin;
 
-            // Overriding schema
-            let overrideOperator = schema.extends[0];
-            if (overrideOperator === '+' || overrideOperator === '-') {
-                let baseName = schema.extends.substr(1);
-                let base = this._schemaDescriptions.get(baseName);
-                if (!base) {
-                    throw new Error(`Invalid model overriding with model ${schemaName}. ${baseName} doesn't exist`);
-                }
-                if (baseName !== schemaName) {
-                    throw new Error(`Invalid model overriding with model ${schemaName} extends options must be equal to '+${baseName}'`);
-                }
-                // Rename old
-                if (overrideOperator === '+') {
-                    // Extends old definition (which will be called +<schemaName>)
-                    this._schemaDescriptions.set(schema.extends, base);
-                }
-                else {
-                    // Replace old definition (which will be override below)
-                    schema.extends = null;
-                }
-            }
-        }
-
-        this._schemaDescriptions.set(schemaName, schema);
-        return schemaName;
-    }
-
-    /**
-     * Get a registered schema by name
-     * Throws an exception if not exists
-     * @param {string} schema name
-     * @returns a schema
-     */
-    getSchema(name: string | Function, optional = false) {
-        if (typeof name === "string") {
-            try {
-                return new Schema(this, name);
-            }
-            catch (e) {
-                if (optional) return null;
-                throw e;
-            }
-        }
-        return new Schema(this, this.addSchemaDescription(name));
-    }
-
-    /**
-     * Get all schemas
-     *
-     * @readonly
-     */
-    get schemas() {
-        return Array.from(this._schemaDescriptions.values());
-    }
-
-    /**
-     * Do not use directly
-     *
-     * @param {string} name
-     * @returns
-     */
-    findSchemaDescription(name: string) {
-        return this._schemaDescriptions.get(name);
-    }
-
-    /**
-     * Do not use directly
-     *
-     * @readonly
-     */
-    get schemaDescriptions() {
-        return Array.from(this._schemaDescriptions.values());
-    }
-
-    addTypes(types, ns: string = "") {
-        if (!types) { throw new Error("Invalid type argument"); }
-        let old = this.types.get(ns);
-        Object.assign(old || {}, types);
-        this.types.set(ns, old);
-    }
-
-    /**
-     * Add a custom validator
-     *
-     */
-    addValidator(name: string, validator: any, ns = '') {
-        if (!name || !validator) { throw new Error("Invalid argument"); }
-        let types = this.types.get(ns);
-        if (!types) {
-            types = {};
-            this.types.set(ns, types);
-        }
-        types[name] = validator;
-    }
-
-    addType(name: string, type: any, ns: string = "") {
-        if (!name) { throw new Error("Invalid argument"); }
-
-        let types = this.types.get(ns);
-        if (!types) {
-            types = {};
-            this.types.set(ns, types);
-        }
-        types[name] = type;
-    }
-
-    _findType(name: string) {
-        if (!name) { return null; }
-        let parts = name.split('.');
-        if (parts.length === 1) {
-            return this.types.get("")[name];
-        }
-        if (parts.length !== 2) {
-            throw new Error("Incorrect type name " + name);
-        }
-        return this.types.get(parts[0])[parts[1]];
-    }
-
-    getBaseType(type) {
-        if (!type.$$nativeSchema) {
-            let stype = type;
-            type.$$nativeSchema = stype.name
-            while (stype && stype.type) {
-                stype = stype.type;
-                type.$$nativeSchema = stype.name;
-                stype = this._findType(stype);
-            }
-        }
-        return type.$$nativeSchema;
-    }
-
-    /**
-     * Remove all sensible data
-     *
-     * @param {any} entity
-     * @param {any} schemaName
-     * @returns
-     */
-    obfuscate(entity, schema: Schema) {
-        let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
-            visitProperty(val, prop) { if (prop.sensible) { this.current[prop.name] = undefined; } }
-        };
-        let v = new SchemaVisitor(this, visitor);
-        v.visit(schema.description, entity);
-    }
-
-    /**
-     * Convert a new object from an other based on a specific schema
-     * @param origin : initial object to convert
-     * @param schemaName : schema to used (default=current schema)
-     * @param obj : existing object to use
-     * @returns {any}
-     */
-    bind(origin, schemaName?: string | SchemaDescription, obj?) {
-        if (!origin) { return null; }
-        let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, obj);
-        if (typeof schema.bind === "function") {
-            return schema.bind(origin);
-        }
-
-        if (typeof origin !== "object") {
-            return origin;
-        }
-        obj = obj || new schema.schemaType(); //origin;
-
-        (<any>obj).__schema = (<any>obj).__schema || schema.name;
+        (<any>result).__schema = (<any>result).__schema || schema.name;
 
         // Convert properties
-        for (const ps in schema.properties) {
-            if (!schema.properties.hasOwnProperty(ps)) { continue; }
-            let prop: ModelPropertyOptions = schema.properties[ps];
+        for (const ps in schema.info.properties) {
+            if (!schema.info.properties.hasOwnProperty(ps)) { continue; }
+            let prop = schema.info.properties[ps];
             if (prop) {
                 try {
-                    let val = this.applyBinding(prop, origin, origin[ps]);
+                    if (prop.cardinality) {
+                        let item = prop.type;
+                        let refValue = data[ps];
 
-                    if (val !== undefined) {
-                        obj[ps] = val;
-                    }
-                }
-                catch (e) {
-                    // ignore
-                }
-            }
-        }
+                        if (item === "any" && refValue && refValue.__schema) {
+                            item = refValue.__schema;
+                        }
 
-        for (const ref in schema.references) {
-            if (!schema.references.hasOwnProperty(ref)) { continue; }
-            let relationshipSchema = schema.references[ref];
-            let refValue = origin[ref];
-            if (relationshipSchema && refValue) {
-                try {
-                    let item = relationshipSchema.item;
-                    if (item === "any" && refValue && refValue.__schema) {
-                        item = refValue.__schema;
-                    }
-                    let elemSchema = this.findSchemaDescription(item);
-                    if (!elemSchema && item !== "any") {
-                        continue;
-                    }
+                        let elemSchema = this.domain.getSchema(item, true);
+                        if (!elemSchema && item !== "any") {
+                            continue;
+                        }
 
-                    if (this.isMany(relationshipSchema)) {
-                        obj[ref] = [];
-                        for (let elem of refValue) {
-                            let val = this.applyBinding(relationshipSchema, elemSchema, elem);
+                        if (this.isMany(prop)) {
+                            result[ps] = [];
+                            for (let elem of refValue) {
+                                let val = this.applyBinding(prop, elemSchema, elem);
+                                if (val !== undefined) {
+                                    result[ps].push(!elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema));
+                                }
+                            }
+                        }
+                        else {
+                            let val = this.applyBinding(prop, elemSchema, refValue);
                             if (val !== undefined) {
-                                obj[ref].push(!elemSchema && item === "any" ? val : this.bind(val, elemSchema));
+                                result[ps] = !elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema);
                             }
                         }
                     }
                     else {
-                        let val = this.applyBinding(relationshipSchema, elemSchema, refValue);
+                        let val = this.applyBinding(prop, data, data[ps]);
+
                         if (val !== undefined) {
-                            obj[ref] = !elemSchema && item === "any" ? val : this.bind(val, elemSchema);
+                            result[ps] = val;
                         }
                     }
                 }
                 catch (e) {
-                    // ignore
+                        // ignore
                 }
             }
         }
+
         if (schema.extends) {
-            this.bind(origin, schema.extends, obj);
+            this.bindInternal(data, schema.extends, result);
         }
-        return obj;
+        return result;
     }
 
     private applyBinding(prop, origin, val) {
@@ -454,41 +133,122 @@ export class Domain {
         return relSchema.cardinality === "many";
     }
 
-    /**
-     * Validate an object
-     * @param val : Object to validate
-     * @param schemaName : schema to use (default=current schema)
-     * @returns Array<string> : A list of errors
-     */
-    validate(ctx: RequestContext, val, schemaName?: string | SchemaDescription) {
-        if (!val) { return Promise.resolve(null); }
-        let schema: SchemaDescription = this.resolveSchemaDescription(schemaName, val);
-        let validator = new Validator(this, this.container);
-        return validator.validate(ctx, schema, val);
+    validate(ctx: IRequestContext, obj) {
+        let validator = new Validator(this.domain, ctx.container);
+        return validator.validate(ctx, this, obj);
     }
 
-    resolveSchemaDescription(schemaName: string | SchemaDescription, val?) {
-        let schema: SchemaDescription;
-        if (!schemaName || typeof schemaName === "string") {
-            schemaName = schemaName || val && val.__schema;
-            schema = schemaName && this._schemaDescriptions.get(<string>schemaName);
-            if (!schema) { throw new Error("Unknown schema " + schemaName); }
-        }
-        else {
-            schema = <SchemaDescription>schemaName;
-            if (!schema) { throw new Error("Invalid schema"); }
-        }
-        return schema;
-    }
-
-    getIdProperty(schemaName?: string | SchemaDescription) {
-        while (schemaName) {
-            let schema = this.resolveSchemaDescription(schemaName);
-            if (schema && schema.idProperty) {
-                return schema.idProperty;
+    getIdProperty() {
+        let schema: Schema = this;
+        while (schema) {
+            if (schema && schema.info.idProperty) {
+                return schema.info.idProperty;
             }
-            schemaName = schema && schema.extends;
+            schema = schema.extends;
         }
         return null;
     }
+
+    getId(obj) {
+        return obj[this.getIdProperty()];
+    }
+
+    encrypt(entity) {
+        if (!entity || !this.info.hasSensibleData) {
+            return entity;
+        }
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
+            visitProperty(val, prop) {
+                if (val && prop.sensible) {
+                    this.current[prop.name] = Service.encrypt(val);
+                }
+            }
+        };
+        let v = new SchemaVisitor(this.domain, visitor);
+        v.visit(this, entity);
+        return entity;
+    }
+
+    decrypt(entity) {
+        if (!entity || !this.info.hasSensibleData) {
+            return entity;
+        }
+
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
+            visitProperty(val, prop) {
+                if (val && prop.sensible) {
+                    this.current[prop.name] = Service.decrypt(val);
+                }
+            }
+        };
+        let v = new SchemaVisitor(this.domain, visitor);
+        v.visit(this, entity);
+        return entity;
+    }
+
+    /**
+ * Remove all sensible data
+ *
+ * @param {any} entity
+ * @returns
+ */
+    obfuscate(entity) {
+        let visitor = {
+            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
+            visitProperty(val, prop) { if (prop.sensible) { this.current[prop.name] = undefined; } }
+        };
+        let v = new SchemaVisitor(this.domain, visitor);
+        v.visit(this, entity);
+    }
+
+    /**
+     * Copy an entity to another taking into account references defined in schema
+     *
+     * @param {any} target
+     * @param {any} source
+     * @param {SchemaDescription} [schema]
+     * @returns
+     *
+     * @memberOf Schema
+     */
+    deepAssign(target, source, schema?: Schema) {
+        if (!source) {
+            return target;
+        }
+        if (!(typeof source === "object")) {
+            return source;
+        }
+
+        schema = schema || this;
+        for (let key of Object.keys(source)) {
+            let val = source[key];
+            if (typeof val === "object") {
+                let ref = schema.info.properties[key];
+                if (ref && ref.cardinality) {
+                    let item = ref.type;
+                    if (item === "any" && val && val.__schema) {
+                        item = val.__schema;
+                    }
+                    let elemSchema = this.domain.getSchema(item, true);
+                    if (elemSchema) {
+                        if (Array.isArray(val)) {
+                            target[key] = [];
+                            val.forEach(v => target[key].push(this.deepAssign({}, v, elemSchema)));
+                        }
+                        else {
+                            target[key] = this.deepAssign(target[key] || {}, val, elemSchema);
+                        }
+                        continue;
+                    }
+                }
+            }
+            if (val !== undefined) {
+                target[key] = val;
+            }
+        }
+        return target;
+    }
 }
+

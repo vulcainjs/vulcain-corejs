@@ -4,7 +4,6 @@ import { RequestContext } from "../pipeline/requestContext";
 import { ApplicationError, UnauthorizedRequestError } from "../pipeline/errors/applicationRequestError";
 import { VulcainLogger } from "../log/vulcainLogger";
 import { DefaultServiceNames, Inject } from "../di/annotations";
-import { Model, Property } from '../schemas/annotations';
 import { IContainer } from '../di/resolvers';
 import { IRequestContext } from '../pipeline/common';
 import { TokenService } from './services/tokenService';

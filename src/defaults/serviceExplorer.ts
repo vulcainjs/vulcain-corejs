@@ -1,7 +1,6 @@
 import { DefaultServiceNames, Inject, LifeTime } from '../di/annotations';
 import { IContainer } from "../di/resolvers";
-import { Domain } from '../schemas/schema';
-import { Model, Property } from '../schemas/annotations';
+import { Domain } from '../schemas/domain';
 import { QueryHandler } from "../pipeline/handlers/annotations.handlers";
 import { Query } from "../pipeline/handlers/annotations";
 import { RequestContext } from "../pipeline/requestContext";
@@ -10,6 +9,8 @@ import { ServiceDescriptors, ServiceDescription } from "../pipeline/handlers/ser
 import { SwaggerServiceDescriptor } from './swagger/swaggerServiceDescriptions';
 import { SwaggerApiDefinition } from './swagger/swaggerApiDefinition';
 import { HttpResponse } from '../index';
+import { Model } from '../schemas/builder/annotations.model';
+import { Property } from '../schemas/builder/annotations.property';
 
 
 @Model()

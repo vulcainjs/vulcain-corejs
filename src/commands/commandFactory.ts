@@ -8,7 +8,7 @@ import { RequestContext } from "../pipeline/requestContext";
 import { CommandMetricsFactory } from "./metrics/commandMetricsFactory";
 import { Service } from './../globals/system';
 import { Preloader } from "../preloader";
-import { Domain } from '../schemas/schema';
+import { Domain } from '../schemas/domain';
 import { Pipeline } from "../pipeline/common";
 
 export interface CommandConfiguration {

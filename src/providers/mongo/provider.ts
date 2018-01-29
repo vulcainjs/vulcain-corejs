@@ -86,10 +86,10 @@ export class MongoProvider implements IProvider<any>
         this.state.keyPropertyNameBySchemas.set(schema.name, keyPropertyName);
 
         let keys;
-        for (let p in schema.description.properties) {
-            if (!schema.description.properties.hasOwnProperty(p))
+        for (let p in schema.info.properties) {
+            if (!schema.info.properties.hasOwnProperty(p))
                 continue;
-            let prop = schema.description.properties[p];
+            let prop = schema.info.properties[p];
             if (prop.unique) {
                 if (!keys) keys = {};
                 keys[p] = prop.unique === true ? 1 : prop.unique;
@@ -105,8 +105,8 @@ export class MongoProvider implements IProvider<any>
         return new Promise((resolve, reject) => {
             // Don't use 'this' here to avoid memory leaks
             // Open connection
-            let indexName = schema.description.storageName + "_uniqueIndex";
-            db.createIndex(schema.description.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
+            let indexName = schema.info.storageName + "_uniqueIndex";
+            db.createIndex(schema.info.storageName, keys, { w: 1, background: true, name: indexName, unique: true },
                 (err) => {
                     if (err) {
                         self.ctx.logError( err, ()=>`MONGODB: Error when creating index for ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name}`);
@@ -153,8 +153,8 @@ export class MongoProvider implements IProvider<any>
             try {
                 let db = self.state._mongo;
                 // TODO try with aggregate
-                let total = await db.collection(schema.description.storageName).find(query).count();
-                let cursor = db.collection(schema.description.storageName).find(query)
+                let total = await db.collection(schema.info.storageName).find(query).count();
+                let cursor = db.collection(schema.info.storageName).find(query)
                     .skip(page * maxByPage)
                     .limit(maxByPage);
                 cursor.toArray((err, res) => {
@@ -182,7 +182,7 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = self.state._mongo;
-                db.collection(schema.description.storageName).findOne(query,
+                db.collection(schema.info.storageName).findOne(query,
                     (err, res) => {
                         if (err) {
                             self.ctx.logError(err, ()=>`MONGODB: Get findone on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
@@ -216,7 +216,7 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = self.state._mongo;
-                db.collection(schema.description.storageName).findOne(filter, (err, res) => {
+                db.collection(schema.info.storageName).findOne(filter, (err, res) => {
                     if (err) {
                         self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name}`);
                         reject(self.normalizeErrors(name, err));
@@ -260,7 +260,7 @@ export class MongoProvider implements IProvider<any>
                 self.ctx.logInfo(()=>`MONGODB: Deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
 
                 let db = self.state._mongo;
-                db.collection(schema.description.storageName).remove(filter, (err, res) => {
+                db.collection(schema.info.storageName).remove(filter, (err, res) => {
                     if (err) {
                         let e = self.normalizeErrors(id, err);
                         self.ctx.logError(e, ()=>`MONGODB ERROR : Deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
@@ -314,7 +314,7 @@ export class MongoProvider implements IProvider<any>
         return new Promise(async (resolve, reject) => {
             try {
                 let db = self.state._mongo;
-                db.collection(schema.description.storageName).insertOne(entity, (err) => {
+                db.collection(schema.info.storageName).insertOne(entity, (err) => {
                     if (err) {
                         let e = self.normalizeErrors(entity[keyPropertyName], err);
                         self.ctx.logError(e, ()=>`MONGODB ERROR : Creating entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
@@ -355,7 +355,7 @@ export class MongoProvider implements IProvider<any>
             try {
 
                 let db = self.state._mongo;
-                let collection = db.collection(schema.description.storageName);
+                let collection = db.collection(schema.info.storageName);
 
                 collection.findOne(filter, (err, initial) => {
                     if (err) {

@@ -1,38 +1,56 @@
-import { Domain, SchemaDescription } from './schema';
 import { IContainer } from '../di/resolvers';
-import { RequestContext } from "../pipeline/requestContext";
+import { IRequestContext } from "../pipeline/common";
+import { Domain } from './domain';
+import { Schema } from './schema';
 
 export class Validator {
 
     constructor(private domain: Domain, private container: IContainer) {
     }
 
-    async validate(ctx: RequestContext, schemaDesc: SchemaDescription, val:any): Promise<{ [propertyName: string]: string }> {
+    async validate(ctx: IRequestContext, schema: Schema, val:any): Promise<{ [propertyName: string]: string }> {
         let errors: { [propertyName: string]: string } = {};
-        if (!schemaDesc || !val) return errors;
+        if (!schema || !val) return errors;
 
-        if (schemaDesc.extends) {
-            let base = this.domain.resolveSchemaDescription(schemaDesc.extends);
-            if (base) {
-                let errorList = (await this.validate(ctx, base, val));
+        if (schema.extends) {
+            if (schema.extends) {
+                let errorList = (await this.validate(ctx, schema.extends, val));
                 errors = Object.assign(errors, errorList);
             }
         }
 
-        let id = val && val[this.domain.getIdProperty(schemaDesc)];
-        let formatContext: FormatContext = { element: val, schemaElement: schemaDesc, id: id };
+        let id = val && val[schema.getIdProperty()];
+        let formatContext: FormatContext = { element: val, schemaElement: schema, id: id };
 
         // Properties checks
-        for (const ps in schemaDesc.properties) {
-            if (!schemaDesc.properties.hasOwnProperty(ps)) continue;
+        for (const ps in schema.info.properties) {
+            if (!schema.info.properties.hasOwnProperty(ps)) continue;
             formatContext.propertyName = ps;
-            formatContext.propertySchema = schemaDesc.properties[ps];
+            formatContext.propertySchema = schema.info.properties[ps];
             formatContext.propertyValue = val[ps];
 
             try {
-                let err = await this.validateProperty(ctx, formatContext, schemaDesc.properties[ps], val[ps], val);
-                if (err) {
-                    errors[ps] = err;
+                let prop = schema.info.properties[ps];
+                if (prop.cardinality) {
+                    if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
+                        if (prop && prop.dependsOn && !prop.dependsOn(val)) continue;
+                        let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
+                        if (!schema) continue;
+                        let errors2 = await this.validate(ctx, schema, formatContext.propertyValue);
+                        if (errors2)
+                            errors = Object.assign(errors, errors2);
+                    }
+                    else {
+                        let errors2 = await this.validateReference(ctx, formatContext, prop, val[ps], val);
+                        if (errors2)
+                            errors = Object.assign(errors, errors2);
+                    }
+                }
+                else {
+                    let err = await this.validateProperty(ctx, formatContext, schema.info.properties[ps], val[ps], val);
+                    if (err) {
+                        errors[ps] = err;
+                    }
                 }
             }
             catch (e) {
@@ -40,41 +58,13 @@ export class Validator {
             }
         }
 
-        // References checks
-        for (const rs in schemaDesc.references) {
-            if (!schemaDesc.references.hasOwnProperty(rs)) continue;
-            formatContext.propertyName = rs;
-            formatContext.propertySchema = schemaDesc.references[rs];
-            formatContext.propertyValue = val[rs];
-
-            try {
-                let ref = schemaDesc.references[rs];
-                if (ref.item === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
-                    if (ref && ref.dependsOn && !ref.dependsOn(val)) continue;
-                    let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
-                    if (!schema) continue;
-                    let errors2 = await this.validate(ctx, schema.description, formatContext.propertyValue);
-                    if (errors2)
-                        errors = Object.assign(errors, errors2);
-                }
-                else {
-                    let errors2 = await this.validateReference(ctx, formatContext, ref, val[rs], val);
-                    if (errors2)
-                        errors = Object.assign(errors, errors2);
-                }
-            }
-            catch (e) {
-                errors[rs] = this.__formatMessage("Validation error for reference {$propertyName} : " + e, formatContext);
-            }
-        }
-
         // Entity check
-        if (schemaDesc.validate) {
+        if (schema.validate) {
             formatContext.propertyName = formatContext.propertySchema = formatContext.propertyValue = null;
             try {
-                let err = await schemaDesc.validate(val, ctx);
+                let err: string = await (<any>schema).validate(val, ctx);
                 if (err)
-                    errors["_"] = this.__formatMessage(err, formatContext, schemaDesc);
+                    errors["_"] = this.__formatMessage(err, formatContext, schema);
             }
             catch (e) {
                 errors["_"] = this.__formatMessage("Validation error for element {__schema} : " + e, formatContext);
@@ -83,7 +73,7 @@ export class Validator {
         return errors;
     }
 
-    private async validateReference(ctx: RequestContext, formatContext: FormatContext, schema, val, entity): Promise<{ [propertyName: string]: string }> {
+    private async validateReference(ctx: IRequestContext, formatContext: FormatContext, schema, val, entity): Promise<{ [propertyName: string]: string }> {
         let errors = {};
 
         if (!schema)
@@ -129,20 +119,19 @@ export class Validator {
                         baseItemSchema = currentItemSchema;
                 }
                 if (currentItemSchema) {
-                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema.description, val));
+                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema, val));
                 }
             }
         }
         return errors;
     }
 
-    private async validateProperty(ctx: RequestContext, formatContext: FormatContext, schema: string | any, val, entity): Promise<string> {
+    private async validateProperty(ctx: IRequestContext, formatContext: FormatContext, schema: string | any, val, entity): Promise<string> {
         if (typeof schema === "string") {
-            let type = this.domain._findType(<string>schema);
-            if (!type) {
+            schema = this.domain.getSchemaFromObject(schema);
+            if (!schema) {
                 return null;
             }
-            schema = type;
         }
 
         if (schema.dependsOn && !schema.dependsOn(entity)) return;

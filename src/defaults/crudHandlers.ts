@@ -17,10 +17,10 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     }
 
     async createWithSensibleData(entity: any) {
-        if (entity && this.schema.description.hasSensibleData)
+        if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
         entity = await this.create(entity);
-        if (entity && this.schema.description.hasSensibleData)
+        if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
@@ -36,10 +36,10 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     async updateWithSensibleData(entity: any) {
         // TODO move to provider
-        if (entity && this.schema.description.hasSensibleData)
+        if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
         entity = await this.update(entity);
-        if (entity && this.schema.description.hasSensibleData)
+        if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
@@ -64,7 +64,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     async getWithSensibleData(id: any) {
         let entity = await this.get(id);
-        if (entity && this.schema.description.hasSensibleData)
+        if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
@@ -76,7 +76,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     async getAllWithSensibleData(options: any) {
         let result = await this.getAll(options);
-        if (result && result.value && result.value.length > 0 && this.schema.description.hasSensibleData) {
+        if (result && result.value && result.value.length > 0 && this.schema.info.hasSensibleData) {
             let list = [];
             for (let entity of result.value) {
                 if (entity) {

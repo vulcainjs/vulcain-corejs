@@ -53,13 +53,6 @@ export let standards = {
         }
     },
     "any": {},
-    "string": {
-        description: "Must be a string",
-        message: "Property '{$propertyName}' must be a string.",
-        validate: function (val) {
-            if (typeof val !== "string") return this.message;
-        }
-    },
     "pattern": {
         description: "Must respect the regex expression {$pattern}",
         $pattern: null,
@@ -68,95 +61,10 @@ export let standards = {
             if (this.$pattern && new RegExp(this.$pattern).test(val) === false) return this.message;
         }
     },
-    "number": {
-        description: "Must be a number.",
-        message: "Property '{$propertyName}' must be a number.",
-        bind: function (val) {
-            if (val === undefined) return val;
-            if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(val))
-                return Number(val);
-            return NaN;
-        },
-        validate: function (val) {
-            if ((typeof val !== "number") || isNaN(val)) return this.message;
-        }
-    },
-    "length": {
-        description: "Must have a length between ${min} and ${max}",
-        type: "string",
-        $min: undefined,
-        $max: undefined,
-        messages: [
-            "Property '{$propertyName}' must have at least {$min} characters.",
-            "Property '{$propertyName}' must have no more than {$max} characters."
-        ],
-        validate: function (val) {
-            let len = val.length;
-            if (this.$min !== undefined) {
-                if (len < this.$min) return this.messages[0];
-            }
-            if (this.$max !== undefined) {
-                if (len > this.$max) return this.messages[1];
-            }
-        }
-    },
-    "integer": {
-        description: "Must be an integer",
-        message: "Property '{$propertyName}' must be an integer.",
-        bind: function (val) {
-            if (val === undefined) return val;
-            if (/^(\-|\+)?([0-9]+([0-9]+)?)$/.test(val))
-                return Number(val);
-            return NaN;
-        },
-        validate: function (val) {
-            if ((typeof val !== "number") || isNaN(val)) return this.message;
-        }
-    },
-    "boolean": {
-        description: "Must be a boolean",
-        message: "Property '{$propertyName}' must be a boolean.",
-        bind: function (val) {
-            if (val === undefined) return val;
-            return (typeof val === "string") ? val === "true" : !!val;
-        },
-        validate: function (val) {
-            if (typeof val !== "boolean") return this.message;
-        }
-    },
-    "enum": {
-        description: "Must be one of [{$values}]",
-        type: "string",
-        $values: null,
-        message: "Invalid property '{$propertyName}'. Must be one of [{$values}].",
-        validate: function (val) {
-            if (!this.$values) return "You must define a list of valid values with the 'values' property.";
-            if (this.$values.indexOf(val) === -1) return this.message;
-        }
-    },
     uid: {
         description: "Must be an UID (will be generated if null)",
         type: "string",
         bind: (v) => v || uuid.v1()
-    },
-    "arrayOf": {
-        description: "Must be an array of ${items}",
-        $items: null,
-        messages: [
-            "Invalid value '{$value}' for '{$propertyName}', all values must be of type {$items}.",
-            "Invalid value '{$value}' for '{$propertyName}', value must be an array.",
-        ],
-        validate: function (val) {
-            if (!this.$items) return "You must define array item type with the 'items' property.";
-            if (!Array.isArray(val)) return this.messages[1];
-            let error = false;
-            if (this.$items !== "any") {
-                val.forEach(e => {
-                    if (e && typeof e !== this.$items) error = true;
-                });
-            }
-            if (error) return this.messages[0];
-        }
     },
     // Value must be a number between min and max
     range: {
@@ -167,17 +75,6 @@ export let standards = {
         message: "Invalid value '{$value}' for '{$propertyName}', value must be between {$min} and {$max}",
         validate: function (val) {
             if (val < this.$min || val > this.$max) return this.message;
-        }
-    },
-    email: {
-        description: "Must be an email",
-        message: "Property '{$propertyName}' must be an email.",
-        validate: function (val) {
-            if ((typeof val !== "string")) return this.message;
-
-            if (!validator.isEmail(val))
-                return this.message;
-
         }
     },
     url: {

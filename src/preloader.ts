@@ -5,7 +5,6 @@ interface Item {
     callback: (container, domain) => void;
 }
 
-const Types = "types";
 const Models = "models";
 const Services = "services";
 const Handlers = "handlers";
@@ -22,11 +21,6 @@ export class Preloader {
     }
 
     private _preloads: { [name: string]: Array<Item> } = {};
-
-    registerType(fn: Function, callback: (container, domain) => void) {
-        let key = fn.name;
-        this.register(Types, key, callback);
-    }
 
     registerModel(fn: Function, callback: (container, domain) => void) {
         let key = fn.name;
@@ -61,7 +55,6 @@ export class Preloader {
 
     runPreloads(container: IContainer, domain) {
         if (this._preloads) {
-            this.run(Types, container, domain);
             this.run(Models, container, domain);
             this.run(Services, container, domain);
             this.run(Handlers, container, domain);

@@ -1,5 +1,5 @@
 import { Service } from '../globals/system';
-import { Domain } from '../schemas/schema';
+import { Domain } from '../schemas/domain';
 import { Preloader } from '../preloader';
 import { ConsoleMetrics } from "../instrumentations/metrics/consoleMetrics";
 import { IContainer } from "../di/resolvers";

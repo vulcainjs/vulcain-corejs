@@ -1,8 +1,11 @@
 import { expect } from "chai";
-import { Model, Property, Reference, Validator, SchemaTypeDefinition, ISchemaTypeDefinition } from "../../dist/schemas/annotations";
-import { Domain } from "../../dist/schemas/schema";
+import { Model } from '../../dist/schemas/builder/annotations.model';
+import { Property } from '../../dist/schemas/builder/annotations.property';
+import { Validator, SchemaTypeDefinition } from '../../dist/schemas/builder/annotations';
+import { ISchemaTypeDefinition} from '../../dist/schemas/schemaType'
+import { Domain } from "../../dist/schemas/domain";
 import 'mocha';
-import { SchemaStandardTypes } from "../../dist/schemas/standards";
+import { SchemaStandardTypes } from "../../dist/schemas/standards/standards";
 import { TestContext } from '../../dist/pipeline/testContext';
 
 @Model()
@@ -22,9 +25,9 @@ class SimpleModel extends BaseModel {
 
 @Model()
 class ReferenceModel {
-    @Reference({ item: "SimpleModel", cardinality: "one", required: true })
+    @Property({ type: "SimpleModel", cardinality: "one", required: true })
     simple: SimpleModel;
-    @Reference({ item: "SimpleModel", cardinality: "many" })
+    @Property({ type: "SimpleModel", cardinality: "many" })
     multiples: Array<SimpleModel>;
 }
 

@@ -15,9 +15,15 @@ export { Service } from './globals/system';
 export { IServiceResolver } from './di/serviceResolver';
 
 // Schemas
-export * from './schemas/schema'
-export { ModelOptions, Model, Property, Reference, PropertyOptions, ReferenceOptions, Validator, ISchemaTypeDefinition, SchemaTypeDefinition } from './schemas/annotations'
-export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards';
+export { Schema } from './schemas/schema';
+export { Domain } from './schemas/domain';
+export { SchemaInfo} from './schemas/schemaInfo';
+export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
+export {  Validator, SchemaTypeDefinition } from './schemas/builder/annotations'
+export { Property, PropertyOptions } from './schemas/builder/annotations.property'
+
+export { ModelOptions, Model } from './schemas/builder/annotations.model'
+export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards/standards';
 
 // Auth
 export {SecurityContext, IAuthenticationStrategy, UserToken} from './security/securityContext'

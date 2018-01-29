@@ -2,7 +2,7 @@ import { Preloader } from './preloader'; // always on first line
 
 import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
 import * as Path from 'path';
-import { Domain } from './schemas/schema';
+import { Domain } from './schemas/domain';
 import { Container } from './di/containers';
 import { Files } from './utils/files';
 import 'reflect-metadata';
@@ -131,7 +131,7 @@ export class Application {
 
         if (!port)
             throw new Error("You must provide a port number");
-        
+
         try {
             await this.init();
 

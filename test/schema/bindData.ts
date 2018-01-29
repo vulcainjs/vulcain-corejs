@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { Model, Property, Reference, Validator } from '../../dist/schemas/annotations';
-import { Domain } from '../../dist/schemas/schema';
+import { Model } from '../../dist/schemas/builder/annotations.model';
+import { Property } from '../../dist/schemas/builder/annotations.property';
+import { Domain } from '../../dist/schemas/domain';
 import { TestCommand } from './../command/commands';
 import { TestContext } from '../../dist/pipeline/testContext';
 
@@ -15,7 +16,7 @@ class SimpleModel {
 
 @Model()
 class AggregateModel {
-    @Reference({ item: "SimpleModel", cardinality: "one" })
+    @Property({ type: "SimpleModel", cardinality: "one" })
     simple: SimpleModel;
 }
 

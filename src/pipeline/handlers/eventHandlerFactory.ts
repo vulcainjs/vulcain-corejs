@@ -1,6 +1,6 @@
 import { HandlerItem } from './serviceDescriptions';
 import { IContainer } from '../../di/resolvers';
-import {Domain} from '../../schemas/schema';
+import {Domain} from '../../schemas/domain';
 import { Service } from '../../globals/system';
 import * as util from 'util';
 import { EventMetadata, ConsumeEventMetadata } from "./messageBus";

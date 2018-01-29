@@ -1,6 +1,6 @@
 import {IContainer} from '../../di/resolvers';
 import {LifeTime} from '../../di/annotations';
-import {Domain} from '../../schemas/schema';
+import {Domain} from '../../schemas/domain';
 import { RequestData } from "../../pipeline/common";
 import { HttpResponse } from "../response";
 import { RequestContext } from '../requestContext';
@@ -52,15 +52,15 @@ export class HandlerFactory {
                     if (v.__schema) {
                         if (!outputSchema || outputSchema.name !== v.__schema)
                             outputSchema = domain.getSchema(v.__schema);
-                        if (outputSchema && outputSchema.description.hasSensibleData)
-                            domain.obfuscate(v, outputSchema);
+                        if (outputSchema && outputSchema.info.hasSensibleData)
+                            outputSchema.obfuscate(v);
                     }
                 });
             }
             else if (result.__schema) {
                 let outputSchema = domain.getSchema(result.__schema);
-                if (outputSchema && outputSchema.description.hasSensibleData)
-                    domain.obfuscate(result, outputSchema);
+                if (outputSchema && outputSchema.info.hasSensibleData)
+                    outputSchema.obfuscate(result);
             }
         }
 

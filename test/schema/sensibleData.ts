@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { Model, Property, Reference } from '../../dist/schemas/annotations';
-import { Domain } from '../../dist/schemas/schema';
+import { Model } from '../../dist/schemas/builder/annotations.model';
+import { Property } from '../../dist/schemas/builder/annotations.property';
+import { Domain } from '../../dist/schemas/domain';
 import { TestContext } from '../../dist/pipeline/testContext';
 
 @Model()
@@ -13,7 +14,7 @@ class SimpleModel {
 
 @Model()
 class AggregateModel {
-    @Reference({ item: "SimpleModel", cardinality: "one" })
+    @Property({ type: "SimpleModel", cardinality: "one" })
     simple: SimpleModel;
 }
 
@@ -53,7 +54,7 @@ describe("Sensible data", function () {
         let model = { normal: "normal", password: "password" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
-        domain.obfuscate(model, schema);
+        schema.obfuscate(model);
         expect(model.normal).equals("normal");
         expect(model.password).to.be.undefined;
     });

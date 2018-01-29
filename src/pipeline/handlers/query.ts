@@ -1,6 +1,6 @@
 import { HandlerFactory, CommonActionMetadata, ServiceHandlerMetadata, IManager } from './common';
 import { IContainer } from '../../di/resolvers';
-import { Domain } from '../../schemas/schema';
+import { Domain } from '../../schemas/domain';
 import { DefaultServiceNames } from '../../di/annotations';
 import { ServiceDescriptors } from './serviceDescriptions';
 import { VulcainLogger } from '../../log/vulcainLogger';

@@ -1,7 +1,6 @@
 import { Inject, DefaultServiceNames } from '../../di/annotations';
 import { IContainer } from '../../di/resolvers';
-import { Domain } from '../../schemas/schema';
-import { Model } from '../../schemas/annotations';
+import { Domain } from '../../schemas/domain';
 import { DefinitionsObject, SwaggerApiDefinition, TagObject, PathsObject, PathItemObject, OperationObject, Parameters, ParameterObject } from './swaggerApiDefinition';
 import { IScopedComponent } from '../../di/annotations';
 import { IRequestContext } from '../../pipeline/common';
@@ -371,7 +370,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
     }
 
     private isFundamentalObject(inputSchema: string) {
-        let type = this.domain._findType(inputSchema);
+        let type = this.domain.getType(inputSchema);
         if (!type)
             return false;
         return this.domain.getBaseType(type);

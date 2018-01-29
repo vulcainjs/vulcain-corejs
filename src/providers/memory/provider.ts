@@ -3,7 +3,6 @@ import { IProvider, ListOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
-import { SchemaBuilder } from '../../schemas/schemaBuilder';
 import { Conventions } from '../../utils/conventions';
 import { IRequestContext } from "../../pipeline/common";
 import { ApplicationError } from '../../pipeline/errors/applicationRequestError';
@@ -64,7 +63,7 @@ export class MemoryProvider implements IProvider<any>
         if (!schemaInfo) {
             schemaInfo = { data: { entities: {}, count: 0 } };
             if (this.state.folder) {
-                schemaInfo.saveToFile = this.state.folder + "/" + schema.description.storageName + ".json";
+                schemaInfo.saveToFile = this.state.folder + "/" + schema.info.storageName + ".json";
                 if (fs.existsSync(schemaInfo.saveToFile)) {
                     schemaInfo.data = JSON.parse(fs.readFileSync(schemaInfo.saveToFile, "UTF-8"));
                 }

@@ -1,6 +1,6 @@
 import { MessageBus, EventNotificationMode, ConsumeEventMetadata, EventData } from './messageBus';
 import { IContainer } from '../../di/resolvers';
-import { Domain } from '../../schemas/schema';
+import { Domain } from '../../schemas/domain';
 import { DefaultServiceNames } from '../../di/annotations';
 import { HandlerFactory, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import { EventHandlerFactory } from './eventHandlerFactory';

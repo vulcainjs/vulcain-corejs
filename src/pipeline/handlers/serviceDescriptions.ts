@@ -1,13 +1,15 @@
-import { Domain, SchemaDescription as schDesc } from '../../schemas/schema';
+import { Domain} from '../../schemas/domain';
 import { ActionMetadata } from './actions';
 import { LifeTime, Inject, DefaultServiceNames } from '../../di/annotations';
-import { Model } from '../../schemas/annotations';
 import { IContainer } from '../../di/resolvers';
 import { ServiceHandlerMetadata, CommonActionMetadata } from './common';
 import { QueryActionMetadata } from './query';
 import { Service } from '../../globals/system';
 import { ApplicationError } from '../errors/applicationRequestError';
 import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
+import { Model } from '../../schemas/builder/annotations.model';
+import { Schema } from '../../schemas/schema';
+import { ISchemaTypeDefinition } from '../../schemas/schemaType';
 
 export interface HandlerItem {
     methodName: string;
@@ -265,6 +267,9 @@ export class ServiceDescriptors {
         if (!schemaName)
             return defaultValue;
 
+        if (typeof schemaName === "function")
+            schemaName = schemaName.name;
+
         let schema = this.domain.getSchema(schemaName, true);
         if (!schema) {
             if (typeof schemaName === "string") {
@@ -283,16 +288,16 @@ export class ServiceDescriptors {
         desc = {
             name: schema.name,
             properties: [],
-            idProperty: schema.description.idProperty,
+            idProperty: schema.info.idProperty,
             dependencies: new Set<string>(),
-            custom: schema.description.custom
+            custom: schema.info.custom
         };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
-        let sd = schema.description;
+        let sd = schema;
         while (sd) {
             this.updateDescription(schemas, sd, desc);
-            sd = this.domain.findSchemaDescription(sd.extends);
+            sd = sd.extends;
         }
         return desc.name;
     }
@@ -308,9 +313,9 @@ export class ServiceDescriptors {
         }
     }
 
-    private updateDescription(schemas: Map<string, SchemaDescription>, schema: schDesc, desc: SchemaDescription) {
-        for (let k of Object.keys(schema.properties)) {
-            const p = schema.properties[k];
+    private updateDescription(schemas: Map<string, SchemaDescription>, schema: Schema, desc: SchemaDescription) {
+        for (let k of Object.keys(schema.info.properties)) {
+            const p = schema.info.properties[k];
             if (p.private)
                 continue;
             let type = this.getPropertyType(p.items || p.type);
@@ -327,49 +332,46 @@ export class ServiceDescriptors {
                 };
                 this.addDescription(desc, pdesc);
             }
-        }
-        for (let k of Object.keys(schema.references)) {
-            const r = schema.references[k];
-            if (r.private)
-                continue;
-            if (schemas.has(k)) return k;
-            this.getSchemaDescription(schemas, r.item);
+            else if( p.cardinality) {
+                if (schemas.has(k)) return k;
+             //   this.getSchemaDescription(schemas, p.type);
 
-            let metadata = { item: r.item, cardinality: r.cardinality, required: r.required, description: r.description };
-            let pdesc: PropertyDescription = {
-                name: k,
-                reference: r.cardinality,
-                type: r.cardinality === "many" ? r.item + "[]" : r.item,
-                required: r.required,
-                description: r.description,
-                typeDescription: "",
-                metadata,
-                order: r.order
-            };
+                let metadata = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description };
+                let pdesc: PropertyDescription = {
+                    name: k,
+                    reference: p.cardinality,
+                    type: p.cardinality === "many" ? p.type + "[]" : p.type,
+                    required: p.required,
+                    description: p.description,
+                    typeDescription: "",
+                    metadata,
+                    order: p.order
+                };
 
-            if (r.item !== "any")
-                desc.dependencies.add(r.item);
+                if (p.type !== "any")
+                    desc.dependencies.add(p.type);
 
-            this.addDescription(desc, pdesc);
+                this.addDescription(desc, pdesc);
+            }
         }
     }
 
-    private getPropertyType(name: string) {
+    private getPropertyType(name: string): ISchemaTypeDefinition {
         if (!name || name === "any")
             return { name: "any" };
 
         while (true) {
-            let type = this.domain._findType(name);
+            let type = this.domain.getType(name);
             if (!type) {
                 name = name.toLowerCase();
-                type = this.domain._findType(name);
+                type = this.domain.getType(name);
             }
-            if (!type || (!type.type && !type.items)) {
+            if (!type || (!type.type)) {
                 if (type)
                     type.name = name;
                 return type;
             }
-            name = type.type || type.items;
+            name = type.type;
         }
     }
 

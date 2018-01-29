@@ -2,7 +2,7 @@ import { Schema } from '../schemas/schema';
 import { IProvider } from '../providers/provider';
 import { DefaultServiceNames } from '../di/annotations';
 import { IContainer } from '../di/resolvers';
-import { Domain } from '../schemas/schema';
+import { Domain } from '../schemas/domain';
 import { Inject } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
 import { ProviderFactory } from '../providers/providerFactory';
