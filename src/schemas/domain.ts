@@ -4,17 +4,20 @@ import { Validator } from './validator';
 import { IRequestContext } from "../pipeline/common";
 import { ModelOptions } from './builder/annotations.model';
 import { ISchemaTypeDefinition } from './schemaType';
+import { Files } from '../utils/files';
+import * as Path from 'path';
 
 /**
  * Domain model
  */
 export class Domain {
     private _schemas: Map<string, Schema>;
-    private static types = new Map<string, ISchemaTypeDefinition>();
+    private static types = {};
 
-    constructor(public name: string, private container: IContainer, defaultTypes?) {
+    constructor(public name: string, private container: IContainer) {
         this._schemas = new Map<string, Schema>();
-        // add default types
+        // Load standard types
+        Files.traverse(Path.join(__dirname, "standards"));
     }
 
     static addType(name: string, type: ISchemaTypeDefinition) {
@@ -30,14 +33,14 @@ export class Domain {
             while (stype && stype.type) {
                 stype = stype.type;
                 type.$$nativeSchema = stype.name;
-                stype = Domain.types.get(stype);
+                stype = Domain.types[stype];
             }
         }
         return type.$$nativeSchema;
     }
 
     getType(name: string) {
-        return Domain.types.get(name);
+        return Domain.types[name];
     }
 
     addSchema(schema: Schema) {

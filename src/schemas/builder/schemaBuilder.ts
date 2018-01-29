@@ -6,17 +6,12 @@ import { ModelPropertyInfo } from '../schemaInfo';
 import { ISchemaValidation, ISchemaTypeDefinition } from '../schemaType';
 
 export class SchemaBuilder {
-    private static properties = new Map<string, ModelPropertyInfo[]>();
-
-    static addProperty(modelName: string, info: ModelPropertyInfo) {
-        let properties = SchemaBuilder.properties.get(modelName) || [];
-        properties.push(info);
-        SchemaBuilder.properties.set(modelName, properties);
-    }
 
     static buildSchema(domain: Domain, options: ModelOptions, type: Function) {
         let schema = new Schema(domain, options, type);
-        let properties = SchemaBuilder.properties.get(name) || [];
+        const sym = Symbol.for("design:properties");
+
+        const properties = Reflect.getOwnMetadata(sym, type.prototype) || [];
 
         for (let propertyName in properties) {
             let propInfo: ModelPropertyInfo = properties[propertyName];

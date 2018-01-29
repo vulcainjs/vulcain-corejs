@@ -21,7 +21,6 @@ export { SchemaInfo} from './schemas/schemaInfo';
 export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
 export {  Validator, SchemaTypeDefinition } from './schemas/builder/annotations'
 export { Property, PropertyOptions } from './schemas/builder/annotations.property'
-
 export { ModelOptions, Model } from './schemas/builder/annotations.model'
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards/standards';
 

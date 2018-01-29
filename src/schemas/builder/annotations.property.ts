@@ -111,7 +111,7 @@ export function Property(options?: PropertyOptions, customOptions?:any) {
         let info: ModelPropertyInfo = options || <any>{};
         info.custom = customOptions;
         info.name = key;
-        
+
         if (!info.type) {
             // Try to infer type
             let t = Reflect.getOwnMetadata('design:type', target, key);
@@ -121,9 +121,10 @@ export function Property(options?: PropertyOptions, customOptions?:any) {
             }
         }
 
-        const sym = Symbol.for("design:model");
-        const schema = Reflect.getOwnMetadata(sym, target);
-        SchemaBuilder.addProperty(schema.name, info);
+        const sym = Symbol.for("design:properties");
+        const properties = Reflect.getOwnMetadata(sym, target) || [];
+        properties.push(info);
+        Reflect.defineMetadata(sym, properties, target);
     };
 }
 
