@@ -28,7 +28,7 @@ export interface ConsumeEventMetadata {
     /**
      * Distribution mode: once or many (default)
      */
-    distributionMode: "once" | "many";
+    distributionMode?: "once" | "many"| undefined;
     distributionKey?: string; // Unique queue to ensure events are take into account once
 }
 

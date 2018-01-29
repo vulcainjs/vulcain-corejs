@@ -13,40 +13,39 @@ export class SchemaBuilder {
 
         const properties = Reflect.getOwnMetadata(sym, type.prototype) || [];
 
-        for (let propertyName in properties) {
-            let propInfo: ModelPropertyInfo = properties[propertyName];
-            if (propInfo) {
-                if (propInfo.type !== "any") {
-                    const propertyType = domain.getType(propInfo.type);
+        for (let property of properties) {
+            if (property) {
+                if (property.type !== "any") {
+                    const propertyType = domain.getType(property.type);
                     if (!propertyType) {
-                        const propertySchema = domain.getSchema(propInfo.type, true);
+                        const propertySchema = domain.getSchema(property.type, true);
                         if(!propertySchema)
-                            throw new Error(`Unknown type '${propInfo.type}' for property ${propertyName} of schema ${name}`);
+                            throw new Error(`Unknown type '${property.type}' for property ${property.name} of schema ${name}`);
 
                         schema.info.cardinality = schema.info.cardinality || "one";
                         if (!schema.info.hasSensibleData && propertySchema) {
                             if (propertySchema.info.hasSensibleData)
                                 schema.info.hasSensibleData = true;
                         }
-                        propInfo.validators = SchemaBuilder.createValidatorsChain(domain, "$ref", propInfo, propertyName, schema.schemaType);
+                        property.validators = SchemaBuilder.createValidatorsChain(domain, "$ref", property, property.name, schema.schemaType);
                     }
                     else {
-                        propInfo.validators = SchemaBuilder.createValidatorsChain(domain, propInfo.type, propInfo, propertyName, schema.schemaType);
+                        property.validators = SchemaBuilder.createValidatorsChain(domain, property.type, property, property.name, schema.schemaType);
                     }
                 }
 
-                if (propInfo.isKey) {
+                if (property.isKey) {
                     if (schema.getIdProperty())
                         throw new Error("Multiple property id is not valid for schema " + name);
-                    schema.info.idProperty = propertyName;
+                    schema.info.idProperty = property.name;
                 }
 
                 if (!schema.info.hasSensibleData) {
-                    if (propInfo.sensible)
+                    if (property.sensible)
                         schema.info.hasSensibleData = true;
                 }
 
-                schema.info.properties[propertyName] = propInfo;
+                schema.info.properties[property.name] = property;
             }
         }
 
@@ -74,7 +73,7 @@ export class SchemaBuilder {
             // Type inheritence (in reverse order)
             let stypeName = clonedType.type;
             while (stypeName) {
-                let stype = domain.getSchema(stypeName, true);
+                let stype = domain.getType(stypeName);
                 if (!stype)
                     break;
                 chain.unshift(SchemaBuilder.clone(stype, attributeInfo));
@@ -88,7 +87,7 @@ export class SchemaBuilder {
         let validators = Reflect.getOwnMetadata(symValidators, obj.prototype, propertyName);
         if (validators) {
             for (let info of validators) {
-                let validator = domain.getSchema(info.name, true);
+                let validator = domain.getType(info.name);
                 if (!validator)
                     throw new Error(`Unknow validator ${info.name}`);
                 else

@@ -2,10 +2,11 @@ import { IContainer } from '../di/resolvers';
 import { IRequestContext } from "../pipeline/common";
 import { Domain } from './domain';
 import { Schema } from './schema';
+import { ModelPropertyInfo } from './schemaInfo';
 
 export class Validator {
 
-    constructor(private domain: Domain, private container: IContainer) {
+    constructor(private domain: Domain) {
     }
 
     async validate(ctx: IRequestContext, schema: Schema, val:any): Promise<{ [propertyName: string]: string }> {
@@ -23,46 +24,41 @@ export class Validator {
         let formatContext: FormatContext = { element: val, schemaElement: schema, id: id };
 
         // Properties checks
-        for (const ps in schema.info.properties) {
-            if (!schema.info.properties.hasOwnProperty(ps)) continue;
-            formatContext.propertyName = ps;
-            formatContext.propertySchema = schema.info.properties[ps];
-            formatContext.propertyValue = val[ps];
+        for (const propertyName in schema.info.properties) {
+            if (!schema.info.properties.hasOwnProperty(propertyName)) continue;
+
+            formatContext.propertyName = propertyName;
+            formatContext.propertySchema = schema.info.properties[propertyName];
+            formatContext.propertyValue = val[propertyName];
 
             try {
-                let prop = schema.info.properties[ps];
+                let prop = schema.info.properties[propertyName];
                 if (prop.cardinality) {
+                    let propertyTypeName = prop.type;
                     if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
-                        if (prop && prop.dependsOn && !prop.dependsOn(val)) continue;
-                        let schema = this.domain.getSchema(formatContext.propertyValue.__schema);
-                        if (!schema) continue;
-                        let errors2 = await this.validate(ctx, schema, formatContext.propertyValue);
-                        if (errors2)
-                            errors = Object.assign(errors, errors2);
+                        propertyTypeName = formatContext.propertyValue.__schema;
                     }
-                    else {
-                        let errors2 = await this.validateReference(ctx, formatContext, prop, val[ps], val);
-                        if (errors2)
-                            errors = Object.assign(errors, errors2);
-                    }
+                    let errors2 = await this.validateReference(ctx, formatContext, prop.type, val);
+                    if (errors2)
+                        errors = Object.assign(errors, errors2);
                 }
                 else {
-                    let err = await this.validateProperty(ctx, formatContext, schema.info.properties[ps], val[ps], val);
+                    let err = await this.validateProperty(ctx, formatContext, val);
                     if (err) {
-                        errors[ps] = err;
+                        errors[propertyName] = err;
                     }
                 }
             }
             catch (e) {
-                errors[ps] = this.__formatMessage("Validation error for property {$propertyName} : " + e, formatContext);
+                errors[propertyName] = this.__formatMessage("Validation error for property {$propertyName} : " + e, formatContext);
             }
         }
 
         // Entity check
-        if (schema.validate) {
+        if (schema.info.validate) {
             formatContext.propertyName = formatContext.propertySchema = formatContext.propertyValue = null;
             try {
-                let err: string = await (<any>schema).validate(val, ctx);
+                let err = await schema.info.validate(val, ctx);
                 if (err)
                     errors["_"] = this.__formatMessage(err, formatContext, schema);
             }
@@ -73,42 +69,44 @@ export class Validator {
         return errors;
     }
 
-    private async validateReference(ctx: IRequestContext, formatContext: FormatContext, schema, val, entity): Promise<{ [propertyName: string]: string }> {
+    private async validateReference(ctx: IRequestContext, formatContext: FormatContext, propertyTypeName: string, entity): Promise<{ [propertyName: string]: string }> {
         let errors = {};
 
-        if (!schema)
+        const { propertySchema, propertyValue } = formatContext;
+
+        if (!propertySchema)
             return errors;
 
-        if (schema.dependsOn && !schema.dependsOn(entity))
+        if (propertySchema.dependsOn && !propertySchema.dependsOn(entity))
             return errors;
 
-        if (!val) {
-            if (schema.required) {
-                errors[formatContext.propertyName] = this.__formatMessage(`Reference '{$propertyName}' is required.`, formatContext, schema);
+        if (!propertyValue) {
+            if (propertySchema.required) {
+                errors[formatContext.propertyName] = this.__formatMessage(`Reference '{$propertyName}' is required.`, formatContext, propertySchema);
                 return errors;
             }
             return null;
         }
 
-        if (schema.validators) {
-            for (let validator of schema.validators) {
-                let msg = validator.validate && await validator.validate(val, ctx);
+        if (propertySchema.validators) {
+            for (let validator of propertySchema.validators) {
+                let msg = validator.validate && await validator.validate(propertyValue, ctx);
                 if (msg) {
-                    errors[formatContext.propertyName] = this.__formatMessage(msg, formatContext, schema);
+                    errors[formatContext.propertyName] = this.__formatMessage(msg, formatContext, propertySchema);
                     return errors;
                 }
             }
         }
 
-        let err = schema.validate && await schema.validate(val, ctx);
+        let err = propertySchema.validate && await propertySchema.validate(propertyValue, ctx);
         if (err) {
             errors[formatContext.propertyName] = err;
             return errors;
         }
 
-        let values = schema.cardinality === "one" ? [val] : <Array<any>>val;
+        let values = propertySchema.cardinality === "one" ? [propertyValue] : <Array<any>>propertyValue;
 
-        let baseItemSchema = schema.item && schema.item !== "any" && this.domain.getSchema(schema.item, true);
+        let baseItemSchema = propertyTypeName && propertyTypeName !== "any" && this.domain.getSchema(propertyTypeName, true);
 
         for (let val of values) {
             if (val) {
@@ -126,32 +124,27 @@ export class Validator {
         return errors;
     }
 
-    private async validateProperty(ctx: IRequestContext, formatContext: FormatContext, schema: string | any, val, entity): Promise<string> {
-        if (typeof schema === "string") {
-            schema = this.domain.getSchemaFromObject(schema);
-            if (!schema) {
-                return null;
-            }
-        }
+    private async validateProperty(ctx: IRequestContext, formatContext: FormatContext, entity): Promise<string> {
+        const { propertySchema, propertyValue } = formatContext;
 
-        if (schema.dependsOn && !schema.dependsOn(entity)) return;
+        if (propertySchema.dependsOn && !propertySchema.dependsOn(entity)) return;
 
-        if (val === undefined || val === null) {
-            if (schema.required) {
-                return this.__formatMessage(`Property '{$propertyName}' is required`, formatContext, schema);
+        if (propertyValue === undefined || propertyValue === null) {
+            if (propertySchema.required) {
+                return this.__formatMessage(`Property '{$propertyName}' is required`, formatContext, propertySchema);
             }
             return null;
         }
-        if (schema.validators) {
-            for (let validator of schema.validators) {
-                let err = validator.validate && await validator.validate(val, ctx);
+        if (propertySchema.validators) {
+            for (let validator of propertySchema.validators) {
+                let err = validator.validate && await validator.validate(propertyValue, ctx);
                 if (err) return this.__formatMessage(err, formatContext, validator);
             }
         }
 
-        if (schema.validate) {
-            let err = await schema.validate(val, ctx);
-            if (err) return this.__formatMessage(err, formatContext, schema);
+        if (propertySchema.validate) {
+            let err = await propertySchema.validate(propertyValue, ctx);
+            if (err) return this.__formatMessage(err, formatContext, propertySchema);
         }
     }
 

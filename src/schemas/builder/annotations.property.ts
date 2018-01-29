@@ -2,7 +2,7 @@ import { Preloader } from '../../preloader';
 import { IContainer } from '../../di/resolvers';
 import 'reflect-metadata';
 import { Domain } from '../domain';
-import { RequestContext } from "../../pipeline/requestContext";
+import { IRequestContext } from "../../pipeline/common";
 import { ModelPropertyInfo } from '../schemaInfo';
 import { SchemaBuilder } from './schemaBuilder';
 
@@ -86,7 +86,7 @@ export interface PropertyOptions {
      *
      * @memberOf PropertyOptions
      */
-    validate?: (val, ctx?: RequestContext) => string;
+    validate?: (val, ctx?: IRequestContext) => string;
     /**
      * Define if the property contains sensible data.
      * Sensible datas are obfuscated and are removed from get request.

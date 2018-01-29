@@ -20,8 +20,11 @@ export class Domain {
         Files.traverse(Path.join(__dirname, "standards"));
     }
 
+    /**
+     * Declare a new type or validator
+     */
     static addType(name: string, type: ISchemaTypeDefinition) {
-        if (!name) { throw new Error("Invalid argument"); }
+        if (!name) { throw new Error("Invalid name argument"); }
         Domain.types[name] = type;
         type.name = name;
     }
@@ -29,6 +32,7 @@ export class Domain {
     getBaseType(type) {
         if (!type.$$nativeSchema) {
             let stype = type;
+            // Cache resolved type
             type.$$nativeSchema = stype.name
             while (stype && stype.type) {
                 stype = stype.type;

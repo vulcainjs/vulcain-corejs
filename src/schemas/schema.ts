@@ -60,14 +60,15 @@ export class Schema {
         (<any>result).__schema = (<any>result).__schema || schema.name;
 
         // Convert properties
-        for (const ps in schema.info.properties) {
-            if (!schema.info.properties.hasOwnProperty(ps)) { continue; }
-            let prop = schema.info.properties[ps];
+        for (const propertyName in schema.info.properties) {
+            if (!schema.info.properties.hasOwnProperty(propertyName)) { continue; }
+            let prop = schema.info.properties[propertyName];
+            
             if (prop) {
                 try {
                     if (prop.cardinality) {
                         let item = prop.type;
-                        let refValue = data[ps];
+                        let refValue = data[propertyName];
 
                         if (item === "any" && refValue && refValue.__schema) {
                             item = refValue.__schema;
@@ -79,26 +80,26 @@ export class Schema {
                         }
 
                         if (this.isMany(prop)) {
-                            result[ps] = [];
+                            result[propertyName] = [];
                             for (let elem of refValue) {
                                 let val = this.applyBinding(prop, elemSchema, elem);
                                 if (val !== undefined) {
-                                    result[ps].push(!elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema));
+                                    result[propertyName].push(!elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema));
                                 }
                             }
                         }
                         else {
                             let val = this.applyBinding(prop, elemSchema, refValue);
                             if (val !== undefined) {
-                                result[ps] = !elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema);
+                                result[propertyName] = !elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema);
                             }
                         }
                     }
                     else {
-                        let val = this.applyBinding(prop, data, data[ps]);
+                        let val = this.applyBinding(prop, data, data[propertyName]);
 
                         if (val !== undefined) {
-                            result[ps] = val;
+                            result[propertyName] = val;
                         }
                     }
                 }
@@ -134,7 +135,7 @@ export class Schema {
     }
 
     validate(ctx: IRequestContext, obj) {
-        let validator = new Validator(this.domain, ctx.container);
+        let validator = new Validator(this.domain);
         return validator.validate(ctx, this, obj);
     }
 
@@ -158,8 +159,8 @@ export class Schema {
             return entity;
         }
         let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
-            visitProperty(val, prop) {
+            visitEntity(entity, schema: Schema) { this.current = entity; return schema.info.hasSensibleData; },
+            visitProperty(val, prop: ModelPropertyInfo) {
                 if (val && prop.sensible) {
                     this.current[prop.name] = Service.encrypt(val);
                 }
@@ -176,7 +177,7 @@ export class Schema {
         }
 
         let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
+            visitEntity(entity, schema: Schema) { this.current = entity; return schema.info.hasSensibleData; },
             visitProperty(val, prop) {
                 if (val && prop.sensible) {
                     this.current[prop.name] = Service.decrypt(val);
@@ -196,7 +197,7 @@ export class Schema {
  */
     obfuscate(entity) {
         let visitor = {
-            visitEntity(entity, schema) { this.current = entity; return schema.hasSensibleData; },
+            visitEntity(entity, schema) { this.current = entity; return schema.info.hasSensibleData; },
             visitProperty(val, prop) { if (prop.sensible) { this.current[prop.name] = undefined; } }
         };
         let v = new SchemaVisitor(this.domain, visitor);
