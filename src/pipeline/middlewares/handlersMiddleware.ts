@@ -3,15 +3,20 @@ import { VulcainMiddleware } from "../vulcainPipeline";
 import { Service } from "../../globals/system";
 import { ActionMetadata, CommandManager } from "../handlers/actions";
 import { IContainer } from "../../di/resolvers";
-import { UnauthorizedRequestError } from "../errors/applicationRequestError";
+import { UnauthorizedRequestError, ApplicationError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
 import { QueryManager } from "../handlers/query";
+import { IManager } from "../handlers/common";
+import { HandlerInfo, ServiceDescriptors } from "../handlers/serviceDescriptions";
+import { RequestData } from "../common";
+import { DefaultServiceNames } from '../../di/annotations';
 
 export class HandlersMiddleware extends VulcainMiddleware {
     private actionManager: CommandManager;
     private queryManager: QueryManager;
+    private _serviceDescriptors: ServiceDescriptors;
 
-    constructor(container: IContainer) {
+    constructor(private container: IContainer) {
         super();
         this.actionManager = new CommandManager(container);
         this.queryManager = new QueryManager(container);
@@ -19,10 +24,26 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
     async invoke(ctx: RequestContext) {
         let command = ctx.requestData;
-        let manager = (ctx.request.verb === "GET" ? this.queryManager : this.actionManager);
+        let manager: IManager;
+        let info = this.getInfoHandler(command, ctx.container);
 
         // Check if handler exists
-        let info = manager.getInfoHandler(command);
+        if (!info)
+            throw new ApplicationError(`no handler method founded for ${ctx.requestData.vulcainVerb}`, 405);
+
+        if (ctx.request.verb === "POST" && info.kind === "action") {
+            manager = this.actionManager;
+        }
+
+        if (info.kind==="query" && (ctx.request.verb === "GET" || ctx.request.verb === "POST")) {
+            manager = this.queryManager;
+        }
+
+        if (!manager)
+            throw new ApplicationError(`Unsupported http verb for ${ctx.requestData.vulcainVerb}`, 405);
+
+        if (info.kind === "action" && ctx.request.verb === "GET")
+            throw new ApplicationError(`Action handler ${ctx.requestData.vulcainVerb} must be called with POST`, 405);
 
         // Ensure schema name (casing) is valid
         ctx.requestData.schema = info.metadata.schema || ctx.requestData.schema;
@@ -45,7 +66,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
 
         if (!stubs.enabled || result === undefined) {
-            result = await manager.run(command, ctx);
+            result = await manager.run(info, command, ctx);
         }
         else {
             useMockResult = true;
@@ -55,5 +76,14 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
         !useMockResult && stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
         return super.invoke(ctx);
+    }
+
+
+    private getInfoHandler(command: RequestData, container?: IContainer) {
+        if (!this._serviceDescriptors) {
+            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        }
+        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
+        return info;
     }
 }

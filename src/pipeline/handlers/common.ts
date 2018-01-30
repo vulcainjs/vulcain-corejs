@@ -5,6 +5,7 @@ import { RequestData } from "../../pipeline/common";
 import { HttpResponse } from "../response";
 import { RequestContext } from '../requestContext';
 import { Schema } from '../../index';
+import { HandlerInfo } from './serviceDescriptions';
 
 export interface ErrorResponse {
     message: string;
@@ -38,8 +39,7 @@ export interface ServiceHandlerMetadata extends CommonHandlerMetadata {
 
 export interface IManager {
     container: IContainer;
-    getInfoHandler(command: RequestData, container?: IContainer): { verb: string, handler: Function, metadata: CommonActionMetadata, method: string, kind: "query" | "action" | "event" };
-    run(command: RequestData, ctx: RequestContext): Promise<HttpResponse>;
+    run(info: HandlerInfo, command: RequestData, ctx: RequestContext): Promise<HttpResponse>;
 }
 
 export class HandlerFactory {

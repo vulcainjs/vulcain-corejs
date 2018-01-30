@@ -4,7 +4,7 @@ import { Domain } from '../../schemas/domain';
 import { DefaultServiceNames } from '../../di/annotations';
 import { HandlerFactory, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
 import { EventHandlerFactory } from './eventHandlerFactory';
-import { ServiceDescriptors } from './serviceDescriptions';
+import { ServiceDescriptors, HandlerInfo } from './serviceDescriptions';
 import { Service } from '../../globals/system';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
@@ -145,14 +145,6 @@ export class CommandManager implements IManager {
         return errors;
     }
 
-    getInfoHandler(command: RequestData, container?: IContainer) {
-        if (!this._serviceDescriptors) {
-            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        }
-        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
-        return info;
-    }
-
     private createEvent(ctx: RequestContext, status: "Error" | "Pending" | "Success", result:any, error?:Error): EventData {
         let event: EventData = {
             vulcainVerb: `${ctx.requestData.schema}.${ctx.requestData.action}`,
@@ -170,10 +162,7 @@ export class CommandManager implements IManager {
         return event;
     }
 
-    async run(command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
-        let info = this.getInfoHandler(command, ctx.container);
-        if (!info || info.kind !== "action")
-            throw new ApplicationError("Query handler must be requested with GET.", 405);
+    async run(info: HandlerInfo, command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
 
         let metadata = <ActionMetadata>info.metadata;
         let eventMode = metadata.eventMode || EventNotificationMode.successOnly;
@@ -257,12 +246,18 @@ export class CommandManager implements IManager {
         ctx.setSecurityManager(command.userContext);
 
         let info = this.getInfoHandler(command, ctx.container);
+        if (!info || info.kind !== "event") {
+            Service.log.error(ctx, new ApplicationError(`no handler method founded for event ${ctx.requestData.vulcainVerb}`));
+            ctx.dispose();
+            return;
+        }
+
         let metadata = <ActionMetadata>info.metadata;
         let eventMode = metadata.eventMode || EventNotificationMode.always;
 
         let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
-        let res;
         try {
+            let res;
             command.status = "Running";
             command.startedAt = Service.nowAsString();
 
@@ -370,5 +365,13 @@ export class CommandManager implements IManager {
                 }
             }
         });
+    }
+
+    private getInfoHandler(command: RequestData, container?: IContainer) {
+        if (!this._serviceDescriptors) {
+            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        }
+        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
+        return info;
     }
 }

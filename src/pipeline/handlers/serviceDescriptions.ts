@@ -64,6 +64,14 @@ export class ServiceDescription {
     scopes: Array<{ name: string, description: string }>;
 }
 
+export interface HandlerInfo {
+    handler: any;
+    metadata: CommonActionMetadata;
+    method: string;
+    verb: string;
+    kind: "action" | "query" | "event";
+}
+
 export class ServiceDescriptors {
     static nativeTypes = ["string", "String", "boolean", "Boolean", "number", "Number", "any", "Object"];
     private descriptions: ServiceDescription;
@@ -79,7 +87,7 @@ export class ServiceDescriptors {
         return this.descriptions;
     }
 
-    getHandlerInfo(container: IContainer|undefined, schema: string, action: string, optional?: boolean) {
+    getHandlerInfo(container: IContainer|undefined, schema: string, action: string): HandlerInfo {
         this.createHandlersTable();
 
         let verb = action && action.toLowerCase();
@@ -99,10 +107,7 @@ export class ServiceDescriptors {
         }
 
         if (!item) {
-            if (optional)
-                return null;
-            else
-                throw new ApplicationError(`no handler method founded for action ${action}, schema ${schema}`, 405);
+            return null;
         }
 
         try {

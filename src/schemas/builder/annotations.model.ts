@@ -46,9 +46,10 @@ export interface ModelOptions {
 /**
  * Declare a data model
  */
-export function Model(options?: ModelOptions) {
+export function Model(options?: ModelOptions, customOptions?:any) {
     return function (target: Function) {
         options = options || {};
+        options.custom = customOptions;
         options.name = options.name || target.name;
         options.storageName = options.storageName || options.name;
 

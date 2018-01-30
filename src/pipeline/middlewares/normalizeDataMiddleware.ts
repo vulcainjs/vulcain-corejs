@@ -117,10 +117,10 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         ctx.requestData.action = action || (!body && "all") || null;
         ctx.requestData.schema = schema;
 
-        if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {
+        // if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {
             ctx.requestData.page = 0;
             ctx.requestData.maxByPage = 20;
-        }
+        //}
         // Normalize option values
         Object.keys(url.query).forEach(name => {
             try {

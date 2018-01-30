@@ -145,7 +145,13 @@ export class MongoProvider implements IProvider<any>
 
         let page = options.page || 0;
         let maxByPage = options.maxByPage || 20;
-        let query = options.query ? options.query.filter || options.query : {};
+
+        let proj = options.query && options.query.projections;
+        let query;
+        if (proj)
+            query = options.query.filter;
+        else
+            query = options.query ? options.query.filter || options.query : {};
 
         this.ctx.logInfo(()=>`MONGODB: Get all query on ${Service.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query: ${JSON.stringify(query)}`);
         let self = this;
@@ -154,7 +160,7 @@ export class MongoProvider implements IProvider<any>
                 let db = self.state._mongo;
                 // TODO try with aggregate
                 let total = await db.collection(schema.info.storageName).find(query).count();
-                let cursor = db.collection(schema.info.storageName).find(query)
+                let cursor = db.collection(schema.info.storageName).find(query, proj)
                     .skip(page * maxByPage)
                     .limit(maxByPage);
                 cursor.toArray((err, res) => {

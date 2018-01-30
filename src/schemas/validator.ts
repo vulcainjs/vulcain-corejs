@@ -9,7 +9,7 @@ export class Validator {
     constructor(private domain: Domain) {
     }
 
-    async validate(ctx: IRequestContext, schema: Schema, val:any): Promise<{ [propertyName: string]: string }> {
+    async validate(ctx: IRequestContext, schema: Schema, val:any, parentName:string=""): Promise<{ [propertyName: string]: string }> {
         let errors: { [propertyName: string]: string } = {};
         if (!schema || !val) return errors;
 
@@ -27,7 +27,7 @@ export class Validator {
         for (const propertyName in schema.info.properties) {
             if (!schema.info.properties.hasOwnProperty(propertyName)) continue;
 
-            formatContext.propertyName = propertyName;
+            formatContext.propertyName = parentName + propertyName;
             formatContext.propertySchema = schema.info.properties[propertyName];
             formatContext.propertyValue = val[propertyName];
 
@@ -117,7 +117,7 @@ export class Validator {
                         baseItemSchema = currentItemSchema;
                 }
                 if (currentItemSchema) {
-                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema, val));
+                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema, val, formatContext.propertyName + "."));
                 }
             }
         }

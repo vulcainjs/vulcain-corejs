@@ -104,18 +104,17 @@ export class SchemaBuilder {
 
     // Copy all schema property names from 'from'
     static clone(schema, from, clone?): ISchemaValidation {
-        clone = clone || Object.create(Object.getPrototypeOf( schema));
-        for (let key of Object.keys(schema)) {
-            if (key && key[0] === "$") {
-                let pname = key.substr(1);
-                clone[key] = (from && from[pname]) || schema[key];
-            }
-            else {
-                clone[key] = schema[key];
-            }
+        clone = clone || new schema.constructor();//  Object.create(Object.getPrototypeOf(schema));
+        if (!from)
+            return clone;
+
+        for (let key of Object.keys(from)) {
+            let pname = key === "validate" ? key : "$" + key;
+            clone[pname] = from[key];
         }
         if (from.custom) {
-            clone = SchemaBuilder.clone(schema, from.custom, clone);
+            schema.$custom = {};
+            clone = SchemaBuilder.clone(schema.$custom, from.custom, clone);
         }
 
         return clone;

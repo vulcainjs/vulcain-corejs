@@ -2,7 +2,7 @@ import { HandlerFactory, CommonActionMetadata, ServiceHandlerMetadata, IManager 
 import { IContainer } from '../../di/resolvers';
 import { Domain } from '../../schemas/domain';
 import { DefaultServiceNames } from '../../di/annotations';
-import { ServiceDescriptors } from './serviceDescriptions';
+import { ServiceDescriptors, HandlerInfo } from './serviceDescriptions';
 import { VulcainLogger } from '../../log/vulcainLogger';
 import { RequestContext } from "../../pipeline/requestContext";
 import { RequestData } from "../../pipeline/common";
@@ -38,7 +38,6 @@ export interface QueryActionMetadata extends CommonActionMetadata {
 
 export class QueryManager implements IManager {
     private _domain: Domain;
-    private _serviceDescriptors: ServiceDescriptors;
 
     /**
      * Get the current domain model
@@ -52,14 +51,6 @@ export class QueryManager implements IManager {
     }
 
     constructor(public container: IContainer) {
-    }
-
-    getInfoHandler(command: RequestData, container?: IContainer) {
-        if (!this._serviceDescriptors) {
-            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        }
-        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
-        return info;
     }
 
     private async validateRequestData(ctx: RequestContext, info, query) {
@@ -85,10 +76,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async run(query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
-        let info = this.getInfoHandler(query, ctx.container);
-        if (info.kind !== "query")
-            throw new ApplicationError("Action handler must be requested with POST.", 405);
+    async run(info: HandlerInfo, query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
