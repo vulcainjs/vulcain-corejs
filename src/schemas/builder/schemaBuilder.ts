@@ -20,9 +20,14 @@ export class SchemaBuilder {
                     if (!propertyType) {
                         const propertySchema = domain.getSchema(property.type, true);
                         if(!propertySchema)
-                            throw new Error(`Unknown type '${property.type}' for property ${property.name} of schema ${name}`);
+                            throw new Error(`Unknown type '${property.type}' for property ${property.name} of schema ${schema.name}`);
 
-                        schema.info.cardinality = schema.info.cardinality || "one";
+                        if (!property.cardinality) {
+                            // Try to infer cardinality (see Property annotation class)
+                            property.cardinality = property.$cardinality || "one";
+                            property.$cardinality = undefined;
+                        }
+
                         if (!schema.info.hasSensibleData && propertySchema) {
                             if (propertySchema.info.hasSensibleData)
                                 schema.info.hasSensibleData = true;
@@ -36,7 +41,7 @@ export class SchemaBuilder {
 
                 if (property.isKey) {
                     if (schema.getIdProperty())
-                        throw new Error("Multiple property id is not valid for schema " + name);
+                        throw new Error("Multiple property id is not valid for schema " + schema.name);
                     schema.info.idProperty = property.name;
                 }
 
@@ -64,7 +69,7 @@ export class SchemaBuilder {
         let type = domain.getType(typeName);
         if (type) {
             let clonedType = SchemaBuilder.clone(type, attributeInfo);
-            for (let fn of ["bind", "dependsOn", "validate"]) {
+            for (let fn of ["coerce", "dependsOn", "validate"]) {
                 if (attributeInfo[fn]) {
                     clonedType[fn] = attributeInfo[fn];
                 }

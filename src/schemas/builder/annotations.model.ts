@@ -22,9 +22,9 @@ export interface ModelOptions {
      */
     description?: string;
     /**
-     * Transform input data
+     * Coerce input data
      */
-    bind?: ((data) => any) | boolean;
+    coerce?: ((data) => any) | boolean;
     /**
      * Validatation function
      */

@@ -8,5 +8,5 @@ export interface ISchemaValidation {
 
 export interface ISchemaTypeDefinition extends ISchemaValidation {
     name?: string;
-    bind?: (val: any) => any;
+    coerce?: (val: any) => any;
 }

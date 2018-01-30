@@ -33,22 +33,22 @@ export class Schema {
             storageName: options.storageName,
             hasSensibleData: options.hasSensibleData,
             properties: {},
-            bind: options.bind,
+            coerce: options.coerce,
             validate: options.validate,
             custom: options.custom,
             extends: options.extends
         };
     }
 
-    bind(data) {
-        return this.bindInternal(data, this);
+    coerce(data) {
+        return this.coerceInternal(data, this);
     }
 
-    private bindInternal(data, schema: Schema, result?)
+    private coerceInternal(data, schema: Schema, result?)
     {
         if (!data) { return null; }
-        if (typeof schema.info.bind === "function") {
-            return schema.info.bind(data);
+        if (typeof schema.info.coerce === "function") {
+            return schema.info.coerce(data);
         }
 
         if (typeof data !== "object") {
@@ -63,35 +63,43 @@ export class Schema {
         for (const propertyName in schema.info.properties) {
             if (!schema.info.properties.hasOwnProperty(propertyName)) { continue; }
             let prop = schema.info.properties[propertyName];
-            
+
             if (prop) {
                 try {
                     if (prop.cardinality) {
                         let item = prop.type;
                         let refValue = data[propertyName];
 
-                        if (item === "any" && refValue && refValue.__schema) {
-                            item = refValue.__schema;
-                        }
-
-                        let elemSchema = this.domain.getSchema(item, true);
-                        if (!elemSchema && item !== "any") {
-                            continue;
-                        }
-
-                        if (this.isMany(prop)) {
+                        if (Array.isArray(refValue)) {
                             result[propertyName] = [];
                             for (let elem of refValue) {
+                                if (elem && elem.__schema) {
+                                    item = elem.__schema;
+                                }
+
+                                let elemSchema = this.domain.getSchema(item, true);
+                                if (!elemSchema && item !== "any") {
+                                    continue;
+                                }
                                 let val = this.applyBinding(prop, elemSchema, elem);
                                 if (val !== undefined) {
-                                    result[propertyName].push(!elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema));
+                                    result[propertyName].push(!elemSchema && item === "any" ? val : this.coerceInternal(val, elemSchema));
                                 }
                             }
                         }
                         else {
+                            if (refValue && refValue.__schema) {
+                                item = refValue.__schema;
+                            }
+
+                            let elemSchema = this.domain.getSchema(item, true);
+                            if (!elemSchema && item !== "any") {
+                                continue;
+                            }
+
                             let val = this.applyBinding(prop, elemSchema, refValue);
                             if (val !== undefined) {
-                                result[propertyName] = !elemSchema && item === "any" ? val : this.bindInternal(val, elemSchema);
+                                result[propertyName] = !elemSchema && item === "any" ? val : this.coerceInternal(val, elemSchema);
                             }
                         }
                     }
@@ -110,17 +118,17 @@ export class Schema {
         }
 
         if (schema.extends) {
-            this.bindInternal(data, schema.extends, result);
+            this.coerceInternal(data, schema.extends, result);
         }
         return result;
     }
 
     private applyBinding(prop, origin, val) {
         let mainTypeValidator = prop.validators[prop.validators.length - 1];
-        if (mainTypeValidator["bind"] === false) { return undefined; }// skip value
+        if (mainTypeValidator["coerce"] === false) { return undefined; }// skip value
 
         for (let validator of prop.validators) {
-            let convert = validator["bind"];
+            let convert = validator["coerce"];
             if (convert === false) { continue; }
 
             if (convert && typeof convert === "function") {
@@ -229,7 +237,7 @@ export class Schema {
                 let ref = schema.info.properties[key];
                 if (ref && ref.cardinality) {
                     let item = ref.type;
-                    if (item === "any" && val && val.__schema) {
+                    if (val && val.__schema) {
                         item = val.__schema;
                     }
                     let elemSchema = this.domain.getSchema(item, true);

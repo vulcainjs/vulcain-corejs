@@ -36,7 +36,7 @@ describe("Bind data", function () {
         let schema = domain.getSchema("AggregateModel");
 
         let data = { simple: { test: "test" } };
-        let model = schema.bind(data);
+        let model = schema.coerce(data);
         expect(model.simple.uuid).to.be.not.null;
     });
 
@@ -46,7 +46,7 @@ describe("Bind data", function () {
         let schema = domain.getSchema("ModelWithDefaultValues");
 
         let data = { };
-        let model = schema.bind(data);
+        let model = schema.coerce(data);
         expect(model.value1).to.be.eq('value1');
     });
 
@@ -57,7 +57,7 @@ describe("Bind data", function () {
         let schema = domain.getSchema("ModelWithDefaultValues");
 
         let data = { value2: "value2" };
-        let model = schema.bind(data);
+        let model = schema.coerce(data);
         expect(model.value2).to.be.not.null;
     });
 });

@@ -71,7 +71,7 @@ export class QueryManager implements IManager {
                 query.inputSchema = schema.name;
 
                 // Custom binding if any
-                query.params = schema.bind(query.params);
+                query.params = schema.coerce(query.params);
 
                 errors = await schema.validate(ctx, query.params);
             }

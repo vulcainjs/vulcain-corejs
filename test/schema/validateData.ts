@@ -120,7 +120,7 @@ describe("Validate data", function () {
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
 
-        let model = schema.bind({ text: "text", number: "1w1", baseText: "text" });
+        let model = schema.coerce({ text: "text", number: "1w1", baseText: "text" });
         let errors = await schema.validate(null, model);
         expect(errors.number);
     });

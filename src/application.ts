@@ -10,7 +10,6 @@ import { DefaultServiceNames } from './di/annotations';
 import { IContainer } from "./di/resolvers";
 import { Conventions } from './utils/conventions';
 import { MemoryProvider } from "./providers/memory/provider";
-import './defaults/schemasDescriptor'; // Don't remove (auto register)
 import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)

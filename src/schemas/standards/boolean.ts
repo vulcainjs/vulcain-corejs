@@ -5,8 +5,8 @@ import { SchemaTypeDefinition } from "../builder/annotations";
 export class Boolean implements ISchemaTypeDefinition {
     description = "Must be a boolean";
     message =  "Property '{$propertyName}' must be a boolean.";
-    bind(val) {
-        if (val === undefined) return val;
+    coerce(val) {
+        if (val === undefined || typeof val === "boolean") return val;
         return (typeof val === "string") ? val === "true" : !!val;
     }
     validate(val) {

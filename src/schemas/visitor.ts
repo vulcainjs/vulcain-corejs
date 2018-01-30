@@ -27,7 +27,7 @@ export class SchemaVisitor {
                         let refValue = entity[ps];
                         if (refValue) {
                             let item = prop.type;
-                            if (item === "any" && refValue && refValue.__schema) {
+                            if (refValue && refValue.__schema) {
                                 item = refValue.__schema;
                             }
                             let elemSchema = item && this.domain.getSchema(item, true);

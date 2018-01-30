@@ -28,10 +28,9 @@ export interface SchemaInfo {
     properties: { [index: string]: ModelPropertyInfo };
     extends?: string;
     hasSensibleData?: boolean;
-    bind?: ((data) => any) | boolean;
+    coerce?: ((data) => any) | boolean;
     validate?: (val, ctx: IRequestContext) => string;
     storageName?: string;
     idProperty?: string;
     custom?: any;
-    cardinality?: 'one' | 'many'| undefined;
 }

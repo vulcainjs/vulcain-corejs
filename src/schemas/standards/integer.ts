@@ -5,8 +5,8 @@ import { SchemaTypeDefinition } from "../builder/annotations";
 export class Integer implements ISchemaTypeDefinition {
     description= "Must be an integer";
     message= "Property '{$propertyName}' must be an integer.";
-    bind(val) {
-        if (val === undefined) return val;
+    coerce(val) {
+        if (val === undefined || typeof val === "number") return val;
         if (/^(\-|\+)?([0-9]+([0-9]+)?)$/.test(val))
             return Number(val);
         return NaN;

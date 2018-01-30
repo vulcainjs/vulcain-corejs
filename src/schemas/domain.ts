@@ -25,6 +25,7 @@ export class Domain {
      */
     static addType(name: string, type: ISchemaTypeDefinition) {
         if (!name) { throw new Error("Invalid name argument"); }
+        if (["array", "object", "void"].indexOf(name.toLowerCase()) >= 0) throw new Error("You can not create a type with the reserved name : " + name);
         Domain.types[name] = type;
         type.name = name;
     }

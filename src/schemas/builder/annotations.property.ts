@@ -72,7 +72,7 @@ export interface PropertyOptions {
      *
      * @memberOf PropertyOptions
      */
-    bind?: ((val, entity) => any) | boolean;
+    coerce?: ((val, entity) => any) | boolean;
     /**
      * Provide a way to check if a validation should be done.
      * validation are skipped, if the function returns false.
@@ -115,10 +115,15 @@ export function Property(options?: PropertyOptions, customOptions?:any) {
         if (!info.type) {
             // Try to infer type
             let t = Reflect.getOwnMetadata('design:type', target, key);
-            info.type = t && t.name;
-            if (!info.type || ['string','number','boolean'].indexOf(info.type) < 0) {
+            info.type = t && t.name && t.name.toLowerCase();
+            if (!info.type) {
                 throw new Error(`You must define a type for property ${key} in model ${target.constructor.name}`);
             }
+        }
+        if (!info.cardinality) {
+            let t = Reflect.getOwnMetadata('design:type', target, key);
+            if (t && t.name === "Array")
+                (<any>info).$cardinality = "many"; // suspicion
         }
 
         const sym = Symbol.for("design:properties");

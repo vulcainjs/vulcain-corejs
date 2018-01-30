@@ -123,7 +123,7 @@ export class CommandManager implements IManager {
 
                 // Custom binding if any
                 try {
-                    command.params = schema && schema.bind(command.params);
+                    command.params = schema && schema.coerce(command.params);
                 }
                 catch (ex) {
                     if (!skipValidation) {
