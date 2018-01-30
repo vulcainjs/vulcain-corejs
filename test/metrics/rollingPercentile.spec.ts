@@ -1,6 +1,6 @@
-import { RollingPercentile } from "../../dist/commands/metrics/hystrix/rollingPercentile";
+import { RollingPercentile } from "../../src/commands/metrics/hystrix/rollingPercentile";
 import { expect } from 'chai';
-import ActualTime from '../../dist/utils/actualTime';
+import ActualTime from '../../src/utils/actualTime';
 
 function addExecutionTimes(rollingPercentile) {
     rollingPercentile.addValue(1);
@@ -14,7 +14,7 @@ function addExecutionTimes(rollingPercentile) {
 
 describe("RollingPercentile", function () {
     it("should return 0 values before the first roll", function () {
-        var underTest = new RollingPercentile(10000, 10);
+        let underTest = new RollingPercentile(10000, 10);
         addExecutionTimes(underTest);
         expect(underTest.getPercentile("mean")).to.equal(0);
         expect(underTest.getPercentile(0)).to.equal(0);
@@ -26,7 +26,7 @@ describe("RollingPercentile", function () {
     it("should roll the last bucket", function () {
         ActualTime.enableVirtualTimer();
         try {
-            var underTest = new RollingPercentile(10000, 10);
+            let underTest = new RollingPercentile(10000, 10);
             underTest.addValue(1);
             ActualTime.fastForwardActualTime(1500);
             underTest.addValue(2);
@@ -41,7 +41,7 @@ describe("RollingPercentile", function () {
     it("should calculate correct percentile after the first window roll", function () {
         ActualTime.enableVirtualTimer();
         try {
-            var underTest = new RollingPercentile(10000, 10);
+            let underTest = new RollingPercentile(10000, 10);
             addExecutionTimes(underTest);
             ActualTime.fastForwardActualTime(1001);
             expect(underTest.getPercentile("mean").toFixed(2)).to.equal("4.43");
@@ -57,7 +57,7 @@ describe("RollingPercentile", function () {
     it("should consider values values from all buckets", function () {
         ActualTime.enableVirtualTimer();
         try {
-            var underTest = new RollingPercentile(10000, 10);
+            let underTest = new RollingPercentile(10000, 10);
             addExecutionTimes(underTest);
             ActualTime.fastForwardActualTime(1001);
             underTest.addValue(10);

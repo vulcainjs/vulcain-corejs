@@ -1,9 +1,9 @@
-import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumberEvent";
-import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
-import { CommandProperties } from "../../dist/commands/commandProperties";
+import RollingNumberEvent from "../../src/commands/metrics/hystrix/rollingNumberEvent";
+import { CommandMetricsFactory } from "../../src/commands/metrics/commandMetricsFactory";
+import { CommandProperties } from "../../src/commands/commandProperties";
 import { expect } from 'chai';
-import ActualTime from "../../dist/utils/actualTime";
-import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
+import ActualTime from "../../src/utils/actualTime";
+import { HystrixCommandMetrics } from '../../src/commands/metrics/hystrix/hystrixCommandMetrics';
 
 describe("CommandMetrics", function () {
 

@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { Model } from '../../dist/schemas/builder/annotations.model';
-import { Property } from '../../dist/schemas/builder/annotations.property';
-import { Domain } from '../../dist/schemas/domain';
+import { Model } from '../../src/schemas/builder/annotations.model';
+import { Property } from '../../src/schemas/builder/annotations.property';
+import { Domain } from '../../src/schemas/domain';
 import { TestCommand } from './../command/commands';
-import { TestContext } from '../../dist/pipeline/testContext';
+import { TestContext } from '../../src/pipeline/testContext';
 
 
 @Model()

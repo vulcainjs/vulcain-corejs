@@ -1,9 +1,9 @@
-import { CircuitBreakerFactory } from "../../dist/commands/circuitBreaker";
-import { CommandProperties } from "../../dist/commands/commandProperties";
-import { ICommandMetrics, CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
+import { CircuitBreakerFactory } from "../../src/commands/circuitBreaker";
+import { CommandProperties } from "../../src/commands/commandProperties";
+import { ICommandMetrics, CommandMetricsFactory } from "../../src/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
-import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
-import ActualTime from "../../dist/utils/actualTime";
+import { DynamicConfiguration } from '../../src/configurations/dynamicConfiguration';
+import ActualTime from "../../src/utils/actualTime";
 
 beforeEach(function () {
     ActualTime.enableVirtualTimer();

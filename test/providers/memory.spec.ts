@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { MongoQueryParser } from '../../dist/providers/memory/mongoQueryParser';
+import { MongoQueryParser } from '../../src/providers/memory/mongoQueryParser';
 
 let entity = { name: "entity", num: 10, address: { street: "street1", city: "Paris" }, tags: ["a", "b"] };
 let products = [{ _id: 1, results: [{ product: "abc", score: 10 }, { product: "xyz", score: 5 }] },

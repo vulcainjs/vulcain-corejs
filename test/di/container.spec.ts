@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { LifeTime, Inject } from '../../dist/di/annotations';
-import { Container } from '../../dist/di/containers';
+import { LifeTime, Inject } from '../../src/di/annotations';
+import { Container } from '../../src/di/containers';
 
 export class ClassA {
 }

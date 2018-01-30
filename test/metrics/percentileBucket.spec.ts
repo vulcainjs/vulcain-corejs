@@ -1,9 +1,9 @@
-import Bucket from "../../dist/commands/metrics/hystrix/percentileBucket";
-import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumberEvent";
+import Bucket from "../../src/commands/metrics/hystrix/percentileBucket";
+import RollingNumberEvent from "../../src/commands/metrics/hystrix/rollingNumberEvent";
 import { expect } from 'chai';
 
 describe("PercentileBucket", function () {
-    var underTest;
+    let underTest;
 
     beforeEach(function () {
         underTest = new Bucket(5000);

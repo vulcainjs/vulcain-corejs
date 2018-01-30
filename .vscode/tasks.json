@@ -1,43 +1,26 @@
 {
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
     "version": "2.0.0",
-    "command": "gulp",
     "tasks": [
         {
-            "taskName": "compile-ts",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "isBackground": false,
-            "problemMatcher": "$tsc"
-        },
-        {
-            "taskName": "test",
+            "type": "npm",
+            "script": "test",
             "group": {
                 "kind": "test",
                 "isDefault": true
             },
-            "isBackground": false,
             "problemMatcher": "$tsc"
         },
         {
-            "taskName": "tslint",
-            "args": [],
-            "problemMatcher": {
-                "owner": "tslint",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceRoot}"
-                ],
-                "severity": "warning",
-                "pattern": {
-                    "regexp": "^\\(\\S.*\\) (\\S.*)\\[(\\d+), (\\d+)\\]:\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "message": 4
-                }
-            }
+            "identifier": "build",
+            "type": "npm",
+            "script": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher":"$tsc"
         }
     ]
 }

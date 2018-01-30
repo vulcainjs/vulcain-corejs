@@ -1,8 +1,7 @@
 import { expect } from 'chai';
-import * as sinon from 'sinon';
-import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
-import { MockConfigurationSource } from '../../dist/configurations/sources/memoryConfigurationSource';
-import { DynamicProperty } from '../../dist/configurations/properties/dynamicProperty';
+import { DynamicConfiguration } from '../../src/configurations/dynamicConfiguration';
+import { MockConfigurationSource } from '../../src/configurations/sources/memoryConfigurationSource';
+import { DynamicProperty } from '../../src/configurations/properties/dynamicProperty';
 
 describe('DynamicConfiguration', function () {
 

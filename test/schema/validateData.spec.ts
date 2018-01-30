@@ -1,12 +1,12 @@
 import { expect } from "chai";
-import { Model } from '../../dist/schemas/builder/annotations.model';
-import { Property } from '../../dist/schemas/builder/annotations.property';
-import { Validator, SchemaTypeDefinition } from '../../dist/schemas/builder/annotations';
-import { ISchemaTypeDefinition} from '../../dist/schemas/schemaType'
-import { Domain } from "../../dist/schemas/domain";
+import { Model } from '../../src/schemas/builder/annotations.model';
+import { Property } from '../../src/schemas/builder/annotations.property';
+import { Validator, SchemaTypeDefinition } from '../../src/schemas/builder/annotations';
+import { ISchemaTypeDefinition} from '../../src/schemas/schemaType'
+import { Domain } from "../../src/schemas/domain";
 import 'mocha';
-import { SchemaStandardTypes } from "../../dist/schemas/standards/standards";
-import { TestContext } from '../../dist/pipeline/testContext';
+import { SchemaStandardTypes } from "../../src/schemas/standards/standards";
+import { TestContext } from '../../src/pipeline/testContext';
 
 @Model()
 class BaseModel {

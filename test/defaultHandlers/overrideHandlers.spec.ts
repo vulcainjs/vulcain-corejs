@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { DefaultActionHandler,  ActionHandler, Action, DefaultServiceNames } from '../../dist/index';
-import { TestContext } from '../../dist/pipeline/testContext';
-import { ServiceDescriptors } from '../../dist/pipeline/handlers/serviceDescriptions';
+import { DefaultActionHandler,  ActionHandler, Action, DefaultServiceNames } from '../../src/index';
+import { TestContext } from '../../src/pipeline/testContext';
+import { ServiceDescriptors } from '../../src/pipeline/handlers/serviceDescriptions';
 
 @ActionHandler({ scope: "?" })
 class TestActionHandler extends DefaultActionHandler {
@@ -20,7 +20,7 @@ describe("Default action handler", function () {
 
         let descriptor = context.getService<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         expect(descriptor.getHandlerInfo(context.container, null, "new")).to.be.not.null;
-        expect(descriptor.getHandlerInfo(context.container, null, "create", true)).to.be.null;
+        expect(descriptor.getHandlerInfo(context.container, null, "create")).to.be.null;
     });
 
 });

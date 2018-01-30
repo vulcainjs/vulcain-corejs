@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { StubManager } from '../../dist/stubs/stubManager';
+import { StubManager } from '../../src/stubs/stubManager';
 
 let stubDefinitions = {
     services: {

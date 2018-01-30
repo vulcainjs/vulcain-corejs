@@ -1,7 +1,7 @@
-import { AbstractCommand } from '../../dist/commands/abstractCommand';
-import { Command } from '../../dist/commands/commandFactory';
-import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
-import { CommandFactory } from '../../dist/commands/commandFactory';
+import { AbstractCommand } from '../../src/commands/abstractCommand';
+import { Command } from '../../src/commands/commandFactory';
+import { DynamicConfiguration } from '../../src/configurations/dynamicConfiguration';
+import { CommandFactory } from '../../src/commands/commandFactory';
 
 DynamicConfiguration.reset();
 CommandFactory.reset();

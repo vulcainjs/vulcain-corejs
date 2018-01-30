@@ -1,5 +1,5 @@
-import Bucket from "../../dist/commands/metrics/hystrix/counterBucket";
-import RollingNumberEvent from "../../dist/commands/metrics/hystrix/rollingNumberEvent";
+import Bucket from "../../src/commands/metrics/hystrix/counterBucket";
+import RollingNumberEvent from "../../src/commands/metrics/hystrix/rollingNumberEvent";
 import { expect } from 'chai';
 
 describe("CounterBucket", function () {

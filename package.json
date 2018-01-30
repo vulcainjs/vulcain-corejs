@@ -2,12 +2,13 @@
   "name": "vulcain-corejs",
   "version": "2.0.0-beta914",
   "description": "Vulcain micro-service framework",
-  "main": "dist/index.js",
+  "main": "lib/src/index.js",
   "scripts": {
-    "test": "gulp test"
+    "test": "npm run build && mocha --reporter spec ./lib/test/**/*.spec.js",
+    "build": "tsc -p ."
   },
   "files": [
-    "dist"
+    "lib/src"
   ],
   "repository": {
     "type": "git",
@@ -16,8 +17,11 @@
   "maintainers": [
     "Alain Metge"
   ],
+  "engines": {
+    "node": ">=6.0"
+  },
   "license": "Apache-2.0",
-  "typings": "dist/index.d.ts",
+  "typings": "lib/src/index.d.ts",
   "devDependencies": {
     "@types/amqplib": "^0.5.6",
     "@types/chai": "^4.1.0",
@@ -25,21 +29,9 @@
     "@types/jsonwebtoken": "^7.2.5",
     "@types/mocha": "^2.2.46",
     "@types/mongodb": "^2.2.18",
-    "@types/sinon": "^2.3.7",
     "chai": "^4.1.2",
-    "fs-extra": "^4.0.3",
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-istanbul": "^1.1.3",
-    "gulp-mocha": "^4.3.1",
-    "gulp-sourcemaps": "^2.6.3",
-    "gulp-tslint": "^8.1.1",
-    "gulp-typedoc": "^2.1.2",
-    "gulp-typescript": "^3.2.3",
-    "merge2": "^1.2.1",
-    "sinon": "^4.1.4",
+    "mocha": "^5.0.0",
     "tslint": "^5.9.1",
-    "typedoc": "^0.9.0",
     "typescript": "^2.6.2"
   },
   "dependencies": {

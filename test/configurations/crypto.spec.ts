@@ -1,6 +1,5 @@
-import { CryptoHelper } from '../../dist/utils/crypto';
+import { CryptoHelper } from '../../src/utils/crypto';
 import { expect } from 'chai';
-import * as sinon from 'sinon';
 
 let plainText = "abcdefghijklmnopqrstuvwxyz\n";
 let crypto = new CryptoHelper();

@@ -1,10 +1,10 @@
-import { HystrixSSEStream } from "../../dist/commands/http/hystrixSSEStream";
-import { CommandFactory } from '../../dist/commands/commandFactory';
-import { CommandProperties } from "../../dist/commands/commandProperties";
-import { CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
-import { AbstractCommand } from '../../dist/commands/abstractCommand';
-import { Command } from '../../dist/commands/commandFactory';
-import { TestContext } from '../../dist/pipeline/testContext';
+import { HystrixSSEStream } from "../../src/commands/http/hystrixSSEStream";
+import { CommandFactory } from '../../src/commands/commandFactory';
+import { CommandProperties } from "../../src/commands/commandProperties";
+import { CommandMetricsFactory } from "../../src/commands/metrics/commandMetricsFactory";
+import { AbstractCommand } from '../../src/commands/abstractCommand';
+import { Command } from '../../src/commands/commandFactory';
+import { TestContext } from '../../src/pipeline/testContext';
 
 @Command()
 export class HystrixSSECommand1 extends AbstractCommand<any> {

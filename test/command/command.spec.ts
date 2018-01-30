@@ -1,15 +1,14 @@
-import { CircuitBreakerFactory } from "../../dist/commands/circuitBreaker";
-import { CommandFactory } from '../../dist/commands/commandFactory';
-import { CommandProperties } from "../../dist/commands/commandProperties";
-import { ICommandMetrics, CommandMetricsFactory } from "../../dist/commands/metrics/commandMetricsFactory";
+import { CircuitBreakerFactory } from "../../src/commands/circuitBreaker";
+import { CommandFactory } from '../../src/commands/commandFactory';
+import { CommandProperties } from "../../src/commands/commandProperties";
+import { ICommandMetrics, CommandMetricsFactory } from "../../src/commands/metrics/commandMetricsFactory";
 import { expect } from 'chai';
-import * as sinon from 'sinon';
 import './commands';
-import { CommandRuntimeError } from '../../dist/pipeline/errors/commandRuntimeError';
-import { HystrixCommandMetrics } from '../../dist/commands/metrics/hystrix/hystrixCommandMetrics';
-import { TestContext } from '../../dist/pipeline/testContext';
+import { CommandRuntimeError } from '../../src/pipeline/errors/commandRuntimeError';
+import { HystrixCommandMetrics } from '../../src/commands/metrics/hystrix/hystrixCommandMetrics';
+import { TestContext } from '../../src/pipeline/testContext';
 import { TestCommand, TestCommandTimeout, TestCommandFallback, TestCommandCircuitOpen } from "./commands";
-import { DynamicConfiguration } from '../../dist/configurations/dynamicConfiguration';
+import { DynamicConfiguration } from '../../src/configurations/dynamicConfiguration';
 
 beforeEach(function () {
     DynamicConfiguration.reset();

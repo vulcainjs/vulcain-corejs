@@ -4,11 +4,9 @@
 		"no-duplicate-variable": true,
 		"curly": false,
 		"class-name": true,
-		"semicolon": [
-			"always"
-		],
+		"semicolon":true,
 		"triple-equals": true,
-		"no-use-before-declare": true,
+		"no-use-before-declare":true,
 		"no-var-keyword": true,
 		"prefer-for-of": true
 	}

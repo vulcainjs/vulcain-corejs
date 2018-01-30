@@ -7,11 +7,16 @@
         "module": "commonjs",
         "target": "es6",
         "watch": false,
+        "strictFunctionTypes": true,
         "noUnusedParameters": false,
         "noUnusedLocals": false,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "outDir": "lib",
+        "rootDir": "."
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "lib"
     ]
 }
