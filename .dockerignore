@@ -1,9 +1,0 @@
-typings/
-.DS_Store
-data/
-.vscode/
-.idea/
-template.manifest
-dist-test/
-coverage/
-npm-debug.log
