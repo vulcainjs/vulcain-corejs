@@ -34,7 +34,7 @@ export class Domain {
         if (!type.$$nativeSchema) {
             let stype = type;
             // Cache resolved type
-            type.$$nativeSchema = stype.name
+            type.$$nativeSchema = stype.name;
             while (stype && stype.type) {
                 stype = stype.type;
                 type.$$nativeSchema = stype.name;

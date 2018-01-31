@@ -28,7 +28,7 @@ export class PropertyDescription {
     reference?: "no" | "many" | "one";
     metadata: any;
     order: number;
-    custom?: any
+    custom?: any;
 }
 
 export class SchemaDescription {
