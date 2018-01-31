@@ -58,12 +58,21 @@ export class Domain {
      * @param {string} schema name
      * @returns a schema
      */
-    getSchema(name: string, optional = false) {
-        let schema = this._schemas.get(name);
+    getSchema(name: string | Function, optional = false) {
+        let schema: Schema;
+        if (typeof name === "function") {
+            name = name.name;
+        }
+        
+        if (name) {
+            schema = this._schemas.get(name);
+        }
+
         if (!schema) {
             if (optional) return null;
             throw new Error(`Schema ${name} not found.`);
         }
+
         return schema;
     }
 

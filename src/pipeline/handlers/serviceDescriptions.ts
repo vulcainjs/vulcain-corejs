@@ -180,7 +180,7 @@ export class ServiceDescriptors {
                 kind: "action",
                 async: metadata.async,
                 verb: verb,
-                outputType: metadata.outputType,
+                outputType: metadata.outputType || "one",
                 description: metadata.description,
                 action: metadata.action,
                 scope: metadata.scope,
