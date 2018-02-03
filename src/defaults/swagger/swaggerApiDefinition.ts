@@ -4,53 +4,53 @@ import { Model } from "../../schemas/builder/annotations.model";
 //and amended with customizations
 
 export interface IJsonSchema {
-    id?: string
-    __schema?: string
-    title?: string
-    description?: string
-    multipleOf?: number
-    maximum?: number
-    exclusiveMaximum?: boolean
-    minimum?: number
-    exclusiveMinimum?: boolean
-    maxLength?: number
-    minLength?: number
-    pattern?: string
-    additionalItems?: boolean | IJsonSchema
-    items?: IJsonSchema | IJsonSchema[ ]
-    maxItems?: number
-    minItems?: number
-    uniqueItems?: boolean
-    maxProperties?: number
-    minProperties?: number
-    required?: string[]
-    additionalProperties?: boolean | IJsonSchema
+    id?: string;
+    __schema?: string;
+    title?: string;
+    description?: string;
+    multipleOf?: number;
+    maximum?: number;
+    exclusiveMaximum?: boolean;
+    minimum?: number;
+    exclusiveMinimum?: boolean;
+    maxLength?: number;
+    minLength?: number;
+    pattern?: string;
+    additionalItems?: boolean | IJsonSchema;
+    items?: IJsonSchema | IJsonSchema[ ];
+    maxItems?: number;
+    minItems?: number;
+    uniqueItems?: boolean;
+    maxProperties?: number;
+    minProperties?: number;
+    required?: string[];
+    additionalProperties?: boolean | IJsonSchema;
     definitions?: {
-        [name: string]: IJsonSchema
-    }
+        [name: string]: IJsonSchema;
+    };
     properties?: {
-        [name: string]: IJsonSchema | IExternalReference
-    }
+        [name: string]: IJsonSchema | IExternalReference;
+    };
     patternProperties?: {
-        [name: string]: IJsonSchema
-    }
+        [name: string]: IJsonSchema;
+    };
     dependencies?: {
         [name: string]: IJsonSchema | string[ ]
-    }
-    'enum'?: any[ ]
-    type?: string | string[ ]
-    allOf?: Array<IExternalReference | IJsonSchema>
-    anyOf?: Array<IExternalReference | IJsonSchema>
-    oneOf?: Array<IExternalReference | IJsonSchema>
-    not?: IExternalReference | IJsonSchema
+    };
+    'enum'?: any[];
+    type?: string | string[];
+    allOf?: Array<IExternalReference | IJsonSchema>;
+    anyOf?: Array<IExternalReference | IJsonSchema>;
+    oneOf?: Array<IExternalReference | IJsonSchema>;
+    not?: IExternalReference | IJsonSchema;
 }
 
 export interface IExternalReference {
-    '$ref': string
+    '$ref': string;
 }
 
 
-@Model()
+@Model({}, {system:true})
 export class SwaggerApiDefinition {
     swagger: string;
     info: InfoObject;
@@ -70,39 +70,39 @@ export class SwaggerApiDefinition {
 }
 
 export interface InfoObject {
-    title: string
-    description?: string
-    termsOfService?: string
-    contact?: ContactObject
-    license?: LicenseObject
-    version: string
+    title: string;
+    description?: string;
+    termsOfService?: string;
+    contact?: ContactObject;
+    license?: LicenseObject;
+    version: string;
 }
 
 export interface ContactObject {
-    name?: string
-    url?: string
-    email?: string
+    name?: string;
+    url?: string;
+    email?: string;
 }
 
 export interface LicenseObject {
-    name: string
-    url?: string
+    name: string;
+    url?: string;
 }
 
 export interface PathsObject {
-    [index: string]: PathItemObject | any
+    [index: string]: PathItemObject | any;
 }
 
 export interface PathItemObject {
-    $ref?: string
-    get?: OperationObject
-    put?: OperationObject
-    post?: OperationObject
-    'delete'?: OperationObject
-    options?: OperationObject
-    head?: OperationObject
-    patch?: OperationObject
-    parameters?: Parameters
+    $ref?: string;
+    get?: OperationObject;
+    put?: OperationObject;
+    post?: OperationObject;
+    'delete'?: OperationObject;
+    options?: OperationObject;
+    head?: OperationObject;
+    patch?: OperationObject;
+    parameters?: Parameters;
 }
 
 export interface OperationObject {
@@ -204,7 +204,7 @@ export interface ParametersDefinitionsObject {
     [index: string]: ParameterObject;
 }
 
-export type Parameters = (ParameterObject | ReferenceObject | ReferenceParameterObject | GeneralParameterObject)[]
+export type Parameters = (ParameterObject | ReferenceObject | ReferenceParameterObject | GeneralParameterObject)[];
 
 export interface ParameterObject {
     name?: string;

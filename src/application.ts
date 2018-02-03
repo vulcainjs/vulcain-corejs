@@ -156,7 +156,7 @@ export class Application {
             this.defineScopeDescriptions(scopes);
 
             let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-            descriptors.createHandlersTable();
+            descriptors.getDescriptions(); // ensures handlers table is created
 
             let server = new VulcainServer(this.domain.name, this._container);
             server.start(port);

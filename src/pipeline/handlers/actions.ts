@@ -15,6 +15,7 @@ import { ApplicationError } from "../errors/applicationRequestError";
 import { BadRequestError } from "../errors/badRequestError";
 import { ITaskManager } from "../../providers/taskManager";
 import { IRequestContext } from '../../index';
+import { HandlerProcessor } from '../handlerProcessor';
 
 export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending" | "Running";
@@ -74,7 +75,6 @@ export class CommandManager implements IManager {
     private messageBus: MessageBus;
     private _domain: Domain;
     private _initialized = false;
-    private _serviceDescriptors: ServiceDescriptors;
 
     static eventHandlersFactory = new EventHandlerFactory();
 
@@ -239,13 +239,14 @@ export class CommandManager implements IManager {
             let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
             throw error;
         }
-    }
+    } 
 
     async processAsyncTask(command: AsyncTaskData) {
         let ctx = new RequestContext(this.container, Pipeline.AsyncTask, command);
         ctx.setSecurityManager(command.userContext);
 
-        let info = this.getInfoHandler(command, ctx.container);
+        let processor =  this.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
+        let info = processor.getHandlerInfo(ctx.container, command.schema, command.action);
         if (!info || info.kind !== "event") {
             Service.log.error(ctx, new ApplicationError(`no handler method founded for event ${ctx.requestData.vulcainVerb}`));
             ctx.dispose();
@@ -365,13 +366,5 @@ export class CommandManager implements IManager {
                 }
             }
         });
-    }
-
-    private getInfoHandler(command: RequestData, container?: IContainer) {
-        if (!this._serviceDescriptors) {
-            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        }
-        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
-        return info;
     }
 }

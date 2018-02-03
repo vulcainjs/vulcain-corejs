@@ -52,7 +52,7 @@ export class ActionDescription {
     async: boolean;
 }
 
-@Model()
+@Model({}, {system:true})
 export class ServiceDescription {
     domain: string;
     serviceName: string;
@@ -73,7 +73,7 @@ export interface HandlerInfo {
 }
 
 export class ServiceDescriptors {
-    static nativeTypes = ["string", "String", "boolean", "Boolean", "number", "Number", "any", "Object"];
+    static nativeTypes = ["string", "boolean", "number", "any", "object"];
     private descriptions: ServiceDescription;
     private handlers = new Array<HandlerItem>();
     private routes = new Map<string, HandlerItem>();
@@ -120,7 +120,7 @@ export class ServiceDescriptors {
         }
     }
 
-    createHandlersTable() {
+    private createHandlersTable() {
         if (!this.handlers)
             return;
 
@@ -390,6 +390,15 @@ export class ServiceDescriptors {
         this.descriptions.schemas.forEach((s: SchemaDescription) => delete s.dependencies);
     }
 
+    /**
+     * Register an handler
+     * @param container 
+     * @param domain 
+     * @param target 
+     * @param actions 
+     * @param handlerMetadata 
+     * @param kind 
+     */
     register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind: "action" | "query") {
 
         handlerMetadata = handlerMetadata || { scope: "*" };

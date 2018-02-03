@@ -10,36 +10,34 @@ import { IManager } from "../handlers/common";
 import { HandlerInfo, ServiceDescriptors } from "../handlers/serviceDescriptions";
 import { RequestData } from "../common";
 import { DefaultServiceNames } from '../../di/annotations';
+import { HandlerProcessor } from "../handlerProcessor";
 
 export class HandlersMiddleware extends VulcainMiddleware {
-    private actionManager: CommandManager;
-    private queryManager: QueryManager;
-    private _serviceDescriptors: ServiceDescriptors;
+    private handlerProcessor: HandlerProcessor;
 
     constructor(private container: IContainer) {
         super();
-        this.actionManager = new CommandManager(container);
-        this.queryManager = new QueryManager(container);
+        this.handlerProcessor = this.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
     }
 
     async invoke(ctx: RequestContext) {
         let command = ctx.requestData;
-        let manager: IManager;
-        let info = this.getInfoHandler(command, ctx.container);
+        let info = this.handlerProcessor.getHandlerInfo(ctx.container, command.schema, command.action);
 
         // Check if handler exists
         if (!info)
             throw new ApplicationError(`no handler method founded for ${ctx.requestData.vulcainVerb}`, 405);
 
+        let guard = false;
         if (ctx.request.verb === "POST" && info.kind === "action") {
-            manager = this.actionManager;
+            guard = true;
         }
 
         if (info.kind==="query" && (ctx.request.verb === "GET" || ctx.request.verb === "POST")) {
-            manager = this.queryManager;
+            guard = true;
         }
 
-        if (!manager)
+        if (!guard)
             throw new ApplicationError(`Unsupported http verb for ${ctx.requestData.vulcainVerb}`, 405);
 
         if (info.kind === "action" && ctx.request.verb === "GET")
@@ -58,32 +56,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         }
 
         // Process handler
-        let result: HttpResponse;
-        const stubs = Service.getStubManager(ctx.container);
-        let params = Object.assign({}, command.params || {});
-        let metadata = <ActionMetadata>info.metadata;
-        let useMockResult = false;
-        result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
-
-        if (!stubs.enabled || result === undefined) {
-            result = await manager.run(info, command, ctx);
-        }
-        else {
-            useMockResult = true;
-        }
-
-        ctx.response = result;
-
-        !useMockResult && stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
+        await this.handlerProcessor.invokeHandler(ctx, info);
         return super.invoke(ctx);
-    }
-
-
-    private getInfoHandler(command: RequestData, container?: IContainer) {
-        if (!this._serviceDescriptors) {
-            this._serviceDescriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        }
-        let info = this._serviceDescriptors.getHandlerInfo(container, command.schema, command.action);
-        return info;
     }
 }

@@ -14,7 +14,7 @@ const symActions = Symbol.for("handler:actions");
 const symMetadata = Symbol.for("handler:metadata");
 
 function resolveType(type): string {
-    if (typeof type === "function" && ServiceDescriptors.nativeTypes.indexOf(type.name) >= 0)
+    if (typeof type === "function" && ServiceDescriptors.nativeTypes.indexOf(type.name.toLowerCase()) >= 0)
         return type.name;
     return type;
 }

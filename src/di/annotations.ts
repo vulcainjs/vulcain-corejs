@@ -34,6 +34,7 @@ export class DefaultServiceNames {
     static RequestTracker = "RequestTracker";
     static ServiceResolver = "ServiceResolver";
     static BearerTokenService = "BearerTokenService";
+    static HandlerProcessor = "HandlerProcessor";
 }
 
 /**

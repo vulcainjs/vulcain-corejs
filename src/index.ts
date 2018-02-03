@@ -19,17 +19,17 @@ export { Schema } from './schemas/schema';
 export { Domain } from './schemas/domain';
 export { SchemaInfo} from './schemas/schemaInfo';
 export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
-export {  Validator, SchemaTypeDefinition } from './schemas/builder/annotations'
-export { Property, PropertyOptions } from './schemas/builder/annotations.property'
-export { ModelOptions, Model } from './schemas/builder/annotations.model'
+export { Validator, SchemaTypeDefinition } from './schemas/builder/annotations';
+export { Property, PropertyOptions } from './schemas/builder/annotations.property';
+export { ModelOptions, Model } from './schemas/builder/annotations.model';
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards/standards';
 
 // Auth
-export {SecurityContext, IAuthenticationStrategy, UserToken} from './security/securityContext'
-export {IAuthorizationPolicy} from './security/authorizationPolicy'
+export { SecurityContext, IAuthenticationStrategy, UserToken } from './security/securityContext';
+export { IAuthorizationPolicy } from './security/authorizationPolicy';
 
 // Core
-export * from './application'
+export * from './application';
 export { Conventions } from './utils/conventions';
 export { IMetrics } from './instrumentations/metrics';
 export { IStubManager } from './stubs/istubManager';
@@ -50,19 +50,20 @@ export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
 export { ISerializer } from './pipeline/serializers/serializer';
 export { HttpRequest } from './pipeline/vulcainPipeline';
-export { Logger } from './log/logger'
-export { UserContextData, } from './security/securityContext'
+export { HandlerProcessor } from './pipeline/handlerProcessor';
+export { Logger } from './log/logger';
+export { UserContextData, } from './security/securityContext';
 export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
 export { TrackerId } from './instrumentations/common';
 
 // Bus adapter
-export * from './bus/busAdapter'
-export * from './bus/rabbitAdapter'
+export * from './bus/busAdapter';
+export * from './bus/rabbitAdapter';
 
 // Providers
-export { IProvider, ListOptions } from './providers/provider'
-export * from './providers/memory/provider'
-export * from './providers/mongo/provider'
+export { IProvider, ListOptions } from './providers/provider';
+export * from './providers/memory/provider';
+export * from './providers/mongo/provider';
 export { ProviderFactory } from './providers/providerFactory';
 export { ITaskManager } from './providers/taskManager';
 
