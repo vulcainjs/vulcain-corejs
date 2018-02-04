@@ -1,10 +1,9 @@
-import { CommandManager, AsyncTaskData } from './actions';
+import { CommandManager, AsyncTaskData } from './action/actionManager';
 import {IActionBusAdapter, IEventBusAdapter} from '../../bus/busAdapter';
 import {DefaultServiceNames} from '../../di/annotations';
 import * as RX from 'rxjs';
 import { Service } from '../../globals/system';
 import { RequestData } from "../../pipeline/common";
-import { CommonMetadata } from "./common";
 import { UserContextData } from "../../security/securityContext";
 import { Conventions } from '../../utils/conventions';
 
@@ -19,7 +18,7 @@ export interface EventData extends RequestData {
     status: string;
 }
 
-export interface ConsumeEventMetadata {
+export interface ConsumeEventDefinition {
     description: string;
     subscribeToDomain?: string;
     subscribeToAction?: string;
@@ -30,9 +29,13 @@ export interface ConsumeEventMetadata {
      */
     distributionMode?: "once" | "many"| undefined;
     distributionKey?: string; // Unique queue to ensure events are take into account once
+    metadata?: any;
 }
 
-export interface EventMetadata extends CommonMetadata {
+export interface EventDefinition {
+    description?: string;
+    schema?: string;
+    metadata?: any;
     subscribeToDomain?: string;
 }
 

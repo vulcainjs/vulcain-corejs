@@ -2,7 +2,7 @@ import { IContainer } from '../di/resolvers';
 import { IRequestContext } from "../pipeline/common";
 import { Domain } from './domain';
 import { Schema } from './schema';
-import { ModelPropertyInfo } from './schemaInfo';
+import { ModelPropertyDefinition } from './schemaInfo';
 
 export class Validator {
 

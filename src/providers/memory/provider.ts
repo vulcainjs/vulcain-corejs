@@ -6,7 +6,7 @@ import { DefaultServiceNames } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
 import { IRequestContext } from "../../pipeline/common";
 import { ApplicationError } from '../../pipeline/errors/applicationRequestError';
-import { QueryResult } from '../../pipeline/handlers/query';
+import { QueryResult } from '../../pipeline/handlers/query/queryResult';
 
 interface AstNode {
     op: string;
@@ -89,7 +89,7 @@ export class MemoryProvider implements IProvider<any>
     getAll(schema: Schema, options: ListOptions): Promise<QueryResult> {
         let data = this.ensureSchema(schema).data;
 
-        options = options || { maxByPage: -1 };
+        options = options || { pageSize: -1 };
         return new Promise((resolve, reject) => {
             try {
                 const elements = Array.from(this.filter(schema, data.entities, options));
@@ -118,7 +118,7 @@ export class MemoryProvider implements IProvider<any>
 
     public *take(list, options: ListOptions) {
         if (list) {
-            let take = options.maxByPage || -1;
+            let take = options.pageSize || -1;
             let skip = take * (options.page > 0 ? options.page-1 : 0 || 0);
             let cx = 0;
             for (let k in list) {

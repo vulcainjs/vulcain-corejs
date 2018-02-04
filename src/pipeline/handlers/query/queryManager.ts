@@ -1,40 +1,16 @@
-import { HandlerFactory, CommonActionMetadata, ServiceHandlerMetadata, IManager } from './common';
-import { IContainer } from '../../di/resolvers';
-import { Domain } from '../../schemas/domain';
-import { DefaultServiceNames } from '../../di/annotations';
-import { ServiceDescriptors, HandlerInfo } from './serviceDescriptions';
-import { VulcainLogger } from '../../log/vulcainLogger';
-import { RequestContext } from "../../pipeline/requestContext";
-import { RequestData } from "../../pipeline/common";
-import { CommandRuntimeError } from "../errors/commandRuntimeError";
-import { HttpResponse } from "../response";
-import { BadRequestError } from "../errors/badRequestError";
-import { ApplicationError } from "../errors/applicationRequestError";
-
-
-export class QueryResult<T=any> {
-    constructor(public value: Array<T>, public total?: number) { }
-}
-
-/**
- *
- *
- * @export
- * @interface QueryMetadata
- * @extends {ServiceHandlerMetadata}
- */
-export interface QueryMetadata extends ServiceHandlerMetadata {
-}
-
-/**
- *
- *
- * @export
- * @interface QueryActionMetadata
- * @extends {CommonActionMetadata}
- */
-export interface QueryActionMetadata extends CommonActionMetadata {
-}
+import { IContainer } from '../../../di/resolvers';
+import { Domain } from '../../../schemas/domain';
+import { DefaultServiceNames } from '../../../di/annotations';
+import { Handler } from '../descriptions/serviceDescriptions';
+import { VulcainLogger } from '../../../log/vulcainLogger';
+import { RequestContext } from "../../../pipeline/requestContext";
+import { RequestData } from "../../../pipeline/common";
+import { CommandRuntimeError } from "../../errors/commandRuntimeError";
+import { HttpResponse } from "../../response";
+import { BadRequestError } from "../../errors/badRequestError";
+import { QueryResult } from './queryResult';
+import { IManager } from '../definitions';
+import { Utils } from '../utils';
 
 export class QueryManager implements IManager {
     private _domain: Domain;
@@ -53,9 +29,9 @@ export class QueryManager implements IManager {
     constructor(public container: IContainer) {
     }
 
-    private async validateRequestData(ctx: RequestContext, info, query) {
+    private async validateRequestData(ctx: RequestContext, info: Handler, query) {
         let errors;
-        let inputSchema = info.metadata.inputSchema;
+        let inputSchema = info.definition.inputSchema;
         if (inputSchema && inputSchema !== "none") {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
@@ -76,7 +52,7 @@ export class QueryManager implements IManager {
         return errors;
     }
 
-    async run(info: HandlerInfo, query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
+    async run(info: Handler, query: RequestData, ctx: RequestContext): Promise<HttpResponse> {
 
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
@@ -86,10 +62,10 @@ export class QueryManager implements IManager {
                 throw new BadRequestError("Validation errors", errors);
             }
 
-            query.schema = query.schema || <string>info.metadata.schema;
+            query.schema = query.schema || <string>info.definition.schema;
             info.handler.context = ctx;
 
-            let result = await info.handler[info.method](query.params);
+            let result = await info.handler[info.methodName](query.params);
 
             if (!(result instanceof HttpResponse)) {
                 let values = result;
@@ -99,11 +75,11 @@ export class QueryManager implements IManager {
                     total = result.total;
                 }
 
-                let res:any = { meta: {}, value: HandlerFactory.obfuscateSensibleData(this.domain, this.container, values) };
+                let res:any = { meta: {}, value: Utils.obfuscateSensibleData(this.domain, this.container, values) };
                 res.meta.total = total;
                 if (result && Array.isArray(result)) {
                     res.meta.total = res.meta.total || result.length;
-                    res.meta.maxByPage = query.maxByPage;
+                    res.meta.pageSize = query.pageSize;
                     res.meta.page = query.page;
                 }
                 return new HttpResponse(res);

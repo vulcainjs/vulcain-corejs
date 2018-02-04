@@ -1,19 +1,16 @@
 import { LifeTime } from '../../di/annotations';
 import { Service } from '../../globals/system';
 import { VulcainManifest } from '../../globals/manifest';
-import { QueryHandler } from "../../pipeline/handlers/annotations.handlers";
-import { Query } from "../../pipeline/handlers/annotations";
 import { RequestContext } from "../../pipeline/requestContext";
 import { ForbiddenRequestError } from "../../pipeline/errors/applicationRequestError";
 import { HttpResponse } from "../../pipeline/response";
+import { Query } from '../../pipeline/handlers/query/annotations.query';
+import { QueryHandler } from '../../pipeline/handlers/query/annotations.queryHandler';
 
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class SwaggerUIHandler {
 
-    constructor() {
-    }
-
-    @Query({ outputSchema: "string", description: "Display Swagger UI", action: "_swagger" })
+    @Query({ outputSchema: "string", description: "Display Swagger UI", action: "_swagger" }, {system:true})
     displaySwaggerUI() {
         let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)

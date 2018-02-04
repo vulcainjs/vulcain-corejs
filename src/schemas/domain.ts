@@ -2,17 +2,19 @@ import { IContainer } from '../di/resolvers';
 import { Schema } from "./schema";
 import { Validator } from './validator';
 import { IRequestContext } from "../pipeline/common";
-import { ModelOptions } from './builder/annotations.model';
-import { ISchemaTypeDefinition } from './schemaType';
+import { ModelDefinition } from './builder/annotations.model';
+import { ISchemaTypeDefinition, ISchemaValidation } from './schemaType';
 import { Files } from '../utils/files';
 import * as Path from 'path';
+
+const scalarType = Symbol("scalar");
 
 /**
  * Domain model
  */
 export class Domain {
     private _schemas: Map<string, Schema>;
-    private static types = {};
+    private static types: {[name:string]: ISchemaTypeDefinition} = {};
 
     constructor(public name: string, private container: IContainer) {
         this._schemas = new Map<string, Schema>();
@@ -30,22 +32,29 @@ export class Domain {
         type.name = name;
     }
 
-    getBaseType(type) {
-        if (!type.$$nativeSchema) {
-            let stype = type;
+    getScalarTypeOf(source: ISchemaTypeDefinition | string): string {
+        let type: ISchemaTypeDefinition;
+        if (typeof source === "string") {
+            type = source = this.getType(source);
+        }
+        else {
+            type = source;
+        }
+        if (!source)
+            return null;
+        
+        if (!source[scalarType]) {
             // Cache resolved type
-            type.$$nativeSchema = stype.name;
-            while (stype && stype.type) {
-                stype = stype.type;
-                type.$$nativeSchema = stype.name;
-                stype = Domain.types[stype];
+            while (type) {
+                source[scalarType] = type.name;
+                type = this.getType(type.type);
             }
         }
-        return type.$$nativeSchema;
+        return source[scalarType];
     }
 
     getType(name: string) {
-        return Domain.types[name];
+        return (name && Domain.types[name]) || undefined;
     }
 
     addSchema(schema: Schema) {
@@ -63,7 +72,7 @@ export class Domain {
         if (typeof name === "function") {
             name = name.name;
         }
-        
+
         if (name) {
             schema = this._schemas.get(name);
         }

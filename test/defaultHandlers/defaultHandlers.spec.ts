@@ -1,7 +1,9 @@
 import { expect } from 'chai';
-import { DefaultActionHandler, DefaultQueryHandler, QueryHandler, Query, ActionHandler, Model, Property, IRequestContext, IContainer } from '../../src/index';
+import { DefaultActionHandler, DefaultQueryHandler, ActionHandler, Model, Property, IRequestContext, IContainer } from '../../src/index';
 import { DefaultServiceNames } from '../../src/di/annotations';
 import { TestContext } from '../../src/pipeline/testContext';
+import { Query } from '../../src/pipeline/handlers/query/annotations.query';
+import { QueryHandler } from '../../src/pipeline/handlers/query/annotations.queryHandler';
 
 @Model()
 class TestModel {

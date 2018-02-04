@@ -18,7 +18,7 @@ import { MemoryProvider } from "../providers/memory/provider";
 import { DefaultTenantPolicy } from "../pipeline/policies/defaultTenantPolicy";
 import { ProviderFactory } from "../providers/providerFactory";
 import { MetricsFactory } from "../instrumentations/metrics";
-import { ServiceDescriptors } from "../pipeline/handlers/serviceDescriptions";
+import { ServiceDescriptors } from "../pipeline/handlers/descriptions/serviceDescriptions";
 import { StubManager } from "../stubs/stubManager";
 import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";

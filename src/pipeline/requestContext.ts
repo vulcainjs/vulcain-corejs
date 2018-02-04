@@ -142,10 +142,10 @@ export class RequestContext implements IRequestContext {
                 domain: data.domain,
                 params: this.pipeline === Pipeline.Event ? data.value : data.params,
                 inputSchema: data.inputSchema,
-                maxByPage: data.maxByPage,
+                pageSize: data.pageSize,
                 page: data.page,
                 body: data.body
-            }
+            };
         }
 
         if(!this.requestData.correlationId)
@@ -155,7 +155,7 @@ export class RequestContext implements IRequestContext {
             // For event we do not use parentId to chain traces.
             // However all traces can be aggregated with the correlationId tag.
             const parentId = (this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null;
-            const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId }
+            const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId };
             this._tracker = Span.createRequestTracker(this, trackerId);
         }
         else {
@@ -195,7 +195,7 @@ export class RequestContext implements IRequestContext {
             domain: this.requestData.domain,
             schema: this.requestData.schema,
             params: this.requestData.params,
-            maxByPage: this.requestData.maxByPage,
+            pageSize: this.requestData.pageSize,
             page: this.requestData.page
         };
     }

@@ -1,13 +1,10 @@
 import { RequestContext } from "../requestContext";
 import { VulcainMiddleware } from "../vulcainPipeline";
 import { Service } from "../../globals/system";
-import { ActionMetadata, CommandManager } from "../handlers/actions";
 import { IContainer } from "../../di/resolvers";
 import { UnauthorizedRequestError, ApplicationError } from "../errors/applicationRequestError";
 import { HttpResponse } from "../response";
-import { QueryManager } from "../handlers/query";
-import { IManager } from "../handlers/common";
-import { HandlerInfo, ServiceDescriptors } from "../handlers/serviceDescriptions";
+import { Handler, ServiceDescriptors } from "../handlers/descriptions/serviceDescriptions";
 import { RequestData } from "../common";
 import { DefaultServiceNames } from '../../di/annotations';
 import { HandlerProcessor } from "../handlerProcessor";
@@ -37,21 +34,22 @@ export class HandlersMiddleware extends VulcainMiddleware {
             guard = true;
         }
 
-        if (!guard)
+        if (!guard) {
             throw new ApplicationError(`Unsupported http verb for ${ctx.requestData.vulcainVerb}`, 405);
+        }
 
         if (info.kind === "action" && ctx.request.verb === "GET")
             throw new ApplicationError(`Action handler ${ctx.requestData.vulcainVerb} must be called with POST`, 405);
 
         // Ensure schema name (casing) is valid
-        ctx.requestData.schema = info.metadata.schema || ctx.requestData.schema;
+        ctx.requestData.schema = info.definition.schema || ctx.requestData.schema;
 
         Service.log.info(ctx, () => `Request input   : ${JSON.stringify(command.params)}`);
         Service.log.info(ctx, () => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
 
         // Verify authorization
-        if (!ctx.user.hasScope(info.metadata.scope)) {
-            Service.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.metadata.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+        if (!ctx.user.hasScope(info.definition.scope)) {
+            Service.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
             throw new UnauthorizedRequestError();
         }
 

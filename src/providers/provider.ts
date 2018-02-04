@@ -10,7 +10,7 @@ export interface ListOptions {
      * @type {number}
      * @memberOf ListOptions
      */
-    maxByPage?: number;  // 0 for all
+    pageSize?: number;  // 0 for all
     /**
      * Page to returns
      *

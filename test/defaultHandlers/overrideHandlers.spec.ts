@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { DefaultActionHandler,  ActionHandler, Action, DefaultServiceNames } from '../../src/index';
 import { TestContext } from '../../src/pipeline/testContext';
-import { ServiceDescriptors } from '../../src/pipeline/handlers/serviceDescriptions';
+import { ServiceDescriptors } from '../../src/pipeline/handlers/descriptions/serviceDescriptions';
 
 @ActionHandler({ scope: "?" })
 class TestActionHandler extends DefaultActionHandler {

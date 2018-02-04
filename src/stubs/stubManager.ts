@@ -3,7 +3,7 @@ import { Conventions } from '../utils/conventions';
 import { Service } from '../globals/system';
 import { IDynamicProperty } from '../configurations/abstractions';
 import { VulcainHeaderNames } from "../pipeline/requestContext";
-import { ActionMetadata } from "../pipeline/handlers/actions";
+import { ActionDefinition } from "../pipeline/handlers/action/definitions";
 import { HttpResponse } from "../pipeline/response";
 import { DynamicConfiguration } from '../configurations/dynamicConfiguration';
 import { IRequestContext } from "../pipeline/common";
@@ -206,7 +206,7 @@ export class StubManager implements IStubManager {
         return null;
     }
 
-    async tryGetMockValue(ctx: IRequestContext, metadata: ActionMetadata, verb: string, params: any) {
+    async tryGetMockValue(ctx: IRequestContext, metadata: ActionDefinition, verb: string, params: any) {
         const setting = this.useMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_USE_STUB];
         const session = this.splitAndTestSession(setting);
         if (!session) {
@@ -217,7 +217,7 @@ export class StubManager implements IStubManager {
         return result;
     }
 
-    saveStub(ctx: IRequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse) {
+    saveStub(ctx: IRequestContext, metadata: ActionDefinition, verb: string, params: any, result: HttpResponse) {
         const setting = this.registerMockProperty.value || <string>ctx.request.headers[VulcainHeaderNames.X_VULCAIN_REGISTER_STUB];
         const session = this.splitAndTestSession(setting);
         if (!session) {

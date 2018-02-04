@@ -1,14 +1,14 @@
-import { HandlerItem } from './serviceDescriptions';
-import { IContainer } from '../../di/resolvers';
-import {Domain} from '../../schemas/domain';
-import { Service } from '../../globals/system';
+import { Handler } from '../descriptions/serviceDescriptions';
+import { IContainer } from '../../../di/resolvers';
+import {Domain} from '../../../schemas/domain';
+import { Service } from '../../../globals/system';
 import * as util from 'util';
-import { EventMetadata, ConsumeEventMetadata } from "./messageBus";
+import { EventDefinition, ConsumeEventDefinition } from "../messageBus";
 
 export class EventHandlerFactory {
-    private handlers = new Map<string, Map<string, Array<HandlerItem>>>();
+    private handlers = new Map<string, Map<string, Array<Handler>>>();
 
-    *allHandlers(): Iterable<HandlerItem> {
+    *allHandlers(): Iterable<Handler> {
         for (let [vk, v] of this.handlers) {
             for (let [sk, s] of v)
             {
@@ -21,7 +21,7 @@ export class EventHandlerFactory {
     /**
      * Register event handler methods
      */
-    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: EventMetadata) {
+    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: EventDefinition) {
         let domainName = handlerMetadata.subscribeToDomain || domain.name;
         handlerMetadata = handlerMetadata || {};
 
@@ -32,8 +32,8 @@ export class EventHandlerFactory {
         }
 
         for (const action in actions) {
-            let actionMetadata: ConsumeEventMetadata = actions[action];
-            actionMetadata = actionMetadata || <ConsumeEventMetadata>{};
+            let actionMetadata: ConsumeEventDefinition = actions[action];
+            actionMetadata = actionMetadata || <ConsumeEventDefinition>{};
 
             if (actionMetadata.subscribeToSchema) {
                 // test if exists
@@ -51,7 +51,7 @@ export class EventHandlerFactory {
 
             let byActions = this.handlers.get(handlerKey);
             if (!byActions) {
-                byActions = new Map<string, Array<HandlerItem>>();
+                byActions = new Map<string, Array<Handler>>();
                 this.handlers.set(handlerKey, byActions);
             }
 
@@ -62,10 +62,10 @@ export class EventHandlerFactory {
             }
 
             // Merge metadata
-            let item: HandlerItem = {
+            let item: Handler = {
                 kind: "event",
                 methodName: action,
-                metadata: Object.assign({}, handlerMetadata, actionMetadata),
+                definition: Object.assign({}, handlerMetadata, actionMetadata),
                 handler: target
             };
 

@@ -1,97 +1,50 @@
-import { Domain} from '../../schemas/domain';
-import { ActionMetadata } from './actions';
-import { LifeTime, Inject, DefaultServiceNames } from '../../di/annotations';
-import { IContainer } from '../../di/resolvers';
-import { ServiceHandlerMetadata, CommonActionMetadata } from './common';
-import { QueryActionMetadata } from './query';
-import { Service } from '../../globals/system';
-import { ApplicationError } from '../errors/applicationRequestError';
-import { ScopesDescriptor } from "../../defaults/scopeDescriptors";
-import { Model } from '../../schemas/builder/annotations.model';
-import { Schema } from '../../schemas/schema';
-import { ISchemaTypeDefinition } from '../../schemas/schemaType';
+import { Domain} from '../../../schemas/domain';
+import { LifeTime, Inject, DefaultServiceNames } from '../../../di/annotations';
+import { IContainer } from '../../../di/resolvers';
+import { Service } from '../../../globals/system';
+import { ScopesDescriptor } from "../../../defaults/scopeDescriptors";
+import { Schema } from '../../../schemas/schema';
+import { ISchemaTypeDefinition } from '../../../schemas/schemaType';
+import { ServiceDescription } from './serviceDescription';
+import { SchemaDescription } from './schemaDescription';
+import { OperationDescription } from './operationDescription';
+import { PropertyDescription } from './propertyDescription';
+import { ActionDefinition } from '../action/definitions';
+import { OperationDefinition, HandlerDefinition } from '../definitions';
+import { QueryOperationDefinition } from '../query/definitions';
 
-export interface HandlerItem {
+export interface Handler {
     methodName: string;
-    handler: Function;
-    metadata: CommonActionMetadata;
+    handler: any;
+    definition: OperationDefinition;
     kind: "action" | "query" | "event";
     verb?: string;
-}
-
-export class PropertyDescription {
-    name: string;
-    required: boolean;
-    description: string;
-    type: string;
-    typeDescription: string;
-    reference?: "no" | "many" | "one";
-    metadata: any;
-    order: number;
-    custom?: any;
-}
-
-export class SchemaDescription {
-    name: string;
-    idProperty: string;
-    properties: Array<PropertyDescription>;
-    dependencies: Set<string>;
-    custom?: any;
-}
-
-export class ActionDescription {
-    schema: string;
-    kind: "action" | "query" | "get";
-    description: string;
-    action: string;
-    scope: string;
-    inputSchema: string;
-    outputSchema: string;
-    outputType?: string;
-    verb: string;
-    async: boolean;
-}
-
-@Model({}, {system:true})
-export class ServiceDescription {
-    domain: string;
-    serviceName: string;
-    serviceVersion: string;
-    alternateAddress?: string;
-    services: Array<ActionDescription>;
-    schemas: Array<SchemaDescription>;
-    hasAsyncTasks: boolean;
-    scopes: Array<{ name: string, description: string }>;
-}
-
-export interface HandlerInfo {
-    handler: any;
-    metadata: CommonActionMetadata;
-    method: string;
-    verb: string;
-    kind: "action" | "query" | "event";
 }
 
 export class ServiceDescriptors {
     static nativeTypes = ["string", "boolean", "number", "any", "object"];
     private descriptions: ServiceDescription;
-    private handlers = new Array<HandlerItem>();
-    private routes = new Map<string, HandlerItem>();
+    private publicDescriptions: ServiceDescription;
+    private handlers = new Array<Handler>();
+    private routes = new Map<string, Handler>();
     private defaultSchema: string;
 
     constructor( @Inject(DefaultServiceNames.Container) private container: IContainer, @Inject(DefaultServiceNames.Domain) private domain: Domain) {
     }
 
-    getDescriptions() {
+    getDescriptions(includeSystemService=true) {
         this.createHandlersTable();
-        return this.descriptions;
+        if (includeSystemService)
+            return this.descriptions;
+        
+        return this.publicDescriptions;
     }
 
-    getHandlerInfo(container: IContainer|undefined, schema: string, action: string): HandlerInfo {
+    getHandlerInfo(container: IContainer|undefined, schema: string, action: string): Handler {
         this.createHandlersTable();
 
         let verb = action && action.toLowerCase();
-        let item: HandlerItem|undefined;
+        let item: Handler|undefined;
 
         if (!schema) {
             item = this.routes.get(verb);
@@ -112,7 +65,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, metadata: item.metadata, method: item.methodName, verb: verb, kind: item.kind };
+            return { handler: handler, definition: item.definition, methodName: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
             Service.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);
@@ -132,11 +85,11 @@ export class ServiceDescriptors {
         let lastSchema: string|undefined;
         let monoSchema = true;
         this.handlers.forEach(item => {
-            if (!item.metadata.schema)
+            if (!item.definition.schema)
                 return;
             if (!lastSchema)
-                lastSchema = <string>item.metadata.schema;
-            else if (item.metadata.schema !== lastSchema) {
+                lastSchema = <string>item.definition.schema;
+            else if (item.definition.schema !== lastSchema) {
                 monoSchema = false;
             }
         });
@@ -156,92 +109,101 @@ export class ServiceDescriptors {
         };
 
         for (let item of this.handlers.filter(h => h.kind === "action")) {
-            let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
+            let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
 
             let verb = !schema
-                ? item.metadata.action
-                : schema + "." + item.metadata.action;
+                ? item.definition.action
+                : schema + "." + item.definition.action;
 
             verb = verb.toLowerCase();
             if (this.routes.has(verb))
-                throw new Error(`*** Duplicate handler for action ${item.metadata.action} for handler ${item.handler.name}`);
+                throw new Error(`*** Duplicate handler for action ${item.definition.action} for handler ${item.handler.name}`);
 
             Service.log.info(null, ()=> `Handler registered for action verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
-            let metadata = <ActionMetadata>item.metadata;
-            metadata.scope = this.checkScopes(scopes, metadata, verb);
-            metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema, schema);
-            metadata.outputSchema = !metadata.async && this.getSchemaDescription(schemas, metadata.outputSchema, schema);
+            let def = <ActionDefinition>item.definition;
+            def.scope = this.checkScopes(scopes, def, verb);
+            def.inputSchema = this.getSchemaDescription(schemas, def.inputSchema, schema);
+            def.outputSchema = !def.async && this.getSchemaDescription(schemas, def.outputSchema, schema);
 
-            let desc: ActionDescription = {
+            let desc: OperationDescription = {
                 schema: schema,
                 kind: "action",
-                async: metadata.async,
+                async: def.async,
                 verb: verb,
-                outputType: metadata.outputType || "one",
-                description: metadata.description,
-                action: metadata.action,
-                scope: metadata.scope,
-                inputSchema: <string>metadata.inputSchema,
-                outputSchema: <string>metadata.outputSchema
+                outputCardinality: def.outputCardinality || "one",
+                description: def.description,
+                action: def.action,
+                scope: def.scope,
+                inputSchema: <string>def.inputSchema,
+                outputSchema: <string>def.outputSchema,
+                metadata: def.metadata
             };
 
-            if (metadata.async)
+            if (def.async)
                 this.descriptions.hasAsyncTasks = true;
 
             this.descriptions.services.push(desc);
         }
 
+        // Query
         for (let item of this.handlers.filter(h => h.kind === "query")) {
 
-            let schema = item.metadata.schema && this.getSchemaDescription(schemas, item.metadata.schema);
+            let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
 
-            let verb = !item.metadata.schema
-                ? item.metadata.action
-                : schema + "." + item.metadata.action;
+            let verb = !item.definition.schema
+                ? item.definition.action
+                : schema + "." + item.definition.action;
 
             verb = verb.toLowerCase();
             if (this.routes.has(verb))
-                throw new Error(`*** Duplicate handler for query ${item.metadata.action} for handler ${item.handler.name}`);
+                throw new Error(`*** Duplicate handler for query ${item.definition.action} for handler ${item.handler.name}`);
 
             Service.log.info(null, ()=> `Handler registered for query verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
-            if (item.metadata.action.startsWith("_service")) continue;
+            if (item.definition.action.startsWith("_service")) continue;
 
-            let metadata = <QueryActionMetadata>item.metadata;
-            metadata.inputSchema = this.getSchemaDescription(schemas, metadata.inputSchema);
-            metadata.outputSchema = this.getSchemaDescription(schemas, metadata.outputSchema, schema);
-            metadata.scope = this.checkScopes(scopes, metadata, verb);
+            let def = <QueryOperationDefinition>item.definition;
+            def.inputSchema = this.getSchemaDescription(schemas, def.inputSchema);
+            def.outputSchema = this.getSchemaDescription(schemas, def.outputSchema, schema);
+            def.scope = this.checkScopes(scopes, def, verb);
 
-            let desc: ActionDescription = {
+            let desc: OperationDescription = {
                 schema: schema,
-                kind: metadata.action === "get" ? "get" : "query",
+                kind: def.action === "get" ? "get" : "query",
                 verb: verb,
-                outputType: metadata.outputType || metadata.action === "get" ? "one" : "many",
-                description: metadata.description,
-                action: metadata.action,
-                scope: metadata.scope,
+                outputCardinality: def.outputCardinality || def.action === "get" ? "one" : "many",
+                description: def.description,
+                action: def.action,
+                scope: def.scope,
                 async: false,
-                inputSchema: <string>metadata.inputSchema,
-                outputSchema: <string>metadata.outputSchema
+                inputSchema: <string>def.inputSchema,
+                outputSchema: <string>def.outputSchema,
+                metadata: def.metadata
             };
 
             if (desc.action === "get" && !desc.inputSchema)
                 desc.inputSchema = "string";
             if (desc.action !== "get")
-                desc.outputSchema = desc.outputSchema;
+                desc.outputSchema = desc.outputSchema; // ???
+            
             this.descriptions.services.push(desc);
         }
 
         this.sortSchemasDependencies();
+
+        this.publicDescriptions = { ...this.descriptions };
+        this.publicDescriptions.services = this.publicDescriptions.services.filter(s => !s.metadata || !s.metadata.system);
+        this.publicDescriptions.schemas = this.publicDescriptions.schemas.filter(s => !s.metadata || !s.metadata.system);
+
         this.handlers = null;
     }
 
-    private checkScopes(scopes: ScopesDescriptor, metadata: CommonActionMetadata, verb: string): string {
+    private checkScopes(scopes: ScopesDescriptor, metadata: OperationDefinition, verb: string): string {
         let scope = metadata.scope;
         if (!scope || scope === "?" || scope === "*") return scope;
 
@@ -295,7 +257,7 @@ export class ServiceDescriptors {
             properties: [],
             idProperty: schema.info.idProperty,
             dependencies: new Set<string>(),
-            custom: schema.info.custom
+            metadata: schema.info.metadata
         };
         schemas.set(schema.name, desc);
         this.descriptions.schemas.push(desc);
@@ -325,15 +287,14 @@ export class ServiceDescriptors {
                 continue;
             let type = this.getPropertyType(p.items || p.type);
             if (type) {
-                let metadata = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description, isKey: p.isKey };
+                let def = { type: p.type, items: p.items, values: p.values, required: p.required, description: p.description, isKey: p.isKey, ...p.metadata };
                 let pdesc: PropertyDescription = {
                     name: k,
                     type: p.items ? p.items + "[]" : type.name, order: p.order || 0,
                     required: p.required,
                     description: p.description,
                     typeDescription: type.description,
-                    metadata,
-                    custom: p.custom
+                    definition:def
                 };
                 this.addDescription(desc, pdesc);
             }
@@ -341,7 +302,7 @@ export class ServiceDescriptors {
                 if (schemas.has(k)) return k;
              //   this.getSchemaDescription(schemas, p.type);
 
-                let metadata = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description };
+                let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata  };
                 let pdesc: PropertyDescription = {
                     name: k,
                     reference: p.cardinality,
@@ -349,7 +310,7 @@ export class ServiceDescriptors {
                     required: p.required,
                     description: p.description,
                     typeDescription: "",
-                    metadata,
+                    definition: def,
                     order: p.order
                 };
 
@@ -392,29 +353,30 @@ export class ServiceDescriptors {
 
     /**
      * Register an handler
-     * @param container 
-     * @param domain 
-     * @param target 
-     * @param actions 
-     * @param handlerMetadata 
-     * @param kind 
+     * @param container
+     * @param domain
+     * @param target
+     * @param actions
+     * @param handlerDefinition
+     * @param kind
      */
-    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerMetadata: ServiceHandlerMetadata, kind: "action" | "query") {
+    register(container: IContainer, domain: Domain, target: Function, actions: any, handlerDefinition: HandlerDefinition, kind: "action" | "query") {
 
-        handlerMetadata = handlerMetadata || { scope: "*" };
+        handlerDefinition = handlerDefinition || { scope: "*" };
 
-        if (handlerMetadata.schema) {
+        if (handlerDefinition.schema) {
             // test if exists
-            let tmp = domain.getSchema(handlerMetadata.schema);
-            handlerMetadata.schema = tmp.name;
+            let tmp = domain.getSchema(handlerDefinition.schema);
+            handlerDefinition.schema = tmp.name;
         }
 
-        container.inject(handlerMetadata.serviceName || target.name, target, handlerMetadata.serviceLifeTime || LifeTime.Scoped);
+        container.inject(handlerDefinition.serviceName || target.name, target, handlerDefinition.serviceLifeTime || LifeTime.Scoped);
 
         for (const action in actions) {
-            let actionMetadata: CommonActionMetadata = actions[action];
-            actionMetadata = actionMetadata || <CommonActionMetadata>{};
+            let actionMetadata: OperationDefinition = actions[action];
+            actionMetadata = actionMetadata || <OperationDefinition>{};
             actionMetadata.action = actionMetadata.action || action;
+            actionMetadata.metadata = { ...actionMetadata.metadata, ...handlerDefinition.metadata };
 
             if (actionMetadata.schema) {
                 // test if exists
@@ -423,10 +385,10 @@ export class ServiceDescriptors {
             }
 
             // Merge metadata
-            let item: HandlerItem = {
+            let item: Handler = {
                 kind: kind,
                 methodName: action,
-                metadata: Object.assign({}, handlerMetadata, actionMetadata),
+                definition: Object.assign({}, handlerDefinition, actionMetadata),
                 handler: target
             };
 

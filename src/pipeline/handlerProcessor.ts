@@ -1,16 +1,17 @@
 import { VulcainMiddleware } from "./vulcainPipeline";
 import { Service } from "../globals/system";
-import { ActionMetadata, CommandManager } from "./handlers/actions";
 import { IContainer } from "../di/resolvers";
 import { UnauthorizedRequestError, ApplicationError } from "./errors/applicationRequestError";
 import { HttpResponse } from "./response";
-import { QueryManager } from "./handlers/query";
-import { IManager } from "./handlers/common";
-import { HandlerInfo, ServiceDescriptors } from "./handlers/serviceDescriptions";
+import { Handler, ServiceDescriptors } from "./handlers/descriptions/serviceDescriptions";
 import { RequestData, IRequestContext } from "./common";
 import { DefaultServiceNames, Injectable, LifeTime } from '../di/annotations';
 import { RequestContext } from "./requestContext";
 import { Inject } from "../di/annotations";
+import { CommandManager } from "./handlers/action/actionManager";
+import { QueryManager } from "./handlers/query/queryManager";
+import { IManager } from "./handlers/definitions";
+import { ActionDefinition } from "./handlers/action/definitions";
 
 @Injectable(LifeTime.Singleton, DefaultServiceNames.HandlerProcessor)
 export class HandlerProcessor {
@@ -23,7 +24,7 @@ export class HandlerProcessor {
         this.queryManager = new QueryManager(container);
     }
 
-    public async invokeHandler(ctx: IRequestContext, info: HandlerInfo, contextData?: RequestData) {
+    public async invokeHandler(ctx: IRequestContext, info: Handler, contextData?: RequestData) {
         let oldContextData = ctx.requestData;
         try {
             if (contextData) {
@@ -34,7 +35,7 @@ export class HandlerProcessor {
             let result: HttpResponse;
             const stubs = Service.getStubManager(ctx.container);
             let params = Object.assign({}, command.params || {});
-            let metadata = <ActionMetadata>info.metadata;
+            let metadata = <ActionDefinition>info.definition;
             let useMockResult = false;
             result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
 

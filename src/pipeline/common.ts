@@ -11,8 +11,8 @@ export interface VulcainResponse<T=any> {
         status?: string;
         total?: number;
         page?: number;
-        maxByPage?: number;
-    },
+        pageSize?: number;
+    };
     value: T;
 }
 export enum Pipeline {
@@ -121,7 +121,7 @@ export interface RequestData {
     domain: string;
     schema: string;
     params?: any;
-    maxByPage?: number;
+    pageSize?: number;
     page?: number;
     inputSchema?: string;
     body?: any;

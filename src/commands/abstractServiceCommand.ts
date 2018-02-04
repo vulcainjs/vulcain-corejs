@@ -13,8 +13,8 @@ import { RequestContext, VulcainHeaderNames } from "../pipeline/requestContext";
 import { IRequestContext } from "../pipeline/common";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 import { IAuthenticationStrategy } from "../security/securityContext";
-import { QueryResult } from "../pipeline/handlers/query";
-import { ActionResult } from "../pipeline/handlers/actions";
+import { QueryResult } from "../pipeline/handlers/query/queryResult";
+import { ActionResult } from "../pipeline/handlers/action/actionManager";
 import { Span } from '../instrumentations/span';
 import { TokenService } from '../security/services/tokenService';
 import { VulcainResponse } from '../pipeline/common';
@@ -152,13 +152,13 @@ export abstract class AbstractServiceCommand {
      * @param {string} action
      * @param {*} [query]
      * @param {number} [page]
-     * @param {number} [maxByPage]
+     * @param {number} [pageSize]
      * @param {string} [schema]
      * @returns {Promise<QueryResponse<T>>}
      */
-    private async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, maxByPage?: number, schema?: string): Promise<VulcainResponse<T>> {
+    private async getQuery<T>(serviceName: string, serviceVersion: string, verb: string, query?: any, args?, page?: number, pageSize?: number, schema?: string): Promise<VulcainResponse<T>> {
         let data: any = {};
-        data.$maxByPage = maxByPage;
+        data.$pageSize = pageSize;
         data.$page = page;
         data.$query = (query && JSON.stringify(query)) || null;
         const stubs = Service.getStubManager(this.container);
@@ -299,9 +299,9 @@ export abstract class AbstractServiceCommand {
         return response;
     }
 
-    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, maxByPage: any): Promise<VulcainResponse<T>> {
+    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, pageSize: any): Promise<VulcainResponse<T>> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
-        let response = await this.getQuery<T>(serviceName, serviceVersion, verb, data, args, page, maxByPage);
+        let response = await this.getQuery<T>(serviceName, serviceVersion, verb, data, args, page, pageSize);
         return response;
     }
 

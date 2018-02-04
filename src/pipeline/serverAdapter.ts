@@ -59,11 +59,19 @@ export abstract class ServerAdapter implements IServerAdapter {
             }
 
             resp.statusCode = response.statusCode || 200;
-            resp.setHeader('Content-Type', response.contentType || "application/json");
 
             if (response.content) {
-                resp.end(response.content, response.encoding || "utf8");
-            }
+                if (!response.encoding || response.encoding === "utf8") {
+                    const chunk = new Buffer(response.content, 'utf8');
+                    resp.setHeader('Content-Type', (response.contentType || "application/json") + '; charset=utf-8');
+                    resp.setHeader('Content-Length', String(chunk.length));
+                    resp.end(chunk);
+                }
+                else {
+                    resp.setHeader('Content-Type', response.contentType || "application/json");
+                    resp.end(response.content, response.encoding);
+                }
+            }    
             else {
                 resp.end();
             }

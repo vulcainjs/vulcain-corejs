@@ -14,12 +14,13 @@ import './defaults/serviceExplorer'; // Don't remove (auto register)
 import './defaults/dependencyExplorer'; // Don't remove (auto register)
 import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)
 import { LifeTime } from "./di/annotations";
-import { ServiceDescriptors } from "./pipeline/handlers/serviceDescriptions";
+import { ServiceDescriptors } from "./pipeline/handlers/descriptions/serviceDescriptions";
 import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
 import { LocalAdapter } from "./bus/localAdapter";
 import { Service } from './globals/system';
 import { DynamicConfiguration } from './configurations/dynamicConfiguration';
+import './graphql/graphQLHandler';
 
 const vulcainExecutablePath = __dirname;
 const applicationPath = Path.dirname(module.parent.parent.filename);

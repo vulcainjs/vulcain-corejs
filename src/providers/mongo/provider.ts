@@ -144,7 +144,7 @@ export class MongoProvider implements IProvider<any>
         await this.ensureSchemaReady(schema);
 
         let page = options.page || 0;
-        let maxByPage = options.maxByPage || 20;
+        let pageSize = options.pageSize || 20;
 
         let proj = options.query && options.query.projections;
         let query;
@@ -161,8 +161,8 @@ export class MongoProvider implements IProvider<any>
                 // TODO try with aggregate
                 let total = await db.collection(schema.info.storageName).find(query).count();
                 let cursor = db.collection(schema.info.storageName).find(query, proj)
-                    .skip(page * maxByPage)
-                    .limit(maxByPage);
+                    .skip(page * pageSize)
+                    .limit(pageSize);
                 cursor.toArray((err, res) => {
                     if (err) {
                         self.ctx.logError(err, ()=>`MONGODB ERROR: Get all query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query: ${JSON.stringify(query)}`);

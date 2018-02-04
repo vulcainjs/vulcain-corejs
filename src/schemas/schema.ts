@@ -4,9 +4,9 @@ import { IContainer } from '../di/resolvers';
 import { SchemaVisitor } from './visitor';
 import { Service } from './../globals/system';
 import { IRequestContext } from "../pipeline/common";
-import { ModelPropertyInfo, SchemaInfo } from './schemaInfo';
+import { ModelPropertyDefinition, SchemaInfo } from './schemaInfo';
 import { Domain } from './domain';
-import { ModelOptions } from './builder/annotations.model';
+import { ModelDefinition } from './builder/annotations.model';
 import { ISchemaTypeDefinition } from './schemaType';
 
 /**
@@ -27,16 +27,17 @@ export class Schema {
     /**
      * Create a new schema
      */
-    constructor(private domain: Domain, options: ModelOptions, public readonly schemaType) {
+    constructor(private domain: Domain, def: ModelDefinition, public readonly schemaType) {
         this.info = {
-            name: options.name,
-            storageName: options.storageName,
-            hasSensibleData: options.hasSensibleData,
+            name: def.name,
+            storageName: def.storageName,
+            hasSensibleData: def.hasSensibleData,
             properties: {},
-            coerce: options.coerce,
-            validate: options.validate,
-            custom: options.custom,
-            extends: options.extends
+            coerce: def.coerce,
+            validate: def.validate,
+            metadata: def.metadata,
+            extends: def.extends,
+            isInputModel: def.inputModel
         };
     }
 
@@ -168,7 +169,7 @@ export class Schema {
         }
         let visitor = {
             visitEntity(entity, schema: Schema) { this.current = entity; return schema.info.hasSensibleData; },
-            visitProperty(val, prop: ModelPropertyInfo) {
+            visitProperty(val, prop: ModelPropertyDefinition) {
                 if (val && prop.sensible) {
                     this.current[prop.name] = Service.encrypt(val);
                 }

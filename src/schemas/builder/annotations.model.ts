@@ -8,7 +8,7 @@ import { IContainer } from '../../di/resolvers';
 /**
  * Model metadata definition
  */
-export interface ModelOptions {
+export interface ModelDefinition {
     /**
      * Model name (default class name)
      */
@@ -40,28 +40,35 @@ export interface ModelOptions {
     /**
      * Custom metadata
      */
-    custom?: any;
+    metadata?: any;
+    inputModel?: boolean;
 }
 
 /**
  * Declare a data model
  */
-export function Model(options?: ModelOptions, customOptions?:any) {
+export function Model(def?: ModelDefinition, metadata?:any) {
     return function (target: Function) {
-        options = options || {};
-        options.custom = customOptions;
-        options.name = options.name || target.name;
-        options.storageName = options.storageName || options.name;
+        def = def || {};
+        def.metadata = metadata;
+        def.name = def.name || target.name;
+        def.storageName = def.storageName || def.name;
 
         // Try to infere inherit type
-        if (!options.extends) {
+        if (!def.extends) {
             let ext = Object.getPrototypeOf(target).name;
-            if (ext) options.extends = ext;
+            if (ext) def.extends = ext;
         }
         const sym = Symbol.for("design:model");
-        Reflect.defineMetadata(sym, options, target);
+        Reflect.defineMetadata(sym, def, target);
         Preloader.instance.registerModel(target, (container: IContainer, domain) => {
-            SchemaBuilder.buildSchema(domain, options, target);
+            SchemaBuilder.buildSchema(domain, def, target);
         });
     };
+}
+
+export function InputModel(def?: ModelDefinition, customOptions?: any) {
+    def = def || {};
+    def.inputModel = true;
+    return Model(def, customOptions);
 }

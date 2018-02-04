@@ -1,4 +1,4 @@
-import { AsyncTaskData } from "../pipeline/handlers/actions";
+import { AsyncTaskData } from "../pipeline/handlers/action/actionManager";
 
 export interface ITaskManager {
     registerTask(task: AsyncTaskData): Promise<void>;

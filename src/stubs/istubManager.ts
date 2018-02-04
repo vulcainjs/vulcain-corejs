@@ -1,5 +1,5 @@
 import { IRequestContext } from "../pipeline/common";
-import { ActionMetadata } from "../pipeline/handlers/actions";
+import { ActionDefinition } from "../pipeline/handlers/action/definitions";
 import { HttpResponse } from "../pipeline/response";
 
 export interface IStubManager {
@@ -7,16 +7,16 @@ export interface IStubManager {
     initialize?(sessions: any, saveHandler: Function);
     applyHttpStub(url: string, verb: string);
     applyServiceStub(serviceName: string, serviceVersion: string, verb: string, data);
-    tryGetMockValue(ctx: IRequestContext, metadata: ActionMetadata, verb: string, params: any): Promise<HttpResponse>;
-    saveStub(ctx: IRequestContext, metadata: ActionMetadata, verb: string, params: any, result: HttpResponse): Promise<void>;
+    tryGetMockValue(ctx: IRequestContext, metadata: ActionDefinition, verb: string, params: any): Promise<HttpResponse>;
+    saveStub(ctx: IRequestContext, metadata: ActionDefinition, verb: string, params: any, result: HttpResponse): Promise<void>;
 }
 
 export class DummyStubManager implements IStubManager {
     get enabled() { return false;}
-    tryGetMockValue(ctx: IRequestContext, metadata: ActionMetadata, verb: string, command: any): Promise<HttpResponse> {
+    tryGetMockValue(ctx: IRequestContext, metadata: ActionDefinition, verb: string, command: any): Promise<HttpResponse> {
         return Promise.resolve(null);
     }
-    saveStub(ctx: IRequestContext, metadata: ActionMetadata, verb: string, command: any, result: HttpResponse): Promise<void> {
+    saveStub(ctx: IRequestContext, metadata: ActionDefinition, verb: string, command: any, result: HttpResponse): Promise<void> {
         return Promise.resolve();
     }
     applyHttpStub(url: string, verb: string) {

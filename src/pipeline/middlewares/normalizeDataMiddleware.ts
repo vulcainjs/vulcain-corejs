@@ -18,7 +18,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
     //  /api/customer.create(?params)
     // params:
     //  $action, __schema (force value)
-    //  $maxByPage, $page
+    //  $pageSize, $page
     async invoke(ctx: RequestContext) {
         try {
             this.populateData(ctx);
@@ -119,7 +119,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
 
         // if (ctx.request.verb === "GET" && ctx.requestData.action !== "get") {
             ctx.requestData.page = 0;
-            ctx.requestData.maxByPage = 20;
+            ctx.requestData.pageSize = 20;
         //}
         // Normalize option values
         Object.keys(url.query).forEach(name => {
@@ -128,8 +128,8 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                     case "$page":
                         ctx.requestData.page = (url.query["$page"] && parseInt(url.query["$page"])) || ctx.requestData.page;
                         break;
-                    case "$maxbypage":
-                        ctx.requestData.maxByPage = (url.query[name] && parseInt(url.query[name])) || ctx.requestData.maxByPage;
+                    case "$pageSize":
+                        ctx.requestData.pageSize = (url.query[name] && parseInt(url.query[name])) || ctx.requestData.pageSize;
                         break;
                     case "$query":
                         ctx.requestData.params = url.query["$query"] && JSON.parse(url.query["$query"]);

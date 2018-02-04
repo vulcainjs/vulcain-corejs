@@ -4,9 +4,12 @@ import { Domain } from '../../schemas/domain';
 import { DefinitionsObject, SwaggerApiDefinition, TagObject, PathsObject, PathItemObject, OperationObject, Parameters, ParameterObject } from './swaggerApiDefinition';
 import { IScopedComponent } from '../../di/annotations';
 import { IRequestContext } from '../../pipeline/common';
-import { ServiceDescription, ActionDescription, SchemaDescription, PropertyDescription } from '../../pipeline/handlers/serviceDescriptions';
 import { Conventions } from '../../utils/conventions';
 import { Service } from '../../index';
+import { ServiceDescription } from '../../pipeline/handlers/descriptions/serviceDescription';
+import { OperationDescription } from '../../pipeline/handlers/descriptions/operationDescription';
+import { SchemaDescription } from '../../pipeline/handlers/descriptions/schemaDescription';
+import { PropertyDescription } from '../../pipeline/handlers/descriptions/propertyDescription';
 
 
 export class SwaggerServiceDescriptor implements IScopedComponent {
@@ -52,12 +55,12 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
      * @param services
      * @return string[]
      */
-    private computeTags(services: Array<ActionDescription>): TagObject[] {
+    private computeTags(services: Array<OperationDescription>): TagObject[] {
         let tags: TagObject[] = [];
 
         let tagsSet = new Set();
 
-        services.forEach((service: ActionDescription) => {
+        services.forEach((service: OperationDescription) => {
             //service.verb = 'customer.myAction'
             // with split we kept only 'customer'
             //split for getting first word
@@ -86,7 +89,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
     private computePaths(serviceDescription: ServiceDescription): PathsObject {
         let paths: PathsObject = {};
 
-        serviceDescription.services.forEach((service: ActionDescription) => {
+        serviceDescription.services.forEach((service: OperationDescription) => {
             if (service.action.startsWith("_"))
                 return;
             let operationObject: OperationObject = {};
@@ -123,7 +126,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
         if (listResponse) {
             (<any>res.properties.meta.properties).total = { type: 'number' };
-            (<any>res.properties.meta.properties).maxByPage= { type: 'number' };
+            (<any>res.properties.meta.properties).pageSize= { type: 'number' };
             (<any>res.properties.meta.properties).page= { type: 'number' };
         }
 
@@ -132,7 +135,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         return res;
     }
 
-    private computeResponses(service: ActionDescription, operationObject: OperationObject) {
+    private computeResponses(service: OperationDescription, operationObject: OperationObject) {
 
         operationObject.responses = {};
 
@@ -212,7 +215,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
 
             if (service.outputSchema) {
                 operationObject.responses['200'].schema.properties.value = {};
-                this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema, service.outputType);
+                this.setReferenceDefinition(operationObject.responses['200'].schema.properties.value, service.outputSchema, service.outputCardinality);
             }
         }
     }
@@ -222,7 +225,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
      *  See the documentation here: http://swagger.io/specification/#parameterObject
      * @param service
      */
-    private computeParameters(schemas: SchemaDescription[], service: ActionDescription): Parameters {
+    private computeParameters(schemas: SchemaDescription[], service: OperationDescription): Parameters {
         if (service.kind === 'get') {
             let params = [
                 {
@@ -232,7 +235,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                     type: 'string',
                     required: true
                 }
-            ]
+            ];
             return params;
         }
         else if (service.kind === 'query') {
@@ -267,7 +270,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                     required: false
                 },
                 {
-                    name: '$maxByPage',
+                    name: '$pageSize',
                     in: 'query',
                     description: "Max items by page",
                     type: 'number',
@@ -348,7 +351,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 }
             }
         } else {
-            // is a 'many' outputType
+            // is a 'many' output cardinality
             desc['type'] = 'array';
             let def = definitionName;
             let pos = def.indexOf('[]');
@@ -373,7 +376,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         let type = this.domain.getType(inputSchema);
         if (!type)
             return false;
-        return this.domain.getBaseType(type);
+        return this.domain.getScalarTypeOf(type);
     }
 
 }

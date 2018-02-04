@@ -3,16 +3,16 @@ import { IContainer } from '../../di/resolvers';
 import 'reflect-metadata';
 import { Domain } from '../domain';
 import { IRequestContext } from "../../pipeline/common";
-import { ModelPropertyInfo } from '../schemaInfo';
+import { ModelPropertyDefinition } from '../schemaInfo';
 import { SchemaBuilder } from './schemaBuilder';
 
 /**
  * Property definition
  *
  * @export
- * @interface PropertyOptions
+ * @interface PropertyDefinition
  */
-export interface PropertyOptions {
+export interface PropertyDefinition {
     /**
      * Base type
      *
@@ -103,13 +103,13 @@ export interface PropertyOptions {
     /**
      * This property is not exposed by service description
      */
-    private?:boolean
+    private?: boolean;
 }
 
-export function Property(options?: PropertyOptions, customOptions?:any) {
+export function Property(def?: PropertyDefinition, metadata?:any) {
     return (target, key) => {
-        let info: ModelPropertyInfo = options || <any>{};
-        info.custom = customOptions;
+        let info: ModelPropertyDefinition = def || <any>{};
+        info.metadata = metadata;
         info.name = key;
 
         if (!info.type) {

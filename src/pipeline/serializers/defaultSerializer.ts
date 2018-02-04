@@ -21,10 +21,11 @@ export class DefaultSerializer implements ISerializer {
                 return body;
         }
 
-        if (request.headers["content-type"] !== "application/json")
-            throw new BadRequestError("Unsupported Media Type");
+        let body = request.body;
+        if (request.headers["content-type"] === "application/json")
+            body = JSON.parse(request.body);
 
-        return (typeof request.body === "object") ? request.body : JSON.parse(request.body);
+        return body; 
     }
 
     serialize(request: HttpRequest, response: HttpResponse) {

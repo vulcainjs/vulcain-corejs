@@ -1,11 +1,11 @@
 import { IRequestContext } from "../pipeline/common";
-import { PropertyOptions } from "./builder/annotations.property";
+import { PropertyDefinition } from "./builder/annotations.property";
 
 /**
  * Internal Property definition
  *
  */
-export interface ModelPropertyInfo extends PropertyOptions {
+export interface ModelPropertyDefinition extends PropertyDefinition {
     name: string;
     /**
     * List of validators - Do not use directly, use @Validator instead
@@ -19,18 +19,19 @@ export interface ModelPropertyInfo extends PropertyOptions {
      *
      * @memberOf PropertyOptions
      */
-    custom?: any;
+    metadata?: any;
 }
 
 export interface SchemaInfo {
     name: string;
     description?: string;
-    properties: { [index: string]: ModelPropertyInfo };
+    properties: { [index: string]: ModelPropertyDefinition };
     extends?: string;
     hasSensibleData?: boolean;
     coerce?: ((data) => any) | boolean;
     validate?: (val, ctx: IRequestContext) => string;
     storageName?: string;
     idProperty?: string;
-    custom?: any;
+    metadata?: any;
+    isInputModel: boolean;
 }

@@ -1,17 +1,17 @@
 import 'reflect-metadata';
-import { ModelOptions } from './annotations.model';
+import { ModelDefinition } from './annotations.model';
 import { Domain } from '../domain';
 import { Schema } from '../schema';
-import { ModelPropertyInfo } from '../schemaInfo';
+import { ModelPropertyDefinition } from '../schemaInfo';
 import { ISchemaValidation, ISchemaTypeDefinition } from '../schemaType';
 
 export class SchemaBuilder {
 
-    static buildSchema(domain: Domain, options: ModelOptions, type: Function) {
+    static buildSchema(domain: Domain, options: ModelDefinition, type: Function) {
         let schema = new Schema(domain, options, type);
         const sym = Symbol.for("design:properties");
 
-        const properties = Reflect.getOwnMetadata(sym, type.prototype) || [];
+        const properties: ModelPropertyDefinition[] = Reflect.getOwnMetadata(sym, type.prototype) || [];
 
         for (let property of properties) {
             if (property) {
@@ -24,8 +24,8 @@ export class SchemaBuilder {
 
                         if (!property.cardinality) {
                             // Try to infer cardinality (see Property annotation class)
-                            property.cardinality = property.$cardinality || "one";
-                            property.$cardinality = undefined;
+                            property.cardinality = (<any>property).$cardinality || "one";
+                            (<any>property).$cardinality = undefined;
                         }
 
                         if (!schema.info.hasSensibleData && propertySchema) {
@@ -62,7 +62,7 @@ export class SchemaBuilder {
         domain.addSchema(schema);
     }
 
-    private static createValidatorsChain(domain: Domain, typeName: string, attributeInfo, propertyName: string, obj) {
+    private static createValidatorsChain(domain: Domain, typeName: string, attributeInfo: ModelPropertyDefinition, propertyName: string, obj) {
         let chain = [];
         const symValidators = Symbol.for("design:validators");
 
@@ -112,9 +112,9 @@ export class SchemaBuilder {
             let pname = key === "validate" ? key : "$" + key;
             clone[pname] = from[key];
         }
-        if (from.custom) {
-            schema.$custom = {};
-            clone = SchemaBuilder.clone(schema.$custom, from.custom, clone);
+        if (from.metadata) {
+            schema.$metadata = {};
+            clone = SchemaBuilder.clone(schema.$metadata, from.metadata, clone);
         }
 
         return clone;

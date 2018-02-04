@@ -20,8 +20,8 @@ export { Domain } from './schemas/domain';
 export { SchemaInfo} from './schemas/schemaInfo';
 export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
 export { Validator, SchemaTypeDefinition } from './schemas/builder/annotations';
-export { Property, PropertyOptions } from './schemas/builder/annotations.property';
-export { ModelOptions, Model } from './schemas/builder/annotations.model';
+export { Property, PropertyDefinition } from './schemas/builder/annotations.property';
+export { ModelDefinition, Model } from './schemas/builder/annotations.model';
 export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards/standards';
 
 // Auth
@@ -39,11 +39,14 @@ export { ITracker } from './instrumentations/common';
 export { ServerAdapter } from './pipeline/serverAdapter';
 
 // Pipeline
-export * from './pipeline/handlers/annotations';
-export { QueryHandler, ActionHandler, EventHandler } from './pipeline/handlers/annotations.handlers';
-export { ActionMetadata, ActionHandlerMetadata } from './pipeline/handlers/actions';
-export { EventNotificationMode,  ConsumeEventMetadata, EventMetadata, EventData } from './pipeline/handlers/messageBus';
-export { QueryActionMetadata, QueryMetadata, QueryResult } from './pipeline/handlers/query';
+export { IManager } from './pipeline/handlers/definitions';
+export { Query } from './pipeline/handlers/query/annotations.query';
+export { QueryHandler } from './pipeline/handlers/query/annotations.queryHandler';
+export { ActionHandler, EventHandler, Action, Consume } from './pipeline/handlers/action/annotations';
+export { ActionDefinition, ActionHandlerDefinition } from './pipeline/handlers/action/definitions';
+export { EventNotificationMode,  ConsumeEventDefinition, EventDefinition, EventData } from './pipeline/handlers/messageBus';
+export { QueryOperationDefinition, QueryDefinition } from './pipeline/handlers/query/definitions';
+export { QueryResult } from './pipeline/handlers/query/queryResult';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
 export { RequestData, IRequestContext, Pipeline, VulcainResponse } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';

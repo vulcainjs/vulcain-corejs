@@ -2,7 +2,8 @@ import {IContainer} from '../di/resolvers';
 import {Inject} from '../di/annotations';
 import { AbstractProviderCommand } from "../commands/abstractProviderCommand";
 import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handlers/abstractHandlers";
-import { Action, Query } from "../pipeline/handlers/annotations";
+import { Action } from "../pipeline/handlers/action/annotations";
+import { Query } from "../pipeline/handlers/query/annotations.query";
 import { ICommand } from "../commands/abstractCommand";
 import { Command } from "../commands/commandFactory";
 import { ApplicationError } from './../pipeline/errors/applicationRequestError';
@@ -154,10 +155,10 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         return await cmd.getWithSensibleData(id);
     }
 
-    @Query({ action: "all", description: "Get all entities" })
-    async getAll(query?: any,  maxByPage?:number, page?:number) : Promise<QueryResult> {
+    @Query({ action: "all", description: "Get all entities", outputCardinality:"many" })
+    async getAll(query?: any,  pageSize?:number, page?:number) : Promise<QueryResult> {
         let options = {
-            maxByPage: maxByPage || this.context.requestData.maxByPage || 0,
+            pageSize: pageSize || this.context.requestData.pageSize || 0,
             page: page || this.context.requestData.page || 0,
             query: query || {}
         };

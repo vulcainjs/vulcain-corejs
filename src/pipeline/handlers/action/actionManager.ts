@@ -1,21 +1,23 @@
-import { MessageBus, EventNotificationMode, ConsumeEventMetadata, EventData } from './messageBus';
-import { IContainer } from '../../di/resolvers';
-import { Domain } from '../../schemas/domain';
-import { DefaultServiceNames } from '../../di/annotations';
-import { HandlerFactory, CommonActionMetadata, IManager, ServiceHandlerMetadata } from './common';
+import { MessageBus, EventNotificationMode, ConsumeEventDefinition, EventData } from '../messageBus';
+import { IContainer } from '../../../di/resolvers';
+import { Domain } from '../../../schemas/domain';
+import { DefaultServiceNames } from '../../../di/annotations';
+import { ServiceDescriptors, Handler } from '../descriptions/serviceDescriptions';
+import { Service } from '../../../globals/system';
+import { RequestContext } from "../../../pipeline/requestContext";
+import { RequestData, Pipeline, ICustomEvent } from "../../../pipeline/common";
+import { CommandRuntimeError } from "../../errors/commandRuntimeError";
+import { UserContextData } from "../../../security/securityContext";
+import { HttpResponse } from "../../response";
+import { ApplicationError } from "../../errors/applicationRequestError";
+import { BadRequestError } from "../../errors/badRequestError";
+import { ITaskManager } from "../../../providers/taskManager";
+import { IRequestContext } from '../../../index';
+import { HandlerProcessor } from '../../handlerProcessor';
 import { EventHandlerFactory } from './eventHandlerFactory';
-import { ServiceDescriptors, HandlerInfo } from './serviceDescriptions';
-import { Service } from '../../globals/system';
-import { RequestContext } from "../../pipeline/requestContext";
-import { RequestData, Pipeline, ICustomEvent } from "../../pipeline/common";
-import { CommandRuntimeError } from "../errors/commandRuntimeError";
-import { UserContextData } from "../../security/securityContext";
-import { HttpResponse } from "../response";
-import { ApplicationError } from "../errors/applicationRequestError";
-import { BadRequestError } from "../errors/badRequestError";
-import { ITaskManager } from "../../providers/taskManager";
-import { IRequestContext } from '../../index';
-import { HandlerProcessor } from '../handlerProcessor';
+import { ActionDefinition } from './definitions';
+import { IManager } from '../definitions';
+import { Utils } from '../utils';
 
 export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending" | "Running";
@@ -30,45 +32,6 @@ export interface ActionResult {
     value?:any;
     status?: "Error" | "Success" | "Pending";
     taskId?: string;
-}
-
-/**
- * Declare default action handler definition
- *
- * @export
- * @interface ActionHandlerMetadata
- * @extends {ServiceHandlerMetadata}
- */
-export interface ActionHandlerMetadata extends ServiceHandlerMetadata {
-    /**
-     *
-     *
-     * @type {boolean}
-     * @memberOf ActionHandlerMetadata
-     */
-    async?: boolean;
-    /**
-     *
-     *
-     * @type {EventNotificationMode}
-     * @memberOf ActionHandlerMetadata
-     */
-    eventMode?: EventNotificationMode;
-}
-
-/**
- *
- *
- * @export
- * @interface ActionMetadata
- * @extends {CommonActionMetadata}
- */
-export interface ActionMetadata extends CommonActionMetadata {
-    skipDataValidation?: boolean;
-    async?: boolean;
-    eventMode?: EventNotificationMode;
-    eventFactory?: (context: IRequestContext, event: EventData) => EventData;
-    eventOptions?: any;
 }
 
 export class CommandManager implements IManager {
@@ -113,9 +76,9 @@ export class CommandManager implements IManager {
         (<any>ctx)._customEvents = null;
     }
 
-    private async validateRequestData(ctx: RequestContext, info:any, command: RequestData, skipValidation: boolean) {
+    private async validateRequestData(ctx: RequestContext, info:Handler, command: RequestData, skipValidation: boolean) {
         let errors;
-        let inputSchema = info.metadata.inputSchema;
+        let inputSchema = info.definition.inputSchema;
         if (inputSchema && inputSchema !== "none") {
             let schema = inputSchema && this.domain.getSchema(inputSchema);
             if (schema) {
@@ -153,7 +116,7 @@ export class CommandManager implements IManager {
             schema: ctx.requestData.schema,
             source: Service.fullServiceName,
             startedAt: Service.nowAsString(),
-            value: result && HandlerFactory.obfuscateSensibleData(this.domain, ctx.container, result),
+            value: result && Utils.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
             userContext: ctx.user.getUserContext(),
             status: status,
@@ -162,22 +125,22 @@ export class CommandManager implements IManager {
         return event;
     }
 
-    async run(info: HandlerInfo, command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
+    async run(info: Handler, command: RequestData, ctx: RequestContext): Promise<HttpResponse> {
 
-        let metadata = <ActionMetadata>info.metadata;
-        let eventMode = metadata.eventMode || EventNotificationMode.successOnly;
+        let def = <ActionDefinition>info.definition;
+        let eventMode = def.eventMode || EventNotificationMode.successOnly;
 
         try {
-            let skipValidation = metadata.skipDataValidation || (metadata.action === "delete" && metadata.skipDataValidation === undefined);
+            let skipValidation = def.skipDataValidation || (def.action === "delete" && def.skipDataValidation === undefined);
             let errors = await this.validateRequestData(ctx, info, command, skipValidation);
             if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }
 
-            command.schema = command.schema || <string>info.metadata.schema;
+            command.schema = command.schema || <string>info.definition.schema;
 
             // Synchronous task
-            if (!metadata.async) {
+            if (!def.async) {
 
                 info.handler.context = ctx;
                 /** // Inject runTask in the current context
@@ -190,8 +153,8 @@ export class CommandManager implements IManager {
                     this.messageBus.pushTask(task);
                     };
                 **/
-                let resultRaw = await info.handler[info.method](command.params);
-                let result = resultRaw && HandlerFactory.obfuscateSensibleData(this.domain, this.container, resultRaw);
+                let resultRaw = await info.handler[info.methodName](command.params);
+                let result = resultRaw && Utils.obfuscateSensibleData(this.domain, this.container, resultRaw);
 
                 if (!(result instanceof HttpResponse)) {
                     let res: ActionResult = {
@@ -202,8 +165,8 @@ export class CommandManager implements IManager {
 
                 if ((eventMode === EventNotificationMode.successOnly && result.statusCode === 200) || eventMode === EventNotificationMode.always) {
                     let event = this.createEvent(ctx, "Success", resultRaw);
-                    if (metadata.eventFactory)
-                        event = metadata.eventFactory(ctx, event);
+                    if (def.eventFactory)
+                        event = def.eventFactory(ctx, event);
                     if(event)
                         this.messageBus.sendEvent(event);
                 }
@@ -253,8 +216,8 @@ export class CommandManager implements IManager {
             return;
         }
 
-        let metadata = <ActionMetadata>info.metadata;
-        let eventMode = metadata.eventMode || EventNotificationMode.always;
+        let def = <ActionDefinition>info.definition;
+        let eventMode = def.eventMode || EventNotificationMode.always;
 
         let taskManager = this.container.get<ITaskManager>(DefaultServiceNames.TaskManager, true);
         try {
@@ -267,17 +230,17 @@ export class CommandManager implements IManager {
 
             ctx.requestTracker.trackAction(command.vulcainVerb);
             info.handler.context = ctx;
-            let result = await info.handler[info.method](command.params);
+            let result = await info.handler[info.methodName](command.params);
 
             if (result instanceof HttpResponse) {
                 throw new Error("Custom Http Response is not valid in an async action");
             }
             if (eventMode === EventNotificationMode.always || eventMode === EventNotificationMode.successOnly) {
-                result = result && HandlerFactory.obfuscateSensibleData(this.domain, this.container, result);
+                result = result && Utils.obfuscateSensibleData(this.domain, this.container, result);
                 let event = this.createEvent(ctx, "Success", result);
                 event.completedAt = Service.nowAsString();
-                if (metadata.eventFactory)
-                    event = metadata.eventFactory(ctx, event);
+                if (def.eventFactory)
+                    event = def.eventFactory(ctx, event);
                 if(event)
                     this.messageBus.sendEvent(event);
             }
@@ -289,8 +252,8 @@ export class CommandManager implements IManager {
                 let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
                 let event = this.createEvent(ctx, "Error", null, error);
                 event.completedAt = Service.nowAsString();
-                if (metadata.eventFactory)
-                    event = metadata.eventFactory(ctx, event);
+                if (def.eventFactory)
+                    event = def.eventFactory(ctx, event);
                 if(event)
                     this.messageBus.sendEvent(event);
             }
@@ -309,7 +272,7 @@ export class CommandManager implements IManager {
         if (!this._initialized) {
             this._initialized = true;
             for (let item of CommandManager.eventHandlersFactory.allHandlers()) {
-                this.bindEventHandler(<ConsumeEventMetadata>item.metadata);
+                this.bindEventHandler(<ConsumeEventDefinition>item.definition);
             }
         }
     }
@@ -317,22 +280,22 @@ export class CommandManager implements IManager {
     /**
      *
      */
-    private bindEventHandler(metadata: ConsumeEventMetadata) {
+    private bindEventHandler(def: ConsumeEventDefinition) {
         // Subscribe to events for a domain, a schema and an action
         // Get event stream for a domain
-        let events = this.messageBus.getEventQueue(metadata.subscribeToDomain || this.domain.name, metadata.distributionMode === "once" ? metadata.distributionKey: null);
+        let events = this.messageBus.getEventQueue(def.subscribeToDomain || this.domain.name, def.distributionMode === "once" ? def.distributionKey: null);
 
         // Filtered by schema
-        if (metadata.subscribeToSchema !== '*') {
-            events = events.filter(e => e.schema === metadata.subscribeToSchema);
+        if (def.subscribeToSchema !== '*') {
+            events = events.filter(e => e.schema === def.subscribeToSchema);
         }
         // Filtered by action
-        if (metadata.subscribeToAction !== '*') {
-            events = events.filter(e => !e.action ||  (e.action.toLowerCase() === metadata.subscribeToAction));
+        if (def.subscribeToAction !== '*') {
+            events = events.filter(e => !e.action ||  (e.action.toLowerCase() === def.subscribeToAction));
         }
         // And by custom filter
-        if (metadata.filter)
-            events = metadata.filter(events);
+        if (def.filter)
+            events = def.filter(events);
 
         events.subscribe(async (evt: EventData) => {
             let handlers = CommandManager.eventHandlersFactory.getFilteredHandlers(evt.domain, evt.schema, evt.action);
