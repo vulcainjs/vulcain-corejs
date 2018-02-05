@@ -14,7 +14,7 @@ interface PoolItem {
 
 class ContextualProvider {
     constructor(public ctx: IRequestContext, provider) {
-        (<any>this).__proto__ = Object.getPrototypeOf(provider)
+        (<any>this).__proto__ = Object.getPrototypeOf(provider);
         Object.assign(this, provider);
     }
 }
