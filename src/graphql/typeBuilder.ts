@@ -117,7 +117,7 @@ export class GraphQLTypeBuilder {
                 if (idPropertyName) {
                     const idProperty = outputSchema.info.properties[idPropertyName];                    
                     args[outputSchema.getIdProperty()] =  {
-                        type: this.createScalarType(idProperty.type)
+                        type: this.createScalarType(idProperty.type,idPropertyName)
                     };
                 }
             }
@@ -126,9 +126,17 @@ export class GraphQLTypeBuilder {
         return { operationName, outputType, args };
     }
 
-    private createScalarType(propType: string) {
+    private createScalarType(propType: string, propertyName: string) {
         if (!propType)
             return null;    
+        
+        if (propType === "enum") {
+            let t = this.domain.getType(propType);
+            if (t) {
+                return new graphql.GraphQLEnum({name: propertyName + "_enum", values: (<any>t).$values, description: t.description});
+            }
+        }
+        
         switch (this.domain.getScalarTypeOf(propType)) {
             case "id":
                 return graphql["GraphQLID"];
@@ -154,11 +162,11 @@ export class GraphQLTypeBuilder {
         if (t)
             return t;
 
-        let fields = {};
+        let fields = { "__schema": { type: graphql.GraphQLString}};
         for (let p in schema.info.properties) {
             let prop = schema.info.properties[p];
 
-            let type = this.createScalarType(prop.type);
+            let type = this.createScalarType(prop.type, prop.name);
 
             if (!type) {
                 let sch = this.domain.getSchema(prop.type, true);
@@ -184,7 +192,6 @@ export class GraphQLTypeBuilder {
             if (prop.required) {
                 let t = fields[prop.name].type;
                 fields[prop.name].type = graphql.GraphQLNonNull(t);
-                fields[prop.name].type.name = t.name + "!";
             }
         }
 
