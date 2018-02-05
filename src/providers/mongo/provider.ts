@@ -245,20 +245,14 @@ export class MongoProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    async delete(schema: Schema, old: string | any) {
-        if (!old)
-            throw new Error("MONGODB delete: Argument is required");
+    async delete(schema: Schema, id: string | number) {
+        if (!id)
+            throw new Error("MONGODB delete: Id is required");
+        
         await this.ensureSchemaReady(schema);
         let self = this;
         return new Promise<boolean>(async (resolve, reject) => {
-            let id;
             let keyPropertyName = self.state.keyPropertyNameBySchemas.get(schema.name);
-            if (typeof old === "string")
-                id = old;
-            else
-                id = old[keyPropertyName];
-            if (!id)
-                throw new Error(`MONGODB delete : Id must not be null`);
             let filter = {};
             filter[keyPropertyName || "_id"] = id;
 
@@ -274,7 +268,7 @@ export class MongoProvider implements IProvider<any>
                     }
                     else {
                         self.ctx.logInfo(()=>`MONGODB: Deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}. Result=${res}`);
-                        resolve();
+                        resolve(res);
                     }
                 });
             }
@@ -285,7 +279,7 @@ export class MongoProvider implements IProvider<any>
         });
     }
 
-    private normalizeErrors(id: string, err) {
+    private normalizeErrors(id: string|number, err) {
         if (!err || !err.errors) return err;
         let error = new ApplicationError("Mongo error - " + (err.message || ""));
         if (err.errors) {

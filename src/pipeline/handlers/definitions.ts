@@ -9,7 +9,7 @@ import { Handler } from './descriptions/serviceDescriptions';
 
 export interface OperationDefinition {
     description: string;
-    action?: string;
+    name?: string;
     scope?: string;
     schema?: string;
     inputSchema?: string;

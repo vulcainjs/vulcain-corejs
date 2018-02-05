@@ -6,6 +6,7 @@ import { ModelDefinition } from './builder/annotations.model';
 import { ISchemaTypeDefinition, ISchemaValidation } from './schemaType';
 import { Files } from '../utils/files';
 import * as Path from 'path';
+import { ApplicationError } from '..';
 
 const scalarType = Symbol("scalar");
 
@@ -58,6 +59,8 @@ export class Domain {
     }
 
     addSchema(schema: Schema) {
+        if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(schema.name))
+            throw new ApplicationError(`Schema name ${schema.name}has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);    
         this._schemas.set(schema.name, schema);
     }
 

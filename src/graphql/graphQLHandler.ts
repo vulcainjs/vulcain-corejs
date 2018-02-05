@@ -9,24 +9,30 @@ import { IRequestContext, RequestData } from '../pipeline/common';
 import { HttpResponse } from "../pipeline/response";
 import { ActionHandler, Action } from "../pipeline/handlers/action/annotations";
 import { GraphQLTypeBuilder } from "./typeBuilder";
+import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 const graphql = require('graphql');
 
-@ActionHandler({ async: false, scope: "?" }, { system: true })
 export class GraphQLActionHandler extends AbstractHandler {
     private static _schema;
 
     get graphQuerySchema() {
         if (!GraphQLActionHandler._schema) {
-            const builder = new GraphQLTypeBuilder(this.container);
+            const builder = new GraphQLTypeBuilder(this.context);
             GraphQLActionHandler._schema = builder.build();
         }
         return GraphQLActionHandler._schema;
 
     }
 
-    @Action({ description: "Custom action", outputSchema: "string" })
+    @Action({ description: "Custom action", name: "_graphql" })
     async graphql(g: any) {
-        let response = await graphql.graphql( this.graphQuerySchema, g, null, this.context);
-        return new HttpResponse(response);
+        let response = await graphql.graphql(this.graphQuerySchema, g.query || g, null, this.context, g.variables);
+        if (this.metadata.metadata.responseType === "graphql")
+            return new HttpResponse(response);
+
+        if (response.errors && response.errors.length > 0) {
+            throw new ApplicationError(response.errors[0].message);
+        }
+        return response.data;
     }
 }

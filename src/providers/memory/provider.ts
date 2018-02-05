@@ -167,29 +167,23 @@ export class MemoryProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    delete(schema: Schema, old: string | any) {
-        if (!old)
-            throw new Error("Argument is required");
+    delete(schema: Schema, id: string | number) {
+        if (!id)
+            throw new Error("Id is required");
+        
         let data = this.ensureSchema(schema).data;
-
         let self = this;
         return new Promise<boolean>((resolve, reject) => {
             try {
-                let id;
-                if (typeof old === "string")
-                    id = old;
-                else
-                    id = schema.getId(old);
-
                 let list = data.entities;
                 if (list && list[id]) {
+                    resolve(list[id]);
                     delete list[id];
                     data.count--;
                     self.save(schema);
-                    resolve(true);
                 }
                 else {
-                    resolve(false);
+                    resolve(null);
                 }
             }
             catch (err) {

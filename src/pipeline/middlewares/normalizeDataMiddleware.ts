@@ -47,7 +47,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         if( Service.isTestEnvironment)
             ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
 
-        if (Object.getOwnPropertyDescriptor(ctx.response.content, "value")) {
+        if (Object.getOwnPropertyDescriptor(ctx.response.content, "value") || Object.getOwnPropertyDescriptor(ctx.response.content, "error")) {
             ctx.response.content.meta = ctx.response.content.meta || {};
             ctx.response.content.meta.correlationId = ctx.requestData.correlationId;
         }
@@ -56,7 +56,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
     private populateData(ctx: RequestContext) {
         let action: string;
         let schema: string;
-        let id: string = null;
 
         const url = ctx.request.url;
         const body = ctx.request.body;
@@ -68,13 +67,6 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         if (schemaAction) {
             if (schemaAction[schemaAction.length - 1] === '/')
                 schemaAction = schemaAction.substr(0, schemaAction.length - 1);
-
-            // Path can contain an id (/schema.action/id)
-            let pos = schemaAction && schemaAction.indexOf('/') || -1;
-            if (pos >= 0) {
-                id = schemaAction.substr(pos + 1);
-                schemaAction = schemaAction.substr(0, pos);
-            }
         }
 
         // Split schema and action (schema is optional)
@@ -139,16 +131,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
             catch (ex) {/*ignore*/ }
         });
 
-        // If there is an id and no params, params is the id
-        if (!ctx.requestData.params) {
-            ctx.requestData.params = id || {};
-        }
-        else if(id) {
-            ctx.requestData.params.id = id;
-        }
-
         ctx.requestData.vulcainVerb = ctx.requestData.schema ?  `${ctx.requestData.schema}.${ctx.requestData.action}` : ctx.requestData.action;
-
         ctx.requestTracker.trackAction(ctx.requestData.vulcainVerb);
     }
 }

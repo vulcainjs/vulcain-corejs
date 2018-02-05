@@ -5,7 +5,7 @@
             "name": "Test with debug",
             "type": "node",
 			"request": "launch",
-			"smartStep": false,
+			"smartStep": true,
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             "preLaunchTask": "build",

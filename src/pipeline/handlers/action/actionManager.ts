@@ -131,7 +131,7 @@ export class CommandManager implements IManager {
         let eventMode = def.eventMode || EventNotificationMode.successOnly;
 
         try {
-            let skipValidation = def.skipDataValidation || (def.action === "delete" && def.skipDataValidation === undefined);
+            let skipValidation = def.skipDataValidation || (def.name === "delete" && def.skipDataValidation === undefined);
             let errors = await this.validateRequestData(ctx, info, command, skipValidation);
             if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);

@@ -3,6 +3,8 @@ import { IContainer } from '../di/resolvers';
 import { ICommand } from "../commands/abstractCommand";
 import { HttpRequest } from "./vulcainPipeline";
 import { ISpanTracker, ITracker } from '../instrumentations/common';
+import { Model } from '../schemas/builder/annotations.model';
+import { Property} from '../schemas/builder/annotations.property';
 
 export interface VulcainResponse<T=any> {
     meta: {
@@ -125,4 +127,10 @@ export interface RequestData {
     page?: number;
     inputSchema?: string;
     body?: any;
+}
+
+@Model()
+export class IdArguments {
+    @Property({type:"id"})
+    id: any;
 }

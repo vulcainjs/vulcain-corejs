@@ -5,7 +5,7 @@ const uuid = require('uuid');
 @SchemaTypeDefinition("uid")
 export class UID implements ISchemaTypeDefinition {
     description= "Must be an UID (will be generated if null)";
-    type= "string";
+    type= "id";
     coerce(v) {
         return v || uuid.v1();
     }

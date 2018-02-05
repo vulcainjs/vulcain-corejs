@@ -12,6 +12,7 @@ export interface IActionMetadata {
     scope?: string;
     schema: string;
     inputSchema?: string;
+    metadata?: any;
 }
 
 export abstract class AbstractHandler implements IScopedComponent {

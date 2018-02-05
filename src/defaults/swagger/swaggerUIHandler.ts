@@ -10,7 +10,7 @@ import { QueryHandler } from '../../pipeline/handlers/query/annotations.queryHan
 @QueryHandler({ scope: "?", serviceLifeTime: LifeTime.Singleton })
 export class SwaggerUIHandler {
 
-    @Query({ outputSchema: "string", description: "Display Swagger UI", action: "_swagger" }, {system:true})
+    @Query({ outputSchema: "string", description: "Display Swagger UI", name: "_swagger" }, {system:true})
     displaySwaggerUI() {
         let ctx: RequestContext = (<any>this).context;
         if (ctx.publicPath)

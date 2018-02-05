@@ -6,16 +6,19 @@ import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { OperationDescription } from "../pipeline/handlers/descriptions/operationDescription";
+import { Service } from "..";
 const graphql = require('graphql');
+
+const resolverSymbol = Symbol.for("vulcain_resolver");
 
 export class GraphQLTypeBuilder {
     private types = new Map<string, any>();
     private descriptors: ServiceDescriptors;
     private domain: Domain;
 
-    constructor(private container:IContainer) {
-        this.descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        this.domain = this.container.get<Domain>(DefaultServiceNames.Domain);
+    constructor(private context: IRequestContext) {
+        this.descriptors = context.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        this.domain = context.container.get<Domain>(DefaultServiceNames.Domain);
     }
     
     private *getHandlers(kind: "action"|"query") {
@@ -36,20 +39,21 @@ export class GraphQLTypeBuilder {
     private createQueryOperations() {
         let fields = {};
         for (let queryHandler of this.getHandlers("query")) {
-            if (queryHandler.action === "get")
+            if (queryHandler.name === "get")
                 continue;
 
             let { operationName, outputType, args } = this.createHandlerType(queryHandler);
             if (!outputType)
-                throw new Error(`GRAPHQL : Query handler ${queryHandler.verb} must have an output schema`);
+                continue;
             
             // Define the Query type
             fields[operationName] =
                 {
-                type: queryHandler.outputCardinality === "one" ? new graphql.GraphQLList(outputType) : outputType,
+                type: queryHandler.outputCardinality === "many" ? new graphql.GraphQLList(outputType) : outputType,
                     args,
-                    resolve: this.resolve
+                    resolve: this.resolveQuery
                 };
+            this.context.logInfo(() => `GRAPHQL: Enabling query handler ${operationName}`);
         }
         return new graphql.GraphQLObjectType({
             name: 'Query',
@@ -62,15 +66,18 @@ export class GraphQLTypeBuilder {
         for (let actionHandler of this.getHandlers("action")) {
    
             let { operationName, outputType, args } = this.createHandlerType(actionHandler);
-            let type = outputType && actionHandler.outputCardinality === "one" ? new graphql.GraphQLList(outputType) : outputType;
+            if (!outputType)
+                continue;    
+            let type = actionHandler.outputCardinality === "many" ? new graphql.GraphQLList(outputType) : outputType;
 
             // Define the Query type
             fields[operationName] =
                 {
                     type,
                     args,
-                    resolve: this.resolve
+                    resolve: this.resolveMutation
                 };
+            this.context.logInfo(() => `GRAPHQL: Enabling mutation handler ${operationName}`);
         }
 
         return new graphql.GraphQLObjectType({
@@ -79,19 +86,25 @@ export class GraphQLTypeBuilder {
         });
     }
 
-    private createHandlerType(queryHandler: OperationDescription) {
-        let outputSchema = queryHandler.outputSchema && this.domain.getSchema(queryHandler.outputSchema, true);
+    private createHandlerType(handler: OperationDescription) {
+        let outputSchema = handler.outputSchema && this.domain.getSchema(handler.outputSchema, true);
         let args: any;
-        let operationName = queryHandler.verb.replace(/\./g, "_");
+        let operationName = handler.verb.replace(/\./g, "_");
 
         let outputType = this.createType(outputSchema);
 
-        if (queryHandler.inputSchema) {
-                let inputSchema = this.domain.getSchema(queryHandler.inputSchema, true);
-               // if (inputSchema)
-               //     args = this.createType(inputSchema, true);
-        }    
-        else if (queryHandler.action === "all") {
+        // Ignore handler if outputSchema is not a model
+        if (!outputType) {
+            this.context.logInfo(() => `GRAPHQL: Skipping handler ${handler.verb} with no outputSchema or with a scalar output schema.`);
+            return {};
+        }
+
+        if (handler.inputSchema) {
+            let inputSchema = this.domain.getSchema(handler.inputSchema, true);
+            if (inputSchema)
+                args = { ["input"]: { type: this.createType(inputSchema, true) } };
+        }
+        else if (handler.name === "all") {
             if(outputSchema)
                 operationName = outputSchema.name;
             args = {
@@ -99,17 +112,15 @@ export class GraphQLTypeBuilder {
                 _page: { type: graphql.GraphQLInt }
             };
 
-            if (!outputSchema || !outputSchema.getIdProperty()) {
-                args[outputSchema.getIdProperty()] = { type: graphql["GraphQLString"] }; // TODO get type from prop
+            if (outputSchema) {
+                const idPropertyName = outputSchema.getIdProperty();
+                if (idPropertyName) {
+                    const idProperty = outputSchema.info.properties[idPropertyName];                    
+                    args[outputSchema.getIdProperty()] =  {
+                        type: this.createScalarType(idProperty.type)
+                    };
+                }
             }
-        }
-
-        // Ensure outputType is not null
-        if (!outputType) {
-            if (queryHandler.outputSchema)
-                outputType = this.createScalarType(queryHandler.outputSchema);
-            else
-                outputType = graphql.GraphQLString; // Force a type (void is not authorized with graphQL)
         }
         
         return { operationName, outputType, args };
@@ -118,8 +129,9 @@ export class GraphQLTypeBuilder {
     private createScalarType(propType: string) {
         if (!propType)
             return null;    
-        switch (this.domain.getScalarTypeOf(propType)) {
-            case "uid":
+        switch (this.domain.getScalarTypeOf(propType).toLowerCase()) {
+            case "id":
+                return graphql["GraphQLID"];
             case "string":
                 return graphql["GraphQLString"];
             case "number":
@@ -134,7 +146,11 @@ export class GraphQLTypeBuilder {
         if (!schema)
             return null;
         
-        let t = this.types.get(schema.name);
+        let name = schema.name;
+        if (createInputType)
+            name = name + "_Input";
+        
+        let t = this.types.get(name);
         if (t)
             return t;
 
@@ -147,13 +163,15 @@ export class GraphQLTypeBuilder {
             if (!type) {
                 let sch = this.domain.getSchema(prop.type, true);
                 if (sch) {
-                    let t = this.createType(sch);
+                    let t = this.createType(sch, createInputType);
                     if (prop.cardinality === "many")
                         t = new graphql.GraphQLList(t);
                     fields[prop.name] = {
                         type: t,
-                        resolve: this.resolve
                     };
+
+                    if (!createInputType)
+                        fields[prop.name].resolve = this.resolveQuery;
                 }
             }
             else {
@@ -171,7 +189,7 @@ export class GraphQLTypeBuilder {
         }
 
         t = {
-            name: schema.name,
+            name,
             fields: () => fields
         };
 
@@ -180,23 +198,42 @@ export class GraphQLTypeBuilder {
 
         let type;
         if (createInputType) {
-            t.name = t.name + "_Input";
-            type = new graphql.GraphQLInputType(t);
+            type = new graphql.GraphQLInputObjectType(t);
         }
         else {
             type = new graphql.GraphQLObjectType(t);
         }
-        this.types.set(schema.name, type);
+        this.types.set(name, type);
 
         return type;
     }
 
-    private async resolve(entity, args, ctx: IRequestContext, info) {
-        if (info.returnType.$$resolver) {
-            return info.returnType.$$resolver(entity, ctx);
+    private async resolveMutation(entity, args, ctx: IRequestContext, info:any) {
+        let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
+        let fieldName: string = info.fieldName;
+        let pos = fieldName.lastIndexOf('_');
+        if (pos < 0) {
+            ctx.requestData.schema = null;
+            ctx.requestData.action = fieldName;
+        }
+        else {
+            ctx.requestData.schema = fieldName.substr(0, pos);
+            ctx.requestData.action = fieldName.substr(pos + 1);
+        }   
+        ctx.requestData.params = args.input;
+        ctx.requestData.vulcainVerb = fieldName;
+
+        let handler = processor.getHandlerInfo(ctx.container, ctx.requestData.schema, ctx.requestData.action);
+        let res = await processor.invokeHandler(ctx, handler);
+        return res.content.value;
+    }
+
+    private async resolveQuery(entity, args, ctx: IRequestContext, info) {
+        if (info.returnType[resolverSymbol]) {
+            return info.returnType[resolverSymbol](entity, ctx);
         }
         // check root schema
-        // else check remote root schema (=> au démarrage faire une requete à toutes les depandances sur _servicedescription pour connaitre les root schema)
+        // else check remote root schema (=> au démarrage faire une requete à toutes les dependances sur _servicedescription pour connaitre les root schema)
         // else return entity[fieldName]
         let schema = info.returnType;
         let isList = false;
@@ -205,13 +242,25 @@ export class GraphQLTypeBuilder {
             isList = true;
         }
 
+        let fieldName: string = info.fieldName;
+        let pos = fieldName.lastIndexOf('_');
+        if (pos < 0) {
+            ctx.requestData.schema = fieldName;
+            ctx.requestData.action = "all";
+        }
+        else {
+            ctx.requestData.schema = fieldName.substr(0, pos);
+            ctx.requestData.action = fieldName.substr(pos + 1);
+        }    
+        ctx.requestData.vulcainVerb = fieldName;
+
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
-        let handler = processor.getHandlerInfo(ctx.container, schema.name, isList ? "all" : "get");
+        let handler = processor.getHandlerInfo(ctx.container, ctx.requestData.schema, ctx.requestData.action);
         if (!handler) {
             // args doit être null sinon faut faire une recherche ????
             let fn = info.fieldName;
-            info.returnType.$$resolver = (e) => e && e[fn];
-            return info.returnType.$$resolver(entity);
+            info.returnType[resolverSymbol] = (e) => e && e[fn];
+            return info.returnType[resolverSymbol](entity, ctx);
         }
 
         let data: RequestData = { ...ctx.requestData, params: args };

@@ -21,6 +21,8 @@ import { LocalAdapter } from "./bus/localAdapter";
 import { Service } from './globals/system';
 import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 import './graphql/graphQLHandler';
+import { ActionHandler } from './pipeline/handlers/action/annotations';
+import { GraphQLActionHandler } from './graphql/graphQLHandler';
 
 const vulcainExecutablePath = __dirname;
 const applicationPath = Path.dirname(module.parent.parent.filename);
@@ -52,6 +54,11 @@ export class Application {
 
     public useService(name: string, service: Function, lifeTime?: LifeTime) {
         this.container.inject(name, service, lifeTime);
+        return this;
+    }
+
+    public enableGraphQL(responseType: "vulcain"|"graphql" = "graphql") {
+        ActionHandler({ async: false, scope: "?", description: "GraphQL action handler" }, { responseType, system: true })(GraphQLActionHandler);
         return this;
     }
 

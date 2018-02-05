@@ -6,6 +6,7 @@ import { Service } from '../../../globals/system';
 import { IContainer } from '../../../di/resolvers';
 import { DefaultServiceNames } from '../../../di/annotations';
 import { Utils } from '../utils';
+import { ApplicationError } from '../../../pipeline/errors/applicationRequestError';
 
 //const symMetadata = Symbol.for("handler:metadata");
 const symActions = Symbol.for("handler:actions");
@@ -34,11 +35,17 @@ export function Query(def: QueryOperationDefinition, metadata?:any) {
         if (output && ["Promise", "Object", "void 0", "null"].indexOf(output.name) < 0) {
             actions[key].outputSchema = Utils.resolveType(output.name);
         }
-        if (!actions[key].action) {
+        if (!actions[key].name) {
             let tmp = key.toLowerCase();
             if (tmp.endsWith("async")) tmp = tmp.substr(0, tmp.length - 5);
-            actions[key].action = tmp;
+            actions[key].name = tmp;
         }
+
+        if (!/^[_a-zA-Z][a-zA-Z0-9]*$/.test(actions[key].name)) {
+            if (actions[key].name[0] !== '_' || !actions[key].metadata.system)  // Only system handler can begin with _ (to be consistant withj graphql)              
+                throw new ApplicationError(`Query name ${actions[key].name}has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);
+        }
+
         Reflect.defineMetadata(symActions, actions, target.constructor);
     };
 }

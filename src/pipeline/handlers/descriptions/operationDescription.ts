@@ -2,7 +2,7 @@ export class OperationDescription {
     schema: string;
     kind: "action" | "query" | "get";
     description: string;
-    action: string;
+    name: string;
     scope: string;
     inputSchema: string;
     outputSchema: string;

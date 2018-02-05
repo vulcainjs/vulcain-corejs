@@ -48,7 +48,7 @@ export { EventNotificationMode,  ConsumeEventDefinition, EventDefinition, EventD
 export { QueryOperationDefinition, QueryDefinition } from './pipeline/handlers/query/definitions';
 export { QueryResult } from './pipeline/handlers/query/queryResult';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
-export { RequestData, IRequestContext, Pipeline, VulcainResponse } from './pipeline/common';
+export { RequestData, IRequestContext, Pipeline, VulcainResponse, IdArguments } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
 export { ISerializer } from './pipeline/serializers/serializer';
@@ -56,8 +56,14 @@ export { HttpRequest } from './pipeline/vulcainPipeline';
 export { HandlerProcessor } from './pipeline/handlerProcessor';
 export { Logger } from './log/logger';
 export { UserContextData, } from './security/securityContext';
-export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
 export { TrackerId } from './instrumentations/common';
+export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
+
+// Descriptions
+export { ServiceDescriptors, Handler } from "./pipeline/handlers/descriptions/serviceDescriptions";
+export { PropertyDescription } from "./pipeline/handlers/descriptions/propertyDescription";
+export { SchemaDescription } from "./pipeline/handlers/descriptions/schemaDescription";
+export { ServiceDescription } from "./pipeline/handlers/descriptions/serviceDescription";
 
 // Bus adapter
 export * from './bus/busAdapter';

@@ -79,7 +79,7 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    get(schema: Schema, id: string): Promise<T>;
+    get(schema: Schema, id: string|number): Promise<T>;
     /**
      * Create an entity
      *
@@ -110,6 +110,6 @@ export interface IProvider<T>
      *
      * @memberOf IProvider
      */
-    delete(schema: Schema, old:string|T ) : Promise<boolean>;
+    delete(schema: Schema, id: number|string ) : Promise<T>;
 }
 

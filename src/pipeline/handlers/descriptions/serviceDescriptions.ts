@@ -112,12 +112,12 @@ export class ServiceDescriptors {
             let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
 
             let verb = !schema
-                ? item.definition.action
-                : schema + "." + item.definition.action;
+                ? item.definition.name
+                : schema + "." + item.definition.name;
 
             verb = verb.toLowerCase();
             if (this.routes.has(verb))
-                throw new Error(`*** Duplicate handler for action ${item.definition.action} for handler ${item.handler.name}`);
+                throw new Error(`*** Duplicate handler for action ${item.definition.name} for handler ${item.handler.name}`);
 
             Service.log.info(null, ()=> `Handler registered for action verb ${verb}`);
             this.routes.set(verb, item);
@@ -135,7 +135,7 @@ export class ServiceDescriptors {
                 verb: verb,
                 outputCardinality: def.outputCardinality || "one",
                 description: def.description,
-                action: def.action,
+                name: def.name,
                 scope: def.scope,
                 inputSchema: <string>def.inputSchema,
                 outputSchema: <string>def.outputSchema,
@@ -154,18 +154,18 @@ export class ServiceDescriptors {
             let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
 
             let verb = !item.definition.schema
-                ? item.definition.action
-                : schema + "." + item.definition.action;
+                ? item.definition.name
+                : schema + "." + item.definition.name;
 
             verb = verb.toLowerCase();
             if (this.routes.has(verb))
-                throw new Error(`*** Duplicate handler for query ${item.definition.action} for handler ${item.handler.name}`);
+                throw new Error(`*** Duplicate handler for query ${item.definition.name} for handler ${item.handler.name}`);
 
             Service.log.info(null, ()=> `Handler registered for query verb ${verb}`);
             this.routes.set(verb, item);
             item.verb = verb;
 
-            if (item.definition.action.startsWith("_service")) continue;
+            if (item.definition.name.startsWith("_service")) continue;
 
             let def = <QueryOperationDefinition>item.definition;
             def.inputSchema = this.getSchemaDescription(schemas, def.inputSchema);
@@ -174,11 +174,11 @@ export class ServiceDescriptors {
 
             let desc: OperationDescription = {
                 schema: schema,
-                kind: def.action === "get" ? "get" : "query",
+                kind: def.name === "get" ? "get" : "query",
                 verb: verb,
-                outputCardinality: def.outputCardinality || def.action === "get" ? "one" : "many",
+                outputCardinality: def.outputCardinality || (def.name === "get" ? "one" : "many"),
                 description: def.description,
-                action: def.action,
+                name: def.name,
                 scope: def.scope,
                 async: false,
                 inputSchema: <string>def.inputSchema,
@@ -186,9 +186,9 @@ export class ServiceDescriptors {
                 metadata: def.metadata
             };
 
-            if (desc.action === "get" && !desc.inputSchema)
+            if (desc.name === "get" && !desc.inputSchema)
                 desc.inputSchema = "string";
-            if (desc.action !== "get")
+            if (desc.name !== "get")
                 desc.outputSchema = desc.outputSchema; // ???
             
             this.descriptions.services.push(desc);
@@ -375,7 +375,7 @@ export class ServiceDescriptors {
         for (const action in actions) {
             let actionMetadata: OperationDefinition = actions[action];
             actionMetadata = actionMetadata || <OperationDefinition>{};
-            actionMetadata.action = actionMetadata.action || action;
+            actionMetadata.name = actionMetadata.name || action;
             actionMetadata.metadata = { ...actionMetadata.metadata, ...handlerDefinition.metadata };
 
             if (actionMetadata.schema) {

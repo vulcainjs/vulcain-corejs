@@ -1,10 +1,10 @@
 {
   "name": "vulcain-corejs",
-  "version": "2.0.0-beta916",
+  "version": "2.0.0-beta917",
   "description": "Vulcain micro-service framework",
   "main": "lib/src/index.js",
   "scripts": {
-    "test": "npm run build && mocha --reporter spec ./lib/test/**/*.spec.js",
+    "test": "npm run build && mocha --reporter spec ./lib/test/**/*.spec",
     "build": "tsc -p ."
   },
   "files": [

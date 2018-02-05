@@ -53,7 +53,7 @@ export class HttpResponse {
     }
 */
     static createFromError(err: ApplicationError): HttpResponse {
-        let res = new HttpResponse({ error: { message: err.message, errors: err.errors }}, err.statusCode|| 500);
+        let res = new HttpResponse({ error: { message: err.messageTitle || err.message, errors: err.errors }}, err.statusCode|| 500);
         return res;
     }
 

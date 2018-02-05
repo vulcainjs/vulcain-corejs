@@ -9,7 +9,8 @@ import { Command } from "../commands/commandFactory";
 import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 import { CommandFactory } from '../commands/commandFactory';
 import { Service } from '../globals/system';
-import { QueryResult } from '../index';
+import { QueryResult } from '../pipeline/handlers/query/queryResult';
+import { IdArguments } from '../pipeline/common';
 
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     create(entity: any) {
@@ -45,21 +46,27 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    deleteWithSensibleData(entity: any) {
-        return this.delete(entity);
+    deleteWithSensibleData(id: any) {
+        return this.delete(id);
     }
 
-    delete(entity: any) {
+    async delete(id: any) {
         this.setMetricTags("delete", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
-        let keyProperty = this.schema.getIdProperty();
-        return this.provider.delete(this.schema, entity[keyProperty]);
+        return this.provider.delete(this.schema, id);
     }
 
-    async get(id: any) {
+    async get(args: any) {
         this.setMetricTags("get", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
+        if (!args || !args[keyProperty])
+            throw new ApplicationError("GET: You must provide an identifier");    
+        
+        // Create a query object without the __schema element
         let query = {};
-        query[keyProperty] = id;
+        Object.keys(args).forEach(k => {
+            if (k !== "__schema")
+                query[k] = args[k];    
+        });
         return await this.provider.findOne(this.schema, query);
     }
 
@@ -72,6 +79,11 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     getAll(options: any): Promise<QueryResult> {
         this.setMetricTags("getAll", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
+        let query = {};
+        Object.keys(options).forEach(k => {
+            if (k !== "__schema")
+                query[k] = options[k];    
+        });
         return this.provider.getAll(this.schema, options);
     }
 
@@ -109,7 +121,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         super(container);
     }
 
-    @Action({ action: "create", description: "Create a new entity" , outputSchema:""})
+    @Action({ name: "create", description: "Create a new entity" , outputSchema:""})
     async create(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
@@ -117,7 +129,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
         return cmd.createWithSensibleData(entity);
     }
 
-    @Action({ action: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
+    @Action({ name: "update", description: "Update an entity", outputSchema:"" }) // Put outputSchema empty to take the default schema
     async update(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
@@ -125,13 +137,10 @@ export class DefaultActionHandler extends AbstractActionHandler {
         return cmd.updateWithSensibleData( entity);
     }
 
-    @Action({ action: "delete", description: "Delete an entity", outputSchema:"boolean", skipDataValidation: true })
-    async delete(entity: any) {
-        if (!entity)
-            throw new ApplicationError("Entity is required");
-
+    @Action({ name: "delete", description: "Delete an entity", outputSchema:"", inputSchema:"IdArguments"})
+    async delete(args: IdArguments) {
         let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
-        return cmd.deleteWithSensibleData( entity);
+        return cmd.deleteWithSensibleData( args.id );
     }
 }
 
@@ -149,13 +158,13 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
         super(container);
     }
 
-    @Query({ action: "get", description: "Get an entity by id" })
+    @Query({ name: "get", description: "Get an entity by id", inputSchema: "IdArguments" })
     async get(id: any): Promise<T> {
         let cmd = this.createDefaultCommand();
         return await cmd.getWithSensibleData(id);
     }
 
-    @Query({ action: "all", description: "Get all entities", outputCardinality:"many" })
+    @Query({ name: "all", description: "Get all entities", outputCardinality:"many" })
     async getAll(query?: any,  pageSize?:number, page?:number) : Promise<QueryResult> {
         let options = {
             pageSize: pageSize || this.context.requestData.pageSize || 0,

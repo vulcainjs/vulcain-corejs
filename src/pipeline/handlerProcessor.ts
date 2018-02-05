@@ -36,27 +36,25 @@ export class HandlerProcessor {
             const stubs = Service.getStubManager(ctx.container);
             let params = Object.assign({}, command.params || {});
             let metadata = <ActionDefinition>info.definition;
-            let useMockResult = false;
-            result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
 
-            let manager: IManager;
-            if (info.kind === "action") {
-                manager = this.actionManager;
-            }
-
-            if (info.kind === "query") {
-                manager = this.queryManager;
-            }
-
+            result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);          
             if (!stubs.enabled || result === undefined) {
+                let manager: IManager;
+                if (info.kind === "action") {
+                    manager = this.actionManager;
+                }
+    
+                if (info.kind === "query") {
+                    manager = this.queryManager;
+                }
                 result = await manager.run(info, command, <RequestContext>ctx);
+                (<RequestContext>ctx).response = result;
             }
             else {
-                useMockResult = true;
+                (<RequestContext>ctx).response = result;
+                stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
             }
 
-            (<RequestContext>ctx).response = result;
-            !useMockResult && stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
             return result;
         }
         finally {

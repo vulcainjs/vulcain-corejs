@@ -90,7 +90,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         let paths: PathsObject = {};
 
         serviceDescription.services.forEach((service: OperationDescription) => {
-            if (service.action.startsWith("_"))
+            if (service.name.startsWith("_"))
                 return;
             let operationObject: OperationObject = {};
 
@@ -210,7 +210,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         else {
             operationObject.responses['200'] = {
                 description: 'Successful operation',
-                schema: this.createResponseDefinition(service.kind === "query" && service.action === "all")
+                schema: this.createResponseDefinition(service.kind === "query" && service.name === "all")
             };
 
             if (service.outputSchema) {
