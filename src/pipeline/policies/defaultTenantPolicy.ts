@@ -51,7 +51,7 @@ export class DefaultTenantPolicy {
     resolveTenant(ctx: RequestContext): string {
         let tenant: string;
         // 1 - tenant in url (test only)
-        tenant = (Service.isTestEnvironment && ctx.requestData.params.$tenant);
+        tenant = (Service.isTestEnvironment && ctx.requestData.params && ctx.requestData.params.$tenant);
         if (tenant) {
             return tenant;
         }

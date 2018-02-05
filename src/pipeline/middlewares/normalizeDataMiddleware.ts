@@ -99,7 +99,9 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                 }
             });
         }
-
+        
+        ctx.requestData.params = ctx.requestData.params || {};
+        
         // Or can be forced in the url query
         if (url.query["$action"])
             action = url.query["$action"];

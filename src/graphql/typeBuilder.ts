@@ -129,7 +129,7 @@ export class GraphQLTypeBuilder {
     private createScalarType(propType: string) {
         if (!propType)
             return null;    
-        switch (this.domain.getScalarTypeOf(propType).toLowerCase()) {
+        switch (this.domain.getScalarTypeOf(propType)) {
             case "id":
                 return graphql["GraphQLID"];
             case "string":
