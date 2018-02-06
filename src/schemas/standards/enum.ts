@@ -5,7 +5,7 @@ import { SchemaTypeDefinition } from "../builder/annotations";
 export class Enumeration implements ISchemaTypeDefinition {
     description = "Must be one of [{$values}]";
     type = "string";
-    $values: any[];
+    $values: string[];
     message = "Invalid property '{$propertyName}'. Must be one of [{$values}].";
     validate(val) {
         if (!this.$values) return "You must define a list of valid values with the 'values' property.";

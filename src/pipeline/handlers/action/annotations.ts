@@ -51,8 +51,8 @@ export function Action(def: ActionDefinition, metadata?: any) {
             if (tmp.endsWith("async")) tmp = tmp.substr(0, tmp.length - 5);
             actions[key].name = tmp;
         }
-        if (!/^[_a-zA-Z][a-zA-Z0-9]*$/.test(actions[key].name)) {
-            if (actions[key].name[0] !== '_' || !actions[key].metadata.system)  // Only system handler can begin with _ (to be consistant withj graphql)              
+        if (!/^[_a-zA-Z][a-zA-Z0-9]*$/.test(actions[key].name)) { // (to be consistant withj graphql) 
+            if (actions[key].name[0] !== '_' || !actions[key].metadata.system)  // Only system handler can begin with _              
                 throw new ApplicationError(`Action name ${actions[key].name}has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);
         }
         

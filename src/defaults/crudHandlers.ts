@@ -10,7 +10,14 @@ import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 import { CommandFactory } from '../commands/commandFactory';
 import { Service } from '../globals/system';
 import { QueryResult } from '../pipeline/handlers/query/queryResult';
-import { IdArguments } from '../pipeline/common';
+import { Property } from '../schemas/builder/annotations.property';
+import { InputModel } from '../schemas/builder/annotations.model';
+
+@InputModel()
+export class IdArguments {
+    @Property({type:"id"})
+    id: any;
+}
 
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     create(entity: any) {

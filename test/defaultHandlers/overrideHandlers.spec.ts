@@ -2,8 +2,7 @@ import { expect } from 'chai';
 import { DefaultActionHandler, ActionHandler, Action, DefaultServiceNames } from '../../src/index';
 import { TestContext } from '../../src/pipeline/testContext';
 import { ServiceDescriptors } from '../../src/pipeline/handlers/descriptions/serviceDescriptions';
-import { IdArguments } from '../../src/pipeline/common';
-
+import { IdArguments } from '../../src/defaults/crudHandlers';
 
 @ActionHandler({ scope: "?" })
 class TestActionHandler extends DefaultActionHandler {
@@ -19,13 +18,10 @@ beforeEach(() => {
 });
 
 describe("Default action handler", function () {
-    
     it("should override existing action", async function () {
-
         let descriptor = context.getService<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         expect(descriptor.getHandlerInfo(context.container, null, "new")).to.be.not.null;
         expect(descriptor.getHandlerInfo(context.container, null, "create")).to.be.null;
     });
-
 });
 

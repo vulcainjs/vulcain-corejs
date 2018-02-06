@@ -6,10 +6,9 @@ import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { OperationDescription } from "../pipeline/handlers/descriptions/operationDescription";
-import { Service } from "..";
+import { Service, MemoryProvider } from "..";
+import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 const graphql = require('graphql');
-
-const resolverSymbol = Symbol.for("vulcain_resolver");
 
 export class GraphQLTypeBuilder {
     private types = new Map<string, any>();
@@ -129,9 +128,11 @@ export class GraphQLTypeBuilder {
     private createScalarType(propType: string) {
         if (!propType)
             return null;    
+    
+        if (propType === "id" || propType === "uid")
+            return graphql["GraphQLID"];
+            
         switch (this.domain.getScalarTypeOf(propType)) {
-            case "id":
-                return graphql["GraphQLID"];
             case "string":
                 return graphql["GraphQLString"];
             case "number":
@@ -168,6 +169,7 @@ export class GraphQLTypeBuilder {
                         t = new graphql.GraphQLList(t);
                     fields[prop.name] = {
                         type: t,
+                        description: prop.description
                     };
 
                     if (!createInputType)
@@ -175,13 +177,10 @@ export class GraphQLTypeBuilder {
                 }
             }
             else {
-                fields[prop.name] = { type };
+                fields[prop.name] = { type, description: prop.description };
             }
-
-            if (prop.description)
-                fields[prop.name].description = prop.description;
             
-            if (prop.required) {
+            if (prop.required && fields[prop.name]) {
                 let t = fields[prop.name].type;
                 fields[prop.name].type = graphql.GraphQLNonNull(t);
                 fields[prop.name].type.name = t.name + "!";
@@ -229,19 +228,6 @@ export class GraphQLTypeBuilder {
     }
 
     private async resolveQuery(entity, args, ctx: IRequestContext, info) {
-        if (info.returnType[resolverSymbol]) {
-            return info.returnType[resolverSymbol](entity, ctx);
-        }
-        // check root schema
-        // else check remote root schema (=> au démarrage faire une requete à toutes les dependances sur _servicedescription pour connaitre les root schema)
-        // else return entity[fieldName]
-        let schema = info.returnType;
-        let isList = false;
-        while (schema.ofType) {
-            schema = schema.ofType;
-            isList = true;
-        }
-
         let fieldName: string = info.fieldName;
         let pos = fieldName.lastIndexOf('_');
         if (pos < 0) {
@@ -254,15 +240,6 @@ export class GraphQLTypeBuilder {
         }    
         ctx.requestData.vulcainVerb = fieldName;
 
-        let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
-        let handler = processor.getHandlerInfo(ctx.container, ctx.requestData.schema, ctx.requestData.action);
-        if (!handler) {
-            // args doit être null sinon faut faire une recherche ????
-            let fn = info.fieldName;
-            info.returnType[resolverSymbol] = (e) => e && e[fn];
-            return info.returnType[resolverSymbol](entity, ctx);
-        }
-
         let data: RequestData = { ...ctx.requestData, params: args };
         if (args._page) {
             data.page = args._page;
@@ -272,8 +249,34 @@ export class GraphQLTypeBuilder {
             data.pageSize = args._pagesize;
             delete args._pagesize;
         }
+
+        const resolverSymbol = Symbol.for("vulcain_resolver_" + fieldName);
+        if (info.returnType[resolverSymbol]) {
+            return info.returnType[resolverSymbol](entity && entity[fieldName], ctx);
+        }
+
+        let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
+        let handler = processor.getHandlerInfo(ctx.container, ctx.requestData.schema, ctx.requestData.action);
+        if (!handler) {
+            // Embedded object        
+            // Cache resolver
+            info.returnType[resolverSymbol] = this.resolveEmbeddedObject;
+            return info.returnType[resolverSymbol](entity && entity[fieldName], ctx);
+        }
+
         let res = await processor.invokeHandler(ctx, handler, data);
         return res.content.value;
     }
 
+    private resolveEmbeddedObject(obj, ctx: IRequestContext) {
+        if (!obj)
+            return null;    
+        
+        if (Array.isArray(obj)) {
+            return MemoryProvider.Query(obj, ctx.requestData.params, ctx.requestData.page, ctx.requestData.pageSize);
+        } else {
+            const queryParser = new MongoQueryParser(ctx.requestData.params);
+            return queryParser.execute(obj) ? obj : null;
+        }
+    }
 }

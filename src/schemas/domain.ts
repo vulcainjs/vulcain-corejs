@@ -8,7 +8,7 @@ import { Files } from '../utils/files';
 import * as Path from 'path';
 import { ApplicationError } from '..';
 
-const scalarType = Symbol("scalar");
+const scalarSymbol = Symbol("scalar");
 
 /**
  * Domain model
@@ -35,6 +35,7 @@ export class Domain {
 
     getScalarTypeOf(source: ISchemaTypeDefinition | string): string {
         let type: ISchemaTypeDefinition;
+
         if (typeof source === "string") {
             type = source = this.getType(source);
         }
@@ -44,14 +45,22 @@ export class Domain {
         if (!source)
             return null;
         
-        if (!source[scalarType]) {
+        if (!source[scalarSymbol]) {
             // Cache resolved type
+            let scalarType: string;
             while (type) {
-                source[scalarType] = type.name;
+                scalarType = type.scalarType;
+                if (scalarType)
+                    break;    
                 type = this.getType(type.type);
             }
+            if (!scalarType)
+                scalarType = "any";
+            
+            source[scalarSymbol] = scalarType;
         }
-        return source[scalarType];
+        
+        return source[scalarSymbol];
     }
 
     getType(name: string) {

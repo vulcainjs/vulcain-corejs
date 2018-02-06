@@ -128,9 +128,3 @@ export interface RequestData {
     inputSchema?: string;
     body?: any;
 }
-
-@Model()
-export class IdArguments {
-    @Property({type:"id"})
-    id: any;
-}

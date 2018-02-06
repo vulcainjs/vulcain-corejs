@@ -7,6 +7,7 @@ export interface ISchemaValidation {
 }
 
 export interface ISchemaTypeDefinition extends ISchemaValidation {
+    scalarType?: string;
     name?: string;
     coerce?: (val: any) => any;
 }

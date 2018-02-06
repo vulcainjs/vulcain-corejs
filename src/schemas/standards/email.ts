@@ -6,6 +6,7 @@ const validator = require('validator');
 export class Email implements ISchemaTypeDefinition {
     description = "Must be an email";
     message = "Property '{$propertyName}' must be an email.";
+    type = "string";
     validate(val) {
         if ((typeof val !== "string")) return this.message;
 

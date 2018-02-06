@@ -92,9 +92,8 @@ export class MemoryProvider implements IProvider<any>
         options = options || { pageSize: -1 };
         return new Promise((resolve, reject) => {
             try {
-                const elements = Array.from(this.filter(schema, data.entities, options));
-                let result = new QueryResult(Array.from(this.take(elements, options)), elements.length);
-                resolve(result);
+                let result = MemoryProvider.Query(data.entities, (options.query && options.query.filter) || options.query, options.page, options.pageSize);
+                resolve(new QueryResult(result));
             }
             catch (err) {
                 reject(err);
@@ -103,25 +102,29 @@ export class MemoryProvider implements IProvider<any>
         );
     }
 
-    public *filter(schema: Schema, list, options: ListOptions) {
+    static Query(list, query, page: number, pageSize: number, cloneResult=true) {
+        return Array.from(MemoryProvider.take(MemoryProvider.filter(list, query, cloneResult), page, pageSize));
+    }
+
+    static *filter(list, query, cloneResult) {
         let cx = 0;
-        let query = new MongoQueryParser((options.query && options.query.filter) || options.query);
         if (list) {
+            const queryParser = new MongoQueryParser(query);
             for (let k in list) {
                 let v = list[k];
-                if (!v || !query.execute(v)) continue;
+                if (!v || !queryParser.execute(v)) continue;
                 cx++;
-                yield Conventions.clone(v);
+                yield cloneResult ? Conventions.clone(v) : v;
             }
         }
     }
 
-    public *take(list, options: ListOptions) {
+    static *take(list: IterableIterator<any>, page: number, pageSize: number) {
         if (list) {
-            let take = options.pageSize || -1;
-            let skip = take * (options.page > 0 ? options.page-1 : 0 || 0);
+            let take = pageSize || -1;
+            let skip = take * (page > 0 ? page-1 : 0 || 0);
             let cx = 0;
-            for (let k in list) {
+            for (let k of list) {
                 let v = list[k];
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {

@@ -48,7 +48,7 @@ export { EventNotificationMode,  ConsumeEventDefinition, EventDefinition, EventD
 export { QueryOperationDefinition, QueryDefinition } from './pipeline/handlers/query/definitions';
 export { QueryResult } from './pipeline/handlers/query/queryResult';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';
-export { RequestData, IRequestContext, Pipeline, VulcainResponse, IdArguments } from './pipeline/common';
+export { RequestData, IRequestContext, Pipeline, VulcainResponse } from './pipeline/common';
 export { HttpResponse, HttpRedirectResponse } from './pipeline/response';
 export { ScopesDescriptor, ScopeDescription } from './defaults/scopeDescriptors';
 export { ISerializer } from './pipeline/serializers/serializer';
@@ -57,7 +57,8 @@ export { HandlerProcessor } from './pipeline/handlerProcessor';
 export { Logger } from './log/logger';
 export { UserContextData, } from './security/securityContext';
 export { TrackerId } from './instrumentations/common';
-export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand } from './defaults/crudHandlers';
+// Defaults
+export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand, IdArguments } from './defaults/crudHandlers';
 
 // Descriptions
 export { ServiceDescriptors, Handler } from "./pipeline/handlers/descriptions/serviceDescriptions";
@@ -78,7 +79,6 @@ export { ITaskManager } from './providers/taskManager';
 
 // Containers
 export { IContainer, IInjectionNotification } from './di/resolvers';
-//export { TestContainer } from './di/containers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
 export { TestContext } from './pipeline/testContext';
 
