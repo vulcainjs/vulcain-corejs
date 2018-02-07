@@ -19,6 +19,7 @@ export interface EventData extends RequestData {
 }
 
 export interface ConsumeEventDefinition {
+    name?: string;
     description: string;
     subscribeToDomain?: string;
     subscribeToAction?: string;
@@ -96,5 +97,6 @@ export class MessageBus {
         event.inputSchema = null;
         (<any>event).eventId = Conventions.getRandomId();
         this.eventBus.sendEvent(event.domain, event);
+        return event;
     }
 }

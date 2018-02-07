@@ -57,8 +57,12 @@ export { HandlerProcessor } from './pipeline/handlerProcessor';
 export { Logger } from './log/logger';
 export { UserContextData, } from './security/securityContext';
 export { TrackerId } from './instrumentations/common';
+
 // Defaults
 export { DefaultActionHandler, DefaultQueryHandler, DefaultCRUDCommand, IdArguments } from './defaults/crudHandlers';
+
+// GraphQL
+export { IGraphQLSchemaBuilder } from './graphql/typeBuilder';
 
 // Descriptions
 export { ServiceDescriptors, Handler } from "./pipeline/handlers/descriptions/serviceDescriptions";

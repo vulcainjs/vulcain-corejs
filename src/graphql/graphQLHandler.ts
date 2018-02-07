@@ -11,6 +11,7 @@ import { ActionHandler, Action } from "../pipeline/handlers/action/annotations";
 import { GraphQLTypeBuilder } from "./typeBuilder";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 import { ISpanRequestTracker } from "../instrumentations/common";
+import { IGraphQLSchemaBuilder } from "./typeBuilder";
 const graphql = require('graphql');
 
 export class GraphQLActionHandler extends AbstractHandler {
@@ -18,11 +19,10 @@ export class GraphQLActionHandler extends AbstractHandler {
 
     get graphQuerySchema() {
         if (!GraphQLActionHandler._schema) {
-            const builder = new GraphQLTypeBuilder(this.context);
-            GraphQLActionHandler._schema = builder.build();
+            const builder = this.container.get<IGraphQLSchemaBuilder>(DefaultServiceNames.GraphQLSchemaBuilder);
+            GraphQLActionHandler._schema = builder.build(this.context);
         }
         return GraphQLActionHandler._schema;
-
     }
 
     @Action({ description: "Custom action", name: "_graphql" })

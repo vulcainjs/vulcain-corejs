@@ -50,7 +50,7 @@ export interface ModelDefinition {
 export function Model(def?: ModelDefinition, metadata?:any) {
     return function (target: Function) {
         def = def || {};
-        def.metadata = metadata;
+        def.metadata = metadata || {};
         def.name = def.name || target.name;
         def.storageName = def.storageName || def.name;
 

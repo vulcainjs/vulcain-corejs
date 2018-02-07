@@ -23,7 +23,7 @@ export function Query(def: QueryOperationDefinition, metadata?:any) {
     return (target, key) => {
         let actions: { [name: string]: QueryOperationDefinition } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = def || <any>{};
-        actions[key].metadata = metadata;
+        actions[key].metadata = metadata || {};
 
         if (!actions[key].inputSchema) {
             let params = Reflect.getMetadata("design:paramtypes", target, key);

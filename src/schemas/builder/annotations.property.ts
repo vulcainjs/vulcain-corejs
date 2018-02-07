@@ -109,7 +109,7 @@ export interface PropertyDefinition {
 export function Property(def?: PropertyDefinition, metadata?:any) {
     return (target, key) => {
         let info: ModelPropertyDefinition = def || <any>{};
-        info.metadata = metadata;
+        info.metadata = metadata || {};
         info.name = key;
 
         if (!info.type) {

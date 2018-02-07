@@ -35,6 +35,7 @@ export class DefaultServiceNames {
     static ServiceResolver = "ServiceResolver";
     static BearerTokenService = "BearerTokenService";
     static HandlerProcessor = "HandlerProcessor";
+    static GraphQLSchemaBuilder = "GraphQLSchemaBuilder";
 }
 
 /**

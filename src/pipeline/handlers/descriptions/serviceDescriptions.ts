@@ -197,8 +197,8 @@ export class ServiceDescriptors {
         this.sortSchemasDependencies();
 
         this.publicDescriptions = { ...this.descriptions };
-        this.publicDescriptions.services = this.publicDescriptions.services.filter(s => !s.metadata || !s.metadata.system);
-        this.publicDescriptions.schemas = this.publicDescriptions.schemas.filter(s => !s.metadata || !s.metadata.system);
+        this.publicDescriptions.services = this.publicDescriptions.services.filter(s => !s.metadata.system);
+        this.publicDescriptions.schemas = this.publicDescriptions.schemas.filter(s => !s.metadata.system);
 
         this.handlers = null;
     }

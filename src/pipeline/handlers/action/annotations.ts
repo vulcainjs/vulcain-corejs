@@ -27,7 +27,7 @@ export function Action(def: ActionDefinition, metadata?: any) {
     return (target, key) => {
         let actions: {[name:string]: ActionDefinition} = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = def || <any>{};
-        actions[key].metadata = metadata;
+        actions[key].metadata = metadata || {};
 
         if (actions[key].inputSchema === undefined) { // null means take schema name
             let params = Reflect.getMetadata("design:paramtypes", target, key);
@@ -72,6 +72,7 @@ export function Consume(def?: ConsumeEventDefinition, metadata?:any) {
         let actions: { [name: string]: ConsumeEventDefinition } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = def || <any>{};
         actions[key].metadata = metadata;
+        actions[key] = def.name || key;
 
         if (!actions[key].distributionKey) {
             // Used if distributionMode==='once'

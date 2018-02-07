@@ -1,6 +1,6 @@
 import { IContainer } from "../di/resolvers";
 import { ServiceDescriptors } from "../pipeline/handlers/descriptions/serviceDescriptions";
-import { DefaultServiceNames } from "../di/annotations";
+import { DefaultServiceNames, Injectable, LifeTime } from "../di/annotations";
 import { HandlerProcessor } from "../pipeline/handlerProcessor";
 import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
@@ -10,24 +10,29 @@ import { Service, MemoryProvider } from "..";
 import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 const graphql = require('graphql');
 
-export class GraphQLTypeBuilder {
+export interface IGraphQLSchemaBuilder {
+    build(context: IRequestContext): any;
+}
+
+@Injectable(LifeTime.Singleton, DefaultServiceNames.GraphQLSchemaBuilder)
+export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
     private types = new Map<string, any>();
     private descriptors: ServiceDescriptors;
     private domain: Domain;
-
-    constructor(private context: IRequestContext) {
-        this.descriptors = context.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-        this.domain = context.container.get<Domain>(DefaultServiceNames.Domain);
-    }
+    private context: IRequestContext;
     
     private *getHandlers(kind: "action"|"query") {
         for (let handler of this.descriptors.getDescriptions(false).services) {
-            if (!handler.async && handler.kind === kind)
+            if (!handler.async && handler.kind === kind && (!handler.metadata.graphql || handler.metadata.graphql.expose !== false))
                 yield handler;    
         }    
     }
 
-    build() {
+    build(context: IRequestContext) {
+        this.context = context;
+        this.descriptors = context.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        this.domain = context.container.get<Domain>(DefaultServiceNames.Domain);
+
         return new graphql.GraphQLSchema({
             query: this.createQueryOperations(),
             mutation: this.createMutationOperations(),
