@@ -15,7 +15,7 @@ export class Reference implements ISchemaTypeDefinition {
             throw new Error("Incorrect cardinality. Allowed values are 'one' or 'many'");
         if (this.$cardinality === "one") {
             if (Array.isArray(val)) return this.messages[0];
-            if (this.$item && val.__schema && val.__schema !== this.$item) return this.messages[2];
+            if (this.$item && val._schema && val._schema !== this.$item) return this.messages[2];
             return;
         }
         if (this.$cardinality === "many") {
@@ -23,7 +23,7 @@ export class Reference implements ISchemaTypeDefinition {
             if (this.$item && val) {
                 let ok = true;
                 val.forEach(v => {
-                    if (v.__schema) ok = ok || v.__schema === this.$item;
+                    if (v._schema) ok = ok || v._schema === this.$item;
                 });
                 if (!ok) return this.messages[2];
             }

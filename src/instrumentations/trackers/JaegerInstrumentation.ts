@@ -1,5 +1,5 @@
 import * as jaeger from 'jaeger-client';
-const UDPSender = require('jaeger-client/dist/src/reporters/udp_sender').default
+const UDPSender = require('jaeger-client/dist/src/reporters/udp_sender').default;
 import * as opentracing from 'opentracing';
 import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
 import { ITrackerAdapter, IRequestTrackerFactory } from './index';

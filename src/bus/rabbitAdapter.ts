@@ -56,7 +56,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
 
     stopReception() {
         this.pauseReception();
-        this.eventHandlers.forEach(eh => { this.channel.unbindQueue(eh.queue, eh.domain, eh.args) });
+        this.eventHandlers.forEach(eh => { this.channel.unbindQueue(eh.queue, eh.domain, eh.args); });
         this.eventHandlers.clear();
     }
 

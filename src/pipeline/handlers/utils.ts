@@ -24,16 +24,16 @@ static getMetadata(key, target) {
             if (Array.isArray(result)) {
                 let outputSchema: Schema | null;
                 result.forEach(v => {
-                    if (v.__schema) {
-                        if (!outputSchema || outputSchema.name !== v.__schema)
-                            outputSchema = domain.getSchema(v.__schema);
+                    if (v._schema) {
+                        if (!outputSchema || outputSchema.name !== v._schema)
+                            outputSchema = domain.getSchema(v._schema);
                         if (outputSchema && outputSchema.info.hasSensibleData)
                             outputSchema.obfuscate(v);
                     }
                 });
             }
-            else if (result.__schema) {
-                let outputSchema = domain.getSchema(result.__schema);
+            else if (result._schema) {
+                let outputSchema = domain.getSchema(result._schema);
                 if (outputSchema && outputSchema.info.hasSensibleData)
                     outputSchema.obfuscate(result);
             }

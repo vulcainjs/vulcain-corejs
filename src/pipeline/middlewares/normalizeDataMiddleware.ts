@@ -17,7 +17,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
     // post
     //  /api/customer.create(?params)
     // params:
-    //  $action, __schema (force value)
+    //  $action, _schema (force value)
     //  $pageSize, $page
     async invoke(ctx: RequestContext) {
         try {
@@ -105,8 +105,8 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         // Or can be forced in the url query
         if (url.query["$action"])
             action = url.query["$action"];
-        if (url.query["__schema"])
-            schema = url.query["__schema"];
+        if (url.query["_schema"])
+            schema = url.query["_schema"];
 
         ctx.requestData.action = action || (!body && "all") || null;
         ctx.requestData.schema = schema;

@@ -48,7 +48,7 @@ export class PrometheusMetrics implements IMetrics {
         }
         catch (e) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.error(null, e, ()=>"Prometheus metrics")
+            logger.error(null, e, () => "Prometheus metrics");
         }
     }
 
@@ -64,7 +64,7 @@ export class PrometheusMetrics implements IMetrics {
         }
         catch (e) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.error(null, e, ()=>"Prometheus metrics")
+            logger.error(null, e, () => "Prometheus metrics");
         }
     }
 
@@ -79,7 +79,7 @@ export class PrometheusMetrics implements IMetrics {
         }
         catch (e) {
             let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
-            logger.error(null, e, ()=>"Prometheus metrics")
+            logger.error(null, e, () => "Prometheus metrics");
         }
     }
 }

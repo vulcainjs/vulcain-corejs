@@ -5,7 +5,7 @@ import { Model } from "../../schemas/builder/annotations.model";
 
 export interface IJsonSchema {
     id?: string;
-    __schema?: string;
+    _schema?: string;
     title?: string;
     description?: string;
     multipleOf?: number;

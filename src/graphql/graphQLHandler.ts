@@ -10,6 +10,7 @@ import { HttpResponse } from "../pipeline/response";
 import { ActionHandler, Action } from "../pipeline/handlers/action/annotations";
 import { GraphQLTypeBuilder } from "./typeBuilder";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
+import { ISpanRequestTracker } from "../instrumentations/common";
 const graphql = require('graphql');
 
 export class GraphQLActionHandler extends AbstractHandler {
@@ -26,6 +27,9 @@ export class GraphQLActionHandler extends AbstractHandler {
 
     @Action({ description: "Custom action", name: "_graphql" })
     async graphql(g: any) {
+        
+        (<ISpanRequestTracker>this.context.requestTracker).trackAction("graphql");
+
         let response = await graphql.graphql(this.graphQuerySchema, g.query || g, null, this.context, g.variables);
         if (this.metadata.metadata.responseType === "graphql")
             return new HttpResponse(response);

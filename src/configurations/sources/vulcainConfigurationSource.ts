@@ -18,7 +18,7 @@ export class VulcainConfigurationSource extends HttpConfigurationSource {
 
     protected createRequestUrl() {
         this.options.lastUpdate = this.lastUpdate;
-        return this.uri + "?$query=" + JSON.stringify(this.options);;
+        return this.uri + "?$query=" + JSON.stringify(this.options);
     }
 
     pollProperties(timeoutInMs: number) {

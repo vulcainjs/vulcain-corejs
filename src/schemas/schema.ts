@@ -58,7 +58,7 @@ export class Schema {
 
         result = result || new schema.schemaType(); //origin;
 
-        (<any>result).__schema = (<any>result).__schema || schema.name;
+        (<any>result)._schema = (<any>result)._schema || schema.name;
 
         // Convert properties
         for (const propertyName in schema.info.properties) {
@@ -74,8 +74,8 @@ export class Schema {
                         if (Array.isArray(refValue)) {
                             result[propertyName] = [];
                             for (let elem of refValue) {
-                                if (elem && elem.__schema) {
-                                    item = elem.__schema;
+                                if (elem && elem._schema) {
+                                    item = elem._schema;
                                 }
 
                                 let elemSchema = this.domain.getSchema(item, true);
@@ -89,8 +89,8 @@ export class Schema {
                             }
                         }
                         else {
-                            if (refValue && refValue.__schema) {
-                                item = refValue.__schema;
+                            if (refValue && refValue._schema) {
+                                item = refValue._schema;
                             }
 
                             let elemSchema = this.domain.getSchema(item, true);
@@ -238,8 +238,8 @@ export class Schema {
                 let ref = schema.info.properties[key];
                 if (ref && ref.cardinality) {
                     let item = ref.type;
-                    if (val && val.__schema) {
-                        item = val.__schema;
+                    if (val && val._schema) {
+                        item = val._schema;
                     }
                     let elemSchema = this.domain.getSchema(item, true);
                     if (elemSchema) {

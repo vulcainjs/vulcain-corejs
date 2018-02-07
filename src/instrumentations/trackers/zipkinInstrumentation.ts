@@ -53,7 +53,7 @@ class ZipkinRequestTracker implements ITrackerAdapter {
     private id: any;
 
     constructor(recorder, spanId: TrackerId, private kind: SpanKind, name: string, private action: string) {
-        this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder })
+        this.tracer = new Tracer({ ctxImpl: new ExplicitContext(), recorder });
 
         this.id = new TraceId({
             traceId: new Some(spanId.correlationId),

@@ -68,10 +68,10 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         if (!args || !args[keyProperty])
             throw new ApplicationError("GET: You must provide an identifier");    
         
-        // Create a query object without the __schema element
+        // Create a query object without the _schema element
         let query = {};
         Object.keys(args).forEach(k => {
-            if (k !== "__schema")
+            if (k !== "_schema")
                 query[k] = args[k];    
         });
         return await this.provider.findOne(this.schema, query);
@@ -88,7 +88,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         this.setMetricTags("getAll", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let query = {};
         Object.keys(options).forEach(k => {
-            if (k !== "__schema")
+            if (k !== "_schema")
                 query[k] = options[k];    
         });
         return this.provider.getAll(this.schema, options);

@@ -92,7 +92,10 @@ export class MemoryProvider implements IProvider<any>
         options = options || { pageSize: -1 };
         return new Promise((resolve, reject) => {
             try {
-                let result = MemoryProvider.Query(data.entities, (options.query && options.query.filter) || options.query, options.page, options.pageSize);
+                let result = MemoryProvider.Query(data.entities,
+                    (options.query && options.query.filter) || options.query,
+                    options.page,
+                    options.pageSize);
                 resolve(new QueryResult(result));
             }
             catch (err) {
@@ -106,7 +109,7 @@ export class MemoryProvider implements IProvider<any>
         return Array.from(MemoryProvider.take(MemoryProvider.filter(list, query, cloneResult), page, pageSize));
     }
 
-    static *filter(list, query, cloneResult) {
+    private static *filter(list, query, cloneResult) {
         let cx = 0;
         if (list) {
             const queryParser = new MongoQueryParser(query);
@@ -119,13 +122,12 @@ export class MemoryProvider implements IProvider<any>
         }
     }
 
-    static *take(list: IterableIterator<any>, page: number, pageSize: number) {
-        if (list) {
+    private static *take(iterator: IterableIterator<any>, page: number, pageSize: number) {
+        if (iterator) {
             let take = pageSize || -1;
             let skip = take * (page > 0 ? page-1 : 0 || 0);
             let cx = 0;
-            for (let k of list) {
-                let v = list[k];
+            for (let v of iterator) {
                 if (cx < skip) { cx++; continue; }
                 if (take < 0 || cx < skip + take) {
                     cx++;

@@ -121,7 +121,7 @@ export class Domain {
     getSchemaFromObject(schemaName?: string | Schema, val?: any) {
         let schema: Schema;
         if (!schemaName || typeof schemaName === "string") {
-            schemaName = schemaName && schemaName !== "any" ? schemaName : val && val.__schema;
+            schemaName = schemaName && schemaName !== "any" ? schemaName : val && val._schema;
             schema = schemaName && this._schemas.get(<string>schemaName);
             if (!schema) { throw new Error("Unknown schema " + schemaName); }
         }

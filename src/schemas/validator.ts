@@ -35,8 +35,8 @@ export class Validator {
                 let prop = schema.info.properties[propertyName];
                 if (prop.cardinality) {
                     let propertyTypeName = prop.type;
-                    if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue.__schema) {
-                        propertyTypeName = formatContext.propertyValue.__schema;
+                    if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue._schema) {
+                        propertyTypeName = formatContext.propertyValue._schema;
                     }
                     let errors2 = await this.validateReference(ctx, formatContext, prop.type, val);
                     if (errors2)
@@ -63,7 +63,7 @@ export class Validator {
                     errors["_"] = this.__formatMessage(err, formatContext, schema);
             }
             catch (e) {
-                errors["_"] = this.__formatMessage("Validation error for element {__schema} : " + e, formatContext);
+                errors["_"] = this.__formatMessage("Validation error for element {_schema} : " + e, formatContext);
             }
         }
         return errors;
@@ -111,8 +111,8 @@ export class Validator {
         for (let val of values) {
             if (val) {
                 let currentItemSchema = baseItemSchema;
-                if (val.__schema && (!currentItemSchema || val.__schema !== currentItemSchema.name)) {
-                    currentItemSchema = this.domain.getSchema(val.__schema, true);
+                if (val._schema && (!currentItemSchema || val._schema !== currentItemSchema.name)) {
+                    currentItemSchema = this.domain.getSchema(val._schema, true);
                     if (!baseItemSchema)
                         baseItemSchema = currentItemSchema;
                 }
@@ -161,7 +161,7 @@ export class Validator {
             switch (name) {
                 case "$value":
                     return ctx.propertyValue;
-                case "__schema":
+                case "_schema":
                     return ctx.propertyName ? ctx.propertySchema : ctx.schemaElement;
                 case "$id":
                     return ctx.id;

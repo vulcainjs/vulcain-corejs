@@ -286,11 +286,11 @@ export class Span implements ISpanTracker {
 
     get durationInMs() {
         const endTime = process.hrtime();
-        const secondDiff = endTime[0] - this.startTick[0]
-        const nanoSecondDiff = endTime[1] - this.startTick[1]
-        const diffInNanoSecond = secondDiff * 1e9 + nanoSecondDiff
+        const secondDiff = endTime[0] - this.startTick[0];
+        const nanoSecondDiff = endTime[1] - this.startTick[1];
+        const diffInNanoSecond = secondDiff * 1e9 + nanoSecondDiff;
 
-        return diffInNanoSecond / 1e6
+        return diffInNanoSecond / 1e6;
     }
 
     private randomTraceId() {
