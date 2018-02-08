@@ -8,11 +8,12 @@ import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { HttpResponse } from "../pipeline/response";
 import { ActionHandler, Action } from "../pipeline/handlers/action/annotations";
-import { GraphQLTypeBuilder } from "./typeBuilder";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 import { ISpanRequestTracker } from "../instrumentations/common";
 import { IGraphQLSchemaBuilder } from "./typeBuilder";
 const graphql = require('graphql');
+
+const GraphQLTypeBuilder = require("./typeBuilder"); // Do not change this. Force to load GraphQLTypeBuilder
 
 export class GraphQLActionHandler extends AbstractHandler {
     private static _schema;

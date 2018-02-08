@@ -47,7 +47,7 @@ export interface PropertyDefinition {
      * @type {string} - A valid type for all elements of the array
      * @memberOf PropertyOptions
      */
-    items?: string;
+    itemsType?: string;
     /**
      * Entity key - Only one property by entity can be define.
      *
@@ -67,7 +67,7 @@ export interface PropertyDefinition {
      */
     cardinality?: 'one' | 'many' | undefined;
     /**
-     * Function to transform an input value. If null or false, the value are ignored.
+     * Function to transform an input value. If null or false, the value is ignored.
      *
      *
      * @memberOf PropertyOptions
@@ -104,6 +104,10 @@ export interface PropertyDefinition {
      * This property is not exposed by service description
      */
     private?: boolean;
+    /** 
+     * Foreign key in case of reference
+    */
+    refProperty?: string;
 }
 
 export function Property(def?: PropertyDefinition, metadata?:any) {

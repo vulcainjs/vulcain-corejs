@@ -13,6 +13,7 @@ import { ISchemaTypeDefinition } from './schemaType';
  * Schema definition
  */
 export class Schema {
+    private _subModels: Schema[];
     public readonly info: SchemaInfo;
 
     public get name() { return this.info.name; }
@@ -39,6 +40,40 @@ export class Schema {
             extends: def.extends,
             isInputModel: def.inputModel
         };
+
+        let superModel = this.extends;
+        if (superModel) {
+            superModel._subModels = superModel._subModels || [];
+            superModel._subModels.push(this);
+        }
+    }
+
+    public *subModels(all = true): IterableIterator<Schema> {
+        if (this._subModels) {
+            for (let sm of this._subModels) {
+                yield sm;
+                if(all)
+                    yield* sm.subModels();
+            }
+        }    
+    }
+
+    findProperty(name: string) {
+        for (let prop of this.allProperties()) {
+            if (prop.name === name)
+                return prop;    
+        }
+        return undefined;
+    }
+    
+    public *allProperties(): IterableIterator<ModelPropertyDefinition> {
+        let ext = this.extends;
+        if (ext) {
+            yield* ext.allProperties();
+        }
+        for (let p in this.info.properties) {
+            yield this.info.properties[p];
+        }
     }
 
     coerce(data) {

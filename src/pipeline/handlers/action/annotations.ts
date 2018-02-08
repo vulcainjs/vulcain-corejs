@@ -72,7 +72,7 @@ export function Consume(def?: ConsumeEventDefinition, metadata?:any) {
         let actions: { [name: string]: ConsumeEventDefinition } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
         actions[key] = def || <any>{};
         actions[key].metadata = metadata;
-        actions[key] = def.name || key;
+        actions[key].name = def.name || key;
 
         if (!actions[key].distributionKey) {
             // Used if distributionMode==='once'

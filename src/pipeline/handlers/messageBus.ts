@@ -6,6 +6,7 @@ import { Service } from '../../globals/system';
 import { RequestData } from "../../pipeline/common";
 import { UserContextData } from "../../security/securityContext";
 import { Conventions } from '../../utils/conventions';
+import { EventEmitter } from 'events';
 
 export interface EventData extends RequestData {
     value?: any;
@@ -46,10 +47,13 @@ export enum EventNotificationMode {
     successOnly
 }
 
+
 export class MessageBus {
     private commandBus: IActionBusAdapter;
     private eventBus: IEventBusAdapter;
     private _events: Map<string,RX.Subject<EventData>> = new Map<string, RX.Subject<EventData>>();
+    public static readonly LocalEvents = new EventEmitter();
+    public static readonly LocalEventSymbol = Symbol("local_event");
 
     /**
      * Get event queue for a domain
@@ -97,6 +101,15 @@ export class MessageBus {
         event.inputSchema = null;
         (<any>event).eventId = Conventions.getRandomId();
         this.eventBus.sendEvent(event.domain, event);
+        this.emitLocalEvent(event);
         return event;
+    }
+
+    emitLocalEvent(evt) {
+        if (evt[MessageBus.LocalEventSymbol])
+            return;
+        
+        evt[MessageBus.LocalEventSymbol] = true;
+        MessageBus.LocalEvents.emit(MessageBus.LocalEventSymbol, evt);
     }
 }

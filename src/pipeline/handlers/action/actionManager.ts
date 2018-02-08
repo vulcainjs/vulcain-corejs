@@ -318,6 +318,7 @@ export class CommandManager implements IManager {
                     try {
                         await handler[info.methodName](evt.value);
                         this.sendCustomEvent(ctx);
+                        this.messageBus.emitLocalEvent(evt);
                     }
                     catch (e) {
                         let error = (e instanceof CommandRuntimeError && e.error) ? e.error.toString() : (e.message || e.toString());

@@ -169,9 +169,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             return t;
 
         let fields = { "_schema": { type: graphql.GraphQLString}};
-        for (let p in schema.info.properties) {
-            let prop = schema.info.properties[p];
-
+        for (let prop of schema.allProperties()) {
             let type = this.createScalarType(prop.type, prop.name);
 
             if (!type) {
@@ -214,6 +212,23 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         else {
             type = new graphql.GraphQLObjectType(t);
         }
+
+        if (!createInputType) {
+            let subModels = Array.from(schema.subModels());
+            if (subModels.length > 0) {
+                let types = [type].concat(subModels.map(sch => this.createType(sch)));
+                type = new graphql.GraphQLUnionType({
+                    name: name + "_Union",
+                    types: types,
+                    resolveType: (val) => {
+                        if (!val._schema)
+                            throw new Error("Unable to resolve an union type. You must set the _schema property.");
+                        return val._schema;
+                    }
+                });
+            }
+        }    
+
         this.types.set(name, type);
 
         return type;
@@ -252,7 +267,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         }    
         ctx.requestData.vulcainVerb = fieldName;
 
-        let data: RequestData = { ...ctx.requestData, params: args };
+        let data: RequestData = { ...ctx.requestData };
         if (args._page) {
             data.page = args._page;
             delete args._page;
@@ -261,10 +276,11 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             data.pageSize = args._pagesize;
             delete args._pagesize;
         }
+        data.params = args;
 
         const resolverSymbol = Symbol.for("vulcain_resolver_" + fieldName);
         if (info.returnType[resolverSymbol]) {
-            return info.returnType[resolverSymbol](entity && entity[fieldName], ctx);
+            return info.returnType[resolverSymbol](entity && entity[fieldName], data);
         }
 
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
@@ -272,22 +288,29 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         if (!handler) {
             // Embedded object        
             // Cache resolver
-            info.returnType[resolverSymbol] = this.resolveEmbeddedObject;
+            info.returnType[resolverSymbol] = GraphQLTypeBuilder.resolveEmbeddedObject;
             return info.returnType[resolverSymbol](entity && entity[fieldName], ctx);
         }
 
+        if (entity) { // Is it the root ?
+            let schema = this.domain.getSchema(ctx.requestData.schema);
+            let propType = schema.findProperty(fieldName);
+            let fk = propType.refProperty || propType.type + "Id";
+            data.params = { [fk]: entity[schema.getId(entity)] };
+        }
+        
         let res = await processor.invokeHandler(ctx, handler, data);
         return res.content.value;
     }
 
-    private resolveEmbeddedObject(obj, ctx: IRequestContext) {
+    private static resolveEmbeddedObject(obj, data: RequestData) {
         if (!obj)
             return null;    
         
         if (Array.isArray(obj)) {
-            return MemoryProvider.Query(obj, ctx.requestData.params, ctx.requestData.page, ctx.requestData.pageSize);
+            return MemoryProvider.Query(obj, data.params, data.page, data.pageSize);
         } else {
-            const queryParser = new MongoQueryParser(ctx.requestData.params);
+            const queryParser = new MongoQueryParser(data.params);
             return queryParser.execute(obj) ? obj : null;
         }
     }

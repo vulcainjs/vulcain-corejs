@@ -90,7 +90,7 @@ export class ArrayOfEnum implements ISchemaTypeDefinition {
 
 @Model()
 class ArrayOfModel {
-    @Property({ type: "ArrayOfEnum", items: "string", values: ["a", "b"] })
+    @Property({ type: "ArrayOfEnum", itemsType: "string", values: ["a", "b"] })
     enums: string[];
 }
 
