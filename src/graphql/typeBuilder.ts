@@ -157,7 +157,33 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         return null;
     }
 
-    private createType(schema: Schema, createInputType = false) {
+    createInterfaceType(schema: Schema, createInputType = false) {
+        if (!schema)
+            return null;
+
+        let name = schema.name;
+        if (createInputType)
+            name = name + "_Input";
+
+        let t = this.interfaces.get(name);
+        if (t)
+            return t;   
+        
+        let iType = new graphql.GraphQLInterfaceType({
+            name: name + "_Interface",
+            fields: () => this.createInterfaceFields(schema, createInputType),
+            resolveType: (val) => {
+                if (!val._schema)
+                    throw new Error("Unable to resolve an union type. You must set the _schema property.");
+                return val._schema;
+            },
+            description: schema.info.description
+        });
+        this.interfaces.set(name, iType);  
+        return iType;
+    }
+
+    private createType(schema: Schema, createInputType = false, interfaceType?: any) {
         if (!schema)
             return null;
         
@@ -169,50 +195,38 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         if (t)
             return t;
 
-        let iType = new graphql.GraphQLInterfaceType({
-                name: name  + "_Interface",
-                fields: () => this.createInterfaceFields(schema, createInputType),
-                description: schema.info.description
-        });
-        this.interfaces.set(name, iType);
+        let subModels = schema.subModels();
+        if (!createInputType) {
+            for (let subModel of subModels) {
+                if (!interfaceType) {
+                    interfaceType = this.createInterfaceType(schema, createInputType);
+                }
+                this.createType(subModel, createInputType, interfaceType);
+            }
+        }
         
         let fields = this.createFields(schema, createInputType);
         let type = createInputType
             ? new graphql.GraphQLInputObjectType({
                 name,
+                interfaces: interfaceType && [interfaceType],
                 fields: () => fields,
                 description: schema.info.description
             })
             : new graphql.GraphQLObjectType({
                 name,
+                interfaces: interfaceType && [interfaceType],
                 fields: () => fields,
                 description: schema.info.description
-            });        
+            });
 
-
-/*        if (!createInputType) {
-            let subModels = Array.from(schema.subModels());
-            if (subModels.length > 0) {
-                let types = [type].concat(subModels.map(sch => this.createType(sch)));
-                type = new graphql.GraphQLUnionType({
-                    name: name + "_Union",
-                    types: types,
-                    resolveType: (val) => {
-                        if (!val._schema)
-                            throw new Error("Unable to resolve an union type. You must set the _schema property.");
-                        return val._schema;
-                    }
-                });
-            }
-        }    
-*/
         this.types.set(name, type);
-
-        return type;
+        return interfaceType || type;
     }
 
-    private createFields(schema: Schema, createInputType: boolean) {
-        let fields = { "_schema": { type: graphql.GraphQLString } };
+    private createFields(schema: Schema, createInputType: boolean, fields?: any) {
+        fields = fields || { "_schema": { type: graphql.GraphQLString } };
+
         for (let prop of schema.allProperties()) {
             let type = this.createScalarType(prop.type, prop.name);
             if (!type) {
@@ -232,17 +246,25 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             else {
                 fields[prop.name] = { type, description: prop.description };
             }
+
             if (prop.required && fields[prop.name]) {
                 let t = fields[prop.name].type;
                 fields[prop.name].type = graphql.GraphQLNonNull(t);
             }
         }
+
+        if (createInputType) {
+            for (let subModel of schema.subModels()) {
+                this.createFields(subModel, true, fields);
+            }
+        }
+        
         return fields;
     }
 
     private createInterfaceFields(schema: Schema, createInputType: boolean) {
         let fields = { "_schema": { type: graphql.GraphQLString } };
-        for (let prop of schema.properties()) {
+        for (let prop of schema.allProperties()) {
             let type = this.createScalarType(prop.type, prop.name);
             if (!type) {
                 let sch = this.domain.getSchema(prop.type, true);

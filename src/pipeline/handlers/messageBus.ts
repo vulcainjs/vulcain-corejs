@@ -47,13 +47,12 @@ export enum EventNotificationMode {
     successOnly
 }
 
-
+const LocalEventSymbol = Symbol("local_event");
 export class MessageBus {
     private commandBus: IActionBusAdapter;
     private eventBus: IEventBusAdapter;
     private _events: Map<string,RX.Subject<EventData>> = new Map<string, RX.Subject<EventData>>();
     public static readonly LocalEvents = new EventEmitter();
-    public static readonly LocalEventSymbol = Symbol("local_event");
 
     /**
      * Get event queue for a domain
@@ -106,10 +105,10 @@ export class MessageBus {
     }
 
     emitLocalEvent(evt) {
-        if (evt[MessageBus.LocalEventSymbol])
+        if (evt[LocalEventSymbol])
             return;
         
-        evt[MessageBus.LocalEventSymbol] = true;
-        MessageBus.LocalEvents.emit(MessageBus.LocalEventSymbol, evt);
+        evt[LocalEventSymbol] = true;
+        MessageBus.LocalEvents.emit("on", evt);
     }
 }
