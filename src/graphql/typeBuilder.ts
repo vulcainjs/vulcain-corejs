@@ -17,6 +17,7 @@ export interface IGraphQLSchemaBuilder {
 @Injectable(LifeTime.Singleton, DefaultServiceNames.GraphQLSchemaBuilder)
 export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
     private types = new Map<string, any>();
+    private interfaces = new Map<string, any>();
     private descriptors: ServiceDescriptors;
     private domain: Domain;
     private context: IRequestContext;
@@ -168,52 +169,28 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         if (t)
             return t;
 
-        let fields = { "_schema": { type: graphql.GraphQLString}};
-        for (let prop of schema.allProperties()) {
-            let type = this.createScalarType(prop.type, prop.name);
+        let iType = new graphql.GraphQLInterfaceType({
+                name: name  + "_Interface",
+                fields: () => this.createInterfaceFields(schema, createInputType),
+                description: schema.info.description
+        });
+        this.interfaces.set(name, iType);
+        
+        let fields = this.createFields(schema, createInputType);
+        let type = createInputType
+            ? new graphql.GraphQLInputObjectType({
+                name,
+                fields: () => fields,
+                description: schema.info.description
+            })
+            : new graphql.GraphQLObjectType({
+                name,
+                fields: () => fields,
+                description: schema.info.description
+            });        
 
-            if (!type) {
-                let sch = this.domain.getSchema(prop.type, true);
-                if (sch) {
-                    let t = this.createType(sch, createInputType);
-                    if (prop.cardinality === "many")
-                        t = new graphql.GraphQLList(t);
-                    fields[prop.name] = {
-                        type: t,
-                        description: prop.description
-                    };
 
-                    if (!createInputType)
-                        fields[prop.name].resolve = this.resolveQuery;
-                }
-            }
-            else {
-                fields[prop.name] = { type, description: prop.description };
-            }
-            
-            if (prop.required && fields[prop.name]) {
-                let t = fields[prop.name].type;
-                fields[prop.name].type = graphql.GraphQLNonNull(t);
-            }
-        }
-
-        t = {
-            name,
-            fields: () => fields
-        };
-
-        if (schema.info.description)
-            t.description = schema.info.description;
-
-        let type;
-        if (createInputType) {
-            type = new graphql.GraphQLInputObjectType(t);
-        }
-        else {
-            type = new graphql.GraphQLObjectType(t);
-        }
-
-        if (!createInputType) {
+/*        if (!createInputType) {
             let subModels = Array.from(schema.subModels());
             if (subModels.length > 0) {
                 let types = [type].concat(subModels.map(sch => this.createType(sch)));
@@ -228,10 +205,67 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 });
             }
         }    
-
+*/
         this.types.set(name, type);
 
         return type;
+    }
+
+    private createFields(schema: Schema, createInputType: boolean) {
+        let fields = { "_schema": { type: graphql.GraphQLString } };
+        for (let prop of schema.allProperties()) {
+            let type = this.createScalarType(prop.type, prop.name);
+            if (!type) {
+                let sch = this.domain.getSchema(prop.type, true);
+                if (sch) {
+                    let t = this.createType(sch, createInputType);
+                    if (prop.cardinality === "many")
+                        t = new graphql.GraphQLList(t);
+                    fields[prop.name] = {
+                        type: t,
+                        description: prop.description
+                    };
+                    if (!createInputType)
+                        fields[prop.name].resolve = this.resolveQuery;
+                }
+            }
+            else {
+                fields[prop.name] = { type, description: prop.description };
+            }
+            if (prop.required && fields[prop.name]) {
+                let t = fields[prop.name].type;
+                fields[prop.name].type = graphql.GraphQLNonNull(t);
+            }
+        }
+        return fields;
+    }
+
+    private createInterfaceFields(schema: Schema, createInputType: boolean) {
+        let fields = { "_schema": { type: graphql.GraphQLString } };
+        for (let prop of schema.properties()) {
+            let type = this.createScalarType(prop.type, prop.name);
+            if (!type) {
+                let sch = this.domain.getSchema(prop.type, true);
+                if (sch) {
+                    let t = this.createType(sch, createInputType);
+                    if (prop.cardinality === "many")
+                        t = new graphql.GraphQLList(t);
+                    fields[prop.name] = {
+                        type: t,
+                        description: prop.description
+                    };
+                }
+            }
+            else {
+                fields[prop.name] = { type, description: prop.description };
+            }
+
+            if (prop.required && fields[prop.name]) {
+                let t = fields[prop.name].type;
+                fields[prop.name].type = graphql.GraphQLNonNull(t);
+            }
+        }
+        return fields;
     }
 
     private async resolveMutation(entity, args, ctx: IRequestContext, info:any) {

@@ -72,13 +72,13 @@ export class QueryManager implements IManager {
                 let total = 0;
                 if (result instanceof QueryResult) {
                     values = result.value;
-                    total = result.total;
+                    total = result.totalCount;
                 }
 
                 let res:any = { meta: {}, value: Utils.obfuscateSensibleData(this.domain, this.container, values) };
-                res.meta.total = total;
+                res.meta.totalCount = total;
                 if (result && Array.isArray(result)) {
-                    res.meta.total = res.meta.total || result.length;
+                    res.meta.totalCount = res.meta.totalCount || result.length;
                     res.meta.pageSize = query.pageSize;
                     res.meta.page = query.page;
                 }

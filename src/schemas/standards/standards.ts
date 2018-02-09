@@ -1,7 +1,7 @@
 const uuid = require('uuid');
 const validator = require('validator');
 
-export class SchemaStandardTypes {
+export class TYPES {
     static "string" = "string";
     static "any" = "any";
     static "boolean" = "boolean";
@@ -16,7 +16,7 @@ export class SchemaStandardTypes {
     static "date-iso8601" = "date-iso8601";
 }
 
-export class SchemaStandardValidators {
+export class VALIDATORS {
     static "range" = "range";
     static "pattern" = "pattern";
     static "len" = "length";

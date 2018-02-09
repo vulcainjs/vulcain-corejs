@@ -66,14 +66,18 @@ export class Schema {
         return undefined;
     }
     
+    public *properties() {
+        for (let p in this.info.properties) {
+            yield this.info.properties[p];
+        }
+    }
+
     public *allProperties(): IterableIterator<ModelPropertyDefinition> {
         let ext = this.extends;
         if (ext) {
             yield* ext.allProperties();
         }
-        for (let p in this.info.properties) {
-            yield this.info.properties[p];
-        }
+        yield* this.properties();
     }
 
     coerce(data) {

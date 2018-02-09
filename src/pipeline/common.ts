@@ -11,7 +11,7 @@ export interface VulcainResponse<T=any> {
         correlationId: string;
         taskId?: string;
         status?: string;
-        total?: number;
+        totalCount?: number;
         page?: number;
         pageSize?: number;
     };

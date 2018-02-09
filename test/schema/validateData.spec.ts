@@ -2,10 +2,10 @@ import { expect } from "chai";
 import { Model } from '../../src/schemas/builder/annotations.model';
 import { Property } from '../../src/schemas/builder/annotations.property';
 import { Validator, SchemaTypeDefinition } from '../../src/schemas/builder/annotations';
-import { ISchemaTypeDefinition} from '../../src/schemas/schemaType'
+import { ISchemaTypeDefinition } from '../../src/schemas/schemaType';
 import { Domain } from "../../src/schemas/domain";
 import 'mocha';
-import { SchemaStandardTypes } from "../../src/schemas/standards/standards";
+import { TYPES } from "../../src/schemas/standards/standards";
 import { TestContext } from '../../src/pipeline/testContext';
 
 @Model()
@@ -34,7 +34,7 @@ class ReferenceModel {
 
 @Model()
 class EmailModel {
-    @Property({ type: SchemaStandardTypes.email })
+    @Property({ type: TYPES.email })
     email: string;
 }
 

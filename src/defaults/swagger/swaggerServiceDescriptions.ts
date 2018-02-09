@@ -125,7 +125,7 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
         };
 
         if (listResponse) {
-            (<any>res.properties.meta.properties).total = { type: 'number' };
+            (<any>res.properties.meta.properties).totalCount = { type: 'number' };
             (<any>res.properties.meta.properties).pageSize= { type: 'number' };
             (<any>res.properties.meta.properties).page= { type: 'number' };
         }

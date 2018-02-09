@@ -22,7 +22,7 @@ export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
 export { Validator, SchemaTypeDefinition } from './schemas/builder/annotations';
 export { Property, PropertyDefinition } from './schemas/builder/annotations.property';
 export { ModelDefinition, Model } from './schemas/builder/annotations.model';
-export { SchemaStandardTypes, SchemaStandardValidators } from './schemas/standards/standards';
+export { TYPES, VALIDATORS } from './schemas/standards/standards';
 
 // Auth
 export { SecurityContext, IAuthenticationStrategy, UserToken } from './security/securityContext';
