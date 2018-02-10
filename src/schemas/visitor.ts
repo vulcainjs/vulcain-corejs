@@ -23,7 +23,7 @@ export class SchemaVisitor {
                 if (!sch.info.properties.hasOwnProperty(ps)) continue;
                 let prop = sch.info.properties[ps];
                 if (prop) {
-                    if (prop.cardinality) {
+                    if (schema.isSchemaReference(prop)) {
                         let refValue = entity[ps];
                         if (refValue) {
                             let item = prop.type;

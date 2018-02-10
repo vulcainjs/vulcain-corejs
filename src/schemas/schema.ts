@@ -84,15 +84,15 @@ export class Schema {
         return this.coerceInternal(data, this);
     }
 
-    private coerceInternal(data, schema: Schema, result?)
+    private coerceInternal(entity, schema: Schema, result?)
     {
-        if (!data) { return null; }
+        if (!entity) { return null; }
         if (typeof schema.info.coerce === "function") {
-            return schema.info.coerce(data);
+            return schema.info.coerce(entity);
         }
 
-        if (typeof data !== "object") {
-            return data;
+        if (typeof entity !== "object") {
+            return entity;
         }
 
         result = result || new schema.schemaType(); //origin;
@@ -100,54 +100,52 @@ export class Schema {
         (<any>result)._schema = (<any>result)._schema || schema.name;
 
         // Convert properties
-        for (const propertyName in schema.info.properties) {
-            if (!schema.info.properties.hasOwnProperty(propertyName)) { continue; }
-            let prop = schema.info.properties[propertyName];
+        for (const propertyDefinition of schema.properties()) {
 
-            if (prop) {
+            if (propertyDefinition) {
                 try {
-                    if (prop.cardinality) {
-                        let item = prop.type;
-                        let refValue = data[propertyName];
+                    if (this.isSchemaReference(propertyDefinition)) { 
+                        let itemSchemaName = propertyDefinition.type;
+                        let itemValue = entity[propertyDefinition.name];
 
-                        if (Array.isArray(refValue)) {
-                            result[propertyName] = [];
-                            for (let elem of refValue) {
+                        if (Array.isArray(itemValue)) {
+                            result[propertyDefinition.name] = [];
+                            for (let elem of itemValue) {
                                 if (elem && elem._schema) {
-                                    item = elem._schema;
+                                    itemSchemaName = elem._schema;
                                 }
 
-                                let elemSchema = this.domain.getSchema(item, true);
-                                if (!elemSchema && item !== "any") {
+                                let elemSchema = this.domain.getSchema(itemSchemaName, true);
+                                if (!elemSchema && itemSchemaName !== "any") {
                                     continue;
                                 }
-                                let val = this.applyBinding(prop, elemSchema, elem);
+                                let val = this.applyBinding(propertyDefinition, entity, elem);
                                 if (val !== undefined) {
-                                    result[propertyName].push(!elemSchema && item === "any" ? val : this.coerceInternal(val, elemSchema));
+                                    result[propertyDefinition.name].push(!elemSchema ? val : this.coerceInternal(val, elemSchema));
                                 }
                             }
                         }
                         else {
-                            if (refValue && refValue._schema) {
-                                item = refValue._schema;
+                            if (itemValue && itemValue._schema) {
+                                itemSchemaName = itemValue._schema;
                             }
 
-                            let elemSchema = this.domain.getSchema(item, true);
-                            if (!elemSchema && item !== "any") {
+                            let elemSchema = this.domain.getSchema(itemSchemaName, true);
+                            if (!elemSchema && itemSchemaName !== "any") {
                                 continue;
                             }
 
-                            let val = this.applyBinding(prop, elemSchema, refValue);
+                            let val = this.applyBinding(propertyDefinition, entity, itemValue);
                             if (val !== undefined) {
-                                result[propertyName] = !elemSchema && item === "any" ? val : this.coerceInternal(val, elemSchema);
+                                result[propertyDefinition.name] = !elemSchema ? val : this.coerceInternal(val, elemSchema);
                             }
                         }
                     }
                     else {
-                        let val = this.applyBinding(prop, data, data[propertyName]);
+                        let val = this.applyBinding(propertyDefinition, entity, entity[propertyDefinition.name]);
 
                         if (val !== undefined) {
-                            result[propertyName] = val;
+                            result[propertyDefinition.name] = val;
                         }
                     }
                 }
@@ -158,7 +156,7 @@ export class Schema {
         }
 
         if (schema.extends) {
-            this.coerceInternal(data, schema.extends, result);
+            this.coerceInternal(entity, schema.extends, result);
         }
         return result;
     }
@@ -176,10 +174,6 @@ export class Schema {
             }
         }
         return val;
-    }
-
-    private isMany(relSchema) {
-        return relSchema.cardinality === "many";
     }
 
     validate(ctx: IRequestContext, obj) {
@@ -252,6 +246,10 @@ export class Schema {
         v.visit(this, entity);
     }
 
+    isSchemaReference(prop: ModelPropertyDefinition) {
+        return prop && prop.cardinality && !prop.itemsType;
+    }
+
     /**
      * Copy an entity to another taking into account references defined in schema
      *
@@ -275,7 +273,7 @@ export class Schema {
             let val = source[key];
             if (typeof val === "object") {
                 let ref = schema.info.properties[key];
-                if (ref && ref.cardinality) {
+                if (this.isSchemaReference(ref)) {
                     let item = ref.type;
                     if (val && val._schema) {
                         item = val._schema;
