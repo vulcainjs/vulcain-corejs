@@ -322,8 +322,8 @@ export class SwaggerServiceDescriptor implements IScopedComponent {
                 description: property.typeDescription
             };
 
-            if (property.reference === 'one' || property.reference === 'many') {
-                this.setReferenceDefinition(jsonSchema.properties[property.name], property.type, property.reference);
+            if (property.definition.cardinality === 'one' || property.definition.cardinality === 'many') {
+                this.setReferenceDefinition(jsonSchema.properties[property.name], property.type, property.definition.cardinality);
             }
 
             if (property.description) {

@@ -330,10 +330,10 @@ export class ServiceDescriptors {
                 let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata  };
                 let pdesc: PropertyDescription = {
                     name: k,
-                    reference: p.cardinality,
                     type: p.cardinality === "many" ? p.type + "[]" : p.type,
                     required: p.required,
                     description: p.description,
+                    reference: p.reference,
                     typeDescription: "",
                     definition: def,
                     order: p.order

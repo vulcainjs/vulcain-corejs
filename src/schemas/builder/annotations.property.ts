@@ -107,7 +107,7 @@ export interface PropertyDefinition {
     /** 
      * Foreign key in case of reference
     */
-    refProperty?: string;
+    reference?: string;
 }
 
 export function Property(def?: PropertyDefinition) {

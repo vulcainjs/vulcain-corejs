@@ -285,7 +285,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;    
             
-            const propType = createInputType ? prop.type : (def.type || prop.type);
+            const propType = createInputType ? prop.type : (prop.reference || prop.type);
             let type = this.createScalarType(propType, prop);
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
@@ -330,7 +330,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;    
 
-            const propType = createInputType ? prop.type : (def.type || prop.type);
+            const propType = createInputType ? prop.type : (prop.reference || prop.type);
             let type = this.createScalarType(propType, prop);
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
@@ -416,7 +416,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             const def: GraphQLDefinition = prop.metadata.graphql || {};
             let itemSchema = domain.getSchema(def.type);
 
-            let fk = itemSchema.getIdProperty();
+            let fk = itemSchema.getIdProperty(); // TODO Ref field
             let value = entity[fieldName];
             if (Array.isArray(value)) {
                 data.params = {
