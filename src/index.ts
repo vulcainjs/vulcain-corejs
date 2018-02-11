@@ -13,6 +13,7 @@ export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProper
 export { VulcainLogger } from './log/vulcainLogger';
 export { Service } from './globals/system';
 export { IServiceResolver } from './di/serviceResolver';
+export { Metadata } from './utils/reflector';
 
 // Schemas
 export { Schema } from './schemas/schema';

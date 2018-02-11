@@ -37,24 +37,19 @@ export interface ModelDefinition {
      * This model (or its children) has sensible data - Required if you want obfuscate sensible type data
      */
     hasSensibleData?: boolean;
-    /**
-     * Custom metadata
-     */
-    metadata?: any;
     inputModel?: boolean;
 }
 
 /**
  * Declare a data model
  */
-export function Model(def?: ModelDefinition, metadata?:any) {
+export function Model(def?: ModelDefinition) {
     return function (target: Function) {
         def = def || {};
-        def.metadata = metadata || {};
         def.name = def.name || target.name;
         def.storageName = def.storageName || def.name;
 
-        // Try to infere inherit type
+        // Try to infer inherit type
         if (!def.extends) {
             let ext = Object.getPrototypeOf(target).name;
             if (ext) def.extends = ext;
@@ -67,8 +62,8 @@ export function Model(def?: ModelDefinition, metadata?:any) {
     };
 }
 
-export function InputModel(def?: ModelDefinition, customOptions?: any) {
+export function InputModel(def?: ModelDefinition) {
     def = def || {};
     def.inputModel = true;
-    return Model(def, customOptions);
+    return Model(def);
 }

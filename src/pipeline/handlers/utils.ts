@@ -5,7 +5,7 @@ import { ServiceDescriptors } from './descriptions/serviceDescriptions';
 
 export class Utils {
 
-    // Get registered metadata by reverse hierarchy order
+// Get registered metadata by reverse hierarchy order
 // to override base metadata
 static getMetadata(key, target) {
     let metadata;

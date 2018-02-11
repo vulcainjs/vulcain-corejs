@@ -8,6 +8,7 @@ import { ModelPropertyDefinition, SchemaInfo } from './schemaInfo';
 import { Domain } from './domain';
 import { ModelDefinition } from './builder/annotations.model';
 import { ISchemaTypeDefinition } from './schemaType';
+import { Reflector } from '../utils/reflector';
 
 /**
  * Schema definition
@@ -36,7 +37,7 @@ export class Schema {
             properties: {},
             coerce: def.coerce,
             validate: def.validate,
-            metadata: def.metadata,
+            metadata: Reflector.getMetadata(schemaType),
             extends: def.extends,
             isInputModel: def.inputModel
         };

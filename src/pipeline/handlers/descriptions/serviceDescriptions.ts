@@ -109,7 +109,7 @@ export class ServiceDescriptors {
         };
 
         for (let item of this.handlers.filter(h => h.kind === "action")) {
-            let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
+            let schema = item.definition.schema && this.getOrCreateSchemaDescription(schemas, item.definition.schema);
 
             let verb = !schema
                 ? item.definition.name
@@ -125,8 +125,8 @@ export class ServiceDescriptors {
 
             let def = <ActionDefinition>item.definition;
             def.scope = this.checkScopes(scopes, def, verb);
-            def.inputSchema = this.getSchemaDescription(schemas, def.inputSchema, schema);
-            def.outputSchema = !def.async && this.getSchemaDescription(schemas, def.outputSchema, schema);
+            def.inputSchema = this.getOrCreateSchemaDescription(schemas, def.inputSchema, schema);
+            def.outputSchema = !def.async && this.getOrCreateSchemaDescription(schemas, def.outputSchema, schema);
 
             let desc: OperationDescription = {
                 schema: schema,
@@ -151,7 +151,7 @@ export class ServiceDescriptors {
         // Query
         for (let item of this.handlers.filter(h => h.kind === "query")) {
 
-            let schema = item.definition.schema && this.getSchemaDescription(schemas, item.definition.schema);
+            let schema = item.definition.schema && this.getOrCreateSchemaDescription(schemas, item.definition.schema);
 
             let verb = !item.definition.schema
                 ? item.definition.name
@@ -168,8 +168,8 @@ export class ServiceDescriptors {
             if (item.definition.name.startsWith("_service")) continue;
 
             let def = <QueryOperationDefinition>item.definition;
-            def.inputSchema = this.getSchemaDescription(schemas, def.inputSchema);
-            def.outputSchema = this.getSchemaDescription(schemas, def.outputSchema, schema);
+            def.inputSchema = this.getOrCreateSchemaDescription(schemas, def.inputSchema);
+            def.outputSchema = this.getOrCreateSchemaDescription(schemas, def.outputSchema, schema);
             def.scope = this.checkScopes(scopes, def, verb);
 
             let desc: OperationDescription = {
@@ -228,7 +228,8 @@ export class ServiceDescriptors {
         return result.join(',');
     }
 
-    private getSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?: string): string {
+    private getOrCreateSchemaDescription(schemas: Map<string, SchemaDescription>, schemaName: string | Function, defaultValue?: string): string {
+
         if (schemaName === "none")
             return;
         if (!schemaName)
@@ -237,6 +238,10 @@ export class ServiceDescriptors {
         if (typeof schemaName === "function")
             schemaName = schemaName.name;
 
+        let desc = schemas.get(schemaName);
+        if (desc)
+            return desc.name;
+        
         let schema = this.domain.getSchema(schemaName, true);
         if (!schema) {
             if (typeof schemaName === "string") {
@@ -249,9 +254,9 @@ export class ServiceDescriptors {
                 throw new Error("Unknown schema " + schemaName);
         }
 
-        let desc: SchemaDescription = schemas.get(schema.name);
+        desc = schemas.get(schema.name);
         if (desc) return desc.name;
-
+        
         desc = {
             name: schema.name,
             properties: [],
@@ -259,13 +264,23 @@ export class ServiceDescriptors {
             dependencies: new Set<string>(),
             metadata: schema.info.metadata
         };
+        
         schemas.set(schema.name, desc);
-        this.descriptions.schemas.push(desc);
-        let sd = schema;
-        while (sd) {
-            this.updateDescription(schemas, sd, desc);
-            sd = sd.extends;
+        
+        let extendedSchema = schema.extends;
+        if (extendedSchema) {
+            this.getOrCreateSchemaDescription(schemas, extendedSchema.name);
+            desc.extends = extendedSchema.name;
         }
+
+        this.descriptions.schemas.push(desc);
+        this.updateDescription(schemas, schema, desc);
+
+        let subModels = schema.subModels();
+        for (let subModel of subModels) {
+            this.getOrCreateSchemaDescription(schemas, subModel.name);
+        }
+
         return desc.name;
     }
 
@@ -285,12 +300,23 @@ export class ServiceDescriptors {
             const p = schema.info.properties[k];
             if (p.private)
                 continue;
+            
             let type = this.getPropertyType(p.itemsType || p.type);
-            if (type) {
-                let def = { type: p.type, itemsType: p.itemsType, values: p.values, required: p.required, description: p.description, isKey: p.isKey, ...p.metadata };
+            if (type || !schema.isSchemaReference(p)) {
+                let def = {
+                    type: p.type,
+                    itemsType: p.itemsType,
+                    values: p.values,
+                    required: p.required,
+                    description: p.description,
+                    isKey: p.isKey,
+                    ...p.metadata
+                };
+                
                 let pdesc: PropertyDescription = {
                     name: k,
-                    type: p.itemsType ? p.itemsType + "[]" : type.name, order: p.order || 0,
+                    type: this.domain.getScalarTypeOf(type) + (p.itemsType ? "[]" : ""),
+                    order: p.order || 0,
                     required: p.required,
                     description: p.description,
                     typeDescription: type.description,
@@ -298,9 +324,8 @@ export class ServiceDescriptors {
                 };
                 this.addDescription(desc, pdesc);
             }
-            else if( p.cardinality) {
+            else {
                 if (schemas.has(k)) return k;
-             //   this.getSchemaDescription(schemas, p.type);
 
                 let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata  };
                 let pdesc: PropertyDescription = {

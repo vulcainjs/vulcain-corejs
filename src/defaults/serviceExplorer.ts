@@ -7,13 +7,14 @@ import { ServiceDescriptors } from "../pipeline/handlers/descriptions/serviceDes
 import { ServiceDescription } from "../pipeline/handlers/descriptions/serviceDescription";
 import { SwaggerServiceDescriptor } from './swagger/swaggerServiceDescriptions';
 import { SwaggerApiDefinition } from './swagger/swaggerApiDefinition';
-import { HttpResponse } from '../index';
+import { HttpResponse, Metadata } from '../index';
 import { Model, InputModel } from '../schemas/builder/annotations.model';
 import { Property } from '../schemas/builder/annotations.property';
 import { Query } from '../pipeline/handlers/query/annotations.query';
 import { QueryHandler } from '../pipeline/handlers/query/annotations.queryHandler';
 
-@InputModel(null, { system: true })
+@InputModel()
+@Metadata("system", true)        
 export class ServiceExplorerParameter {
     @Property({ description: "Format the description service. Only 'swagger' are available", type: "string" })
     format: string;

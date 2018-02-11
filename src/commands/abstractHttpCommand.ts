@@ -76,20 +76,20 @@ export abstract class AbstractHttpCommand {
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyHttpStub(url, verb);
         if (result) {
-            Service.log.info(this.context, ()=>`Using stub output for (${verb}) ${Service.removePasswordFromUrl(url)}`);
+            this.context.logInfo(()=>`Using stub output for (${verb}) ${Service.removePasswordFromUrl(url)}`);
             return result;
         }
 
         let request: types.IHttpCommandRequest = rest[verb](url);
 
         prepareRequest && prepareRequest(request);
-        Service.log.info(this.context, ()=>`Calling (${verb}) ${Service.removePasswordFromUrl(url)}`);
+        this.context.logInfo(()=>`Calling (${verb}) ${Service.removePasswordFromUrl(url)}`);
 
         return new Promise<types.IHttpCommandResponse>((resolve, reject) => {
             request.end((response) => {
                 if (response.status >= 400) {
                     let msg = ()=> `Http request ${verb} ${url} failed with status code ${response.status}`;
-                    Service.log.info(this.context, msg);
+                    this.context.logInfo(msg);
                     reject(new HttpCommandError(msg(), response));
                     return;
                 }
@@ -100,14 +100,14 @@ export abstract class AbstractHttpCommand {
                     return;
                 }
 
-                Service.log.info(this.context, ()=>`Http request ${verb} ${url} completed successfully (code:${response.status}).`);
+                this.context.logInfo(()=>`Http request ${verb} ${url} completed successfully (code:${response.status}).`);
                 resolve(response);
             });
         });
     }
 
     private handleError(msg: ()=>string, err?) {
-        Service.log.error(this.context, err, msg);
+        this.context.logError(err, msg);
         if (err && !(err instanceof Error)) {
             let tmp = err;
             err = new Error(msg());

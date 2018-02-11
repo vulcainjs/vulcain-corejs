@@ -110,10 +110,9 @@ export interface PropertyDefinition {
     refProperty?: string;
 }
 
-export function Property(def?: PropertyDefinition, metadata?:any) {
+export function Property(def?: PropertyDefinition) {
     return (target, key) => {
         let info: ModelPropertyDefinition = def || <any>{};
-        info.metadata = metadata || {};
         info.name = key;
 
         if (!info.type) {

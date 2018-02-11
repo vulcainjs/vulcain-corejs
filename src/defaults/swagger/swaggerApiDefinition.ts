@@ -1,4 +1,5 @@
 import { Model } from "../../schemas/builder/annotations.model";
+import { Metadata } from "../..";
 
 //copied from swaggerize-express typed definitions
 //and amended with customizations
@@ -50,7 +51,8 @@ export interface IExternalReference {
 }
 
 
-@Model({}, {system:true})
+@Model({})
+@Metadata("system", true)    
 export class SwaggerApiDefinition {
     swagger: string;
     info: InfoObject;

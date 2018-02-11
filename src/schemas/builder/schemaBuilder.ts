@@ -4,6 +4,7 @@ import { Domain } from '../domain';
 import { Schema } from '../schema';
 import { ModelPropertyDefinition } from '../schemaInfo';
 import { ISchemaValidation, ISchemaTypeDefinition } from '../schemaType';
+import { Reflector } from '../../utils/reflector';
 
 export class SchemaBuilder {
 
@@ -15,6 +16,8 @@ export class SchemaBuilder {
 
         for (let property of properties) {
             if (property) {
+                property.metadata = Reflector.getMetadata(type, property.name);
+                
                 if (property.type !== "any") {
                     const propertyType = domain.getType(property.type);
                     if (!propertyType) {

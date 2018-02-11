@@ -80,7 +80,7 @@ export class VulcainLogger implements Logger{
      *
      * @memberOf VulcainLogger
      */
-    info(context: IRequestContext|null, msg: ()=>string) {
+    info(context: IRequestContext | null, msg: () => string) {
         let entry = this.prepareEntry(context);
         entry.message = msg && msg();
         this.writeEntry(entry);

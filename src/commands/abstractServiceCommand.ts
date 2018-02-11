@@ -134,7 +134,7 @@ export abstract class AbstractServiceCommand {
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, schema ? schema + ".get" : "get", { id });
         if (result !== undefined) {
-            Service.log.info(this.context, ()=>`Using stub database result for ${serviceName}`);
+            this.context.logInfo(()=>`Using stub database result for ${serviceName}`);
             return result;
         }
 
@@ -164,7 +164,7 @@ export abstract class AbstractServiceCommand {
         const stubs = Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            Service.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
+            this.context.logInfo(()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 
@@ -188,7 +188,7 @@ export abstract class AbstractServiceCommand {
         const stubs=Service.getStubManager(this.container);
         let result = Service.isDevelopment && stubs.enabled && await stubs.applyServiceStub(serviceName, serviceVersion, verb, data);
         if (result !== undefined) {
-            Service.log.info(this.context, ()=>`Using stub database result for (${verb}) ${serviceName}`);
+            this.context.logInfo(()=>`Using stub database result for (${verb}) ${serviceName}`);
             return result;
         }
 
@@ -265,24 +265,24 @@ export abstract class AbstractServiceCommand {
                         else {
                             err = new ApplicationError((response.error && response.error.message) || "Unknown error", response.status);
                         }
-                        Service.log.error(this.context, err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        this.context.logError(err, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(err);
                         return;
                     }
                     let vulcainResponse = response.body;
                     if (vulcainResponse.error) {
-                        Service.log.info(this.context, ()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
+                        this.context.logInfo(()=>`Service request ${verb} ${url} failed with status code ${response.status}`);
                         reject(new ApplicationError(vulcainResponse.error.message, response.status, vulcainResponse.error.errors));
                     }
                     else {
-                        Service.log.info(this.context, ()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
+                        this.context.logInfo(()=>`Service request ${verb} ${url} completed with status code ${response.status}`);
                         resolve(vulcainResponse);
                     }
                 });
             }
             catch (err) {
                 let msg = ()=>`Service request ${verb} ${url} failed`;
-                Service.log.error(this.context, err, msg);
+                this.context.logError(err, msg);
                 if (!(err instanceof Error)) {
                     let tmp = err;
                     err = new Error(msg());

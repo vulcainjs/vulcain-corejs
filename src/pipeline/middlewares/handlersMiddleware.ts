@@ -44,12 +44,12 @@ export class HandlersMiddleware extends VulcainMiddleware {
         // Ensure schema name (casing) is valid
         ctx.requestData.schema = info.definition.schema || ctx.requestData.schema;
 
-        Service.log.info(ctx, () => `Request input   : ${JSON.stringify(command.params)}`);
-        Service.log.info(ctx, () => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
+        ctx.logInfo(() => `Request input   : ${JSON.stringify(command.params)}`);
+        ctx.logInfo(() => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
 
         // Verify authorization
         if (!ctx.user.hasScope(info.definition.scope)) {
-            Service.log.error(ctx, new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+            ctx.logError(new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
             throw new UnauthorizedRequestError();
         }
 

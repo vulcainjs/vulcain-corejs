@@ -6,4 +6,5 @@ export class SchemaDescription {
     properties: Array<PropertyDescription>;
     dependencies: Set<string>;
     metadata?: any;
+    extends?: string;
 }

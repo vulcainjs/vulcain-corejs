@@ -211,7 +211,7 @@ export class CommandManager implements IManager {
         let processor =  this.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
         let info = processor.getHandlerInfo(ctx.container, command.schema, command.action);
         if (!info || info.kind !== "event") {
-            Service.log.error(ctx, new ApplicationError(`no handler method founded for event ${ctx.requestData.vulcainVerb}`));
+            ctx.logError(new ApplicationError(`no handler method founded for event ${ctx.requestData.vulcainVerb}`));
             ctx.dispose();
             return;
         }
