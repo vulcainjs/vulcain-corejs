@@ -408,33 +408,37 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             return info.returnType[resolverSymbol](entity && entity[fieldName], data);
         }
 
+        let embedded = false;
         if (entity) { // Is it the root ?
             let domain = ctx.container.get<Domain>(DefaultServiceNames.Domain);
             let schema = domain.getSchema(ctx.requestData.schema);
             let prop = schema.findProperty(fieldName);
 
-            const def: GraphQLDefinition = prop.metadata.graphql || {};
-            let itemSchema = domain.getSchema(def.type);
-
-            let fk = itemSchema.getIdProperty(); // TODO Ref field
-            let value = entity[fieldName];
-            if (Array.isArray(value)) {
-                data.params = {
-                    [fk]: {
-                        $in: value
-                    }
-                };
+            let itemSchema = domain.getSchema(prop.reference, true);
+            if (!itemSchema) {
+                embedded = true;
             }
             else {
-                data.params = { [fk]: value };
+                let fk = prop.referenceProperty || itemSchema.getIdProperty(); 
+                let value = entity[fieldName];
+                if (Array.isArray(value)) {
+                    data.params = {
+                        [fk]: {
+                            $in: value
+                        }
+                    };
+                }
+                else {
+                    data.params = { [fk]: value };
+                }
+                data.schema = itemSchema.name;
+                data.action = "all";
+                data.vulcainVerb = itemSchema.name + ".all";
             }
-            data.schema = itemSchema.name;
-            data.action = "all";
-            data.vulcainVerb = itemSchema.name + ".all";
-        }
+        }    
 
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
-        let handler = processor.getHandlerInfo(ctx.container, data.schema, data.action);
+        let handler = !embedded && processor.getHandlerInfo(ctx.container, data.schema, data.action);
         if (!handler) {
             // Embedded object        
             // Cache resolver

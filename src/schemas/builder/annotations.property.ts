@@ -108,12 +108,18 @@ export interface PropertyDefinition {
      * Foreign key in case of reference
     */
     reference?: string;
+    referenceProperty?: string;
+    /**
+     * Properties for custom types
+     */
+    typeProperties?: any;
 }
 
-export function Property(def?: PropertyDefinition) {
+export function Property(def?: PropertyDefinition, typeProperties?: any) {
     return (target, key) => {
         let info: ModelPropertyDefinition = def || <any>{};
         info.name = key;
+        info.typeProperties = info.typeProperties || typeProperties;
 
         if (!info.type) {
             // Try to infer type

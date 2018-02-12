@@ -194,7 +194,12 @@ export class ServiceDescriptors {
             this.descriptions.services.push(desc);
         }
 
-        this.sortSchemasDependencies();
+        // Ensures all schemas has been created
+        for (let sch of this.domain.schemas) {
+            this.getOrCreateSchemaDescription(schemas, sch.name);
+        }
+
+        this.sortSchemasDependencies();            
 
         this.publicDescriptions = { ...this.descriptions };
         this.publicDescriptions.services = this.publicDescriptions.services.filter(s => !s.metadata.system);
@@ -325,8 +330,6 @@ export class ServiceDescriptors {
                 this.addDescription(desc, pdesc);
             }
             else {
-                if (schemas.has(k)) return k;
-
                 let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata  };
                 let pdesc: PropertyDescription = {
                     name: k,

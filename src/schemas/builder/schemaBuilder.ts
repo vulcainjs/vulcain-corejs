@@ -107,7 +107,7 @@ export class SchemaBuilder {
 
     // Copy all schema property names from 'from'
     static clone(schema, from, clone?): ISchemaValidation {
-        clone = clone || new schema.constructor();//  Object.create(Object.getPrototypeOf(schema));
+        clone = clone || new schema.constructor();
         if (!from)
             return clone;
 
@@ -115,9 +115,8 @@ export class SchemaBuilder {
             let pname = key === "validate" ? key : "$" + key;
             clone[pname] = from[key];
         }
-        if (from.metadata) {
-            schema.$metadata = {};
-            clone = SchemaBuilder.clone(schema.$metadata, from.metadata, clone);
+        if (from.typeProperties) {
+            clone = SchemaBuilder.clone(null, from.typeProperties, clone);
         }
 
         return clone;

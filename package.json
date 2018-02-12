@@ -1,6 +1,6 @@
 {
   "name": "vulcain-corejs",
-  "version": "2.0.0-beta922",
+  "version": "2.0.0-beta923",
   "description": "Vulcain micro-service framework",
   "main": "lib/src/index.js",
   "scripts": {
