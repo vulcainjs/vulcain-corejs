@@ -30,6 +30,7 @@ export interface IGraphQLSchemaBuilder {
 
 @Injectable(LifeTime.Singleton, DefaultServiceNames.GraphQLSchemaBuilder)
 export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
+    private propertyTypes = new Map<string, any>();
     private types = new Map<string, any>();
     private interfaces = new Map<string, any>();
     private descriptors: ServiceDescriptors;
@@ -143,7 +144,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 if (idPropertyName) {
                     const idProperty = outputSchema.info.properties[idPropertyName];                    
                     args[outputSchema.getIdProperty()] =  {
-                        type: this.createScalarType(idProperty.type, idProperty)
+                        type: this.createScalarType(idProperty.type, idProperty, outputSchema.name)
                     };
                 }
             }
@@ -164,24 +165,34 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         return null;
     }
 
-    private createScalarType(propType: string, property: ModelPropertyDefinition) {
+    private createScalarType(propType: string, property: ModelPropertyDefinition, prefix: string) {
         if (!propType)
             return null;    
     
         if (propType === "id" || propType === "uid")
             return graphql["GraphQLID"];
-            
         
         if (propType === TYPES.enum) {
+            let typeName = prefix + "_" + property.name + "_enum";
+            let tmp = this.propertyTypes.get(typeName);
+            if (tmp)
+                return tmp;    
+            
             let t = this.domain.getType(propType);
             if (t) {
-                return new graphql.GraphQLEnum({name: property.name + "_enum", values: property.values, description: t.description});
+                tmp = new graphql.GraphQLEnum({ name: typeName, values: property.values, description: t.description });
+                this.propertyTypes.set(typeName, tmp);
+                return tmp;
             }
         }
         
         if (propType === TYPES.arrayOf) {
-            return new graphql.GraphQLScalarType({
-                name: property.name + "arrayOf",
+            let typeName = prefix + "_" + property.name + "arrayOf";
+            let tmp = this.propertyTypes.get(typeName);
+            if (tmp)
+                return tmp;    
+            tmp = new graphql.GraphQLScalarType({
+                name: typeName,
                 serialize: value => {
                     return value;
                 },
@@ -195,16 +206,8 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                     return ast.value;
                 }
             });
-        
-            // let t = this.domain.getType(propType);
-            // if (t) {
-            //     let itemType = this.typeToGraphQLType(property.itemsType);
-            //     if (!itemType) {
-            //         this.context.logInfo(() => `GRAPHQL: Ignore property ${property.name} with unknow item array type ${property.itemsType}`);
-            //         return null;
-            //     }
-            //     return new graphql.GraphQLList(itemType);
-            // }
+            this.propertyTypes.set(typeName, tmp);
+            return tmp;
         }
 
         return this.typeToGraphQLType(this.domain.getScalarTypeOf(propType));
@@ -286,7 +289,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 continue;    
             
             const propType = createInputType ? prop.type : (prop.reference || prop.type);
-            let type = this.createScalarType(propType, prop);
+            let type = this.createScalarType(propType, prop, schema.name);
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
                 if (sch) {
@@ -331,7 +334,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 continue;    
 
             const propType = createInputType ? prop.type : (prop.reference || prop.type);
-            let type = this.createScalarType(propType, prop);
+            let type = this.createScalarType(propType, prop, schema.name + "_input");
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
                 if (sch) {
