@@ -209,14 +209,14 @@ export class MongoProvider implements IProvider<any>
 
     /**
      * Read an entity
-     * @param name
+     * @param id
      * @returns {Promise}
      */
-    async get(schema: Schema, name: string) {
+    async get(schema: Schema, id: string) {
         await this.ensureSchemaReady(schema);
 
         let filter = {};
-        filter[this.state.keyPropertyNameBySchemas.get(schema.name) || "_id"] = name;
+        filter[this.state.keyPropertyNameBySchemas.get(schema.name) || "_id"] = id;
         this.ctx.logInfo(()=>`MONGODB: Get query on ${Service.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with filter : ${JSON.stringify(filter)}`);
         let self = this;
         return new Promise(async (resolve, reject) => {
@@ -224,17 +224,17 @@ export class MongoProvider implements IProvider<any>
                 let db = self.state._mongo;
                 db.collection(schema.info.storageName).findOne(filter, (err, res) => {
                     if (err) {
-                        self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name}`);
-                        reject(self.normalizeErrors(name, err));
+                        self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
+                        reject(self.normalizeErrors(id, err));
                     }
                     else {
-                        self.ctx.logInfo(()=>`MONGODB: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name} returns a value: ${res !== null}`);
+                        self.ctx.logInfo(()=>`MONGODB: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id} returns a value: ${res !== null}`);
                         resolve(res);
                     }
                 });
             }
             catch (err) {
-                self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${name}`);
+                self.ctx.logError(err, ()=>`MONGODB ERROR: Get query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with id: ${id}`);
                 reject(err);
             }
         });
@@ -245,20 +245,25 @@ export class MongoProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    async delete(schema: Schema, id: string | number) {
+    async delete(schema: Schema, id: string): Promise<any> {
         if (!id)
             throw new Error("MONGODB delete: Id is required");
         
         await this.ensureSchemaReady(schema);
         let self = this;
-        return new Promise<boolean>(async (resolve, reject) => {
+        return new Promise<any>(async (resolve, reject) => {
             let keyPropertyName = self.state.keyPropertyNameBySchemas.get(schema.name);
             let filter = {};
             filter[keyPropertyName || "_id"] = id;
 
             try {
                 self.ctx.logInfo(()=>`MONGODB: Deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}`);
-
+                let old = await this.get(schema, id);
+                if (!old) {
+                    self.ctx.logInfo(()=>`MONGODB: Error when deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)} - Entity must exists.`);                    
+                    reject(new Error("MONGODB DELETE ERROR: Entity must exists"));
+                    return;
+                }
                 let db = self.state._mongo;
                 db.collection(schema.info.storageName).remove(filter, (err, res) => {
                     if (err) {
@@ -268,7 +273,7 @@ export class MongoProvider implements IProvider<any>
                     }
                     else {
                         self.ctx.logInfo(()=>`MONGODB: Deleting entity on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with filter: ${JSON.stringify(filter)}. Result=${res}`);
-                        resolve(res);
+                        resolve(old);
                     }
                 });
             }

@@ -147,7 +147,8 @@ export class DefaultActionHandler extends AbstractActionHandler {
     @Action({ name: "delete", description: "Delete an entity", outputSchema:"", inputSchema:"IdArguments"})
     async delete(args: IdArguments) {
         let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
-        return cmd.deleteWithSensibleData( args.id );
+        let res = await cmd.deleteWithSensibleData(args.id);
+        return res;
     }
 }
 
