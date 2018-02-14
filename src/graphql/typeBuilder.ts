@@ -180,7 +180,13 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             
             let t = this.domain.getType(propType);
             if (t) {
-                tmp = new graphql.GraphQLEnum({ name: typeName, values: property.values, description: t.description });
+                const values = {};
+                Object.keys(property.values).forEach(v => values[property.values[v]] = { value: property.values[v] });
+                tmp = new graphql.GraphQLEnumType({
+                    name: typeName,
+                    values,
+                    description: t.description
+                });
                 this.propertyTypes.set(typeName, tmp);
                 return tmp;
             }
