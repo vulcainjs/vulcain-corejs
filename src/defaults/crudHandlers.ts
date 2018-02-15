@@ -65,6 +65,10 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     async get(args: any) {
         this.setMetricTags("get", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
+        if (args && !(typeof args === "object")) {
+            args[keyProperty] = args;    
+        }
+
         if (!args || !args[keyProperty])
             throw new ApplicationError("GET: You must provide an identifier");    
         

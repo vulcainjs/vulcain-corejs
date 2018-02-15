@@ -321,7 +321,7 @@ export class CommandManager implements IManager {
                         this.messageBus.emitLocalEvent(evt);
                     }
                     catch (e) {
-                        let error = (e instanceof CommandRuntimeError && e.error) ? e.error.toString() : (e.message || e.toString());
+                        let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
                         ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
                     }
                 }

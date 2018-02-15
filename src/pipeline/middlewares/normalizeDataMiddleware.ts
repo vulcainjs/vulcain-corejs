@@ -122,7 +122,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
                     case "$page":
                         ctx.requestData.page = (url.query["$page"] && parseInt(url.query["$page"])) || ctx.requestData.page;
                         break;
-                    case "$pageSize":
+                    case "$pagesize":
                         ctx.requestData.pageSize = (url.query[name] && parseInt(url.query[name])) || ctx.requestData.pageSize;
                         break;
                     case "$query":
