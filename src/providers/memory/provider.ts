@@ -96,7 +96,7 @@ export class MemoryProvider implements IProvider<any>
                     (options.query && options.query.filter) || options.query,
                     options.page,
                     options.pageSize);
-                resolve(new QueryResult(result));
+                resolve(new QueryResult(result, data.count));
             }
             catch (err) {
                 reject(err);
