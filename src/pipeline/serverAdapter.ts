@@ -129,7 +129,8 @@ export class HttpAdapter extends ServerAdapter {
             if (req.method === "OPTIONS" && Service.isTestEnvironment) {
                 resp.setHeader("Access-Control-Allow-Origin", "*");
                 resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
-                resp.setHeader("Access-Control-Allow-Headers", "*");
+                resp.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept");
+                resp.setHeader("Access-Control-Allow-Credentials", "true");
                 resp.setHeader('Content-Length', '0');
                 resp.statusCode = 204;
             }

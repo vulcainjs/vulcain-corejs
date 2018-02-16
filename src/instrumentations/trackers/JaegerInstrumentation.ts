@@ -79,9 +79,7 @@ export class JaegerRequestTracker implements ITrackerAdapter {
         this.rootSpan.setTag("message", error.message);
         this.rootSpan.setTag("stack", error.stack);
         this.rootSpan.setTag("event", "error");
-        if (msg) {
-            this.log(msg);
-        }
+        this.log(msg || error.message);
     }
 
     finish() {
