@@ -147,7 +147,7 @@ export class Service {
         if (alias)
             return alias;
 
-        let propertyName = '$alias.' + name;
+        let propertyName = name;
         if (version)
             propertyName = propertyName + "-" + version;
 
