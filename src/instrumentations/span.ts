@@ -21,7 +21,7 @@ export class Span implements ISpanTracker {
     private _id: TrackerId;
     private _tracker: ITrackerAdapter;
     public action: string;
-    private commandType: string;
+    private commandType = "Custom";
 
     get id() {
         return this._id;
