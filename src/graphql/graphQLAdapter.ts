@@ -75,15 +75,17 @@ export class GraphQLAdapter{
                     let payload = {
                         [eventHandlerName]: result && result.data && result.data[eventHandlerName],
                         error: evt.error
-                    }
+                    };
 
+                    response.write("event: " + eventHandlerName + '\n');
                     response.write("data: " + JSON.stringify(payload) + '\n\n');
                 }
             );
 
             request.on("close", () => {
                 self._subscriptions.delete(id);
-                subscription.unsubscribe();
+                if(subscription)
+                    subscription.unsubscribe();
             });
         };
     }
