@@ -1,7 +1,7 @@
 import * as amqp from 'amqplib';
 import { Service } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
-import { EventData } from "../pipeline/handlers/messageBus";
+import { EventData } from "./messageBus";
 import { RequestData } from "../pipeline/common";
 import { CryptoHelper } from '../utils/crypto';
 

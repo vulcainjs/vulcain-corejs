@@ -26,6 +26,7 @@ import { TrackerFactory } from "../instrumentations/trackers/index";
 import { ScopesDescriptor } from "../defaults/scopeDescriptors";
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 import { RabbitAdapter } from '../bus/rabbitAdapter';
+import http = require('http');
 
 /**
  * Component container for dependency injection
@@ -381,12 +382,11 @@ export class Container implements IContainer {
 
     private customEndpoints: { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] = [];
 
-    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse) {
-        this.customEndpoints.push({ path, handler, verb: "get" });
+    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse, verb="get") {
+        this.customEndpoints.push({ path, handler, verb });
     }
 
     getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] {
         return this.customEndpoints;
     }
-
 }

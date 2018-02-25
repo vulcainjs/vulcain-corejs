@@ -45,7 +45,7 @@ export { Query } from './pipeline/handlers/query/annotations.query';
 export { QueryHandler } from './pipeline/handlers/query/annotations.queryHandler';
 export { ActionHandler, EventHandler, Action, Consume } from './pipeline/handlers/action/annotations';
 export { ActionDefinition, ActionHandlerDefinition } from './pipeline/handlers/action/definitions';
-export { EventNotificationMode,  ConsumeEventDefinition, EventDefinition, EventData } from './pipeline/handlers/messageBus';
+export { EventNotificationMode,  ConsumeEventDefinition, EventDefinition, EventData } from './bus/messageBus';
 export { QueryOperationDefinition, QueryDefinition } from './pipeline/handlers/query/definitions';
 export { QueryResult } from './pipeline/handlers/query/queryResult';
 export { AbstractActionHandler, AbstractEventHandler, AbstractQueryHandler } from './pipeline/handlers/abstractHandlers';

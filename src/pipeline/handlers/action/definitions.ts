@@ -1,4 +1,4 @@
-import { MessageBus, EventNotificationMode, ConsumeEventDefinition, EventData } from '../messageBus';
+import { MessageBus, EventNotificationMode, ConsumeEventDefinition, EventData } from '../../../bus/messageBus';
 import { IContainer } from '../../../di/resolvers';
 import { Domain } from '../../../schemas/domain';
 import { DefaultServiceNames } from '../../../di/annotations';

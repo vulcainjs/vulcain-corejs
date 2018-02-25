@@ -7,6 +7,32 @@ import { CircuitBreakerFactory } from "../circuitBreaker";
 import { Service } from "../../globals/system";
 
 export class HystrixSSEStream {
+    static getHandler() {
+        return (request, response) => {
+            response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
+            response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
+            response.setHeader('Pragma', 'no-cache');
+            //     System.log.info(null, () => "get hystrix.stream");
+
+            let subscription = HystrixSSEStream.toObservable().subscribe(
+                function onNext(sseData) {
+                    response.write('data: ' + sseData + '\n\n');
+                },
+                function onError(error) {
+                    Service.log.error(null, error, () => "hystrixstream: error");
+                },
+                function onComplete() {
+                    //     System.log.info(null, () => "end hystrix.stream");
+                    return response.end();
+                }
+            );
+            request.on("close", () => {
+                //    System.log.info(null, () => "close hystrix.stream");
+                subscription.unsubscribe();
+            });
+        }
+    }
+    
     static toObservable(delay=2000) {
         let observableMetrics = Observable
             .interval(delay)

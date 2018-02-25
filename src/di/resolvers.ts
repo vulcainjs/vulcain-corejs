@@ -2,6 +2,7 @@ import { Container } from './containers';
 import { LifeTime } from './annotations';
 import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
+import http = require('http');
 
 export enum BusUsage {
     all,
@@ -10,8 +11,7 @@ export enum BusUsage {
 }
 
 export interface IContainer {
-
-    registerEndpoint(route: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string);
+    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string, verb?: string);
     getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
 
     injectInstance(fn, name: string): IContainer;

@@ -1,5 +1,5 @@
 import { RequestData } from "../pipeline/common";
-import { EventData } from "../pipeline/handlers/messageBus";
+import { EventData } from "./messageBus";
 
 /**
  * Async actions dispatcher

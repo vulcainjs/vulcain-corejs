@@ -9,6 +9,8 @@ import { OperationDescription } from "../pipeline/handlers/descriptions/operatio
 import { Service, MemoryProvider, TYPES } from "..";
 import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 import { ModelPropertyDefinition } from "../schemas/schemaInfo";
+import { CommandManager } from "../pipeline/handlers/action/actionManager";
+import { GraphQLAdapter } from "./graphQLAdapter";
 const graphql = require('graphql');
 
 export interface GraphQLDefinition {
@@ -25,10 +27,9 @@ export interface GraphQLDefinition {
 }
 
 export interface IGraphQLSchemaBuilder {
-    build(context: IRequestContext): any;
+    build(context: IRequestContext, adapter: GraphQLAdapter): any;
 }
 
-@Injectable(LifeTime.Singleton, DefaultServiceNames.GraphQLSchemaBuilder)
 export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
     private propertyTypes = new Map<string, any>();
     private types = new Map<string, any>();
@@ -36,15 +37,15 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
     private descriptors: ServiceDescriptors;
     private domain: Domain;
     private context: IRequestContext;
-    
-    private *getHandlers(kind: "action"|"query") {
+
+    private *getHandlers(kind: "action" | "query") {
         for (let handler of this.descriptors.getDescriptions(false).services) {
             if (!handler.async && handler.kind === kind)
-                yield handler;    
-        }    
+                yield handler;
+        }
     }
 
-    build(context: IRequestContext) {
+    build(context: IRequestContext, adapter: GraphQLAdapter) {
         this.context = context;
         this.descriptors = context.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         this.domain = context.container.get<Domain>(DefaultServiceNames.Domain);
@@ -52,49 +53,58 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         return new graphql.GraphQLSchema({
             query: this.createQueryOperations(),
             mutation: this.createMutationOperations(),
+            subscription: this.createSubscriptionOperations(adapter),
             types: Array.from(this.types.values())
         });
     }
 
     private createQueryOperations() {
         let fields = {};
+        let hasFields = false;
+
         for (let queryHandler of this.getHandlers("query")) {
             const def: GraphQLDefinition = queryHandler.metadata.graphql || {};
             if (def.expose === false)
-                continue;    
-            
+                continue;
+
             if (queryHandler.name === "get")
                 continue;
 
             let { operationName, outputType, args } = this.createHandlerType(queryHandler);
             if (!outputType)
                 continue;
-            
+
             // Define the Query type
             fields[operationName] =
                 {
-                type: queryHandler.outputCardinality === "many" ? new graphql.GraphQLList(outputType) : outputType,
+                    type: queryHandler.outputCardinality === "many" ? new graphql.GraphQLList(outputType) : outputType,
                     args,
                     resolve: def.resolve || this.resolveQuery
                 };
+            hasFields = true;
             this.context.logInfo(() => `GRAPHQL: Enabling query handler ${operationName}`);
         }
-        return new graphql.GraphQLObjectType({
-            name: 'Query',
-            fields
-        });
+
+        return hasFields ?
+            new graphql.GraphQLObjectType({
+                name: 'Query',
+                fields
+            })
+            : null;
     }
 
     private createMutationOperations() {
         let fields = {};
+        let hasFields = false;
+
         for (let actionHandler of this.getHandlers("action")) {
             const def: GraphQLDefinition = actionHandler.metadata.graphql || {};
             if (def.expose === false)
-                continue;    
-            
+                continue;
+
             let { operationName, outputType, args } = this.createHandlerType(actionHandler);
             if (!outputType)
-                continue;    
+                continue;
             let type = actionHandler.outputCardinality === "many" ? new graphql.GraphQLList(outputType) : outputType;
 
             // Define the Query type
@@ -104,13 +114,57 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                     args,
                     resolve: def.resolveMutation || this.resolveMutation
                 };
+            hasFields = true;
             this.context.logInfo(() => `GRAPHQL: Enabling mutation handler ${operationName}`);
         }
 
-        return new graphql.GraphQLObjectType({
-            name: 'Mutation',
-            fields
-        });
+        return hasFields
+            ? new graphql.GraphQLObjectType({
+                name: 'Mutation',
+                fields
+            })
+            : null;
+    }
+
+    private createSubscriptionOperations(adapter: GraphQLAdapter) {
+        let fields = {};
+        let hasFields = false;
+
+        for (let handler of CommandManager.eventHandlersFactory.allHandlers()) {
+            const def: GraphQLDefinition = (handler.definition.metadata && handler.definition.metadata.graphql) || {};
+            if (def.expose === false)
+                continue;
+
+            let schemaName = handler.definition.schema || (<any>handler.definition).subscribeToSchema;
+            let outputSchema = schemaName && this.domain.getSchema(schemaName, true);
+            let args = { ["channel"]: { type: graphql.GraphQLNonNull(this.typeToGraphQLType("string")) } };
+            let operationName = handler.name.replace(/\./g, "_");
+
+            let outputType = this.createType(outputSchema);
+
+            // Ignore handler if outputSchema is not a model
+            if (!outputType) {
+                this.context.logInfo(() => `GRAPHQL: Skipping subscription handler ${handler.methodName} with no schema or with a scalar output schema.`);
+                continue;
+            }
+
+            // Define the Query type
+            fields[operationName] =
+                {
+                    type: outputType,
+                    args,
+                    resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler.name, args.channel, entity)
+                };
+            hasFields = true;
+            
+            this.context.logInfo(() => `GRAPHQL: Enabling subscription handler ${operationName}`);
+        }
+        return hasFields
+            ? new graphql.GraphQLObjectType({
+                name: 'Subscription',
+                fields
+            })
+            : null;
     }
 
     private createHandlerType(handler: OperationDescription) {
@@ -132,7 +186,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 args = { ["input"]: { type: this.createType(inputSchema, true) } };
         }
         else if (handler.name === "all") {
-            if(outputSchema)
+            if (outputSchema)
                 operationName = outputSchema.name;
             args = {
                 _pagesize: { type: graphql.GraphQLInt },
@@ -142,14 +196,14 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (outputSchema) {
                 const idPropertyName = outputSchema.getIdProperty();
                 if (idPropertyName) {
-                    const idProperty = outputSchema.info.properties[idPropertyName];                    
-                    args[outputSchema.getIdProperty()] =  {
+                    const idProperty = outputSchema.info.properties[idPropertyName];
+                    args[outputSchema.getIdProperty()] = {
                         type: this.createScalarType(idProperty.type, idProperty, outputSchema.name)
                     };
                 }
             }
         }
-        
+
         return { operationName, outputType, args };
     }
 
@@ -167,17 +221,17 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
 
     private createScalarType(propType: string, property: ModelPropertyDefinition, prefix: string) {
         if (!propType)
-            return null;    
-    
+            return null;
+
         if (propType === "id" || propType === "uid")
             return graphql["GraphQLID"];
-        
+
         if (propType === TYPES.enum) {
             let typeName = prefix + "_" + property.name + "_enum";
             let tmp = this.propertyTypes.get(typeName);
             if (tmp)
-                return tmp;    
-            
+                return tmp;
+
             let t = this.domain.getType(propType);
             if (t) {
                 const values = {};
@@ -191,12 +245,12 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 return tmp;
             }
         }
-        
+
         if (propType === TYPES.arrayOf) {
             let typeName = prefix + "_" + property.name + "arrayOf";
             let tmp = this.propertyTypes.get(typeName);
             if (tmp)
-                return tmp;    
+                return tmp;
             tmp = new graphql.GraphQLScalarType({
                 name: typeName,
                 serialize: value => {
@@ -229,8 +283,8 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
 
         let t = this.interfaces.get(name);
         if (t)
-            return t;   
-        
+            return t;
+
         let iType = new graphql.GraphQLInterfaceType({
             name: name + "_Interface",
             fields: () => this.createInterfaceFields(schema, createInputType),
@@ -241,18 +295,18 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             },
             description: schema.info.description
         });
-        this.interfaces.set(name, iType);  
+        this.interfaces.set(name, iType);
         return iType;
     }
 
     private createType(schema: Schema, createInputType = false, interfaceType?: any) {
         if (!schema)
             return null;
-        
+
         let name = schema.name;
         if (createInputType)
             name = name + "_Input";
-        
+
         let t = this.types.get(name);
         if (t)
             return t;
@@ -266,7 +320,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 this.createType(subModel, createInputType, interfaceType);
             }
         }
-        
+
         let fields = this.createFields(schema, createInputType);
         let type = createInputType
             ? new graphql.GraphQLInputObjectType({
@@ -292,8 +346,8 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         for (let prop of schema.allProperties()) {
             const def: GraphQLDefinition = prop.metadata.graphql || {};
             if (def.expose === false)
-                continue;    
-            
+                continue;
+
             const propType = createInputType ? prop.type : (prop.reference || prop.type);
             let type = this.createScalarType(propType, prop, schema.name);
             if (!type) {
@@ -328,7 +382,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 this.createFields(subModel, true, fields);
             }
         }
-        
+
         return fields;
     }
 
@@ -337,7 +391,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         for (let prop of schema.allProperties()) {
             const def: GraphQLDefinition = prop.metadata.graphql || {};
             if (def.expose === false)
-                continue;    
+                continue;
 
             const propType = createInputType ? prop.type : (prop.reference || prop.type);
             let type = this.createScalarType(propType, prop, schema.name + "_input");
@@ -365,7 +419,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         return fields;
     }
 
-    private async resolveMutation(entity, args, ctx: IRequestContext, info:any) {
+    private async resolveMutation(entity, args, ctx: IRequestContext, info: any) {
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
         let fieldName: string = info.fieldName;
         let pos = fieldName.lastIndexOf('_');
@@ -376,11 +430,13 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         else {
             ctx.requestData.schema = fieldName.substr(0, pos);
             ctx.requestData.action = fieldName.substr(pos + 1);
-        }   
+        }
         ctx.requestData.params = args.input;
         ctx.requestData.vulcainVerb = fieldName;
 
         let handler = processor.getHandlerInfo(ctx.container, ctx.requestData.schema, ctx.requestData.action);
+        ctx.requestData.schema = handler.definition.schema;
+
         let res = await processor.invokeHandler(ctx, handler);
         return res.content.value;
     }
@@ -428,7 +484,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 embedded = true;
             }
             else {
-                let fk = prop.referenceProperty || itemSchema.getIdProperty(); 
+                let fk = prop.referenceProperty || itemSchema.getIdProperty();
                 let value = entity[fieldName];
                 if (Array.isArray(value)) {
                     data.params = {
@@ -444,7 +500,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 data.action = "all";
                 data.vulcainVerb = itemSchema.name + ".all";
             }
-        }    
+        }
 
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
         let handler = !embedded && processor.getHandlerInfo(ctx.container, data.schema, data.action);
@@ -454,15 +510,15 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             info.returnType[resolverSymbol] = GraphQLTypeBuilder.resolveEmbeddedObject;
             return info.returnType[resolverSymbol](entity && entity[fieldName], ctx);
         }
-        
+
         let res = await processor.invokeHandler(ctx, handler, data);
         return res.content.value;
     }
 
     private static resolveEmbeddedObject(obj, data: RequestData) {
         if (!obj)
-            return null;    
-        
+            return null;
+
         if (Array.isArray(obj)) {
             return MemoryProvider.Query(obj, data.params, data.page, data.pageSize);
         } else {

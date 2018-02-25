@@ -3,7 +3,7 @@ import { Inject, IScopedComponent } from '../../di/annotations';
 import 'reflect-metadata';
 import { RequestContext } from "../../pipeline/requestContext";
 import { Pipeline, IRequestContext } from "../../pipeline/common";
-import { EventNotificationMode, EventData } from "./messageBus";
+import { EventNotificationMode, EventData } from "../../bus/messageBus";
 const symMetadata = Symbol.for("handler:metadata");
 
 export interface IActionMetadata {

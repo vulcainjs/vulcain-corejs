@@ -14,6 +14,7 @@ import { OperationDefinition, HandlerDefinition } from '../definitions';
 import { QueryOperationDefinition } from '../query/definitions';
 
 export interface Handler {
+    name: string;
     methodName: string;
     handler: any;
     definition: OperationDefinition;
@@ -65,7 +66,7 @@ export class ServiceDescriptors {
 
         try {
             let handler = container && container.resolve(item.handler);
-            return { handler: handler, definition: item.definition, methodName: item.methodName, verb: verb, kind: item.kind };
+            return { name: item.name, handler: handler, definition: item.definition, methodName: item.methodName, verb: verb, kind: item.kind };
         }
         catch (e) {
             Service.log.error(null, e, ()=>`Unable to create handler action ${action}, schema ${schema}`);
@@ -414,6 +415,7 @@ export class ServiceDescriptors {
 
             // Merge metadata
             let item: Handler = {
+                name: actionMetadata.name,
                 kind: kind,
                 methodName: action,
                 definition: Object.assign({}, handlerDefinition, actionMetadata),

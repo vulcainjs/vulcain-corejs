@@ -1,4 +1,4 @@
-import { MessageBus, EventNotificationMode, ConsumeEventDefinition, EventData } from '../messageBus';
+import { MessageBus, EventNotificationMode, ConsumeEventDefinition, EventData } from '../../../bus/messageBus';
 import { IContainer } from '../../../di/resolvers';
 import { Domain } from '../../../schemas/domain';
 import { DefaultServiceNames } from '../../../di/annotations';
@@ -283,7 +283,7 @@ export class CommandManager implements IManager {
     private bindEventHandler(def: ConsumeEventDefinition) {
         // Subscribe to events for a domain, a schema and an action
         // Get event stream for a domain
-        let events = this.messageBus.getEventQueue(def.subscribeToDomain || this.domain.name, def.distributionMode === "once" ? def.distributionKey: null);
+        let events = this.messageBus.getOrCreateEventQueue(def.subscribeToDomain || this.domain.name, def.distributionMode === "once" ? def.distributionKey: null);
 
         // Filtered by schema
         if (def.subscribeToSchema !== '*') {
@@ -318,7 +318,7 @@ export class CommandManager implements IManager {
                     try {
                         await handler[info.methodName](evt.value);
                         this.sendCustomEvent(ctx);
-                        this.messageBus.emitLocalEvent(evt);
+                        MessageBus.emitLocalEvent(def.name, evt);
                     }
                     catch (e) {
                         let error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;

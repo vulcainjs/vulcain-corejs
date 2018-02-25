@@ -3,7 +3,7 @@ import { IContainer } from '../../../di/resolvers';
 import {Domain} from '../../../schemas/domain';
 import { Service } from '../../../globals/system';
 import * as util from 'util';
-import { EventDefinition, ConsumeEventDefinition } from "../messageBus";
+import { EventDefinition, ConsumeEventDefinition } from "../../../bus/messageBus";
 
 export class EventHandlerFactory {
     private handlers = new Map<string, Map<string, Array<Handler>>>();
@@ -16,6 +16,18 @@ export class EventHandlerFactory {
                     yield i;
             }
         }
+    }
+
+    private checkIsUnique(name: string) {
+        for (let [action, byActions] of this.handlers) {
+            for (let [schema, bySchemas] of byActions) {
+                for (let handler of bySchemas) {
+                    if (handler.name === name)
+                        return false;    
+                }                
+            }
+        }
+        return true;
     }
 
     /**
@@ -32,6 +44,9 @@ export class EventHandlerFactory {
         }
 
         for (const action in actions) {
+            if (!this.checkIsUnique(handlerMetadata.name || action)) {
+                throw new Error(`Event handler named ${handlerMetadata.name || action} must be unique`);
+            }
             let actionMetadata: ConsumeEventDefinition = actions[action];
             actionMetadata = actionMetadata || <ConsumeEventDefinition>{};
 
@@ -64,6 +79,7 @@ export class EventHandlerFactory {
             // Merge metadata
             let item: Handler = {
                 kind: "event",
+                name: handlerMetadata.name || action,
                 methodName: action,
                 definition: Object.assign({}, handlerMetadata, actionMetadata),
                 handler: target
