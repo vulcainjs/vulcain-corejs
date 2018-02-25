@@ -24,9 +24,10 @@ export class GraphQLAdapter{
     }
 
     enableSubscription(context: IRequestContext, name: string, id: string, entity) {
-        if (entity)
+        if (entity) // Subscription resolve
             return entity;
         
+        // Subscription step
         let g = context.requestData[graphQlQuerySymbol];
         let item = this._subscriptions.get(id);
         if (!item)
@@ -60,6 +61,7 @@ export class GraphQLAdapter{
             let self = this;
             let id = parts[1];
             let context = new RequestContext(this.container, Pipeline.HttpRequest)
+
             let subscription = MessageBus.localEvents.subscribe(
                 async function onNext(evt: EventData) {
                     let eventHandlerName = evt[MessageBus.LocalEventSymbol];
@@ -86,6 +88,7 @@ export class GraphQLAdapter{
                 self._subscriptions.delete(id);
                 if(subscription)
                     subscription.unsubscribe();
+                context.dispose();
             });
         };
     }

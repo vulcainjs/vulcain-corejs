@@ -159,6 +159,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             
             this.context.logInfo(() => `GRAPHQL: Enabling subscription handler ${operationName}`);
         }
+        
         return hasFields
             ? new graphql.GraphQLObjectType({
                 name: 'Subscription',
