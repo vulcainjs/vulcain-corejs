@@ -11,6 +11,7 @@ import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 import { ModelPropertyDefinition } from "../schemas/schemaInfo";
 import { CommandManager } from "../pipeline/handlers/action/actionManager";
 import { GraphQLAdapter } from "./graphQLAdapter";
+import { PaginateDirective, applySchemaCustomDirectives} from "./directives";
 const graphql = require('graphql');
 
 export interface GraphQLDefinition {
@@ -50,12 +51,18 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         this.descriptors = context.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
         this.domain = context.container.get<Domain>(DefaultServiceNames.Domain);
 
-        return new graphql.GraphQLSchema({
+        let schema = new graphql.GraphQLSchema({
+            directives: [
+                PaginateDirective
+            ],
             query: this.createQueryOperations(),
             mutation: this.createMutationOperations(),
             subscription: this.createSubscriptionOperations(adapter),
             types: Array.from(this.types.values())
         });
+
+        applySchemaCustomDirectives(schema);
+        return schema;
     }
 
     private createQueryOperations() {
@@ -189,10 +196,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         else if (handler.name === "all") {
             if (outputSchema)
                 operationName = outputSchema.name;
-            args = {
-                _pagesize: { type: graphql.GraphQLInt },
-                _page: { type: graphql.GraphQLInt }
-            };
+            args = {};
 
             if (outputSchema) {
                 const idPropertyName = outputSchema.getIdProperty();
@@ -459,14 +463,6 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         }
 
         let data: RequestData = { ...ctx.requestData };
-        if (args._page) {
-            data.page = args._page;
-            delete args._page;
-        }
-        if (args._pagesize) {
-            data.pageSize = args._pagesize;
-            delete args._pagesize;
-        }
         data.params = args;
 
         const resolverSymbol = Symbol.for("vulcain_resolver_" + fieldName);
