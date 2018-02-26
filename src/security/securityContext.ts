@@ -146,7 +146,7 @@ export class SecurityContext implements UserContext {
         else if (tenantOrCtx) {
             this.tenant = tenantOrCtx.tenant;
             this.name = tenantOrCtx.name;
-            this.displayName = tenantOrCtx.displayName;
+            this.displayName = tenantOrCtx.displayName || tenantOrCtx.name;
             this.email = tenantOrCtx.email;
             this._scopes = tenantOrCtx.scopes;
             this.claims = tenantOrCtx.claims;

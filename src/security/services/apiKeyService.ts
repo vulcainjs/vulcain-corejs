@@ -36,11 +36,12 @@ export class ApiKeyService implements IAuthenticationStrategy {
             throw new UnauthorizedRequestError("You must provide a valid token");
         }
 
-        // Can have an unique apikey define in vulcain.config (settings: { apiKey: { token: "", tenant: "", key: "" }})
+        // Can have an unique apikey define in vulcain.config (settings: { apiKey: { token: "", tenant: "", key }}) (for test)
+        // with key = Buffer.from(JSON.stringify({name: "...", scopes: ["...", "..."] [, claims: {}, tenant: "", displayName: "", email: ""] }).toString('base64')
         let apiKey = Service.settings.getSettings("apiKey");
         let userContext;
         if (apiKey && apiKey.token === accessToken && tenant === tenant) {
-            userContext = apiKey.key;
+            userContext = JSON.parse(Buffer.from(apiKey.key, "base64").toString('utf8'));
         }
         else {
             let cmd = CommandFactory.createCommand<ApiKeyVerifyCommand>(ctx, ApiKeyVerifyCommand.name);
