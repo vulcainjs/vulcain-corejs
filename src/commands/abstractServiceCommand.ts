@@ -293,19 +293,19 @@ export abstract class AbstractServiceCommand {
         });
     }
 
-    async execGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args: any): Promise<VulcainResponse<T>>{
+    async execGet<T>(serviceName: string, serviceVersion: string, userContext: any, data: any, args?: any): Promise<VulcainResponse<T>>{
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.getRequest<T>(serviceName, serviceVersion, data, args);
         return response;
     }
 
-    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any, page: any, pageSize: any): Promise<VulcainResponse<T>> {
+    async execQuery<T>( serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args?: any, page?: number, pageSize?: number): Promise<VulcainResponse<T>> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.getQuery<T>(serviceName, serviceVersion, verb, data, args, page, pageSize);
         return response;
     }
 
-    async execAction<T>(serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args: any): Promise<VulcainResponse<T>> {
+    async execAction<T>(serviceName: string, serviceVersion: string, userContext: any, verb: string, data: any, args?: any): Promise<VulcainResponse<T>> {
         userContext && this.setRequestContext(userContext.authorization, userContext.tenant);
         let response = await this.sendAction<T>(serviceName, serviceVersion, verb, data, args);
         return response;

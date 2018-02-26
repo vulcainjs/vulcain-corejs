@@ -19,6 +19,7 @@ export class Settings {
     private _stubs: { [name: string]: string };
     private _config: { [name: string]: string };
     private _alias: { [name: string]: string };
+    private _settings: { [name: string]: string };
 
     constructor() {
         this.readContext();
@@ -46,7 +47,8 @@ export class Settings {
                     mode: this._environment,
                     alias: this._alias,
                     config: this._config,
-                    stubs: this._stubs
+                    stubs: this._stubs,
+                    settings: this._settings
                 }
             ));
         }
@@ -65,6 +67,7 @@ export class Settings {
         this._alias = {};
         this._config = {};
         this._stubs = {};
+        this._settings = {};
 
         // Default mode is local
         this._environment = <any>process.env[Conventions.instance.ENV_VULCAIN_ENV] || "local";
@@ -79,6 +82,7 @@ export class Settings {
                 let data:any = fs.readFileSync(path, "utf8");
                 data = data && JSON.parse(data);
                 if (data) {
+                    this._settings = data.settings || this._settings;
                     this._alias = data.alias || this._alias;
                     this._config = data.config || this._config;
                     this._stubs = data.stubs || this._stubs;
@@ -119,6 +123,10 @@ export class Settings {
         return this.isDevelopment || this._environment === "test";
     }
 
+    getSettings(name: string) {
+        return <any>this._settings[name];
+    }
+    
     /**
      * Resolve service alias
      *

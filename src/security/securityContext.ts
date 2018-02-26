@@ -7,6 +7,7 @@ import { DefaultServiceNames, Inject } from "../di/annotations";
 import { IContainer } from '../di/resolvers';
 import { IRequestContext } from '../pipeline/common';
 import { TokenService } from './services/tokenService';
+import { ApiKeyService } from './services/apiKeyService';
 
 export interface IAuthenticationStrategy {
     name: string;
@@ -75,6 +76,7 @@ export class SecurityContext implements UserContext {
     constructor(container: IContainer, private scopePolicy: IAuthorizationPolicy) {
         // Default
         this.addOrReplaceStrategy(new TokenService());
+        this.addOrReplaceStrategy(new ApiKeyService());
 
         let strategies = container.getList<IAuthenticationStrategy>(DefaultServiceNames.AuthenticationStrategy);
         for(let strategy of strategies) {

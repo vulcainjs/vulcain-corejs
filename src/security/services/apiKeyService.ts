@@ -1,31 +1,56 @@
-import { DefaultServiceNames, Inject } from '../../di/annotations';
-import { AbstractHandler } from "../../pipeline/handlers/abstractHandlers";
-import { IAuthenticationStrategy, UserContext, UserToken } from "../securityContext";
-import { IContainer } from "../../di/resolvers";
-import { Command, CommandFactory } from "../../commands/commandFactory";
-import { AbstractServiceCommand } from "../../commands/abstractServiceCommand";
-/*
-export class ApiKeyService extends AbstractHandler implements IAuthenticationStrategy {
-    constructor(@Inject(DefaultServiceNames.Container) container: IContainer, private apiKeyServiceName: string, private apiKeyServiceVersion: string) {
-        super(container);
+import { ApiKeyVerifyCommand } from "./apiKeyCommand";
+import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/annotations';
+import { ConfigurationProperty } from '../../globals/manifest';
+import { IAuthenticationStrategy, UserContextData, UserToken } from "../securityContext";
+import { DynamicConfiguration } from '../../configurations/dynamicConfiguration';
+import { IDynamicProperty } from '../../configurations/abstractions';
+import { Service } from '../../globals/system';
+import { IRequestContext } from '../../pipeline/common';
+import { UnauthorizedRequestError } from "../../pipeline/errors/applicationRequestError";
+import { CommandFactory } from "../../commands/commandFactory";
+
+@Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy )
+export class ApiKeyService implements IAuthenticationStrategy {
+
+    public readonly name = "apiKey";
+    private enabled: boolean;
+
+    @ConfigurationProperty("apiKeyServiceName", "string") 
+    private apiKeyServiceName: IDynamicProperty<string>;
+    @ConfigurationProperty("apiKeyServiceVersion", "string")
+    private apiKeyServiceVersion: IDynamicProperty<string>;
+
+    constructor() {
+        this.apiKeyServiceName = DynamicConfiguration.getChainedConfigurationProperty<string>("apiKeyServiceName");
+        this.apiKeyServiceVersion = DynamicConfiguration.getChainedConfigurationProperty<string>("apiKeyServiceVersion");     
+        this.enabled = !!this.apiKeyServiceName.value && !!this.apiKeyServiceVersion.value;
+        if(this.enabled)
+            Service.log.info(null, () => `using ${this.apiKeyServiceName.value}-${this.apiKeyServiceVersion.value} as ApiKey server`);
     }
 
-    createToken(user: UserContext): Promise<{ expiresIn: number, token: string, renewToken: string }> {
-        return Promise.reject("Invalid method. You must use vulcain-authentication module to create token.");
-    }
+    async verifyToken(ctx: IRequestContext, accessToken: string, tenant: string): Promise<UserToken> {
+        if (!this.enabled)
+            return null;
+        
+        if (!accessToken) {
+            throw new UnauthorizedRequestError("You must provide a valid token");
+        }
 
-    async verifyToken(data: VerifyTokenParameter): Promise<UserToken> {
-        const cmd = CommandFactory.get<ApiKeyVerifyCommand>(ApiKeyVerifyCommand.commandName, this.context);
-        return await cmd.run(this.apiKeyServiceName, this.apiKeyServiceVersion, data);
+        // Can have an unique apikey define in vulcain.config (settings: { apiKey: { token: "", tenant: "", key: "" }})
+        let apiKey = Service.settings.getSettings("apiKey");
+        let userContext;
+        if (apiKey && apiKey.token === accessToken && tenant === tenant) {
+            userContext = apiKey.key;
+        }
+        else {
+            let cmd = CommandFactory.createCommand<ApiKeyVerifyCommand>(ctx, ApiKeyVerifyCommand.name);
+            userContext = await cmd.run(this.apiKeyServiceName.value, this.apiKeyServiceVersion.value, { token: accessToken, tenant });
+        }
+        
+        if (!userContext)
+            throw new UnauthorizedRequestError("Invalid api key");
+
+        userContext.scopes = Array.isArray(userContext.scopes) ? userContext.scopes : [<string>userContext.scopes];
+        return userContext;
     }
 }
-
-@Command({ executionTimeoutInMilliseconds: 500 })
-class ApiKeyVerifyCommand extends AbstractServiceCommand {
-    static commandName = "ApiKeyVerifyCommand";
-
-    async run(apiKeyServiceName: string, apiKeyServiceVersion: string, data: VerifyTokenParameter): Promise<UserToken> {
-        let resp = await this.sendAction<boolean>(apiKeyServiceName, apiKeyServiceVersion, "apikey.verifyToken", data);
-        return resp.value;
-    }
-}*/
