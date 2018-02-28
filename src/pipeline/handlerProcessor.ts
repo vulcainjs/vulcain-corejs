@@ -25,6 +25,12 @@ export class HandlerProcessor {
     }
 
     public async invokeHandler(ctx: IRequestContext, info: Handler, contextData?: RequestData) {
+        // Verify authorization
+        if (!ctx.user.hasScope(info.definition.scope)) {
+            ctx.logError(new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+            throw new UnauthorizedRequestError();
+        }
+        
         let oldContextData = ctx.requestData;
         try {
             if (contextData) {

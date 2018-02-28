@@ -38,7 +38,6 @@
     "amqplib": "^0.5.2",
     "fast-stats": "0.0.3",
     "graphql": "^0.12.3",
-    "graphql-subscriptions": "^0.5.8",
     "jaeger-client": "^3.7.0",
     "jsonwebtoken": "^8.1.0",
     "moment": "^2.20.1",
