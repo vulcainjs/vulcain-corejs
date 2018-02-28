@@ -32,6 +32,7 @@ export interface ConsumeEventDefinition {
     distributionMode?: "once" | "many"| undefined;
     distributionKey?: string; // Unique queue to ensure events are take into account once
     metadata?: any;
+    scope?: string;
 }
 
 export interface EventDefinition {
@@ -40,6 +41,7 @@ export interface EventDefinition {
     schema?: string;
     metadata?: any;
     subscribeToDomain?: string;
+    scope?: string;
 }
 
 export enum EventNotificationMode {

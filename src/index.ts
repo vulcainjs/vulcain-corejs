@@ -83,7 +83,7 @@ export { ProviderFactory } from './providers/providerFactory';
 export { ITaskManager } from './providers/taskManager';
 
 // Containers
-export { IContainer, IInjectionNotification } from './di/resolvers';
+export { IContainer, IInjectionNotification, NativeEndpoint } from './di/resolvers';
 export { Inject, Injectable, LifeTime, DefaultServiceNames, IScopedComponent } from './di/annotations';
 export { TestContext } from './pipeline/testContext';
 

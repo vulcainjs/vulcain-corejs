@@ -5,10 +5,12 @@ import {Observable} from 'rxjs';
 import ActualTime from "../../utils/actualTime";
 import { CircuitBreakerFactory } from "../circuitBreaker";
 import { Service } from "../../globals/system";
+import { IRequestContext } from '../../pipeline/common';
+import http = require('http');
 
 export class HystrixSSEStream {
     static getHandler() {
-        return (request, response) => {
+        return (request: http.IncomingMessage, response: http.ServerResponse) => {
             response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
             response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.setHeader('Pragma', 'no-cache');
@@ -30,7 +32,7 @@ export class HystrixSSEStream {
                 //    System.log.info(null, () => "close hystrix.stream");
                 subscription.unsubscribe();
             });
-        }
+        };    
     }
     
     static toObservable(delay=2000) {

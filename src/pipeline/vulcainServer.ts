@@ -2,7 +2,6 @@ import { IContainer } from '../di/resolvers';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
-import { HystrixSSEStream as hystrixStream } from '../commands/http/hystrixSSEStream';
 import { Service } from "../globals/system";
 import { VulcainPipeline } from "./vulcainPipeline";
 import { NormalizeDataMiddleware } from "./middlewares/normalizeDataMiddleware";
@@ -10,6 +9,7 @@ import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware
 import { HandlersMiddleware } from "./middlewares/handlersMiddleware";
 import { IServerAdapter, HttpAdapter } from './serverAdapter';
 import { GraphQLAdapter } from '../graphql/graphQLAdapter';
+import { ServerSideEventMiddleware } from './middlewares/ServerSideEventMiddleware';
 
 export class VulcainServer {
     private metrics: IMetrics;
@@ -23,27 +23,23 @@ export class VulcainServer {
             new VulcainPipeline([
                 new NormalizeDataMiddleware(),
                 new AuthenticationMiddleware(),
+                new ServerSideEventMiddleware(this.adapter),
                 new HandlersMiddleware(container)
             ]));
         this.container.injectInstance(this.adapter, DefaultServiceNames.ServerAdapter); // Override current adapter
     }
 
     public start(port: number) {
-        // Hystrix stream
-        this.adapter.registerNativeRoute("get", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
+        this.container.getCustomEndpoints().forEach(e => {
+            this.adapter.registerRoute(e);
+        });
 
-        let graphQLAdapter = this.container.get<GraphQLAdapter>(DefaultServiceNames.GraphQLAdapter);
-        this.adapter.registerNativeRoute("get", "/_graphql.subscriptions", graphQLAdapter.getSubscriptionHandler());
-
-        this.adapter.registerNativeRoute('get', '/health', (req, res) => {
+        this.adapter.registerRoute({ kind: "HTTP", verb: "GET", path: "/health", handler: (req, res)=> {
             res.statusCode = 200;
             res.end();
+        }
         });
-
-        this.container.getCustomEndpoints().forEach(e => {
-            this.adapter.registerRoute(e.verb, e.path, e.handler);
-        });
-
+        
         this.adapter.start(port, (err) => Service.log.info(null, () => 'Listening on port ' + port));
     }
 }

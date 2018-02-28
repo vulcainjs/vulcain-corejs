@@ -3,6 +3,7 @@ import { LifeTime } from './annotations';
 import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { HttpResponse } from "../pipeline/response";
 import http = require('http');
+import { IRequestContext } from '../pipeline/common';
 
 export enum BusUsage {
     all,
@@ -10,9 +11,24 @@ export enum BusUsage {
     eventOnly
 }
 
+/**
+ * Register direct route
+ * @param verb Http verb in uppercase
+ * @param path Path to compare 
+ * @param handler Request
+ */
+export class NativeEndpoint {
+    kind: "SSE" | "HTTP";
+    verb: string;
+    path: string;
+    handler: Function;
+}
+
 export interface IContainer {
-    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse , httpVerb?:string, verb?: string);
-    getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[];
+    registerHTTPEndpoint(verb: string, path: string, handler: (req: http.IncomingMessage, res: http.ServerResponse) => void); 
+    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void);
+
+    getCustomEndpoints(): Array<NativeEndpoint>;
 
     injectInstance(fn, name: string): IContainer;
 

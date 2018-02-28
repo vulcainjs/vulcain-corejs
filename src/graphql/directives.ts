@@ -24,7 +24,7 @@ const DEFAULT_DIRECTIVES = ['skip', 'include'];
  * of calling that function.
  */
 function defaultResolveFn(source, args, context, info) {
-    var fieldName = info.fieldName;
+    let fieldName = info.fieldName;
     // ensure source is a value for which property access is acceptable.
     if (typeof source === 'object' || typeof source === 'function') {
         return typeof source[fieldName] === 'function' ? source[fieldName]() : source[fieldName];
@@ -44,7 +44,7 @@ function resolveWithDirective(resolve, source, directive, context, info) {
     }
 
     return directiveConfig.resolve(resolve, source, args, context, info);
-};
+}
 
 /**
  * parse directives from a schema defenition form them as graphql directive structure
@@ -60,7 +60,7 @@ function parseSchemaDirectives(directives) {
         let argsList = [], args = '';
 
         Object.keys(directives[directiveName]).map(key => {
-            argsList.push(`${key}:"${directives[directiveName][key]}"`)
+            argsList.push(`${key}:"${directives[directiveName][key]}"`);
         });
 
         if (argsList.length > 0) {
@@ -71,7 +71,7 @@ function parseSchemaDirectives(directives) {
     }
 
     return parse(`{ a: String ${schemaDirectives.join(' ')} }`).definitions[0].selectionSet.selections[0].directives;
-};
+}
 
 /**
  * If the directive is defined on a field it will execute the custom directive
@@ -101,7 +101,7 @@ function resolveMiddlewareWrapper(resolve = defaultResolveFn, directives = {}) {
 
         return defer;
     };
-};
+}
 
 /**
  * Scanning the shema and wrapping the resolve of each field with the support
@@ -111,10 +111,10 @@ function wrapFieldsWithMiddleware(fields) {
 
     for (let key of Object.keys(fields)) {
         let field = fields[key];
-        if (!!field && typeof field == 'object') {
+        if (!!field && typeof field === 'object') {
             field.resolve = resolveMiddlewareWrapper(field.resolve, field.directives);
             if (field.type._fields) {
-                wrapFieldsWithMiddleware(field.type._fields)
+                wrapFieldsWithMiddleware(field.type._fields);
             } else if (field.type.ofType && field.type.ofType._fields) {
                 wrapFieldsWithMiddleware(field.type.ofType._fields);
             }

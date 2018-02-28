@@ -107,6 +107,7 @@ export class RequestContext implements IRequestContext {
     container: IContainer;
     locale: string;
     requestData: RequestData;
+    keepConnected: boolean;
     response: HttpResponse;
     request: HttpRequest;
     private _securityManager: SecurityContext;

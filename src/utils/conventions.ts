@@ -60,6 +60,7 @@ export class Conventions {
     defaultHystrixPath = "/hystrix.stream";
     defaultUrlprefix = "/api";
     vulcainFileName = "vulcain.json";
+    defaultGraphQLSubscriptionPath = "/api/_graphql.subscriptions";
 
     defaultStatsdDelayInMs = 10000;
     defaultSecretKey = "Dn~BnCG7*fjEX@Rw5uN^hWR4*AkRVKMe"; // 32 length random string

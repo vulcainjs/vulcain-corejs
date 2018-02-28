@@ -7,7 +7,7 @@ import { Container } from './di/containers';
 import { Files } from './utils/files';
 import 'reflect-metadata';
 import { DefaultServiceNames } from './di/annotations';
-import { IContainer } from "./di/resolvers";
+import { IContainer, NativeEndpoint } from "./di/resolvers";
 import { Conventions } from './utils/conventions';
 import { MemoryProvider } from "./providers/memory/provider";
 import './defaults/serviceExplorer'; // Don't remove (auto register)
@@ -23,6 +23,8 @@ import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 import './graphql/graphQLHandler';
 import { ActionHandler } from './pipeline/handlers/action/annotations';
 import { GraphQLActionHandler } from './graphql/graphQLHandler';
+import { GraphQLAdapter } from "./graphql/graphQLAdapter";
+import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 
 const vulcainExecutablePath = __dirname;
 const applicationPath = Path.dirname(module.parent.parent.filename);
@@ -57,8 +59,17 @@ export class Application {
         return this;
     }
 
+    public enableHystrixStream() {
+        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
+        return this;
+    }
+
     public enableGraphQL(responseType: "vulcain"|"graphql" = "graphql") {
         ActionHandler({ async: false, scope: "?", description: "GraphQL action handler" }, { responseType, system: true })(GraphQLActionHandler);
+        Preloader.instance.registerHandler((container: IContainer, domain) => {
+            let graphQLAdapter = container.get<GraphQLAdapter>(DefaultServiceNames.GraphQLAdapter);
+            container.registerSSEEndpoint(Conventions.instance.defaultGraphQLSubscriptionPath, graphQLAdapter.getSubscriptionHandler());
+        });    
         return this;
     }
 

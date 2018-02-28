@@ -160,7 +160,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 {
                     type: outputType,
                     args,
-                    resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler.name, args.channel, entity)
+                    resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler, args.channel, entity)
                 };
             hasFields = true;
             

@@ -6,6 +6,7 @@ import { HttpRequest } from "../../pipeline/vulcainPipeline";
 import { HttpResponse } from "../../pipeline/response";
 import { DefaultServiceNames } from '../../di/annotations';
 import { VulcainLogger } from '../../log/vulcainLogger';
+import http = require('http');
 
 // Avg per seconds
 //  rate(vulcain_service_duration_seconds_sum[5m]) / rate(vulcain_service_duration_seconds_count[5m])
@@ -17,10 +18,11 @@ export class PrometheusMetrics implements IMetrics {
 
     constructor(private container: IContainer) {
 
-        container.registerEndpoint( '/metrics', (req: HttpRequest) => {
-            let res = new HttpResponse(Prometheus.register.metrics());
-            res.contentType = (<any>Prometheus).contentType || "text/plain; version=0.0.4";
-            return res;
+        container.registerHTTPEndpoint("GET", '/metrics', (req: http.IncomingMessage, resp: http.ServerResponse) => {           
+            const chunk = new Buffer(Prometheus.register.metrics(), 'utf8');
+            resp.setHeader('Content-Type', (<any>Prometheus).contentType || "text/plain; version=0.0.4");
+            resp.setHeader('Content-Length', String(chunk.length));
+            resp.end(chunk);
         });
     }
 

@@ -113,6 +113,11 @@ export interface IRequestContext {
      */
     logVerbose(msg: () => string);
 
+    /**
+     * Don't close the request (used by SSE request)
+     */
+    keepConnected?: boolean;
+
     dispose();
 }
 

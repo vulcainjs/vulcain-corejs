@@ -56,7 +56,7 @@ export function Model(def?: ModelDefinition) {
         }
         const sym = Symbol.for("design:model");
         Reflect.defineMetadata(sym, def, target);
-        Preloader.instance.registerModel(target, (container: IContainer, domain) => {
+        Preloader.instance.registerModel((container: IContainer, domain) => {
             SchemaBuilder.buildSchema(domain, def, target);
         });
     };

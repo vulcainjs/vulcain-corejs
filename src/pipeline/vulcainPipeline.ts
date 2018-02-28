@@ -3,6 +3,7 @@ import url = require('url');
 import { IContainer } from "../di/resolvers";
 import { Pipeline } from "./common";
 import { HttpResponse } from "./response";
+import http = require('http');
 
 export abstract class VulcainMiddleware {
     next: VulcainMiddleware;
@@ -20,6 +21,8 @@ export interface HttpRequest {
     headers: { [header: string]: string | string[] };
     body: any;
     verb: string;
+    nativeRequest?: http.IncomingMessage;
+    nativeResponse?: http.ServerResponse;
 }
 
 export class VulcainPipeline {
@@ -55,6 +58,7 @@ export class VulcainPipeline {
         finally {
             ctx.dispose();
         }
-        return ctx.response;
+
+        return ctx.keepConnected ? null : ctx.response;
     }
 }

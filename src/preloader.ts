@@ -1,7 +1,6 @@
 import { IContainer } from './di/resolvers';
 
 interface Item {
-    name: string;
     callback: (container, domain) => void;
 }
 
@@ -22,27 +21,24 @@ export class Preloader {
 
     private _preloads: { [name: string]: Array<Item> } = {};
 
-    registerModel(fn: Function, callback: (container, domain) => void) {
-        let key = fn.name;
-        this.register(Models, key, callback);
+    registerModel(callback: (container, domain) => void) {
+        this.register(Models, callback);
     }
 
-    registerService(fn: Function, callback: (container, domain) => void) {
-        let key = fn.name;
-        this.register(Services, key, callback);
+    registerService(callback: (container, domain) => void) {
+        this.register(Services, callback);
     }
 
-    registerHandler(fn: Function, callback: (container, domain) => void) {
-        let key = fn.name;
-        this.register(Handlers, key, callback);
+    registerHandler(callback: (container, domain) => void) {
+        this.register(Handlers, callback);
     }
 
-    private register(key: string, name: string, callback) {
+    private register(key: string, callback) {
         let list = this._preloads[key];
         if (!list) {
             this._preloads[key] = list = [];
         }
-        list.push({ name, callback: callback });
+        list.push({ callback: callback });
     }
 
     private run(key: string, container, domain) {

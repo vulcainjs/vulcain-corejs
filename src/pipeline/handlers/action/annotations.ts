@@ -96,7 +96,7 @@ export function ActionHandler(def: ActionHandlerDefinition, metadata?: any) {
         def.scope = def.scope || "?";
         def.metadata = metadata;
 
-        Preloader.instance.registerHandler(target, (container: IContainer, domain) => {
+        Preloader.instance.registerHandler((container: IContainer, domain) => {
             const symModel = Symbol.for("design:model");
             let modelMetadatas = Reflect.getOwnMetadata(symModel, target);
 
@@ -132,7 +132,7 @@ export function EventHandler(def?: EventDefinition, metadata?: any) {
     def.metadata = metadata;
 
     return function (target: Function) {
-        Preloader.instance.registerHandler(target, (container, domain) => {
+        Preloader.instance.registerHandler((container, domain) => {
             let actions = Utils.getMetadata(symActions, target);
             CommandManager.eventHandlersFactory.register(container, domain, target, actions, def);
             Reflect.defineMetadata(symMetadata, def, target);

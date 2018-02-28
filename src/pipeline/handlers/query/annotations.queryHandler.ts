@@ -25,7 +25,7 @@ export function QueryHandler(def: QueryDefinition, metadata?: any) {
         def.scope = def.scope || "?";
         def.metadata = metadata;
 
-        Preloader.instance.registerHandler(target, (container: IContainer, domain) => {
+        Preloader.instance.registerHandler((container: IContainer, domain) => {
             const symModel = Symbol.for("design:model");
             let modelMetadatas = Reflect.getOwnMetadata(symModel, target);
             if (modelMetadatas) {

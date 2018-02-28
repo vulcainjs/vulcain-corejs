@@ -1,25 +1,26 @@
-import { IContainer } from '../di/resolvers';
+import { IContainer, NativeEndpoint } from '../di/resolvers';
 import { VulcainPipeline, HttpRequest } from "./vulcainPipeline";
 import { HttpResponse } from "./response";
 import { Conventions } from '../utils/conventions';
 import http = require('http');
 import url = require('url');
-import Router = require('router');
 import { ISerializer } from "./serializers/serializer";
 import { DefaultSerializer } from "./serializers/defaultSerializer";
 import { Service } from '../globals/system';
 
 export interface IServerAdapter {
     init(container: IContainer, pipeline: VulcainPipeline);
-    start(port: number, callback: (err) => void);
-    registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse);
-    registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void);
+    start(port: number, callback: (err) => void);  
+    registerRoute(e: NativeEndpoint);
+    getRoute(filter: (e:NativeEndpoint)=> boolean);
 }
 
 export abstract class ServerAdapter implements IServerAdapter {
     protected container: IContainer;
     protected vulcainPipe: VulcainPipeline;
     protected serializer: ISerializer;
+    private routes = new Array<NativeEndpoint>();
+
     /**
      *
      */
@@ -32,7 +33,7 @@ export abstract class ServerAdapter implements IServerAdapter {
     abstract start(port: number, callback: (err) => void);
 
     protected async processVulcainRequest(req: http.IncomingMessage, resp: http.ServerResponse, body, request?: HttpRequest) {
-        request = request || { body: body, headers: req.headers, verb: req.method, url: url.parse(req.url, true) };
+        request = request || { body: body, headers: req.headers, verb: req.method, url: url.parse(req.url, true), nativeRequest: req, nativeResponse: resp };
         let response: HttpResponse = null;
         try {
             request.body = this.serializer.deserialize(request);
@@ -41,6 +42,9 @@ export abstract class ServerAdapter implements IServerAdapter {
         catch (e) {
             response = HttpResponse.createFromError(e);
         }
+        if (!response)
+            return; // Ignore response
+        
         response = this.serializer.serialize(request, response);
         this.sendResponse(resp, response);
     }
@@ -89,27 +93,42 @@ export abstract class ServerAdapter implements IServerAdapter {
         return  <HttpRequest> { body: null, headers: req.headers, verb: req.method, url: url.parse(req.url, true) };
     }
 
-    abstract registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse);
+    registerRoute(e: NativeEndpoint) {
+        this.routes.push(e);
+    }
 
-    abstract registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void);
+    getRoute(filter: (e:NativeEndpoint)=> boolean) {
+        for (let e of this.routes) {
+            if( filter(e))
+                return e;    
+        }
+        return undefined;
+    }
 }
+
 export class HttpAdapter extends ServerAdapter {
     private srv: http.Server;
-    private router: Router;
+
     /**
      *
      */
     init(container: IContainer, vulcainPipeline: VulcainPipeline) {
         super.init(container, vulcainPipeline);
-        this.router = Router();
     }
 
     start(port: number, callback: (err) => void) {
 
-        this.srv = http.createServer((req, resp: http.ServerResponse) => {
+        this.srv = http.createServer((req: http.IncomingMessage, resp: http.ServerResponse) => {
+            let u = url.parse(req.url);
+            let endpoint = this.getRoute(e => e.kind === "HTTP" && e.verb === req.method && u.pathname.startsWith(e.path));
+            if (endpoint) {
+                endpoint.handler(req, resp);
+                return;
+            }
+
             // Actions and query
             // POST/GET /api/...
-            if (req.url.startsWith(Conventions.instance.defaultUrlprefix) && (req.method === "GET" || req.method === "POST")) {
+            if ((req.method === "GET" || req.method === "POST")) {
                 let buffer = [];
                 req.on('data', (chunk) => {
                     buffer.push(chunk);
@@ -117,12 +136,6 @@ export class HttpAdapter extends ServerAdapter {
                     let body = req.method === "POST" && Buffer.concat(buffer).toString();
                     this.processVulcainRequest(req, resp, body);
                 });
-                return;
-            }
-
-            // Custom request
-            if (req.method === "GET") {
-                this.router(req, resp, () => { resp.statusCode = 404; resp.end(); });
                 return;
             }
 
@@ -141,16 +154,5 @@ export class HttpAdapter extends ServerAdapter {
         });
 
         this.srv.listen(port, callback);
-    }
-
-    registerRoute(verb: string, path: string, handler: (request: HttpRequest) => HttpResponse) {
-        this.router[verb](path, (req: http.IncomingMessage, res: http.ServerResponse) => {
-            let result = handler(this.createRequest(req));
-            this.sendResponse(res, result);
-        });
-    }
-
-    registerNativeRoute(verb: string, path: string, handler: (request: http.IncomingMessage, res: http.ServerResponse) => void) {
-        this.router[verb](path, handler);
     }
 }

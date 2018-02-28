@@ -37,7 +37,7 @@ const hystrixCommandsCache = new Map<string, CommandCache>();
 export function Command(config: CommandConfiguration = {}, commandKey?: string, commandGroup?: string) {
 
     return function (command: Function) {
-        Preloader.instance.registerHandler(command, (container, domain: Domain) => {
+        Preloader.instance.registerHandler((container, domain: Domain) => {
             CommandFactory.registerCommand(command, config, commandKey, commandGroup);
         });
     };

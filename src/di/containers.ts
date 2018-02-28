@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Preloader } from '../preloader';
 import { Scope } from './scope';
-import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver, IContainer, BusUsage } from './resolvers';
+import { IResolver, InstanceResolver, SingletonResolver, Resolver, ScopedResolver, IContainer, BusUsage, NativeEndpoint } from './resolvers';
 import { LifeTime, DefaultServiceNames } from './annotations';
 import { Files } from '../utils/files';
 import { Conventions } from '../utils/conventions';
@@ -27,6 +27,7 @@ import { ScopesDescriptor } from "../defaults/scopeDescriptors";
 import { SwaggerServiceDescriptor } from '../defaults/swagger/swaggerServiceDescriptions';
 import { RabbitAdapter } from '../bus/rabbitAdapter';
 import http = require('http');
+import { IRequestContext } from '../pipeline/common';
 
 /**
  * Component container for dependency injection
@@ -380,13 +381,27 @@ export class Container implements IContainer {
         return list;
     }
 
-    private customEndpoints: { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] = [];
+    private customEndpoints: Array<NativeEndpoint> = [];
 
-    registerEndpoint(path: string, handler: (req: HttpRequest) => HttpResponse, verb="get") {
-        this.customEndpoints.push({ path, handler, verb });
+    registerHTTPEndpoint(verb: string, path: string, handler: (req: http.IncomingMessage, res: http.ServerResponse) => void) {
+        this.customEndpoints.push({
+            kind: "HTTP",
+            verb,
+            path,
+            handler
+        });
     }
 
-    getCustomEndpoints(): { verb: string, path: string, handler: (req: HttpRequest) => HttpResponse }[] {
+    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void) {
+        this.customEndpoints.push({
+            kind: "SSE",
+            verb: "GET",
+            path,
+            handler
+        });
+    }
+
+    getCustomEndpoints(): Array<NativeEndpoint> {
         return this.customEndpoints;
     }
 }
