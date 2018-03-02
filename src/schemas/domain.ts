@@ -70,7 +70,7 @@ export class Domain {
     addSchema(schema: Schema) {
         if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(schema.name))
             throw new ApplicationError(`Schema name ${schema.name}has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);    
-        this._schemas.set(schema.name, schema);
+        this._schemas.set(schema.name.toLowerCase(), schema);
     }
 
     /**
@@ -86,7 +86,7 @@ export class Domain {
         }
 
         if (name) {
-            schema = this._schemas.get(name);
+            schema = this._schemas.get(name.toLowerCase());
         }
 
         if (!schema) {

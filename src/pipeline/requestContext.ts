@@ -11,6 +11,7 @@ import { HttpResponse } from "./response";
 import { ISpanRequestTracker, DummySpanTracker, TrackerId } from '../instrumentations/common';
 import { Span } from '../instrumentations/span';
 import { Conventions } from '../utils/conventions';
+import { Service, ServiceStatus } from '../globals/system';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -26,20 +27,30 @@ export class VulcainHeaderNames {
     static X_VULCAIN_REGISTER_STUB = 'x-vulcain-save-stub-session';
 }
 
-export class CommandRequest implements IRequestContext {
+export class ContextWrapper implements IRequestContext {
     private _tracker: ISpanRequestTracker;
+    private _requestData: RequestData;
     public parent: RequestContext;
     get user() { return this.parent.user; }
     get container() { return this.parent.container; }
     get locale() { return this.parent.locale; }
     get hostName() { return this.parent.hostName; }
-    get requestData() { return this.parent.requestData; }
+    get requestData() { return this._requestData; }
     get request() { return this.parent.request; }
     get publicPath() { return this.parent.publicPath; }
+    set keepConnected(flag: boolean) { this.parent.keepConnected = flag; }
+    
+    setServiceIsBusy(timeoutInMs=0) { this.parent.setServiceIsBusy(timeoutInMs);}
+    setServiceIsReady() { this.parent.setServiceIsReady();}
 
-    constructor(context: IRequestContext, commandName: string) {
+    constructor(context: IRequestContext, data: string|RequestData) {
         this.parent = <RequestContext>context;
-        this._tracker = this.parent.requestTracker.createCommandTracker(this, commandName);
+        this._tracker = typeof data === "string"
+            ? this.parent.requestTracker.createCommandTracker(this, data)
+            : this.parent.requestTracker;
+        this._requestData = typeof data === "object"
+            ? data
+            : this.parent.requestData;
     }
 
     get requestTracker() {
@@ -57,7 +68,7 @@ export class CommandRequest implements IRequestContext {
         return this.parent.now;
     }
     createCommandRequest(commandName: string) {
-        return new CommandRequest(this, commandName);
+        return new ContextWrapper(this, commandName);
     }
     createCustomTracker(name: string, tags?: { [index: string]: string }) {
         return this._tracker.createCustomTracker(this, name, tags);
@@ -114,7 +125,10 @@ export class RequestContext implements IRequestContext {
     _tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
 
-        /**
+    setServiceIsBusy(timeoutInMs=0) { Service.setServiceStatus(ServiceStatus.Busy, timeoutInMs);}
+    setServiceIsReady() { Service.setServiceStatus(ServiceStatus.Ready); }
+    
+    /**
      * Do not use directly
      * Create an instance of RequestContext.
      *
@@ -181,7 +195,7 @@ export class RequestContext implements IRequestContext {
     }
 
     createCommandRequest(commandName: string) {
-        return new CommandRequest(this, commandName);
+        return new ContextWrapper(this, commandName);
     }
 
     get now() {

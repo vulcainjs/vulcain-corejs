@@ -76,7 +76,7 @@ export class GraphQLAdapter {
             let subscription = MessageBus.localEvents.subscribe(
                 async function onNext(evt: EventData) {
                     let eventHandlerName = evt[MessageBus.LocalEventSymbol];
-                    let item = self._subscriptions.get(id);
+                    let item = self._subscriptions.get(id); 
                     if (!item)
                         return;
                     let g = item.subscriptions[eventHandlerName];
@@ -96,6 +96,7 @@ export class GraphQLAdapter {
                     };
 
                     response.write("event: " + eventHandlerName + '\n');
+                    response.write("id: " + evt.correlationId + '\n');
                     response.write("data: " + JSON.stringify(payload) + '\n\n');
                 }
             );

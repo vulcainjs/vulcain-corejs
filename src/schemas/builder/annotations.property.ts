@@ -5,6 +5,7 @@ import { Domain } from '../domain';
 import { IRequestContext } from "../../pipeline/common";
 import { ModelPropertyDefinition } from '../schemaInfo';
 import { SchemaBuilder } from './schemaBuilder';
+import { Metadata } from '../../utils/reflector';
 
 /**
  * Property definition
@@ -104,15 +105,24 @@ export interface PropertyDefinition {
      * This property is not exposed by service description
      */
     private?: boolean;
-    /** 
-     * Foreign key in case of reference
-    */
-    reference?: string;
-    referenceProperty?: string;
     /**
      * Properties for custom types
      */
     typeProperties?: any;
+}
+
+export interface ReferenceDefinition {
+    reference: string;
+    /** 
+     * Foreign key in case of reference
+     */
+    referenceProperty?: string;
+    verb?: string;
+    args?: any;
+}
+
+export function Reference(def) {
+    return Metadata("reference", def);
 }
 
 export function Property(def?: PropertyDefinition, typeProperties?: any) {

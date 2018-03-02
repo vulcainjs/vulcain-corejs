@@ -308,7 +308,7 @@ export class ServiceDescriptors {
                 continue;
             
             let type = this.getPropertyType(p.itemsType || p.type);
-            if (type || !schema.isSchemaReference(p)) {
+            if(type && !(p.metadata && p.metadata.reference)) {
                 let def = {
                     type: p.type,
                     itemsType: p.itemsType,
@@ -331,13 +331,13 @@ export class ServiceDescriptors {
                 this.addDescription(desc, pdesc);
             }
             else {
-                let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata  };
+                let def = { item: p.type, cardinality: p.cardinality, required: p.required, description: p.description, ...p.metadata };
+                def.reference = def.reference && def.reference.reference;
                 let pdesc: PropertyDescription = {
                     name: k,
                     type: p.cardinality === "many" ? p.type + "[]" : p.type,
                     required: p.required,
                     description: p.description,
-                    reference: p.reference,
                     typeDescription: "",
                     definition: def,
                     order: p.order

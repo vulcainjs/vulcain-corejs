@@ -116,8 +116,11 @@ export interface IRequestContext {
     /**
      * Don't close the request (used by SSE request)
      */
-    keepConnected?: boolean;
+    keepConnected: boolean;
 
+    setServiceIsBusy(timeoutInMs?: number);
+    setServiceIsReady();
+    
     dispose();
 }
 

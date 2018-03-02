@@ -13,6 +13,13 @@ import { Files } from '../utils/files';
 import * as Path from 'path';
 import { Settings } from './settings';
 
+export enum ServiceStatus {
+    Starting,
+    Ready,
+    Busy,
+    Ending
+}
+
 /**
  * Static class providing service helper methods
  *
@@ -31,6 +38,8 @@ export class Service {
     private static _manifest: VulcainManifest;
     private static _stubManager: IStubManager;
     static defaultDomainName: string;
+    private static _serviceStatus: ServiceStatus = ServiceStatus.Starting;
+    private static _statusTimer: NodeJS.Timer;
 
     public static get settings() {
         if (!Service._settings) {
@@ -38,6 +47,51 @@ export class Service {
             Service.log.info(null, () => `Running in ${Service._settings.environment} environment.`);
         }
         return Service._settings;
+    }
+
+    static get serviceStatus() {
+        return Service._serviceStatus;
+    }
+
+    private static setServiceStatusInternal(status: ServiceStatus) {
+        if (status === ServiceStatus.Ready) {
+            if(Service._serviceStatus !== ServiceStatus.Busy)
+                fs.writeFileSync(Path.join(process.cwd(),"service.live"), "OK");
+            fs.writeFileSync(Path.join(process.cwd(),"service.ready"), "OK");
+        }
+        else if (status === ServiceStatus.Busy) {
+            fs.unlinkSync(Path.join(process.cwd(),"service.ready"));
+        }
+        else if(status !== ServiceStatus.Starting) {
+            try {
+                fs.unlinkSync(Path.join(process.cwd(),"service.live"));
+            }
+            catch (e) {
+                // ignore
+            }
+            try {
+                fs.unlinkSync(Path.join(process.cwd(),"service.ready"));
+            }
+            catch (e) {
+                // ignore
+            }
+        }    
+        Service._serviceStatus = status;
+    }
+
+    static setServiceStatus(status: ServiceStatus, timeoutInMs = 0) {
+        if (Service._statusTimer) {
+            clearTimeout(Service._statusTimer);
+        }
+        
+        Service.setServiceStatusInternal(status);    
+
+        if (timeoutInMs > 0) {
+            Service._statusTimer = setTimeout(() => {
+                Service.setServiceStatusInternal(ServiceStatus.Ending);
+                Service._statusTimer = null;
+            }, timeoutInMs);
+        }
     }
 
     /**

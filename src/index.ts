@@ -11,7 +11,7 @@ export { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './globals/manifest';
 export { VulcainLogger } from './log/vulcainLogger';
-export { Service } from './globals/system';
+export { Service, ServiceStatus } from './globals/system';
 export { IServiceResolver } from './di/serviceResolver';
 export { Metadata } from './utils/reflector';
 
@@ -21,7 +21,7 @@ export { Domain } from './schemas/domain';
 export { SchemaInfo} from './schemas/schemaInfo';
 export { ISchemaTypeDefinition, ISchemaValidation } from './schemas/schemaType';
 export { Validator, SchemaTypeDefinition } from './schemas/builder/annotations';
-export { Property, PropertyDefinition } from './schemas/builder/annotations.property';
+export { Property, PropertyDefinition, Reference, ReferenceDefinition } from './schemas/builder/annotations.property';
 export { ModelDefinition, Model } from './schemas/builder/annotations.model';
 export { TYPES, VALIDATORS } from './schemas/standards/standards';
 
