@@ -9,6 +9,7 @@ import { IRequestContext } from '../../pipeline/common';
 import { UnauthorizedRequestError } from "../../pipeline/errors/applicationRequestError";
 import { CommandFactory } from "../../commands/commandFactory";
 
+// TODO add enableApiKeyAuthentication
 @Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy )
 export class ApiKeyService implements IAuthenticationStrategy {
 
@@ -44,7 +45,7 @@ export class ApiKeyService implements IAuthenticationStrategy {
             userContext = JSON.parse(Buffer.from(apiKey.key, "base64").toString('utf8'));
         }
         else {
-            let cmd = CommandFactory.createCommand<ApiKeyVerifyCommand>(ctx, ApiKeyVerifyCommand.name);
+            let cmd = CommandFactory.createDynamicCommand<ApiKeyVerifyCommand>(ctx, ApiKeyVerifyCommand.name);
             userContext = await cmd.run(this.apiKeyServiceName.value, this.apiKeyServiceVersion.value, { token: accessToken, tenant });
         }
         

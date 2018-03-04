@@ -59,11 +59,6 @@ export class Application {
         return this;
     }
 
-    public enableHystrixStream() {
-        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
-        return this;
-    }
-
     public enableGraphQL(responseType: "vulcain"|"graphql" = "graphql") {
         ActionHandler({ async: false, scope: "?", description: "GraphQL action handler" }, { responseType, system: true })(GraphQLActionHandler);
         Preloader.instance.registerHandler((container: IContainer, domain) => {
@@ -100,6 +95,7 @@ export class Application {
 
         Service.defaultDomainName = this.domainName;
         this._container = this._container || new Container();
+        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
     }
 
     private async init() {

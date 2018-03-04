@@ -1,6 +1,6 @@
 import { CircuitBreakerFactory } from "./circuitBreaker";
 import { HystrixCommand } from "./command";
-import { ICommand } from './abstractCommand';
+import { ICommand, AbstractCommand } from './abstractCommand';
 import { CommandProperties } from './commandProperties';
 import { IContainer } from '../di/resolvers';
 import { IRequestContext } from "../pipeline/common";
@@ -30,17 +30,25 @@ export interface CommandConfiguration {
 }
 
 const hystrixCommandsCache = new Map<string, CommandCache>();
+const mainPointSymbol = Symbol("[[commandMainPoint]]");
 
 /**
  * Command attribute
  */
 export function Command(config: CommandConfiguration = {}, commandKey?: string, commandGroup?: string) {
 
-    return function (command: Function) {
-        Preloader.instance.registerHandler((container, domain: Domain) => {
-            CommandFactory.registerCommand(command, config, commandKey, commandGroup);
-        });
-    };
+    return function (command: Function): any {
+        return CommandFactory.declareCommand(command, config, commandKey, commandGroup);
+    }
+}
+
+
+export function CommandMainPoint(ignore=false) {
+    return function (command, key: string, pdesc: PropertyDescriptor) {
+        let endpoints = command.constructor[mainPointSymbol] || {};
+        endpoints[key] = !ignore;
+        command.constructor[mainPointSymbol] = endpoints;
+    }
 }
 
 interface CommandCache {
@@ -59,9 +67,10 @@ export class CommandFactory {
     }
 
     /**
-     * Register a new command
+     * Declare a command. All commands must be declared.
+     * Do not use this method directly, use @Command 
      */
-    static registerCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {
+    static declareCommand(command: Function, config: CommandConfiguration, commandKey?: string, commandGroup?: string) {
         commandGroup = commandGroup || Service.fullServiceName;
         commandKey = commandKey || command.name;
 
@@ -69,43 +78,68 @@ export class CommandFactory {
             let properties = new CommandProperties(commandKey, commandGroup, config);
             CommandMetricsFactory.getOrCreate(properties); // register command - do not delete this line
             CircuitBreakerFactory.getOrCreate(properties); // register command - do not delete this line
-            hystrixCommandsCache.set(commandKey, { properties, command });
+            
+            let cmd = class extends (command as { new(context: IRequestContext, ...args): any }) {
+                constructor(context: IRequestContext, ...args) {
+                    super(context, ...args);
+                    let self = <any>this;
+                    return CommandFactory.createProxy(context, commandKey || command.name, self);
+                };
+            };
+
+            hystrixCommandsCache.set(commandKey, { properties, command: cmd });
+            return cmd;
         }
     }
 
     /**
-     * Create a new command instance
-     * Throws an exception if the command is unknown
-     *
-     * @param {IRequestContext} context current context
-     * @param {string} name Command name
-     * @param {any} args Command constructor arguments
-     * @returns {ICommand} A command
+    * Create a new command instance. Do not use it directly, use new instead
+    * Throws an exception if the command is unknown
+    *
+    * @param {IRequestContext} context current context
+    * @param {string} name Command name
+    * @param {any} args Command constructor arguments
+    * @returns {ICommand} A command
+    */
+    static createDynamicCommand<T=ICommand>(context: IRequestContext, commandName: string, ...args): T {
+        let proxy = CommandFactory.createProxy(context, commandName, null);
+        return <T>new proxy(context, ...args);
+    }
+
+    /**
+     * Create a command proxy to encapsulate command class into a HystrixCommand
      */
-    static createCommand<T=ICommand>(context: IRequestContext, commandName: string, ...args): T {
+    static createProxy<T=ICommand>(context: IRequestContext, commandName: string, command?): { new(context: IRequestContext, ...args): any } {
         if (!context)
             throw new Error("Command can be used only within a context");
 
+        let container = context.container;
         let cache = hystrixCommandsCache.get(commandName);
-        if (cache) {
-            let container = context.container;
 
-            let schema = (args && args.length > 0 && args[0]) || null;
-            let resolvedCommand = container.resolve(cache.command, args);
-
-            return new Proxy(resolvedCommand, {
-                get(ctx, name) {
-                    let handler = <Function>ctx[name];
-                    if (!handler)
-                        throw new Error(`Method ${name} doesn't exist in command ${resolvedCommand.name}`);
-
-                    return function (...args) {
-                        let cmd = new HystrixCommand(cache.properties, resolvedCommand, handler, <RequestContext>context, container, args);
-                        schema && cmd.setSchemaOnCommand(schema);
-                        return cmd.run();
-                    };
+        if (!cache)
+            throw new Error("Unknow command " + commandName);
+        
+        command = command || cache.command;
+        let proxy = new Proxy(command, {
+            get(ctx, name) {
+                let handler = <Function>ctx[name];
+                if (name !== "run") {
+                    if (!handler || typeof name !== "string")
+                        return handler;
+                    
+                    let endPoints = command.constructor[mainPointSymbol];
+                    if (!endPoints || !endPoints[name])
+                        return handler;
                 }
-            });
-        }
+                
+                if (!handler) throw new Error(`Method ${name} doesn't exist in command ${commandName}`);
+                
+                return function (...args) {
+                    let cmd = new HystrixCommand(cache.properties, command, handler, <RequestContext>context, container, args);
+                    return cmd.run();
+                };
+            }
+        });
+        return proxy;
     }
 }

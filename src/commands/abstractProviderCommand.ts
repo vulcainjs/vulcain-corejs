@@ -39,15 +39,18 @@ export abstract class AbstractProviderCommand<T> {
      */
     schema: Schema;
 
+    public container: IContainer;
+
     /**
      * Creates an instance of AbstractCommand.
      *
      * @param {IContainer} container
      * @param {any} providerFactory
      */
-    constructor(
-        @Inject(DefaultServiceNames.Container) public container: IContainer) {
-        this.providerFactory = container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
+    constructor(context: IRequestContext) {
+        this.context = context;
+        this.container = context.container;
+        this.providerFactory = this.container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
     }
 
     /**

@@ -18,7 +18,7 @@ let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = CommandFactory.createCommand<TestCommand>(context.context, "TestCommand");
+        let command = CommandFactory.createDynamicCommand<TestCommand>(context.context, "TestCommand");
         expect(command).not.to.be.undefined;
 
         let result = await command.foo("success");
@@ -29,7 +29,7 @@ describe("Command", function () {
     });
 
     it("should timeout if the function does not resolve within the configured timeout", async () => {
-        let command = CommandFactory.createCommand<TestCommandTimeout>(context.context,"TestCommandTimeout");
+        let command = CommandFactory.createDynamicCommand<TestCommandTimeout>(context.context,"TestCommandTimeout");
 
         expect(command).not.to.be.undefined;
         try {
@@ -46,7 +46,7 @@ describe("Command", function () {
     });
 
     it("should resolve with fallback if the run function fails", async () => {
-        let command = CommandFactory.createCommand<TestCommandFallback>(context.context,"TestCommandFallback");
+        let command = CommandFactory.createDynamicCommand<TestCommandFallback>(context.context,"TestCommandFallback");
 
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");
@@ -56,7 +56,7 @@ describe("Command", function () {
     });
 
     it("should not execute the run command, if the circuit is open", async () => {
-        let command = CommandFactory.createCommand<TestCommandCircuitOpen>(context.context,"TestCommandCircuitOpen");
+        let command = CommandFactory.createDynamicCommand<TestCommandCircuitOpen>(context.context,"TestCommandCircuitOpen");
         let metrics = CommandMetricsFactory.get("TestCommandCircuitOpen");
         let result = await command.runAsync("success");
         expect(result).to.be.equal("fallback");

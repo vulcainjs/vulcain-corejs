@@ -23,7 +23,7 @@ let context = new TestContext();
 describe("HystrixSSEStream", function () {
 
     function executeCommand(commandKey) {
-        let command = CommandFactory.createCommand<HystrixSSECommand1>(context.context, commandKey);
+        let command = CommandFactory.createDynamicCommand<HystrixSSECommand1>(context.context, commandKey);
         command.runAsync("success");
     }
 

@@ -14,8 +14,10 @@ import { ISpanTracker } from '../instrumentations/common';
 export abstract class AbstractHttpCommand {
     public context: IRequestContext;
     private static METRICS_NAME = "external_call";
-
-    constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
+    public container: IContainer;
+    constructor(context: IRequestContext) {
+        this.context = context;
+        this.container = context.container;
         let dep = this.constructor["$dependency:external"];
         if (dep) {
             this.setMetricTags(null, dep.uri);
@@ -30,7 +32,6 @@ export abstract class AbstractHttpCommand {
      *
      * @memberOf AbstractHttpCommand
      */
-
     protected setMetricTags(verb: string, uri: string) {
         if (!uri)
             throw new Error("Metrics tags must have an uri property.");
@@ -44,20 +45,20 @@ export abstract class AbstractHttpCommand {
         }
     }
 
-    post(url: string, data) {
-        return this.sendRequest('post', url, req => req.json(data));
+    post(url: string, data, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+        return this.sendRequest('post', url, req => { req.json(data); prepareRequest && prepareRequest(req); });
     }
 
-    get(url: string) {
-        return this.sendRequest('get', url);
+    get(url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+        return this.sendRequest('get', url, prepareRequest);
     }
 
-    delete(url: string) {
-        return this.sendRequest('delete', url);
+    delete(url: string, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+        return this.sendRequest('delete', url, prepareRequest);
     }
 
-    put(url: string, data) {
-        return this.sendRequest('put', url, req => req.json(data));
+    put(url: string, data, prepareRequest?: (req: types.IHttpCommandRequest) => void) {
+        return this.sendRequest('put', url, req => { req.json(data); prepareRequest && prepareRequest(req); });
     }
 
     /**

@@ -48,10 +48,9 @@ export abstract class AbstractCommand<T> {
     /**
      * Creates an instance of AbstractCommand.
      *
-     * @param {IContainer} container
-     * @param {any} providerFactory
      */
-    constructor() {
+    constructor(context: IRequestContext) {
+        this.context = context;
     }
 
     protected setMetricsTags(command: string, tags: { [key: string]: string }) {

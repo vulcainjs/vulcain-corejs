@@ -5,7 +5,7 @@ import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handler
 import { Action } from "../pipeline/handlers/action/annotations";
 import { Query } from "../pipeline/handlers/query/annotations.query";
 import { ICommand } from "../commands/abstractCommand";
-import { Command } from "../commands/commandFactory";
+import { Command, CommandMainPoint } from "../commands/commandFactory";
 import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 import { CommandFactory } from '../commands/commandFactory';
 import { Service } from '../globals/system';
@@ -13,6 +13,7 @@ import { QueryResult } from '../pipeline/handlers/query/queryResult';
 import { Property } from '../schemas/builder/annotations.property';
 import { InputModel } from '../schemas/builder/annotations.model';
 import { QueryOptions } from '../providers/provider';
+import { IRequestContext } from '..';
 
 @InputModel()
 export class IdArguments {
@@ -21,11 +22,17 @@ export class IdArguments {
 }
 
 export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
-    create(entity: any) {
+
+    constructor(context: IRequestContext, commandName: string, schema: string) {
+        super(context);
+    }
+
+    private create(entity: any) {
         this.setMetricTags("create", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         return this.provider.create( this.schema, entity);
     }
 
+    @CommandMainPoint()
     async createWithSensibleData(entity: any) {
         if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
@@ -35,7 +42,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    async update(entity: any) {
+    private async update(entity: any) {
         this.setMetricTags("update", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
         let old = await this.provider.get(this.schema, entity[keyProperty]);
@@ -44,6 +51,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.update(this.schema, entity);
     }
 
+    @CommandMainPoint()
     async updateWithSensibleData(entity: any) {
         // TODO move to provider
         if (entity && this.schema.info.hasSensibleData)
@@ -54,15 +62,17 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
+    @CommandMainPoint()
     deleteWithSensibleData(id: any) {
         return this.delete(id);
     }
 
-    async delete(id: any) {
+    private async delete(id: any) {
         this.setMetricTags("delete", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         return this.provider.delete(this.schema, id);
     }
 
+    @CommandMainPoint()
     async get(args: any) {
         this.setMetricTags("get", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
@@ -76,6 +86,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.get(this.schema, args[keyProperty]);
     }
 
+    @CommandMainPoint()
     async getWithSensibleData(args: any) {
         let entity = await this.get(args);
         if (entity && this.schema.info.hasSensibleData)
@@ -83,11 +94,12 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    getAll(options: QueryOptions): Promise<QueryResult> {
+    private getAll(options: QueryOptions): Promise<QueryResult> {
         this.setMetricTags("getAll", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         return this.provider.getAll(this.schema, options);
     }
 
+    @CommandMainPoint()
     async getAllWithSensibleData(options: QueryOptions) {
         let result = await this.getAll(options);
         if (result && result.value && result.value.length > 0 && this.schema.info.hasSensibleData) {
@@ -111,11 +123,13 @@ function createCommandName(metadata, kind) {
 export class DefaultActionHandler extends AbstractActionHandler {
 
     protected defineCommand(metadata) {
-        CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Action"));
+        CommandFactory.declareCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Action"));
     }
 
-    protected createDefaultCommand<T>() {
-        return CommandFactory.createCommand<T>(this.context, createCommandName(this.metadata, "Action"), this.metadata.schema);
+    protected createDefaultCommand() {
+        let cmd = CommandFactory.createDynamicCommand<DefaultCRUDCommand>(this.context, createCommandName(this.metadata, "Action"));
+        cmd.setSchema(this.metadata.schema);
+        return cmd;
     }
 
     constructor( @Inject("Container") container: IContainer) {
@@ -126,7 +140,7 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async create(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand();
         return cmd.createWithSensibleData(entity);
     }
 
@@ -134,13 +148,13 @@ export class DefaultActionHandler extends AbstractActionHandler {
     async update(entity: any) {
         if (!entity)
             throw new ApplicationError("Entity is required");
-        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand();
         return cmd.updateWithSensibleData( entity);
     }
 
     @Action({ name: "delete", description: "Delete an entity", outputSchema:"", inputSchema:"IdArguments"})
     async delete(args: IdArguments) {
-        let cmd = this.createDefaultCommand<DefaultCRUDCommand>();
+        let cmd = this.createDefaultCommand();
         let res = await cmd.deleteWithSensibleData(args.id);
         return res;
     }
@@ -149,11 +163,13 @@ export class DefaultActionHandler extends AbstractActionHandler {
 export class DefaultQueryHandler<T> extends AbstractQueryHandler {
 
     private defineCommand(metadata) {
-        CommandFactory.registerCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Query"));
+        CommandFactory.declareCommand(DefaultCRUDCommand, {}, createCommandName(metadata, "Query"));
     }
 
     protected createDefaultCommand() {
-        return CommandFactory.createCommand<DefaultCRUDCommand>(this.context, createCommandName(this.metadata, "Query"), this.metadata.schema);
+        let cmd = CommandFactory.createDynamicCommand<DefaultCRUDCommand>(this.context, createCommandName(this.metadata, "Action"));
+        cmd.setSchema(this.metadata.schema);
+        return cmd;
     }
 
     constructor( @Inject("Container") container: IContainer ) {

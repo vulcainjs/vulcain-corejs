@@ -52,12 +52,6 @@ export class HystrixCommand {
         return SemaphoreFactory.getOrCreate(this.properties);
     }
 
-    setSchemaOnCommand(schema: string) {
-        if (schema && (<any>this.command).setSchema) {
-            this.schemaName = (<any>this.command).setSchema(schema);
-        }
-    }
-
     async run<T>(): Promise<T> {
         if (this.running) {
             throw new Error("This instance can only be executed once. Please instantiate a new instance.");

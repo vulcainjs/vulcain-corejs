@@ -63,11 +63,11 @@ export abstract class AbstractServiceCommand {
     public context: IRequestContext;
     /**
      * Creates an instance of AbstractCommand.
-     *
-     * @param {IContainer} container
-     * @param {any} providerFactory
      */
-    constructor( @Inject(DefaultServiceNames.Container) public container: IContainer) {
+    public container: IContainer;
+    constructor(context: IRequestContext) {
+        this.context = context;
+        this.container = context.container;
         this.setMetricTags();
     }
 
