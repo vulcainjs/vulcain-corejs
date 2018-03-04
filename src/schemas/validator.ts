@@ -33,7 +33,7 @@ export class Validator {
 
             try {
                 let prop = schema.info.properties[propertyName];
-                if (schema.isSchemaReference(prop)) {
+                if (schema.isEmbeddedReference(prop)) {
                     let propertyTypeName = prop.type;
                     if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue._schema) {
                         propertyTypeName = formatContext.propertyValue._schema;

@@ -10,6 +10,8 @@ import { ModelDefinition } from './builder/annotations.model';
 import { ISchemaTypeDefinition } from './schemaType';
 import { Reflector } from '../utils/reflector';
 
+const embeddedSymbol = Symbol("[[embedded]]");
+
 /**
  * Schema definition
  */
@@ -53,20 +55,20 @@ export class Schema {
         if (this._subModels) {
             for (let sm of this._subModels) {
                 yield sm;
-                if(all)
+                if (all)
                     yield* sm.subModels();
             }
-        }    
+        }
     }
 
     findProperty(name: string) {
         for (let prop of this.allProperties()) {
             if (prop.name === name)
-                return prop;    
+                return prop;
         }
         return undefined;
     }
-    
+
     public *properties() {
         for (let p in this.info.properties) {
             yield this.info.properties[p];
@@ -85,8 +87,7 @@ export class Schema {
         return this.coerceInternal(data, this);
     }
 
-    private coerceInternal(entity, schema: Schema, result?)
-    {
+    private coerceInternal(entity, schema: Schema, result?) {
         if (!entity) { return null; }
         if (typeof schema.info.coerce === "function") {
             return schema.info.coerce(entity);
@@ -105,7 +106,7 @@ export class Schema {
 
             if (propertyDefinition) {
                 try {
-                    if (this.isSchemaReference(propertyDefinition)) { 
+                    if (this.isEmbeddedReference(propertyDefinition)) { 
                         let itemSchemaName = propertyDefinition.type;
                         let itemValue = entity[propertyDefinition.name];
 
@@ -151,7 +152,7 @@ export class Schema {
                     }
                 }
                 catch (e) {
-                        // ignore
+                    // ignore
                 }
             }
         }
@@ -233,11 +234,11 @@ export class Schema {
     }
 
     /**
- * Remove all sensible data
- *
- * @param {any} entity
- * @returns
- */
+     * Remove all sensible data
+     *
+     * @param {any} entity
+     * @returns
+     */
     obfuscate(entity) {
         let visitor = {
             visitEntity(entity, schema) { this.current = entity; return schema.info.hasSensibleData; },
@@ -247,8 +248,22 @@ export class Schema {
         v.visit(this, entity);
     }
 
-    isSchemaReference(prop: ModelPropertyDefinition) {
-        return prop && prop.cardinality && !prop.itemsType;
+    isEmbeddedReference(prop: ModelPropertyDefinition) {
+        if (!prop)
+            return false;
+
+        let isEmbedded = prop[embeddedSymbol];
+        if (isEmbedded !== undefined)
+            return isEmbedded;
+
+        if (prop.metadata && prop.metadata.reference && prop.metadata.reference.reference) {
+            isEmbedded = false;
+        }
+        else {
+            isEmbedded = !!this.domain.getSchema(prop.type, true);
+        }
+        prop[embeddedSymbol] = isEmbedded;
+        return isEmbedded;
     }
 
     /**
@@ -274,7 +289,7 @@ export class Schema {
             let val = source[key];
             if (typeof val === "object") {
                 let ref = schema.info.properties[key];
-                if (this.isSchemaReference(ref)) {
+                if (this.isEmbeddedReference(ref)) {
                     let item = ref.type;
                     if (val && val._schema) {
                         item = val._schema;

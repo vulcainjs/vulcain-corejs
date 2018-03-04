@@ -9,7 +9,7 @@ import { ICommandMetrics, CommandMetricsFactory } from "./metrics/commandMetrics
 import { TimeoutError } from "../pipeline/errors/timeoutError";
 import { CommandRuntimeError } from "../pipeline/errors/commandRuntimeError";
 import { BadRequestError } from "../pipeline/errors/badRequestError";
-import { RequestContext, CommandRequest } from '../pipeline/requestContext';
+import { RequestContext, ContextWrapper } from '../pipeline/requestContext';
 import { Span } from '../instrumentations/span';
 import { ISpanTracker } from '../instrumentations/common';
 

@@ -6,7 +6,7 @@ import { HttpResponse } from "./response";
 import { Handler, ServiceDescriptors } from "./handlers/descriptions/serviceDescriptions";
 import { RequestData, IRequestContext } from "./common";
 import { DefaultServiceNames, Injectable, LifeTime } from '../di/annotations';
-import { RequestContext } from "./requestContext";
+import { RequestContext, ContextWrapper } from "./requestContext";
 import { Inject } from "../di/annotations";
 import { CommandManager } from "./handlers/action/actionManager";
 import { QueryManager } from "./handlers/query/queryManager";
@@ -24,48 +24,40 @@ export class HandlerProcessor {
         this.queryManager = new QueryManager(container);
     }
 
-    public async invokeHandler(ctx: IRequestContext, info: Handler, contextData?: RequestData) {
+    public async invokeHandler(context: IRequestContext, info: Handler, contextData?: RequestData) {
         // Verify authorization
-        if (!ctx.user.hasScope(info.definition.scope)) {
-            ctx.logError(new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
+        if (!context.user.hasScope(info.definition.scope)) {
+            context.logError(new Error(`Unauthorized for handler ${info.verb} with scope=${info.definition.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
             throw new UnauthorizedRequestError();
         }
-        
-        let oldContextData = ctx.requestData;
-        try {
-            if (contextData) {
-                ctx.requestData = contextData;
+
+        let ctx = contextData ? new ContextWrapper(context, contextData) : context;
+
+        let command = ctx.requestData;
+        let result: HttpResponse;
+        const stubs = Service.getStubManager(ctx.container);
+        let params = Object.assign({}, command.params || {});
+        let metadata = <ActionDefinition>info.definition;
+
+        result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);
+        if (!stubs.enabled || result === undefined) {
+            let manager: IManager;
+            if (info.kind === "action") {
+                manager = this.actionManager;
             }
-
-            let command = ctx.requestData;
-            let result: HttpResponse;
-            const stubs = Service.getStubManager(ctx.container);
-            let params = Object.assign({}, command.params || {});
-            let metadata = <ActionDefinition>info.definition;
-
-            result = stubs.enabled && await stubs.tryGetMockValue(ctx, metadata, info.verb, params);          
-            if (!stubs.enabled || result === undefined) {
-                let manager: IManager;
-                if (info.kind === "action") {
-                    manager = this.actionManager;
-                }
     
-                if (info.kind === "query") {
-                    manager = this.queryManager;
-                }
-                result = await manager.run(info, command, <RequestContext>ctx);
-                (<RequestContext>ctx).response = result;
+            if (info.kind === "query") {
+                manager = this.queryManager;
             }
-            else {
-                (<RequestContext>ctx).response = result;
-                stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
-            }
+            result = await manager.run(info, command, <RequestContext>ctx);
+            (<RequestContext>ctx).response = result;
+        }
+        else {
+            (<RequestContext>ctx).response = result;
+            stubs.enabled && await stubs.saveStub(ctx, metadata, info.verb, params, result);
+        }
 
-            return result;
-        }
-        finally {
-            ctx.requestData = oldContextData;
-        }
+        return result;
     }
 
     public getHandlerInfo(container: IContainer, schema: string, action: string) {

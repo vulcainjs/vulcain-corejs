@@ -26,6 +26,7 @@ export class GraphQLActionHandler extends AbstractHandler {
         (<ISpanRequestTracker>this.context.requestTracker).trackAction("graphql");
 
         let response = await this._adapter.processGraphQLQuery(this.context, g);
+
         if (this.metadata.metadata.responseType === "graphql")
             return new HttpResponse(response);
 

@@ -24,7 +24,7 @@ static getMetadata(key, target) {
             if (Array.isArray(result)) {
                 let outputSchema: Schema | null;
                 result.forEach(v => {
-                    if (v._schema) {
+                    if (v && v._schema) {
                         if (!outputSchema || outputSchema.name !== v._schema)
                             outputSchema = domain.getSchema(v._schema);
                         if (outputSchema && outputSchema.info.hasSensibleData)

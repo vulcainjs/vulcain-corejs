@@ -6,12 +6,13 @@ import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { OperationDescription } from "../pipeline/handlers/descriptions/operationDescription";
-import { Service, MemoryProvider, TYPES } from "..";
+import { Service, MemoryProvider, TYPES, ConsumeEventDefinition } from "..";
 import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 import { ModelPropertyDefinition } from "../schemas/schemaInfo";
 import { CommandManager } from "../pipeline/handlers/action/actionManager";
 import { GraphQLAdapter } from "./graphQLAdapter";
-import { PaginateDirective, applySchemaCustomDirectives} from "./directives";
+import { PaginateDirective, applySchemaCustomDirectives } from "./directives";
+import { ReferenceDefinition } from "../schemas/builder/annotations.property";
 const graphql = require('graphql');
 
 export interface GraphQLDefinition {
@@ -142,6 +143,14 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;
 
+            // In 'once' distribution mode, event is consumed by only one instance.
+            // Since subscription channel is open on a specific instance, which can not be the same the subscription 
+            // channel is open on, we ignore this kind of event for subscription to avoid lost events.
+            if ((<ConsumeEventDefinition>handler.definition).distributionMode === "once") {
+                this.context.logInfo(() => `GRAPHQL: Skipping subscription handler ${handler.methodName} for event handler with 'once' distribution mode.`);
+                continue;
+            }
+
             let schemaName = handler.definition.schema || (<any>handler.definition).subscribeToSchema;
             let outputSchema = schemaName && this.domain.getSchema(schemaName, true);
             let args = { ["channel"]: { type: graphql.GraphQLNonNull(this.typeToGraphQLType("string")) } };
@@ -163,10 +172,10 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                     resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler, args.channel, entity)
                 };
             hasFields = true;
-            
+
             this.context.logInfo(() => `GRAPHQL: Enabling subscription handler ${operationName}`);
         }
-        
+
         return hasFields
             ? new graphql.GraphQLObjectType({
                 name: 'Subscription',
@@ -353,7 +362,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;
 
-            const propType = createInputType ? prop.type : (prop.reference || prop.type);
+            const propType = createInputType ? prop.type : ((prop.metadata.reference && prop.metadata.reference.reference) || prop.type);
             let type = this.createScalarType(propType, prop, schema.name);
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
@@ -398,7 +407,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;
 
-            const propType = createInputType ? prop.type : (prop.reference || prop.type);
+            const propType = createInputType ? prop.type : ((prop.metadata.reference && prop.metadata.reference.reference) || prop.type);
             let type = this.createScalarType(propType, prop, schema.name + "_input");
             if (!type) {
                 let sch = this.domain.getSchema(propType, true);
@@ -471,37 +480,62 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         }
 
         let embedded = false;
+        let refDefinition: ReferenceDefinition;
+
         if (entity) { // Is it the root ?
             let domain = ctx.container.get<Domain>(DefaultServiceNames.Domain);
             let schema = domain.getSchema(ctx.requestData.schema);
             let prop = schema.findProperty(fieldName);
 
-            let itemSchema = domain.getSchema(prop.reference, true);
-            if (!itemSchema) {
+            refDefinition = prop.metadata && prop.metadata.reference;
+            if (!refDefinition) {
                 embedded = true;
             }
             else {
-                let fk = prop.referenceProperty || itemSchema.getIdProperty();
-                let value = entity[fieldName];
-                if (Array.isArray(value)) {
-                    data.params = {
-                        [fk]: {
-                            $in: value
-                        }
-                    };
+                let itemSchema = domain.getSchema(refDefinition.reference, true);
+                if (!itemSchema) {
+                    embedded = true;
                 }
                 else {
-                    data.params = { [fk]: value };
+                    let fk = refDefinition.referenceProperty || itemSchema.getIdProperty();
+                    let value = entity[fieldName];
+                    if (Array.isArray(value)) {
+                        data.params = {
+                            [fk]: {
+                                $in: value,
+                                ...refDefinition.args
+                            }
+                        };
+                    }
+                    else {
+                        data.params = { [fk]: value, ...refDefinition.args };
+                    }
+                    let verb = refDefinition.verb;
+                    if (verb) {
+                        verb = verb.toLowerCase();
+                        let parts = verb.split('.');
+                        data.schema = parts.length === 2 ? parts[0] : null;
+                        data.action = parts.length === 2 ? parts[1] : verb;
+                        data.vulcainVerb = verb;
+                    }
+                    else {
+                        data.schema = itemSchema.name;
+                        data.action = "all";
+                        data.vulcainVerb = itemSchema.name + "." + data.action;
+                    }
                 }
-                data.schema = itemSchema.name;
-                data.action = "all";
-                data.vulcainVerb = itemSchema.name + ".all";
-            }
+            }    
+        }
+        else if( args.input) {
+            data.params = args.input;
         }
 
         let processor = ctx.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
         let handler = !embedded && processor.getHandlerInfo(ctx.container, data.schema, data.action);
         if (!handler) {
+            if (refDefinition && refDefinition.verb) {
+                throw new Error(`Invalid verb '${refDefinition.verb}' provided on reference metadata for property ${fieldName}`);
+            }            
             // Embedded object        
             // Cache resolver
             info.returnType[resolverSymbol] = GraphQLTypeBuilder.resolveEmbeddedObject;
