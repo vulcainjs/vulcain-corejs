@@ -202,7 +202,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             self.channel.prefetch(1);
 
             self.channel.consume(queue.queue, async (msg) => {
-                if (this.ignoreInputMessages) return;
+                if (this.ignoreInputMessages || Service.serviceStatus === ServiceStatus.Busy) return;
                 await handler(JSON.parse(msg.content.toString()));
                 self.channel.ack(msg);
             }, { noAck: false });

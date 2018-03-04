@@ -3,7 +3,7 @@ import {Schema} from "../schemas/schema";
 import { IRequestContext } from "../pipeline/common";
 import { QueryResult } from "../index";
 
-export interface ListOptions {
+export interface QueryOptions {
     /**
      * Max
      *
@@ -17,15 +17,15 @@ export interface ListOptions {
      * @type {number}
      * @memberOf ListOptions
      */
-    page?: number;       //
+    page?: number;       
     /**
-     * [Output property] Number of items founded
-     *
-     * @type {number}
-     * @memberOf ListOptions
+     * 
      */
-    length?:number;
-    query?:any;
+    query?: {
+        filter?: any;
+        projections?: any;
+        sort?: any;
+    }
 }
 
 /**
@@ -34,14 +34,14 @@ export interface ListOptions {
 export interface IProvider<T>
 {
     /**
-     * address of the database
+     * Server address
      *
      * @type {string}
      * @memberOf IProvider
      */
     address: string;
     /**
-     * Initialize the provider with a tenant and a schema.
+     * Initialize the provider with tenant and schema.
      * Called only once by tenant
      *
      * @param {string} tenant - The tenant to use
@@ -51,25 +51,15 @@ export interface IProvider<T>
      */
     setTenant(tenant: string): () => void;
     /**
-     * Find an entity
-     *
-     * @param {Schema} schema
-     * @param {any} query provider specific query
-     * @returns {Promise<T>}
-     *
-     * @memberOf IProvider
-     */
-    findOne(schema: Schema, query): Promise<T>;
-    /**
      * Get an entity list
      *
      * @param {Schema} schema
-     * @param {ListOptions} options
+     * @param {QueryOptions} options
      * @returns {Promise<Array<T>>}
      *
      * @memberOf IProvider
      */
-    getAll(schema: Schema, options: ListOptions): Promise<QueryResult>;
+    getAll(schema: Schema, options: QueryOptions): Promise<QueryResult>;
     /**
      * Get an entity by id
      *
@@ -95,12 +85,11 @@ export interface IProvider<T>
      *
      * @param {Schema} schema
      * @param {T} entity
-     * @param {T} [old]
      * @returns {Promise<T>}
      *
      * @memberOf IProvider
      */
-    update(schema: Schema, entity: T, old?: T): Promise<T>;
+    update(schema: Schema, entity: T): Promise<T>;
     /**
      * Delete an entity - Must returns the deleted entity.
      *

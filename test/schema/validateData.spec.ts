@@ -34,7 +34,7 @@ class ReferenceModel {
 
 @Model()
 class EmailModel {
-    @Property({ type: TYPES.email })
+    @Property({ type: TYPES.Email })
     email: string;
 }
 

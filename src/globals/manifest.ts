@@ -24,7 +24,7 @@ export interface ExternalDependencyInfo {
 }
 
 /**
- * Contains all service dependencies
+ * List all service dependencies
  *
  * @export
  * @class VulcainManifest
@@ -50,6 +50,9 @@ export class VulcainManifest {
         this.configurations = {};
     }
 
+    /**
+     * Register an external dependency like an api call 
+     */
     registerExternal(uri: string) {
         let exists = this.dependencies.externals.find(ex => ex.uri === uri);
         if (!exists) {
@@ -57,6 +60,9 @@ export class VulcainManifest {
         }
     }
 
+    /**
+     * Database dependency
+     */
     registerProvider(address: string, schema: string) {
         let exists = this.dependencies.databases.find(db => db.address === address && db.schema === schema);
         if (!exists) {
@@ -64,6 +70,9 @@ export class VulcainManifest {
         }
     }
 
+    /**
+     * Vulcain service dependency
+     */
     registerService(targetServiceName: string, targetServiceVersion: string) {
         if (!targetServiceName)
             throw new Error("You must provide a service name");
@@ -76,6 +85,9 @@ export class VulcainManifest {
         }
     }
 
+    /**
+     * Retrieve package dependencies
+     */
     private *retrievePackage() {
         try {
             let packageFilePath = Path.join(process.cwd(), 'package.json');

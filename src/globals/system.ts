@@ -32,6 +32,9 @@ export class Service {
     private static _stubManager: IStubManager;
     static defaultDomainName: string;
 
+    /**
+     * Settings properties from vulcain.json file
+     */
     public static get settings() {
         if (!Service._settings) {
             Service._settings = new Settings();
@@ -106,7 +109,6 @@ export class Service {
 
     /**
      * Check if the service is running in local mode (on developer desktop)
-     * by checking if a '.vulcain' file exists in the working directory
      *
      * @readonly
      * @static
@@ -118,7 +120,7 @@ export class Service {
     }
 
     /**
-     * Check if the current service is running in a test environnement (VULCAIN_TEST=true)
+     * Check if the current service is running in test mode (VULCAIN_TEST=true)
      *
      * @static
      * @returns
@@ -130,7 +132,7 @@ export class Service {
     }
 
     /**
-     * Resolve un alias (configuration key shared/$alternates/name-version)
+     * Resolve alias 
      *
      * @param {string} name
      * @param {string} [version]

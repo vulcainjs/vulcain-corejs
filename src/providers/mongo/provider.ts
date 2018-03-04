@@ -1,5 +1,5 @@
 import { DefaultServiceNames } from './../../di/annotations';
-import { IProvider, ListOptions } from "../provider";
+import { IProvider, QueryOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoClient } from 'mongodb';
 import { Inject } from '../../di/annotations';
@@ -140,7 +140,7 @@ export class MongoProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    async getAll(schema: Schema, options: ListOptions):  Promise<QueryResult> {
+    async getAll(schema: Schema, options: QueryOptions):  Promise<QueryResult> {
         await this.ensureSchemaReady(schema);
 
         let page = options.page || 0;
@@ -176,32 +176,6 @@ export class MongoProvider implements IProvider<any>
             }
             catch (err) {
                 self.ctx.logError(err, ()=>`MONGODB ERROR: Get all query on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query: ${JSON.stringify(query)}`);
-                reject(err);
-            }
-        });
-    }
-
-    async findOne(schema: Schema, query) {
-        await this.ensureSchemaReady(schema);
-        this.ctx.logInfo(()=>`MONGODB: Get findone on ${Service.removePasswordFromUrl(this.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            try {
-                let db = self.state._mongo;
-                db.collection(schema.info.storageName).findOne(query,
-                    (err, res) => {
-                        if (err) {
-                            self.ctx.logError(err, ()=>`MONGODB: Get findone on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
-                            reject(err);
-                        }
-                        else {
-                            self.ctx.logInfo(()=>`MONGODB: Get findone on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)} returns ${(res && res.length) || 0} values.`);
-                            resolve(res);
-                        }
-                    });
-            }
-            catch (err) {
-                self.ctx.logError(err, ()=>`MONGODB: Get findone on ${Service.removePasswordFromUrl(self.state.uri)} for schema ${schema.name} with query : ${JSON.stringify(query)}`);
                 reject(err);
             }
         });
@@ -341,16 +315,15 @@ export class MongoProvider implements IProvider<any>
     /**
      * Update an entity
      * @param entity
-     * @param old
      * @returns {Promise<T>}
      */
-    async update(schema: Schema, entity, old) {
+    async update(schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
         await this.ensureSchemaReady(schema);
         let keyPropertyName = this.state.keyPropertyNameBySchemas.get(schema.name);
 
-        let id = (old || entity)[keyPropertyName];
+        let id = entity[keyPropertyName];
         let filter = {};
         filter[keyPropertyName || "_id"] = id;
 

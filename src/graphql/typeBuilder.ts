@@ -231,7 +231,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
         if (propType === "id" || propType === "uid")
             return graphql["GraphQLID"];
 
-        if (propType === TYPES.enum) {
+        if (propType === TYPES.Enum) {
             let typeName = prefix + "_" + property.name + "_enum";
             let tmp = this.propertyTypes.get(typeName);
             if (tmp)
@@ -251,7 +251,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             }
         }
 
-        if (propType === TYPES.arrayOf) {
+        if (propType === TYPES.ArrayOf) {
             let typeName = prefix + "_" + property.name + "arrayOf";
             let tmp = this.propertyTypes.get(typeName);
             if (tmp)

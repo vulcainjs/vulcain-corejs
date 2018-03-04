@@ -12,6 +12,7 @@ import { Service } from '../globals/system';
 import { QueryResult } from '../pipeline/handlers/query/queryResult';
 import { Property } from '../schemas/builder/annotations.property';
 import { InputModel } from '../schemas/builder/annotations.model';
+import { QueryOptions } from '../providers/provider';
 
 @InputModel()
 export class IdArguments {
@@ -40,7 +41,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         let old = await this.provider.get(this.schema, entity[keyProperty]);
         if (!old)
             throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
-        return await this.provider.update(this.schema, entity, old);
+        return await this.provider.update(this.schema, entity);
     }
 
     async updateWithSensibleData(entity: any) {
@@ -71,34 +72,23 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
         if (!args || !args[keyProperty])
             throw new ApplicationError("GET: You must provide an identifier");    
-        
-        // Create a query object without the _schema element
-        let query = {};
-        Object.keys(args).forEach(k => {
-            if (k !== "_schema")
-                query[k] = args[k];    
-        });
-        return await this.provider.findOne(this.schema, query);
+
+        return await this.provider.get(this.schema, args[keyProperty]);
     }
 
-    async getWithSensibleData(id: any) {
-        let entity = await this.get(id);
+    async getWithSensibleData(args: any) {
+        let entity = await this.get(args);
         if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.decrypt(entity) || entity;
         return entity;
     }
 
-    getAll(options: any): Promise<QueryResult> {
+    getAll(options: QueryOptions): Promise<QueryResult> {
         this.setMetricTags("getAll", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
-        let query = {};
-        Object.keys(options).forEach(k => {
-            if (k !== "_schema")
-                query[k] = options[k];    
-        });
         return this.provider.getAll(this.schema, options);
     }
 
-    async getAllWithSensibleData(options: any) {
+    async getAllWithSensibleData(options: QueryOptions) {
         let result = await this.getAll(options);
         if (result && result.value && result.value.length > 0 && this.schema.info.hasSensibleData) {
             let list = [];
@@ -171,14 +161,14 @@ export class DefaultQueryHandler<T> extends AbstractQueryHandler {
     }
 
     @Query({ name: "get", description: "Get an entity by id", inputSchema: "IdArguments" })
-    async get(id: any): Promise<T> {
+    async get(args: any): Promise<T> {
         let cmd = this.createDefaultCommand();
-        return await cmd.getWithSensibleData(id);
+        return await cmd.getWithSensibleData(args);
     }
 
     @Query({ name: "all", description: "Get all entities", outputCardinality:"many" })
     async getAll(query?: any,  pageSize?:number, page?:number) : Promise<QueryResult> {
-        let options = {
+        let options: QueryOptions = {
             pageSize: pageSize || this.context.requestData.pageSize || 0,
             page: page || this.context.requestData.page || 0,
             query: query || {}

@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { IProvider, ListOptions } from "../provider";
+import { IProvider, QueryOptions } from "../provider";
 import { Schema } from "../../schemas/schema";
 import { MongoQueryParser } from './mongoQueryParser';
 import { DefaultServiceNames } from '../../di/annotations';
@@ -86,7 +86,7 @@ export class MemoryProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAll(schema: Schema, options: ListOptions): Promise<QueryResult> {
+    getAll(schema: Schema, options: QueryOptions): Promise<QueryResult> {
         let data = this.ensureSchema(schema).data;
 
         options = options || { pageSize: -1 };
@@ -139,27 +139,19 @@ export class MemoryProvider implements IProvider<any>
         }
     }
 
-    async findOne(schema: Schema, query) {
-        let options = <ListOptions>{};
-        options.query = query;
-        let result = await this.getAll(schema, options);
-        let list = result && result.value;
-        return list && list.length > 0 ? list[0] : null;
-    }
-
     /**
      * Read an entity
      * @param name
      * @returns {Promise}
      */
-    get(schema: Schema, name: string) {
+    get(schema: Schema, id: string) {
         let data = this.ensureSchema(schema).data;
 
         const self = this;
         return new Promise((resolve, reject) => {
             try {
                 let list = data.entities;
-                resolve(list && Conventions.clone(list[name]));
+                resolve(list && Conventions.clone(list[id]));
             }
             catch (err) {
                 reject(err);
@@ -236,10 +228,9 @@ export class MemoryProvider implements IProvider<any>
     /**
      * Update an entity
      * @param entity
-     * @param old
      * @returns {Promise<T>}
      */
-    update(schema: Schema, entity, old) {
+    update(schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
         let data = this.ensureSchema(schema).data;

@@ -82,6 +82,7 @@ export class GraphQLAdapter {
                     let g = item.subscriptions[eventHandlerName];
                     if (!g)
                         return;
+                    
                     // Verify authorization
                     if (item.scope && !ctx.user.hasScope(item.scope)) {
                         ctx.logError(new Error(`Unauthorized for handler ${Conventions.instance.defaultGraphQLSubscriptionPath} with scope=${item.scope}`), () => `Current user is user=${ctx.user.name}, scopes=${ctx.user.scopes}`);
