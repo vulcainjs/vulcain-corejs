@@ -148,15 +148,16 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 continue;    
     
             let schemaName = eventDef.schema || handler.definition.schema || (<any>handler.definition).subscribeToSchema;
-
-            // In 'once' distribution mode, event is consumed by only one instance.
-            // Since subscription channel is open on a specific instance, which can not be the same the subscription 
-            // channel is open on, we ignore this kind of event for subscription to avoid lost events.
-            if ((<ConsumeEventDefinition>handler.definition).distributionMode === "once") {
-                this.context.logInfo(() => `GRAPHQL: Skipping subscription handler ${handler.methodName} for event handler with 'once' distribution mode.`);
-                continue;
+            if (!eventDef.schema || eventDef.schema === (handler.definition.schema || (<any>handler.definition).subscribeToSchema)) {
+                // In 'once' distribution mode, event is consumed by only one instance.
+                // Since subscription channel is open on a specific instance, which can not be the same the subscription 
+                // channel is open on, we ignore this kind of event for subscription to avoid lost events.
+                if ((<ConsumeEventDefinition>handler.definition).distributionMode === "once") {
+                    this.context.logInfo(() => `GRAPHQL: Skipping subscription handler ${handler.methodName} for event handler with 'once' distribution mode.`);
+                    continue;
+                }
             }
-            
+
             let outputSchema = schemaName && this.domain.getSchema(schemaName, true);
             let args = {};
             let operationName = handler.name.replace(/\./g, "_");
