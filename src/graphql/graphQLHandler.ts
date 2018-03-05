@@ -1,7 +1,7 @@
 import { AbstractHandler } from "../pipeline/handlers/abstractHandlers";
 import { DefaultServiceNames } from "../di/annotations";
 import { HttpResponse } from "../pipeline/response";
-import { ActionHandler, Action } from "../pipeline/handlers/action/annotations";
+import { ActionHandler, Action, ExposeEvent } from "../pipeline/handlers/action/annotations";
 import { ApplicationError } from "../pipeline/errors/applicationRequestError";
 import { ISpanRequestTracker } from "../instrumentations/common";
 import { IContainer } from "../di/resolvers";
@@ -20,7 +20,8 @@ export class GraphQLActionHandler extends AbstractHandler {
         super(container);
     }
 
-    @Action({ description: "Custom action", name: "_graphql", eventMode:EventNotificationMode.never })
+    @Action({ description: "Custom action", name: "_graphql" })
+    @ExposeEvent({mode: EventNotificationMode.never})    
     async graphql(g: any) {
         
         (<ISpanRequestTracker>this.context.requestTracker).trackAction("graphql");

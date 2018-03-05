@@ -17,6 +17,13 @@ import { HandlerProcessor } from '../../handlerProcessor';
 import { EventHandlerFactory } from './eventHandlerFactory';
 import { HandlerDefinition, OperationDefinition } from '../definitions';
 
+export interface ExposeEventDefinition {
+    schema?: string;
+    mode?: EventNotificationMode;
+    factory?: (context: IRequestContext, event: EventData) => EventData;
+    options?: any;
+}
+
 /**
  * Declare default action handler definition
  *
@@ -51,7 +58,5 @@ export interface ActionHandlerDefinition extends HandlerDefinition {
 export interface ActionDefinition extends OperationDefinition {
     skipDataValidation?: boolean;
     async?: boolean;
-    eventMode?: EventNotificationMode;
-    eventFactory?: (context: IRequestContext, event: EventData) => EventData;
-    eventOptions?: any;
+    eventDefinition?: ExposeEventDefinition;
 }

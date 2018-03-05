@@ -7,6 +7,7 @@ import { RequestData } from "./../pipeline/common";
 import { UserContextData } from "../security/securityContext";
 import { Conventions } from '../utils/conventions';
 import { EventEmitter } from 'events';
+import { ExposeEventDefinition } from '../pipeline/handlers/action/definitions';
 
 export interface EventData extends RequestData {
     value?: any;
@@ -33,6 +34,7 @@ export interface ConsumeEventDefinition {
     distributionKey?: string; // Unique queue to ensure events are take into account once
     metadata?: any;
     scope?: string;
+    eventDefinition?: ExposeEventDefinition;
 }
 
 export interface EventDefinition {
@@ -67,10 +69,13 @@ export class MessageBus {
     }
 
     public static emitLocalEvent(eventHandlerName: string, evt: EventData) {
-        if (!MessageBus._localEvents || evt[MessageBus.LocalEventSymbol])  // Infinite loop guard
+        if (evt[MessageBus.LocalEventSymbol])  // Infinite loop guard
             return;
 
         evt[MessageBus.LocalEventSymbol] = eventHandlerName;
+        if (!MessageBus._localEvents)
+            return;
+        
         MessageBus._localEvents.next(evt);
     }
 

@@ -22,7 +22,7 @@ const symMetadata = Symbol.for("handler:metadata");
 export function Query(def: QueryOperationDefinition, metadata?:any) {
     return (target, key) => {
         let actions: { [name: string]: QueryOperationDefinition } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
-        actions[key] = def || <any>{};
+        actions[key] = { ...actions[key], ...def };
         actions[key].metadata = metadata || {};
 
         if (!actions[key].inputSchema) {

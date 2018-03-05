@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { ActionDefinition, ActionHandlerDefinition } from './definitions';
+import { ActionDefinition, ActionHandlerDefinition, ExposeEventDefinition } from './definitions';
 import { ServiceDescriptors } from '../descriptions/serviceDescriptions';
 import { Service } from '../../../globals/system';
 import { ConsumeEventDefinition } from "../../../bus/messageBus";
@@ -26,7 +26,7 @@ const symMetadata = Symbol.for("handler:metadata");
 export function Action(def: ActionDefinition, metadata?: any) {
     return (target, key) => {
         let actions: {[name:string]: ActionDefinition} = Reflect.getOwnMetadata(symActions, target.constructor) || {};
-        actions[key] = def || <any>{};
+        actions[key] = { ...actions[key], ...def };
         actions[key].metadata = metadata || {};
 
         if (actions[key].inputSchema === undefined) { // null means take schema name
@@ -60,6 +60,15 @@ export function Action(def: ActionDefinition, metadata?: any) {
     };
 }
 
+export function ExposeEvent(def?: ExposeEventDefinition) {
+    return (target, key) => {
+        let actions: { [name: string]: any } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
+        actions[key] = { ...actions[key], ...def };
+        actions[key].eventDefinition = def || {};
+        Reflect.defineMetadata(symActions, actions, target.constructor);        
+    };
+}
+
 /**
  * Define an event handler
  *
@@ -70,7 +79,7 @@ export function Action(def: ActionDefinition, metadata?: any) {
 export function Consume(def?: ConsumeEventDefinition, metadata?:any) {
     return (target, key) => {
         let actions: { [name: string]: ConsumeEventDefinition } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
-        actions[key] = def || <any>{};
+        actions[key] = { ...actions[key], ...def };
         actions[key].metadata = metadata;
         actions[key].name = def.name || key;
 

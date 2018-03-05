@@ -406,7 +406,7 @@ export class ServiceDescriptors {
             actionMetadata = actionMetadata || <OperationDefinition>{};
             actionMetadata.name = actionMetadata.name || action;
             actionMetadata.metadata = { ...actionMetadata.metadata, ...handlerDefinition.metadata };
-
+            
             if (actionMetadata.schema) {
                 // test if exists
                 let tmp = domain.getSchema(actionMetadata.schema);

@@ -6,7 +6,7 @@ import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { OperationDescription } from "../pipeline/handlers/descriptions/operationDescription";
-import { Service, MemoryProvider, TYPES, ConsumeEventDefinition } from "..";
+import { Service, MemoryProvider, TYPES, ConsumeEventDefinition, ExposeEventDefinition } from "..";
 import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 import { ModelPropertyDefinition } from "../schemas/schemaInfo";
 import { CommandManager } from "../pipeline/handlers/action/actionManager";
@@ -143,6 +143,12 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
             if (def.expose === false)
                 continue;
 
+            let eventDef: ExposeEventDefinition = (<any>handler.definition).eventDefinition;
+            if (!eventDef)
+                continue;    
+    
+            let schemaName = eventDef.schema || handler.definition.schema || (<any>handler.definition).subscribeToSchema;
+
             // In 'once' distribution mode, event is consumed by only one instance.
             // Since subscription channel is open on a specific instance, which can not be the same the subscription 
             // channel is open on, we ignore this kind of event for subscription to avoid lost events.
@@ -150,8 +156,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 this.context.logInfo(() => `GRAPHQL: Skipping subscription handler ${handler.methodName} for event handler with 'once' distribution mode.`);
                 continue;
             }
-
-            let schemaName = handler.definition.schema || (<any>handler.definition).subscribeToSchema;
+            
             let outputSchema = schemaName && this.domain.getSchema(schemaName, true);
             let args = {};
             let operationName = handler.name.replace(/\./g, "_");
