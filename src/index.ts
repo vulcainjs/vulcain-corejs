@@ -95,7 +95,7 @@ export { RuntimeError } from './pipeline/errors/runtimeError';
 export { HttpCommandError } from './commands/abstractServiceCommand';
 
 // Commands
-export { Command, CommandFactory, CommandMainPoint } from './commands/commandFactory';
+export { Command, CommandFactory, CommandEntryPoint } from './commands/commandFactory';
 export { EventType, FailureType, ExecutionResult } from './commands/executionResult';
 export { AbstractCommand, ICommand } from './commands/abstractCommand';
 export { HystrixSSEStream } from './commands/http/hystrixSSEStream';

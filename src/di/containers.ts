@@ -392,10 +392,10 @@ export class Container implements IContainer {
         });
     }
 
-    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void) {
+    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void, verb="GET") {
         this.customEndpoints.push({
             kind: "SSE",
-            verb: "GET",
+            verb,
             path,
             handler
         });

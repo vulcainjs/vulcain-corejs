@@ -26,7 +26,7 @@ export class NativeEndpoint {
 
 export interface IContainer {
     registerHTTPEndpoint(verb: string, path: string, handler: (req: http.IncomingMessage, res: http.ServerResponse) => void); 
-    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void);
+    registerSSEEndpoint(path: string, handler: (ctx: IRequestContext) => void, verb?:string);
 
     getCustomEndpoints(): Array<NativeEndpoint>;
 

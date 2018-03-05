@@ -57,8 +57,8 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 PaginateDirective
             ],
             query: this.createQueryOperations(),
-            mutation: this.createMutationOperations(),
-            subscription: this.createSubscriptionOperations(adapter),
+            mutation:this.createMutationOperations(),
+            subscription: this.createSubscriptionOperations(adapter),            
             types: Array.from(this.types.values())
         });
 
@@ -153,7 +153,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
 
             let schemaName = handler.definition.schema || (<any>handler.definition).subscribeToSchema;
             let outputSchema = schemaName && this.domain.getSchema(schemaName, true);
-            let args = { ["channel"]: { type: graphql.GraphQLNonNull(this.typeToGraphQLType("string")) } };
+            let args = {};
             let operationName = handler.name.replace(/\./g, "_");
 
             let outputType = this.createType(outputSchema);
@@ -169,7 +169,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 {
                     type: outputType,
                     args,
-                    resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler, args.channel, entity)
+                    resolve: (entity, args, ctx) => adapter.enableSubscription(ctx, handler, entity)
                 };
             hasFields = true;
 

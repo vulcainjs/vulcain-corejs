@@ -5,7 +5,7 @@ import { AbstractActionHandler, AbstractQueryHandler } from "../pipeline/handler
 import { Action } from "../pipeline/handlers/action/annotations";
 import { Query } from "../pipeline/handlers/query/annotations.query";
 import { ICommand } from "../commands/abstractCommand";
-import { Command, CommandMainPoint } from "../commands/commandFactory";
+import { Command, CommandEntryPoint } from "../commands/commandFactory";
 import { ApplicationError } from './../pipeline/errors/applicationRequestError';
 import { CommandFactory } from '../commands/commandFactory';
 import { Service } from '../globals/system';
@@ -32,7 +32,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return this.provider.create( this.schema, entity);
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     async createWithSensibleData(entity: any) {
         if (entity && this.schema.info.hasSensibleData)
             entity = this.schema.encrypt(entity) || entity;
@@ -51,7 +51,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.update(this.schema, entity);
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     async updateWithSensibleData(entity: any) {
         // TODO move to provider
         if (entity && this.schema.info.hasSensibleData)
@@ -62,7 +62,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return entity;
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     deleteWithSensibleData(id: any) {
         return this.delete(id);
     }
@@ -72,7 +72,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return this.provider.delete(this.schema, id);
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     async get(args: any) {
         this.setMetricTags("get", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
@@ -86,7 +86,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return await this.provider.get(this.schema, args[keyProperty]);
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     async getWithSensibleData(args: any) {
         let entity = await this.get(args);
         if (entity && this.schema.info.hasSensibleData)
@@ -99,7 +99,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         return this.provider.getAll(this.schema, options);
     }
 
-    @CommandMainPoint()
+    @CommandEntryPoint()
     async getAllWithSensibleData(options: QueryOptions) {
         let result = await this.getAll(options);
         if (result && result.value && result.value.length > 0 && this.schema.info.hasSensibleData) {

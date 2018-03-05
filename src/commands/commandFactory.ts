@@ -30,7 +30,7 @@ export interface CommandConfiguration {
 }
 
 const hystrixCommandsCache = new Map<string, CommandCache>();
-const mainPointSymbol = Symbol("[[commandMainPoint]]");
+const entryPointSymbol = Symbol("[[commandEntryPoints]]");
 
 /**
  * Command attribute
@@ -39,16 +39,16 @@ export function Command(config: CommandConfiguration = {}, commandKey?: string, 
 
     return function (command: Function): any {
         return CommandFactory.declareCommand(command, config, commandKey, commandGroup);
-    }
+    };
 }
 
 
-export function CommandMainPoint(ignore=false) {
+export function CommandEntryPoint(ignore=false) {
     return function (command, key: string, pdesc: PropertyDescriptor) {
-        let endpoints = command.constructor[mainPointSymbol] || {};
+        let endpoints = command.constructor[entryPointSymbol] || {};
         endpoints[key] = !ignore;
-        command.constructor[mainPointSymbol] = endpoints;
-    }
+        command.constructor[entryPointSymbol] = endpoints;
+    };
 }
 
 interface CommandCache {
@@ -84,7 +84,7 @@ export class CommandFactory {
                     super(context, ...args);
                     let self = <any>this;
                     return CommandFactory.createProxy(context, commandKey || command.name, self);
-                };
+                }
             };
 
             hystrixCommandsCache.set(commandKey, { properties, command: cmd });
@@ -99,11 +99,11 @@ export class CommandFactory {
     * @param {IRequestContext} context current context
     * @param {string} name Command name
     * @param {any} args Command constructor arguments
-    * @returns {ICommand} A command
+    * @returns {ICommand} A command or null
     */
     static createDynamicCommand<T=ICommand>(context: IRequestContext, commandName: string, ...args): T {
         let proxy = CommandFactory.createProxy(context, commandName, null);
-        return <T>new proxy(context, ...args);
+        return proxy ? <T>new proxy(context, ...args) : null;
     }
 
     /**
@@ -117,7 +117,7 @@ export class CommandFactory {
         let cache = hystrixCommandsCache.get(commandName);
 
         if (!cache)
-            throw new Error("Unknow command " + commandName);
+            return null;
         
         command = command || cache.command;
         let proxy = new Proxy(command, {
@@ -127,7 +127,7 @@ export class CommandFactory {
                     if (!handler || typeof name !== "string")
                         return handler;
                     
-                    let endPoints = command.constructor[mainPointSymbol];
+                    let endPoints = command.constructor[entryPointSymbol];
                     if (!endPoints || !endPoints[name])
                         return handler;
                 }
