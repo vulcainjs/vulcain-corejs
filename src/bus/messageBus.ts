@@ -121,7 +121,7 @@ export class MessageBus {
         this.commandBus && this.commandBus.publishTask(command.domain, Service.fullServiceName, command);
     }
 
-    sendEvent(event: EventData) {
+    sendEvent(event: EventData) {        
         event.inputSchema = null;
         (<any>event).eventId = Conventions.getRandomId();
         this.eventBus.sendEvent(event.domain, event);

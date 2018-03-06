@@ -199,8 +199,10 @@ export class CommandManager implements IManager {
                 event = eventDef.factory(ctx, event);
             
             // Redispatch event in EVENT mode only if this is a new event schema
-            if(event && (source !== "EVENT" || eventDef.schema !== (def.outputSchema || def.schema)))
+            if (event && (source !== "EVENT" || (eventDef.schema && eventDef.schema !== (def.outputSchema || def.schema)))) {
+                ctx.logInfo(() => `Send event ${eventDef.schema}`);
                 this.messageBus.sendEvent(event);
+            }
             
             return event;
         }
