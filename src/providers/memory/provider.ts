@@ -180,7 +180,7 @@ export class MemoryProvider implements IProvider<any>
                     self.save(schema);
                 }
                 else {
-                    resolve(null);
+                    reject(new Error(`${schema.name} with id: ${id} not found`));
                 }
             }
             catch (err) {

@@ -8,9 +8,11 @@ import { Service } from '../../globals/system';
 import { IRequestContext } from '../../pipeline/common';
 import { UnauthorizedRequestError } from "../../pipeline/errors/applicationRequestError";
 import { CommandFactory } from "../../commands/commandFactory";
+import { Metadata } from "../../utils/reflector";
 
 // TODO add enableApiKeyAuthentication
-@Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy )
+@Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy)
+@Metadata("system", true)      
 export class ApiKeyService implements IAuthenticationStrategy {
 
     public readonly name = "apiKey";

@@ -69,7 +69,13 @@ export class GraphQLAdapter {
             let g = decodeURIComponent(parts[1]);
 
             ctx.requestData[graphQlQuerySymbol] = g;
-            let result = await graphql.graphql(this.getGraphQuerySchema(ctx), g, null, ctx);
+            let result;
+            try {
+                result = await graphql.graphql(this.getGraphQuerySchema(ctx), g, null, ctx);
+            }
+            catch (e) {
+                result = { errors: e.message || e };
+            }
             if (result.errors) {
                 response.statusCode = 400;
                 response.setHeader("ContentType", "application/json");

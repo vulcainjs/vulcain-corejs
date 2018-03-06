@@ -69,7 +69,7 @@ export class MessageBus {
     }
 
     public static emitLocalEvent(eventHandlerName: string, evt: EventData) {
-        if (evt[MessageBus.LocalEventSymbol])  // Infinite loop guard
+        if (!evt || evt[MessageBus.LocalEventSymbol])  // Infinite loop guard
             return;
 
         evt[MessageBus.LocalEventSymbol] = eventHandlerName;

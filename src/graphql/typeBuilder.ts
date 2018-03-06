@@ -148,7 +148,7 @@ export class GraphQLTypeBuilder implements IGraphQLSchemaBuilder {
                 continue;    
     
             let schemaName = eventDef.schema || handler.definition.schema || (<any>handler.definition).subscribeToSchema;
-            if (!eventDef.schema || eventDef.schema === (handler.definition.schema || (<any>handler.definition).subscribeToSchema)) {
+            if (!eventDef.schema || eventDef.schema === (<any>handler.definition).subscribeToSchema) {
                 // In 'once' distribution mode, event is consumed by only one instance.
                 // Since subscription channel is open on a specific instance, which can not be the same the subscription 
                 // channel is open on, we ignore this kind of event for subscription to avoid lost events.

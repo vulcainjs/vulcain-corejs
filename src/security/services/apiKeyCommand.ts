@@ -3,8 +3,10 @@ import { InputModel } from '../../schemas/builder/annotations.model';
 import { Command } from "../../commands/commandFactory";
 import { AbstractServiceCommand } from "../../commands/abstractServiceCommand";
 import { UserToken } from '../securityContext';
+import { Metadata } from "../../utils/reflector";
 
 @InputModel()
+@Metadata("system", true)      
 export class VerifyTokenParameter {
     @Property({ type: "string", required: true })
     token: string;
