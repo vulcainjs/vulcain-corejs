@@ -76,6 +76,7 @@ export class GraphQLAdapter {
             catch (e) {
                 result = { errors: e.message || e };
             }
+
             if (result.errors) {
                 response.statusCode = 400;
                 response.setHeader("ContentType", "application/json");
@@ -83,9 +84,12 @@ export class GraphQLAdapter {
                 return;
             }
 
-            response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
+            response.setHeader('Content-Type', 'text/event-stream');
             response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.setHeader('Pragma', 'no-cache');
+            response.setHeader('Access-Control-Allow-Origin', '*');
+
+            response.flushHeaders();
 
             let self = this;
             let id = ctx.requestData.correlationId;
@@ -113,7 +117,7 @@ export class GraphQLAdapter {
                         error: evt.error
                     };
 
-                    response.write("event: " + eventHandlerName + '\n');
+                    //response.write("event: " + eventHandlerName + '\n');
                     response.write("id: " + evt.correlationId + '\n');
                     response.write("data: " + JSON.stringify(payload) + '\n\n');
                 }

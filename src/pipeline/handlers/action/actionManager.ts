@@ -306,7 +306,9 @@ export class CommandManager implements IManager {
 
                     let error;
                     try {
-                        await handler[info.methodName](evt.value);
+                        let res = await handler[info.methodName](evt.value);
+                        if (res !== undefined)
+                            evt.value = res;    
                     }
                     catch (e) {
                         error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;

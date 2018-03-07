@@ -11,10 +11,12 @@ import http = require('http');
 export class HystrixSSEStream {
     static getHandler() {
         return (request: http.IncomingMessage, response: http.ServerResponse) => {
-            response.setHeader('Content-Type', 'text/event-stream;charset=UTF-8');
+            response.setHeader('Content-Type', 'text/event-stream');
             response.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
             response.setHeader('Pragma', 'no-cache');
-            //     System.log.info(null, () => "get hystrix.stream");
+            response.setHeader('Access-Control-Allow-Origin', '*');
+
+            response.flushHeaders();
 
             let subscription = HystrixSSEStream.toObservable().subscribe(
                 function onNext(sseData) {
