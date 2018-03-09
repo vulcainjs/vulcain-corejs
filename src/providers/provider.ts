@@ -5,100 +5,98 @@ import { QueryResult } from "../index";
 
 export interface QueryOptions {
     /**
-     * Max
-     *
-     * @type {number}
-     * @memberOf ListOptions
+     * Page size (default 20)
      */
     pageSize?: number;  // 0 for all
     /**
      * Page to returns
      *
-     * @type {number}
-     * @memberOf ListOptions
      */
     page?: number;       
     /**
-     * 
+     * Optional filter
      */
     query?: {
         filter?: any;
         projections?: any;
         sort?: any;
-    }
+    };
+}
+
+/**
+ * Connection factory
+ */
+export interface IProviderFactory {
+    /**
+     * Create a connection from a pool
+     * @param context Current context
+     * @param tenant Tenant
+     */
+    getConnection<T=any>(context: IRequestContext, tenant: string): IProvider<T>;
 }
 
 /**
  * Persistance provider for a schema
  */
-export interface IProvider<T>
+export interface IProvider<T=any>
 {
     /**
-     * Server address
-     *
-     * @type {string}
-     * @memberOf IProvider
+     * Server address     
      */
     address: string;
-    /**
-     * Initialize the provider with tenant and schema.
-     * Called only once by tenant
-     *
-     * @param {string} tenant - The tenant to use
-     * @returns {() => Promise<any>} Dispose function
-     *
-     * @memberOf IProvider
-     */
-    setTenant(tenant: string): () => void;
+
     /**
      * Get an entity list
      *
-     * @param {Schema} schema
+     * @param {IRequestContext} ctx Current context
+     * @param {Schema} schema Entity schema
      * @param {QueryOptions} options
      * @returns {Promise<Array<T>>}
      *
      * @memberOf IProvider
      */
-    getAll(schema: Schema, options: QueryOptions): Promise<QueryResult>;
+    getAll(ctx: IRequestContext, schema: Schema, options: QueryOptions): Promise<QueryResult>;
     /**
      * Get an entity by id
      *
-     * @param {Schema} schema
+     * @param {IRequestContext} ctx Current context
+     * @param {Schema} schema Entity schema
      * @param {string} id
-     * @returns {Promise<T>}
+     * @returns {Promise<T>} 
      *
      * @memberOf IProvider
      */
-    get(schema: Schema, id: string): Promise<T>;
+    get(ctx: IRequestContext, schema: Schema, id: string): Promise<T>;
     /**
      * Create an entity
      *
-     * @param {Schema} schema
+     * @param {IRequestContext} ctx Current context
+     * @param {Schema} schema Entity schema
      * @param {T} entity
-     * @returns {Promise<T>}
+     * @returns {Promise<T>} The created entity
      *
      * @memberOf IProvider
      */
-    create(schema: Schema, entity: T): Promise<T>;
+    create(ctx: IRequestContext, schema: Schema, entity: T): Promise<T>;
     /**
      * Update an entity
      *
-     * @param {Schema} schema
-     * @param {T} entity
-     * @returns {Promise<T>}
+     * @param {IRequestContext} ctx Current context
+     * @param {Schema} schema Entity schema
+     * @param {T} entity Entity to update
+     * @returns {Promise<T>} The updated entity
      *
      * @memberOf IProvider
      */
-    update(schema: Schema, entity: T): Promise<T>;
+    update(ctx: IRequestContext, schema: Schema, entity: T): Promise<T>;
     /**
-     * Delete an entity - Must returns the deleted entity.
-     *
-     * @param {Schema} schema
-     * @param {(string|T)} old
-     * @returns {Promise<boolean>}
-     *
-     * @memberOf IProvider
+     * Delete an entity - Must returns the deleted entity or raise an error if id does not exist
+     * 
+     * @param {IRequestContext} ctx Current context
+     * @param {Schema} schema Entity schema
+     * @param {(string)} id Id 
+     * @returns {Promise<T>} Deleted entity 
      */
-    delete(schema: Schema, id: string ) : Promise<T>;
+    delete(ctx: IRequestContext, schema: Schema, id: string ) : Promise<T>;
 }
 

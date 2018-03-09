@@ -5,7 +5,7 @@ import { IContainer } from '../di/resolvers';
 import { Domain } from '../schemas/domain';
 import { Inject } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
-import { ProviderFactory } from '../providers/providerFactory';
+import { IProviderFactory } from '../providers/provider';
 import { Service } from '../globals/system';
 import { VulcainLogger } from '../log/vulcainLogger';
 import { IRequestContext } from "../pipeline/common";
@@ -22,7 +22,7 @@ import { ISpanTracker } from '../instrumentations/common';
  */
 export abstract class AbstractProviderCommand<T> {
 
-    protected providerFactory: ProviderFactory;
+    protected providerFactory: IProviderFactory;
 
     public context: IRequestContext;
 
@@ -50,7 +50,7 @@ export abstract class AbstractProviderCommand<T> {
     constructor(context: IRequestContext) {
         this.context = context;
         this.container = context.container;
-        this.providerFactory = this.container.get<ProviderFactory>(DefaultServiceNames.ProviderFactory);
+        this.providerFactory = this.container.get<IProviderFactory>(DefaultServiceNames.ProviderFactory);
     }
 
     /**
@@ -61,7 +61,7 @@ export abstract class AbstractProviderCommand<T> {
     setSchema(schema: string): string {
         if (schema && !this.provider) {
             this.schema = this.container.get<Domain>(DefaultServiceNames.Domain).getSchema(schema);
-            this.provider = this.providerFactory.getProvider(this.context, this.context.user.tenant);
+            this.provider = this.providerFactory.getConnection(this.context, this.context.user.tenant);
             return this.schema.name;
         }
     }

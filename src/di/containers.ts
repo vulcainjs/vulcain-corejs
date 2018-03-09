@@ -14,13 +14,12 @@ import { RequestContext } from "../pipeline/requestContext";
 import { DefaultAuthorizationPolicy } from "../security/authorizationPolicy";
 import { HttpRequest } from "../pipeline/vulcainPipeline";
 import { TokenService } from "../security/services/tokenService";
-import { MemoryProvider } from "../providers/memory/provider";
 import { DefaultTenantPolicy } from "../pipeline/policies/defaultTenantPolicy";
-import { ProviderFactory } from "../providers/providerFactory";
+import { MemoryProviderFactory } from "../providers/memory/providerFactory";
+import { MongoProviderFactory } from "../providers/mongo/provider";
 import { MetricsFactory } from "../instrumentations/metrics";
 import { ServiceDescriptors } from "../pipeline/handlers/descriptions/serviceDescriptions";
 import { StubManager } from "../stubs/stubManager";
-import { MongoProvider } from "../providers/mongo/provider";
 import { HttpResponse } from "../pipeline/response";
 import { TrackerFactory } from "../instrumentations/trackers/index";
 import { ScopesDescriptor } from "../defaults/scopeDescriptors";
@@ -64,10 +63,9 @@ export class Container implements IContainer {
             this.injectSingleton(ServiceResolver, DefaultServiceNames.ServiceResolver);
             //this.injectScoped(SwaggerServiceDescriptor, DefaultServiceNames.SwaggerServiceDescriptor);
             this.injectSingleton(ServiceDescriptors, DefaultServiceNames.ServiceDescriptors);
-            this.injectSingleton(ProviderFactory, DefaultServiceNames.ProviderFactory);
+            this.injectSingleton(MemoryProviderFactory, DefaultServiceNames.ProviderFactory);
             this.injectSingleton(DefaultTenantPolicy, DefaultServiceNames.TenantPolicy);
             this.injectSingleton(StubManager, DefaultServiceNames.StubManager);
-            this.injectTransient(MemoryProvider, DefaultServiceNames.Provider);
             this.injectSingleton(TokenService, DefaultServiceNames.AuthenticationStrategy);
             this.injectInstance(MetricsFactory.create(this), DefaultServiceNames.Metrics);
             this.injectInstance(TrackerFactory.create(this), DefaultServiceNames.RequestTracker);
@@ -156,7 +154,7 @@ export class Container implements IContainer {
         if (!uri.startsWith("mongodb://")) {
             uri = "mongodb://" + uri;
         }
-        this.injectTransient(MongoProvider, DefaultServiceNames.Provider, uri, mongoOptions);
+        this.injectTransient(MongoProviderFactory, DefaultServiceNames.ProviderFactory, uri, mongoOptions);
     }
 
     /**
@@ -165,7 +163,7 @@ export class Container implements IContainer {
      * @param {string} [folder] Data can be persisted on disk (on every change)
      */
     useMemoryProvider(folder?: string) {
-        this.injectTransient(MemoryProvider, DefaultServiceNames.Provider, folder);
+        this.injectTransient(MemoryProviderFactory, DefaultServiceNames.ProviderFactory, folder);
     }
 
     // Insert always in first position

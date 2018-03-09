@@ -1,28 +1,22 @@
-import { Injectable, LifeTime, Inject } from '../di/annotations';
-import { DefaultServiceNames } from '../di/annotations';
-import { Schema } from '../schemas/schema';
-import { IProvider } from './provider';
-import { IContainer } from '../di/resolvers';
-import { Service } from '../globals/system';
-import { IRequestContext } from "../pipeline/common";
+import { Injectable, LifeTime, Inject } from '../../di/annotations';
+import { DefaultServiceNames } from '../../di/annotations';
+import { Schema } from '../../schemas/schema';
+import { IProvider } from '../provider';
+import { IContainer } from '../../di/resolvers';
+import { Service } from '../../globals/system';
+import { IRequestContext } from "../../pipeline/common";
+import { MemoryProvider } from './provider';
 
 interface PoolItem {
-    provider?: IProvider<any>;
+    provider?: MemoryProvider;
     count?: number;
     dispose?: () => void;
 }
 
-class ContextualProvider {
-    constructor(public ctx: IRequestContext, provider) {
-        (<any>this).__proto__ = Object.getPrototypeOf(provider);
-        Object.assign(this, provider);
-    }
-}
-
-export class ProviderFactory {
+export class MemoryProviderFactory {
     private pool = new Map<string, PoolItem>();
 
-    constructor(public maxPoolSize = 20) {
+    constructor(private dataFolder, public maxPoolSize = 20) {
     }
 
     private addToPool(context: IRequestContext, key: string, item: PoolItem) {
@@ -54,19 +48,19 @@ export class ProviderFactory {
         }
     }
 
-    getProvider(context: IRequestContext, tenant?: string, providerName: string = DefaultServiceNames.Provider) {
+    getConnection<T=any>(context: IRequestContext, tenant: string): IProvider<T> {
         tenant = tenant || context.user.tenant;
-        let poolKey = providerName + "!" + tenant;
+        let poolKey = tenant;
         let provider = this.getFromPool(poolKey);
         if (!provider) {
-            provider = context.container.get<IProvider<any>>(providerName, false, LifeTime.Transient);
+            provider = new MemoryProvider(this.dataFolder);
             let item: PoolItem = { provider };
-            item.dispose = provider.setTenant(tenant);
+            item.dispose = provider.initialize(tenant);
             if (item.dispose) {
                 this.addToPool(context, poolKey, item);
             }
         }
 
-        return <IProvider<any>><any>new ContextualProvider(context, provider);
+        return <IProvider<any>>provider;
     }
 }

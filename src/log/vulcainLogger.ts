@@ -144,14 +144,12 @@ export class VulcainLogger implements Logger{
         if (Service.isDevelopment) {
             if (entry.kind === "RR")
                 console.log("======================");
-            const msg = entry.message;
-            entry.message = undefined;
-            let str = JSON.stringify(entry);
+            
+            const { message, correlationId, ...e } = entry;
+            let str = JSON.stringify(e);
             str = str.substr(1, str.length - 2); // Remove {}
-            if (str)
-                str = "- " + str;
-            let timestamp = ms().format('HH:mm:ss:SSS');
-            console.log(`${timestamp} - ${msg} ${str}`);
+            let timestamp = ms().format();
+            console.log(`${timestamp}[${correlationId}] - ${message} - ${str}`);
         }
         else {
             console.log( JSON.stringify(entry));

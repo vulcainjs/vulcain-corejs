@@ -29,7 +29,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     private create(entity: any) {
         this.setMetricTags("create", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
-        return this.provider.create( this.schema, entity);
+        return this.provider.create(this.context, this.schema, entity);
     }
 
     @CommandEntryPoint()
@@ -45,10 +45,10 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
     private async update(entity: any) {
         this.setMetricTags("update", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
-        let old = await this.provider.get(this.schema, entity[keyProperty]);
+        let old = await this.provider.get(this.context, this.schema, entity[keyProperty]);
         if (!old)
             throw new ApplicationError("Entity doesn't exist for updating : " + entity[keyProperty]);
-        return await this.provider.update(this.schema, entity);
+        return await this.provider.update(this.context, this.schema, entity);
     }
 
     @CommandEntryPoint()
@@ -69,7 +69,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     private async delete(id: any) {
         this.setMetricTags("delete", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
-        return this.provider.delete(this.schema, id);
+        return this.provider.delete(this.context, this.schema, id);
     }
 
     @CommandEntryPoint()
@@ -83,7 +83,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         if (!args || !args[keyProperty])
             throw new ApplicationError("GET: You must provide an identifier");    
 
-        return await this.provider.get(this.schema, args[keyProperty]);
+        return await this.provider.get(this.context, this.schema, args[keyProperty]);
     }
 
     @CommandEntryPoint()
@@ -96,7 +96,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
 
     private getAll(options: QueryOptions): Promise<QueryResult> {
         this.setMetricTags("getAll", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
-        return this.provider.getAll(this.schema, options);
+        return this.provider.getAll(this.context, this.schema, options);
     }
 
     @CommandEntryPoint()

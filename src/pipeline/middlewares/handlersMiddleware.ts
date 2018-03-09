@@ -23,7 +23,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
 
         // Check if handler exists
         if (!info)
-            throw new ApplicationError(`no handler method founded for ${ctx.requestData.vulcainVerb}`, 405);
+            throw new ApplicationError(`no handler method founded for ${ctx.requestData.vulcainVerb}, path: ${ctx.request.url}`, 405);
 
         let guard = false;
         if (ctx.request.verb === "POST" && info.kind === "action") {
@@ -35,7 +35,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         }
 
         if (!guard) {
-            throw new ApplicationError(`Unsupported http verb for ${ctx.requestData.vulcainVerb}`, 405);
+            throw new ApplicationError(`Unsupported http verb for ${ctx.requestData.vulcainVerb}, path: ${ctx.request.url}`, 405);
         }
 
         if (info.kind === "action" && ctx.request.verb === "GET")
@@ -44,7 +44,7 @@ export class HandlersMiddleware extends VulcainMiddleware {
         // Ensure schema name (casing) is valid
         ctx.requestData.schema = info.definition.schema || ctx.requestData.schema;
 
-        ctx.logInfo(() => `Request input   : ${JSON.stringify(command.params)}`);
+        ctx.logInfo(() => `Request input   : ${ctx.requestData.vulcainVerb}, params: ${JSON.stringify(command.params)}`);
         ctx.logInfo(() => `Request context : user=${ctx.user.name}, scopes=${ctx.user.scopes}, tenant=${ctx.user.tenant}`);
 
         // Process handler

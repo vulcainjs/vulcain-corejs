@@ -6,13 +6,14 @@ import { Domain } from '../schemas/domain';
 import { Schema } from '../schemas/schema';
 import { IRequestContext, RequestData } from '../pipeline/common';
 import { OperationDescription } from "../pipeline/handlers/descriptions/operationDescription";
-import { Service, MemoryProvider, TYPES, ConsumeEventDefinition, ExposeEventDefinition } from "..";
+import { Service,TYPES, ConsumeEventDefinition, ExposeEventDefinition } from "..";
 import { MongoQueryParser } from "../providers/memory/mongoQueryParser";
 import { ModelPropertyDefinition } from "../schemas/schemaInfo";
 import { CommandManager } from "../pipeline/handlers/action/actionManager";
 import { GraphQLAdapter } from "./graphQLAdapter";
 import { PaginateDirective, applySchemaCustomDirectives } from "./directives";
 import { ReferenceDefinition } from "../schemas/builder/annotations.property";
+import { MemoryProvider } from "../providers/memory/provider";
 const graphql = require('graphql');
 
 export interface GraphQLDefinition {

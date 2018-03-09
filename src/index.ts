@@ -77,9 +77,7 @@ export * from './bus/rabbitAdapter';
 
 // Providers
 export { IProvider, QueryOptions } from './providers/provider';
-export * from './providers/memory/provider';
-export * from './providers/mongo/provider';
-export { ProviderFactory } from './providers/providerFactory';
+export { IProviderFactory } from './providers/provider';
 export { ITaskManager } from './providers/taskManager';
 
 // Containers

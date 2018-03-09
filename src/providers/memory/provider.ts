@@ -18,6 +18,7 @@ interface ISchemaData {
     data?: { count: number, entities: any };
     saveToFile?: string;
 }
+
 /**
  * Default memory provider
  */
@@ -39,7 +40,7 @@ export class MemoryProvider implements IProvider<any>
     constructor(private dataFolder?: string) {
     }
 
-    setTenant(tenant: string) {
+    initialize(tenant: string) {
 
         if (!tenant)
             throw new Error("Tenant can not be null");
@@ -86,7 +87,7 @@ export class MemoryProvider implements IProvider<any>
      * @param options
      * @returns {Promise}
      */
-    getAll(schema: Schema, options: QueryOptions): Promise<QueryResult> {
+    getAll(ctx: IRequestContext, schema: Schema, options: QueryOptions): Promise<QueryResult> {
         let data = this.ensureSchema(schema).data;
 
         options = options || { pageSize: -1 };
@@ -144,7 +145,7 @@ export class MemoryProvider implements IProvider<any>
      * @param name
      * @returns {Promise}
      */
-    get(schema: Schema, id: string) {
+    get(ctx: IRequestContext, schema: Schema, id: string) {
         let data = this.ensureSchema(schema).data;
 
         const self = this;
@@ -164,7 +165,7 @@ export class MemoryProvider implements IProvider<any>
      * @param id
      * @returns {Promise}
      */
-    delete(schema: Schema, id: string | number) {
+    delete(ctx: IRequestContext, schema: Schema, id: string | number) {
         if (!id)
             throw new Error("Id is required");
         
@@ -194,7 +195,7 @@ export class MemoryProvider implements IProvider<any>
      * @param entity
      * @returns {Promise}
      */
-    create(schema: Schema, entity) {
+    create(ctx: IRequestContext, schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
         let data = this.ensureSchema(schema).data;
@@ -230,7 +231,7 @@ export class MemoryProvider implements IProvider<any>
      * @param entity
      * @returns {Promise<T>}
      */
-    update(schema: Schema, entity) {
+    update(ctx: IRequestContext, schema: Schema, entity) {
         if (!entity)
             throw new Error("Entity is required");
         let data = this.ensureSchema(schema).data;
