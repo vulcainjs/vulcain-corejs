@@ -141,15 +141,16 @@ export class VulcainLogger implements Logger{
 
     private writeEntry(entry: LogEntry) {
 
-        if (Service.isDevelopment) {
-            if (entry.kind === "RR")
-                console.log("======================");
-            
+        if (Service.isDevelopment) {           
             const { message, correlationId, ...e } = entry;
             let str = JSON.stringify(e);
             str = str.substr(1, str.length - 2); // Remove {}
             let timestamp = ms().format();
-            console.log(`${timestamp}[${correlationId}] - ${message} - ${str}`);
+
+            if (entry.kind === "RR")
+                console.log(`${timestamp}[${correlationId || "global"}] ======================`);
+
+            console.log(`${timestamp}[${correlationId || "global"}] - ${message}. ${str}`);
         }
         else {
             console.log( JSON.stringify(entry));

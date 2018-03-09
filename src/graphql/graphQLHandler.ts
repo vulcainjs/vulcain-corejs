@@ -9,8 +9,6 @@ import { Inject } from "../di/annotations";
 import { EventNotificationMode } from "../bus/messageBus";
 import { GraphQLAdapter } from "./graphQLAdapter";
 
-
-
 export class GraphQLActionHandler extends AbstractHandler {
     private static _schema;
 
@@ -20,7 +18,7 @@ export class GraphQLActionHandler extends AbstractHandler {
         super(container);
     }
 
-    @Action({ description: "Custom action", name: "_graphql" })
+    @Action({ description: "Custom action", name: "_graphql" }, {system: true})
     @ExposeEvent({mode: EventNotificationMode.never})    
     async graphql(g: any) {
         

@@ -114,6 +114,8 @@ export class GraphQLAdapter {
 
                     let payload = {
                         [eventHandlerName]: result && result.data && result.data[eventHandlerName],
+                        action: evt.action,
+                        schema: evt.schema,
                         error: evt.error
                     };
 

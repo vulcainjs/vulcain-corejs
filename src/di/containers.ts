@@ -154,7 +154,7 @@ export class Container implements IContainer {
         if (!uri.startsWith("mongodb://")) {
             uri = "mongodb://" + uri;
         }
-        this.injectTransient(MongoProviderFactory, DefaultServiceNames.ProviderFactory, uri, mongoOptions);
+        this.injectSingleton(MongoProviderFactory, DefaultServiceNames.ProviderFactory, uri, mongoOptions);
     }
 
     /**
@@ -163,7 +163,7 @@ export class Container implements IContainer {
      * @param {string} [folder] Data can be persisted on disk (on every change)
      */
     useMemoryProvider(folder?: string) {
-        this.injectTransient(MemoryProviderFactory, DefaultServiceNames.ProviderFactory, folder);
+        this.injectSingleton(MemoryProviderFactory, DefaultServiceNames.ProviderFactory, folder);
     }
 
     // Insert always in first position

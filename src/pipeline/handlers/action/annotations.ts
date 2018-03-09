@@ -51,9 +51,10 @@ export function Action(def: ActionDefinition, metadata?: any) {
             if (tmp.endsWith("async")) tmp = tmp.substr(0, tmp.length - 5);
             actions[key].name = tmp;
         }
-        if (!/^[_a-zA-Z][a-zA-Z0-9]*$/.test(actions[key].name)) { // (to be consistant withj graphql) 
-            if (actions[key].name[0] !== '_' || !actions[key].metadata.system)  // Only system handler can begin with _              
-                throw new ApplicationError(`Action name ${actions[key].name}has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);
+         // (to be consistant withj graphql) 
+        if (!/^[_a-zA-Z][a-zA-Z0-9]*$/.test(actions[key].name) ||
+            actions[key].name[0] === '_' && !actions[key].metadata.system) { // Only system handler can begin with _              
+                throw new ApplicationError(`Action name ${actions[key].name} has invalid caracter. Must be '[a-zA-Z][a-zA-Z0-9]*'`);
         }
         
         Reflect.defineMetadata(symActions, actions, target.constructor);
@@ -63,7 +64,7 @@ export function Action(def: ActionDefinition, metadata?: any) {
 export function ExposeEvent(def?: ExposeEventDefinition) {
     return (target, key) => {
         let actions: { [name: string]: any } = Reflect.getOwnMetadata(symActions, target.constructor) || {};
-        actions[key] = { ...actions[key], ...def };
+        actions[key] = { ...actions[key] };
         actions[key].eventDefinition = def || {};
         Reflect.defineMetadata(symActions, actions, target.constructor);        
     };
@@ -85,7 +86,7 @@ export function Consume(def?: ConsumeEventDefinition, metadata?:any) {
 
         if (!actions[key].distributionKey) {
             // Used if distributionMode==='once'
-            actions[key].distributionKey = (target.name + ":" + key).toLowerCase();
+            actions[key].distributionKey = (target.constructor.name + ":" + key).toLowerCase();
         }
         Reflect.defineMetadata(symActions, actions, target.constructor);
     };

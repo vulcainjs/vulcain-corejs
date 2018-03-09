@@ -199,8 +199,8 @@ export class CommandManager implements IManager {
                 event = eventDef.factory(ctx, event);
             
             // Redispatch event in EVENT mode only if this is a new event schema
-            if (event && (source !== "EVENT" || (eventDef.schema && eventDef.schema !== (def.outputSchema || def.schema)))) {
-                ctx.logInfo(() => `Send event ${eventDef.schema}`);
+            if (event && (source !== "EVENT" || (eventDef.schema && eventDef.schema !== (<ConsumeEventDefinition>def).subscribeToSchema))) {
+                ctx.logInfo(() => `Sending event ${eventDef.schema || def.outputSchema}`);
                 this.messageBus.sendEvent(event);
             }
             
@@ -300,7 +300,7 @@ export class CommandManager implements IManager {
                         handler.event = evt;
                     }
                     catch (e) {
-                        ctx.logError(e, () => `Unable to create handler ${info.handler.name}`);
+                        ctx.logError(e, () => `Unable to create event handler ${info.handler.name}`);
                         continue;
                     }
 
