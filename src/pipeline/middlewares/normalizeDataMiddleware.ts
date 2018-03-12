@@ -44,8 +44,7 @@ export class NormalizeDataMiddleware extends VulcainMiddleware {
         }
 
         // Inject request context in response
-        if( Service.isTestEnvironment)
-            ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
+        ctx.response.addHeader('Access-Control-Allow-Origin', '*'); // CORS
 
         if (Object.getOwnPropertyDescriptor(ctx.response.content, "value") || Object.getOwnPropertyDescriptor(ctx.response.content, "error")) {
             ctx.response.content.meta = ctx.response.content.meta || {};
