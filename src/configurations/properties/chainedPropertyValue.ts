@@ -68,7 +68,7 @@ export class ChainedDynamicProperty<T>  extends DynamicProperty<T> {
         return v || this.defaultValue;
     }
 
-    public toString() {
-        return this.value;
+    public toJSON(key: string) {
+        return key ? String(this.value) : this.name + "=" + String(this.value);
     }
 }

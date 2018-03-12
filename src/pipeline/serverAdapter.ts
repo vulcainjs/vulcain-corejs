@@ -139,7 +139,7 @@ export class HttpAdapter extends ServerAdapter {
                 return;
             }
 
-            if (req.method === "OPTIONS" && Service.isTestEnvironment) {
+            if (req.method === "OPTIONS") {
                 resp.setHeader("Access-Control-Allow-Origin", "*");
                 resp.setHeader("Access-Control-Allow-Methods", "GET,POST");
                 resp.setHeader("Access-Control-Allow-Headers", "origin, content-type, accept");
