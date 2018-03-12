@@ -74,4 +74,8 @@ export class DynamicProperty<T> implements IDynamicProperty<T>, IUpdatableProper
         this._propertyChanged = null;
         this.removed = true;
     }
+
+    public toString() {
+        return this.value;
+    }
 }

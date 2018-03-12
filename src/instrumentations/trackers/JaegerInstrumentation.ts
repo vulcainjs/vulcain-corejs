@@ -19,6 +19,8 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
                 jaegerAddress = jaegerAddress + ':9411';
             }
 
+            Service.log.info(null, () => `Enabling Jaeger instrumentation at ${jaegerAddress}`);
+
             const sender = new UDPSender();
             const tracer = new jaeger.Tracer(Service.fullServiceName,
                 new jaeger.RemoteReporter(sender),

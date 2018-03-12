@@ -29,6 +29,9 @@ export class ZipkinInstrumentation implements IRequestTrackerFactory {
             if (!/:[0-9]+/.test(zipkinAddress)) {
                 zipkinAddress = zipkinAddress + ':9411';
             }
+
+            Service.log.info(null, () => `Enabling Zipkin instrumentation at ${zipkinAddress}`);
+
             const recorder = new BatchRecorder({
                 logger: new HttpLogger({
                     endpoint: `${zipkinAddress}/api/v1/spans`,

@@ -17,6 +17,7 @@ export class PrometheusMetrics implements IMetrics {
     private ignoredProperties = ["hystrixProperties", "params"];
 
     constructor(private container: IContainer) {
+        Service.log.info(null, () => `Providing prometheus metrics from '/metrics'`);
 
         container.registerHTTPEndpoint("GET", '/metrics', (req: http.IncomingMessage, resp: http.ServerResponse) => {           
             const chunk = new Buffer(Prometheus.register.metrics(), 'utf8');
