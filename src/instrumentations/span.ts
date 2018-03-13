@@ -31,16 +31,11 @@ export class Span implements ISpanTracker {
         return this._tracker;
     }
 
-    private constructor(public context: RequestContext, public kind: SpanKind, private name: string, parent: TrackerId | ISpanTracker) {
+    private constructor(public context: RequestContext, public kind: SpanKind, private name: string, parentId: TrackerId) {
         this._logger = context.container.get<Logger>(DefaultServiceNames.Logger);
 
         this.startTime = Date.now();
         this.startTick = process.hrtime();
-
-        let parentId = <TrackerId>parent;
-        if ((<ISpanTracker>parent).id) {
-            parentId = (<ISpanTracker>parent).id;
-        }
 
         this._id = <TrackerId>{
             correlationId:  parentId.correlationId,
@@ -50,9 +45,10 @@ export class Span implements ISpanTracker {
 
         this.metrics = context.container.get<IMetrics>(DefaultServiceNames.Metrics);
 
-        this.addTag("name",name);
+        this.addTag("name", name);
         this.addTag("domain", Service.domainName);
         this.addTag("host", os.hostname());
+        this.addTag("correlationId", parentId.correlationId);
 
         this.convertKind();
     }
@@ -62,11 +58,11 @@ export class Span implements ISpanTracker {
     }
 
     createCommandTracker(context: RequestContext, commandName: string) {
-        return new Span(context, SpanKind.Command, commandName, this);
+        return new Span(context, SpanKind.Command, commandName, this._id);
     }
 
     createCustomTracker(context: RequestContext, name: string, tags?: {[index:string]:string}): ITracker {
-        let span = new Span(context, SpanKind.Custom, name, this);
+        let span = new Span(context, SpanKind.Custom, name, this._id);
         span.trackAction(name, tags);
         return span;
     }
@@ -144,6 +140,8 @@ export class Span implements ISpanTracker {
             this.endRequest();
 
         if (this._tracker) {
+            Object.keys(this.tags).forEach(key => this._tracker.addTag(key, this.tags[key]));
+
             this._tracker.finish();
             this._tracker = null;
         }
@@ -164,8 +162,12 @@ export class Span implements ISpanTracker {
 
     private endRequest() {
         if (this.action) { // for ignored requests like _servicedependency
-            let hasError = !!this.error || !this.context.response || this.context.response.statusCode && this.context.response.statusCode >= 400;
-            this.addTag("error", hasError ? "true" : "false");
+            if (!this.error && this.kind === SpanKind.Request && this.context.response && this.context.response.statusCode && this.context.response.statusCode >= 400) {
+                this.error = new Error("Http error " + this.context.response.statusCode);
+            }
+            if(this.error)
+                this.addTag("error", this.error.toString());
+            
             this.metrics.timing("vulcain_service_duration_ms", this.durationInMs, this.tags);
         }
 
@@ -213,7 +215,6 @@ export class Span implements ISpanTracker {
                     value = JSON.stringify(value);
                 }
                 this.tags[name] = value;
-                this._tracker && this._tracker.addTag(name, value);
             }
             catch (e) {
                 this.context.logError(e);

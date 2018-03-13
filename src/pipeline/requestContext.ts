@@ -163,13 +163,14 @@ export class RequestContext implements IRequestContext {
             };
         }
 
+        const parentId = this.pipeline !== Pipeline.Event
+                            ? (this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null
+                            : this.requestData.correlationId;
+        
         if(!this.requestData.correlationId)
             this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || Conventions.getRandomId();
-
+        
         if (this.pipeline !== Pipeline.Test) {
-            // For event we do not use parentId to chain traces.
-            // However all traces can be aggregated with the correlationId tag.
-            const parentId = (this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null;
             const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId };
             this._tracker = Span.createRequestTracker(this, trackerId);
         }

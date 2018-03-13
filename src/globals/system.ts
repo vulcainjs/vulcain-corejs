@@ -37,10 +37,13 @@ export class Service {
     private static crypter: CryptoHelper;
     private static _manifest: VulcainManifest;
     private static _stubManager: IStubManager;
-    static defaultDomainName: string;
     private static _serviceStatus: ServiceStatus = ServiceStatus.Starting;
     private static _statusTimer: NodeJS.Timer;
 
+    public static setDomainName(name: string) {
+        if(name)
+            Service._domainName = name;
+    }
     /**
      * Settings properties from vulcain.json file
      */
@@ -326,7 +329,7 @@ export class Service {
             if (env)
                 Service._domainName = env;
             else
-                Service._domainName = Service.defaultDomainName;
+                Service._domainName = "vulcain";
         }
         return Service._domainName;
     }

@@ -93,7 +93,7 @@ export class Application {
             throw new Error("Domain name is required.");
         }
 
-        Service.defaultDomainName = this.domainName;
+        Service.setDomainName(this.domainName);
         this._container = this._container || new Container();
         this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
     }
