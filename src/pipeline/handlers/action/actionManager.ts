@@ -198,9 +198,12 @@ export class CommandManager implements IManager {
             if (eventDef.factory)
                 event = eventDef.factory(ctx, event);
             
+            if(eventDef.schema)
+                event.schema = eventDef.schema;
+
             // Redispatch event in EVENT mode only if this is a new event schema
-            if (event && (source !== "EVENT" || (eventDef.schema && eventDef.schema !== (<ConsumeEventDefinition>def).subscribeToSchema))) {
-                ctx.logInfo(() => `Sending event ${eventDef.schema || def.outputSchema}`);
+            if (event && (source !== "EVENT" || (event.schema !== (<ConsumeEventDefinition>def).subscribeToSchema))) {
+                ctx.logInfo(() => `Sending event ${event.schema}`);
                 this.messageBus.sendEvent(event);
             }
             
@@ -272,16 +275,18 @@ export class CommandManager implements IManager {
         // Subscribe to events for a domain, a schema and an action
         // Get event stream for a domain
         let events = this.messageBus.getOrCreateEventQueue(def.subscribeToDomain || this.domain.name, def.distributionMode === "once" ? def.distributionKey: null);
-        events = events.filter(e => !e[MessageBus.LocalEventSymbol]); // already sent ?
+        events = events.filter(e => !e[MessageBus.LocalEventSymbol] && !!e.schema); // already sent ?
 
         // Filtered by schema
         if (def.subscribeToSchema !== '*') {
             events = events.filter(e => e.schema === def.subscribeToSchema);
         }
+
         // Filtered by action
         if (def.subscribeToAction !== '*') {
             events = events.filter(e => !e.action ||  (e.action.toLowerCase() === def.subscribeToAction));
         }
+        
         // And by custom filter
         if (def.filter)
             events = def.filter(events);
