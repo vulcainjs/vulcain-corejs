@@ -286,7 +286,7 @@ export class CommandManager implements IManager {
         if (def.subscribeToAction !== '*') {
             events = events.filter(e => !e.action ||  (e.action.toLowerCase() === def.subscribeToAction));
         }
-        
+
         // And by custom filter
         if (def.filter)
             events = def.filter(events);
@@ -312,16 +312,17 @@ export class CommandManager implements IManager {
                     let error;
                     try {
                         let res = await handler[info.methodName](evt.value);
-                        if (res !== undefined)
-                            evt.value = res;    
+                        evt.value = res;    
                     }
                     catch (e) {
                         error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
                         ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
                     }
 
-                    let e = this.emitEvent("EVENT", ctx, def, evt.value, error);                        
-                    MessageBus.emitLocalEvent(def.name, e);
+                    if (evt.value) {
+                        let e = this.emitEvent("EVENT", ctx, def, evt.value, error);
+                        MessageBus.emitLocalEvent(def.name, e);
+                    }    
                 }
                 finally {
                     ctx.dispose();
