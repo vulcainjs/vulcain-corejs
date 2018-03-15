@@ -2,7 +2,6 @@ import { HttpConfigurationSource } from './httpConfigurationSource';
 import { DataSource } from '../abstractions';
 import { Service } from '../../globals/system';
 const rest = require('unirest');
-const moment = require('moment');
 
 export class VulcainConfigurationSource extends HttpConfigurationSource {
 

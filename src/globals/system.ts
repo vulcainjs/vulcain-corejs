@@ -1,6 +1,5 @@
 import { CryptoHelper } from '../utils/crypto';
 import { VulcainLogger } from './../log/vulcainLogger';
-import * as moment from 'moment';
 import * as fs from 'fs';
 import { VulcainManifest } from './manifest';
 import { Conventions } from '../utils/conventions';
@@ -39,7 +38,8 @@ export class Service {
     private static _stubManager: IStubManager;
     private static _serviceStatus: ServiceStatus = ServiceStatus.Starting;
     private static _statusTimer: NodeJS.Timer;
-
+    private static _fullServiceName: string;
+    
     public static setDomainName(name: string) {
         if(name)
             Service._domainName = name;
@@ -123,7 +123,7 @@ export class Service {
      * @memberOf System
      */
     static nowAsString() {
-        return moment.utc().format();
+        return new Date(Date.now()).toUTCString();
     }
 
     /**
@@ -284,10 +284,7 @@ export class Service {
     static get serviceName() {
         if (!Service._serviceName) {
             let env = process.env[Conventions.instance.ENV_SERVICE_NAME];
-            if (env)
-                Service._serviceName = env;
-            else
-                return null;
+            Service._serviceName = env || "no-name";
         }
         return Service._serviceName;
     }
@@ -303,16 +300,16 @@ export class Service {
     static get serviceVersion() {
         if (!Service._serviceVersion) {
             let env = process.env[Conventions.instance.ENV_SERVICE_VERSION];
-            if (env)
-                Service._serviceVersion = env;
-            else
-                return null;
+            Service._serviceVersion = env || "1.0";
         }
         return Service._serviceVersion;
     }
 
     static get fullServiceName() {
-        return this.serviceName + "-" + this.serviceVersion;
+        if (!this._fullServiceName) {
+            this._fullServiceName = this.serviceName + "-" + this.serviceVersion;
+        }
+        return this._fullServiceName;
     }
 
     /**

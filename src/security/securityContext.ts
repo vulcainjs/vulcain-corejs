@@ -75,8 +75,8 @@ export class SecurityContext implements UserContext {
 
     constructor(container: IContainer, private scopePolicy: IAuthorizationPolicy) {
         // Default
-        this.addOrReplaceStrategy(new TokenService());
-        this.addOrReplaceStrategy(new ApiKeyService());
+        this.addOrReplaceStrategy(container.get<IAuthenticationStrategy>(DefaultServiceNames.BearerTokenService));
+        //this.addOrReplaceStrategy(new ApiKeyService());
 
         let strategies = container.getList<IAuthenticationStrategy>(DefaultServiceNames.AuthenticationStrategy);
         for(let strategy of strategies) {

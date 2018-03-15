@@ -22,10 +22,10 @@ import { Utils } from '../utils';
 export interface AsyncTaskData extends RequestData {
     status?: "Error" | "Success" | "Pending" | "Running";
     taskId?: string;
-    submitAt?: string;
-    startedAt?: string;
+    submitAt?: number;
+    startedAt?: number;
     userContext?: UserContextData;
-    completedAt?: string;
+    completedAt?: number;
 }
 
 export interface ActionResult {
@@ -63,7 +63,7 @@ export class CommandManager implements IManager {
         this.subscribeToEvents();
     }
 
-    private async validateRequestData(ctx: RequestContext, info:Handler, command: RequestData, skipValidation: boolean) {
+    private validateRequestData(ctx: RequestContext, info:Handler, command: RequestData, skipValidation: boolean) {
         let errors;
         let inputSchema = info.definition.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -81,14 +81,14 @@ export class CommandManager implements IManager {
                     }
                 }
                 if (!skipValidation) {
-                    errors = await schema.validate(ctx, command.params);
+                    errors = schema.validate(ctx, command.params);
                 }
             }
 
             if (!skipValidation && !errors) {
                 // Search if a method naming validate<schema> exists
                 let methodName = 'validate' + inputSchema;
-                errors = info.handler[methodName] && await info.handler[methodName](command.params, command.action);
+                errors = info.handler[methodName] && info.handler[methodName](command.params, command.action);
             }
         }
 
@@ -102,7 +102,7 @@ export class CommandManager implements IManager {
             action: ctx.requestData.action,
             schema: ctx.requestData.schema,
             source: Service.fullServiceName,
-            startedAt: Service.nowAsString(),
+            startedAt: Date.now(),
             value: result && Utils.obfuscateSensibleData(this.domain, ctx.container, result),
             error: error && error.message,
             userContext: ctx.user.getUserContext(),
@@ -118,7 +118,7 @@ export class CommandManager implements IManager {
 
         try {
             let skipValidation = def.skipDataValidation || (def.name === "delete" && def.skipDataValidation === undefined);
-            let errors = await this.validateRequestData(ctx, info, command, skipValidation);
+            let errors = this.validateRequestData(ctx, info, command, skipValidation);
             if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }
@@ -156,7 +156,7 @@ export class CommandManager implements IManager {
             else {
                 // Asynchronous task
                 let pendingTask: AsyncTaskData = Object.assign({}, ctx.getRequestDataObject(), {
-                    submitAt: Service.nowAsString(),
+                    submitAt: Date.now(),
                     status: "Pending"
                 });
 
@@ -193,7 +193,7 @@ export class CommandManager implements IManager {
 
         if ((eventDef.mode === EventNotificationMode.successOnly && !error) || eventDef.mode === EventNotificationMode.always) {
             let event = this.createEvent(ctx, error ? "Error" : "Success", result, error);
-            event.completedAt = Service.nowAsString();
+            event.completedAt = Date.now();
             
             if (eventDef.factory)
                 event = eventDef.factory(ctx, event);
@@ -213,7 +213,7 @@ export class CommandManager implements IManager {
 
     async processAsyncTask(command: AsyncTaskData) {
         let ctx = new RequestContext(this.container, Pipeline.AsyncTask, command);
-        ctx.setSecurityManager(command.userContext);
+        ctx.setSecurityContext(command.userContext);
 
         let processor =  this.container.get<HandlerProcessor>(DefaultServiceNames.HandlerProcessor);
         let info = processor.getHandlerInfo(ctx.container, command.schema, command.action);
@@ -229,7 +229,7 @@ export class CommandManager implements IManager {
         try {
             let res;
             command.status = "Running";
-            command.startedAt = Service.nowAsString();
+            command.startedAt = Date.now();
 
             if (taskManager)
                 await taskManager.updateTask(command);
@@ -252,7 +252,7 @@ export class CommandManager implements IManager {
             command.status = "Error";
         }
         finally {
-            command.completedAt = Service.nowAsString();
+            command.completedAt = Date.now();
             if (taskManager)
                 await taskManager.updateTask(command);
             ctx.dispose();
@@ -299,7 +299,7 @@ export class CommandManager implements IManager {
                 try {
                     try {
                         ctx.requestTracker.trackAction(evt.vulcainVerb);
-                        ctx.setSecurityManager(evt.userContext);
+                        ctx.setSecurityContext(evt.userContext);
                         handler = ctx.container.resolve(info.handler);
                         handler.context = ctx;
                         handler.event = evt;
@@ -316,7 +316,7 @@ export class CommandManager implements IManager {
                     }
                     catch (e) {
                         error = (e instanceof CommandRuntimeError && e.error) ? e.error : e;
-                        ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${evt}`);
+                        ctx.logError(error, () => `Error with event handler ${info.handler.name} event : ${JSON.stringify(evt)}`);
                     }
 
                     if (evt.value) {

@@ -25,6 +25,7 @@ import { ActionHandler } from './pipeline/handlers/action/annotations';
 import { GraphQLActionHandler } from './graphql/graphQLHandler';
 import { GraphQLAdapter } from "./graphql/graphQLAdapter";
 import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
+import { HandlerProcessor } from '.';
 
 const vulcainExecutablePath = __dirname;
 const applicationPath = Path.dirname(module.parent.parent.filename);
@@ -38,6 +39,7 @@ const applicationPath = Path.dirname(module.parent.parent.filename);
  */
 export class Application {
     private _domain: Domain;
+    private _initialized = false;
 
     public useMongoProvider(address: string) {
         this.container.useMongoProvider(address);
@@ -95,17 +97,25 @@ export class Application {
 
         Service.setDomainName(this.domainName);
         this._container = this._container || new Container();
-        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
     }
-
-    private async init() {
+    
+    /**
+     * Only use it for testing. Used start instead
+     */
+    public async init() {
+        if (this._initialized)
+        return;
+        
+        this._initialized = true;
         await DynamicConfiguration.init().startPolling();
-
+        
         Service.log.info(null, () => "Starting application");
-
+        
         this._container.injectInstance(this, DefaultServiceNames.Application);
         this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
+
+        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
 
         process.on('unhandledRejection', (reason, p) => {
             Service.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);
@@ -124,6 +134,32 @@ export class Application {
                 commandBus.stopReception();
             }
         });
+
+        let local = new LocalAdapter();
+        let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
+        if (!eventBus) {
+            this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
+            eventBus = local;
+        }
+        let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
+        if (!commandBus) {
+            this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
+            commandBus = local;
+        }
+
+        this.registerComponents();
+        Preloader.instance.runPreloads(this.container, this._domain);
+
+        await eventBus.open();
+        await commandBus.open();
+
+        let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
+        this.defineScopeDescriptions(scopes);
+
+        let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
+        descriptors.getDescriptions(); // ensures handlers table is created   
+        
+        this.container.injectSingleton(HandlerProcessor, DefaultServiceNames.HandlerProcessor );
     }
 
     /**
@@ -150,30 +186,6 @@ export class Application {
 
         try {
             await this.init();
-
-            let local = new LocalAdapter();
-            let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
-            if (!eventBus) {
-                this.container.injectInstance(local, DefaultServiceNames.EventBusAdapter);
-                eventBus = local;
-            }
-            let commandBus = this.container.get<IActionBusAdapter>(DefaultServiceNames.ActionBusAdapter, true);
-            if (!commandBus) {
-                this.container.injectInstance(local, DefaultServiceNames.ActionBusAdapter);
-                commandBus = local;
-            }
-
-            this.registerComponents();
-            Preloader.instance.runPreloads(this.container, this._domain);
-
-            await eventBus.open();
-            await commandBus.open();
-
-            let scopes = this.container.get<ScopesDescriptor>(DefaultServiceNames.ScopesDescriptor);
-            this.defineScopeDescriptions(scopes);
-
-            let descriptors = this.container.get<ServiceDescriptors>(DefaultServiceNames.ServiceDescriptors);
-            descriptors.getDescriptions(); // ensures handlers table is created
 
             let server = new VulcainServer(this.domain.name, this._container);
             server.start(port);

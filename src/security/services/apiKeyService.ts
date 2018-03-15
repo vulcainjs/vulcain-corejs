@@ -11,8 +11,8 @@ import { CommandFactory } from "../../commands/commandFactory";
 import { Metadata } from "../../utils/reflector";
 
 // TODO add enableApiKeyAuthentication
-@Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy)
-@Metadata("system", true)      
+//@Injectable(LifeTime.Singleton, DefaultServiceNames.AuthenticationStrategy)
+//@Metadata("system", true)      
 export class ApiKeyService implements IAuthenticationStrategy {
 
     public readonly name = "apiKey";

@@ -15,8 +15,8 @@ export interface EventData extends RequestData {
     source: string;
     error?: string;
     userContext: UserContextData;
-    startedAt: string;
-    completedAt?: string;
+    startedAt: number;
+    completedAt?: number;
     status: string;
 }
 

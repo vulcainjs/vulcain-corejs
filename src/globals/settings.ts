@@ -1,5 +1,4 @@
 import { VulcainLogger } from './../log/vulcainLogger';
-import * as moment from 'moment';
 import * as fs from 'fs';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';

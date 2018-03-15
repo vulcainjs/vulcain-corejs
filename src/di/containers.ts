@@ -169,8 +169,13 @@ export class Container implements IContainer {
     // Insert always in first position
     // so 'get' take the last inserted
     private addResolver(name: string, resolver: IResolver) {
-        let list = this.resolvers.get(name) || [];
-        list.unshift(resolver);
+        let list = this.resolvers.get(name);
+        if (!list) {
+            list = [resolver];
+        }
+        else {
+            list.unshift(resolver);
+        }    
         this.resolvers.set(name, list);
     }
 
