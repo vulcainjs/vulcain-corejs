@@ -151,7 +151,7 @@ export class Span implements ISpanTracker {
 
     endCommand() {
         if (this.action) { // for ignored requests like _servicedependency
-            this.addTag("error", this.error ? "true" : "false");
+            this.addTag("error", this.error ? this.error.toString() : "false");
             let metricsName = `vulcain_${this.commandType.toLowerCase()}command_duration_ms`;
             this.metrics.timing(metricsName, this.durationInMs, this.tags);
         }
@@ -165,8 +165,7 @@ export class Span implements ISpanTracker {
             if (!this.error && this.kind === SpanKind.Request && this.context.response && this.context.response.statusCode && this.context.response.statusCode >= 400) {
                 this.error = new Error("Http error " + this.context.response.statusCode);
             }
-            if(this.error)
-                this.addTag("error", this.error.toString());
+            this.addTag("error", this.error ? this.error.toString() : "false");
             
             this.metrics.timing("vulcain_service_duration_ms", this.durationInMs, this.tags);
         }
