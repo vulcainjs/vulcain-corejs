@@ -1,6 +1,5 @@
-import { Injectable, LifeTime, DefaultServiceNames, Inject } from '../../di/annotations';
+import { Injectable, LifeTime, DefaultServiceNames } from '../../di/annotations';
 import { Conventions } from '../../utils/conventions';
-import { Service } from '../../globals/system';
 import { IDynamicProperty } from '../../configurations/abstractions';
 import { ConfigurationProperty } from '../../globals/manifest';
 import { IAuthenticationStrategy, UserContextData } from "../securityContext";
@@ -29,12 +28,13 @@ export class TokenService implements IAuthenticationStrategy {
 
     createToken( user: UserContextData ): Promise<{ expiresIn: number, token: string, renewToken: string }> {
 
+        if (!user || !user.name)
+            throw new Error("Invalid user data. name is required");
+        
         return new Promise(async (resolve, reject) => {
             const payload = {
                 value:
                 {
-                    displayName: user.displayName,
-                    email: user.email,
                     name: user.name,
                     tenant: user.tenant,
                     scopes: user.scopes,

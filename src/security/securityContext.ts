@@ -7,7 +7,6 @@ import { DefaultServiceNames, Inject } from "../di/annotations";
 import { IContainer } from '../di/resolvers';
 import { IRequestContext } from '../pipeline/common';
 import { TokenService } from './services/tokenService';
-import { ApiKeyService } from './services/apiKeyService';
 
 export interface IAuthenticationStrategy {
     name: string;
@@ -17,37 +16,18 @@ export interface IAuthenticationStrategy {
 
 export interface UserContextData {
     /**
-     * User display name
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    displayName?: string;
-    /**
-     * User email
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    email?: string;
-    /**
      * User name
      *
-     * @type {string}
-     * @memberOf UserContext
      */
     name: string;
     /**
      *
-     *
-     * @type {string}
-     * @memberOf UserContext
      */
-    tenant: string;
+    tenant?: string;
 
     scopes: string[];
 
-    claims: any;
+    claims?: any;
 }
 
 export interface UserContext extends UserContextData {
@@ -69,14 +49,13 @@ export interface UserToken extends UserContext {
  */
 export class SecurityContext implements UserContext {
     private static EmptyScopes: string[] = [];
-    private static UserFields = ["name", "displayName", "email", "scopes", "tenant", "bearer", "claims"];
+    private static UserFields = ["name", "scopes", "tenant", "bearer", "claims"];
 
     private strategies = new Map<string, IAuthenticationStrategy>();
 
     constructor(container: IContainer, private scopePolicy: IAuthorizationPolicy) {
         // Default
         this.addOrReplaceStrategy(new TokenService());
-        this.addOrReplaceStrategy(new ApiKeyService());
 
         let strategies = container.getList<IAuthenticationStrategy>(DefaultServiceNames.AuthenticationStrategy);
         for(let strategy of strategies) {
@@ -88,20 +67,6 @@ export class SecurityContext implements UserContext {
         this.strategies.set(strategy.name.toLowerCase(), strategy);
     }
 
-    /**
-     * User display name
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    displayName?: string;
-    /**
-     * User email
-     *
-     * @type {string}
-     * @memberOf UserContext
-     */
-    email?: string;
     /**
      * User name
      *
@@ -146,8 +111,6 @@ export class SecurityContext implements UserContext {
         else if (tenantOrCtx) {
             this.tenant = tenantOrCtx.tenant;
             this.name = tenantOrCtx.name;
-            this.displayName = tenantOrCtx.displayName || tenantOrCtx.name;
-            this.email = tenantOrCtx.email;
             this._scopes = tenantOrCtx.scopes;
             this.claims = tenantOrCtx.claims;
         }
@@ -167,7 +130,7 @@ export class SecurityContext implements UserContext {
             // Anonymous
             this.name = "Anonymous";
             this._isAnonymous = true;
-            this.claims = [];
+            this.claims = {};
             ctx.logInfo(() => `No authentication context: User access is anonymous `);
             return;
         }
@@ -186,8 +149,6 @@ export class SecurityContext implements UserContext {
                 let userContext = await strategy.verifyToken(ctx, token, this.tenant);
                 if (userContext) {
                     this.name = userContext.name;
-                    this.displayName = userContext.displayName;
-                    this.email = userContext.email;
                     this._scopes = userContext.scopes;
                     this.tenant = userContext.tenant || this.tenant;
                     this.bearer = (<UserToken>userContext).bearer;
@@ -224,8 +185,6 @@ export class SecurityContext implements UserContext {
     getUserContext(): UserContextData {
         return {
             tenant: this.tenant,
-            displayName: this.displayName,
-            email: this.email,
             name: this.name,
             scopes: this._scopes,
             claims: this.claims

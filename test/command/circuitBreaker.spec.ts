@@ -8,6 +8,8 @@ import ActualTime from "../../src/utils/actualTime";
 beforeEach(function () {
     ActualTime.enableVirtualTimer();
     DynamicConfiguration.reset();
+    CommandMetricsFactory.resetCache();
+    CircuitBreakerFactory.resetCache();
 });
 
 function getCBOptions(commandKey) {
@@ -18,12 +20,7 @@ function getCBOptions(commandKey) {
         circuitBreakerRequestVolumeThreshold: 1
     }
     );
-};
-
-beforeEach(function () {
-    CommandMetricsFactory.resetCache();
-    CircuitBreakerFactory.resetCache();
-});
+}
 
 describe("CircuitBreaker", function () {
 

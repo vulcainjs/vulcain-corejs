@@ -52,7 +52,7 @@ export class DefaultAuthorizationPolicy {
      *     x-yz         x-*       true
      *
      * @param {string} scope
-     * @returns {number}
+     * @returns {boolean}
      */
     hasScope(sec: SecurityContext, handlerScope: string): boolean {
         if (!handlerScope || handlerScope === "?" || Service.isDevelopment) {
