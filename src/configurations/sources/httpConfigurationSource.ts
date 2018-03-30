@@ -3,7 +3,6 @@ import { AbstractRemoteSource } from "./abstractRemoteSource";
 import { Service } from "../../globals/system";
 
 const rest = require('unirest');
-const moment = require('moment');
 
 export class HttpConfigurationSource extends AbstractRemoteSource {
     protected lastUpdate: string;
@@ -49,7 +48,7 @@ export class HttpConfigurationSource extends AbstractRemoteSource {
                             values = new Map<string, ConfigurationItem>();
                             let data = response.body;
                             data.value && data.value.forEach(cfg => values.set(cfg.key, cfg));
-                            self.lastUpdate = moment.utc().format();
+                            self.lastUpdate = Service.nowAsString();
                             self.mergeChanges(values);
                         }
                     }

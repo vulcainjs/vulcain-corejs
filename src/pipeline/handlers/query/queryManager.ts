@@ -29,7 +29,7 @@ export class QueryManager implements IManager {
     constructor(public container: IContainer) {
     }
 
-    private async validateRequestData(ctx: RequestContext, info: Handler, query) {
+    private validateRequestData(ctx: RequestContext, info: Handler, query) {
         let errors;
         let inputSchema = info.definition.inputSchema;
         if (inputSchema && inputSchema !== "none") {
@@ -40,13 +40,13 @@ export class QueryManager implements IManager {
                 // Custom binding if any
                 query.params = schema.coerce(query.params);
 
-                errors = await schema.validate(ctx, query.params);
+                errors = schema.validate(ctx, query.params);
             }
 
             if (!errors) {
                 // Search if a method naming validate<schema>[Async] exists
                 let methodName = 'validate' + inputSchema;
-                errors = info.handler[methodName] && await info.handler[methodName](query.params, query.action);
+                errors = info.handler[methodName] && info.handler[methodName](query.params, query.action);
             }
         }
         return errors;
@@ -57,7 +57,7 @@ export class QueryManager implements IManager {
         let logger = this.container.get<VulcainLogger>(DefaultServiceNames.Logger);
 
         try {
-            let errors = await this.validateRequestData(ctx, info, query);
+            let errors = this.validateRequestData(ctx, info, query);
             if (errors && Object.keys(errors).length > 0) {
                 throw new BadRequestError("Validation errors", errors);
             }

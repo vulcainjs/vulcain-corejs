@@ -1,39 +1,37 @@
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 import { EventData } from "./messageBus";
 import { RequestData } from "../pipeline/common";
+import * as RX from 'rxjs';
 
 export
 class LocalAdapter implements IActionBusAdapter, IEventBusAdapter {
-    private eventHandler: (event: EventData) => void;
-    private commandHandler:  (event: RequestData) => void;
+    private eventQueue: RX.Subject<EventData>;
+    private taskQueue: RX.Subject<RequestData>;
 
     open() {
+        this.eventQueue = new RX.Subject<EventData>();
+        this.taskQueue = new RX.Subject<RequestData>();
         return Promise.resolve();
     }
 
-    stopReception() { }
-
-    sendEvent(domain: string, event: EventData) {
-        // console.log("Event: %j", event);
-        let self = this;
-        self.eventHandler && setTimeout(function () {
-            self.eventHandler(event);
-        }, (1));
+    stopReception() {   
+        this.eventQueue = null;
+        this.taskQueue = null;
     }
 
-    consumeEvents(domain: string, handler: (event: EventData) => void, queueName?:string) {
-        this.eventHandler = handler;
+    sendEvent(domain: string, event: EventData) {
+        this.eventQueue && this.eventQueue.next(event);
+    }
+
+    consumeEvents(domain: string, handler: (event: EventData) => void, queueName?: string) {
+        this.eventQueue && this.eventQueue.subscribe(handler);
     }
 
     publishTask(domain: string, serviceId: string, command: RequestData) {
-        let self = this;
-        self.commandHandler && setTimeout(function () {
-            // console.log("Running task: %j", command);
-            self.commandHandler(command);
-        }, (1));
+        this.taskQueue && this.taskQueue.next(command);
     }
 
     consumeTask(domain: string, serviceId: string, handler: (event: RequestData) => void) {
-        this.commandHandler = handler;
+        this.taskQueue && this.taskQueue.subscribe(handler);
     }
 }

@@ -6,7 +6,7 @@ import { IContainer } from "../di/resolvers";
 import { UserContext } from "../security/securityContext";
 import { Container } from "../di/containers";
 import { RequestContext } from "./requestContext";
-import { Pipeline } from "./common";
+import { Pipeline, IRequestContext } from "./common";
 import { AbstractHandler } from "./handlers/abstractHandlers";
 import { DefaultServiceNames } from '../di/annotations';
 
@@ -15,7 +15,7 @@ export class TestContext extends RequestContext {
         return this.container;
     }
 
-    constructor(...components: Function[]) {
+    constructor() {
         super(new Container(), Pipeline.Test);
         let domain = new Domain(Service.domainName, this.container);
         this.container.injectInstance(domain, DefaultServiceNames.Domain);
@@ -24,7 +24,7 @@ export class TestContext extends RequestContext {
     }
 
     setUser(user: UserContext) {
-        this.setSecurityManager(user);
+        this.setSecurityContext(user);
         return this;
     }
 
@@ -33,13 +33,18 @@ export class TestContext extends RequestContext {
     }
 
     get context() {
-        let ctx = new RequestContext(this.container, Pipeline.Test);
-        ctx.setSecurityManager("test");
+        return TestContext.newContext(this.container);
+    }
+
+    static newContext(container: IContainer, data?: any): IRequestContext {
+        let ctx = new RequestContext(container, Pipeline.Test, data);
+        ctx.setSecurityContext("test");        
+        ctx.normalize();
         return ctx;
     }
 
     createHandler<T extends AbstractHandler>(handler: Function): T {
-        let ctx = this.context;
+        let ctx = <RequestContext>this.context;
         let scopedContainer = new Container(this.container, ctx);
         let h = new (<(container: IContainer) => void>handler)(scopedContainer);
         h.context = ctx;

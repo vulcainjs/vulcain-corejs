@@ -9,13 +9,13 @@ export class Validator {
     constructor(private domain: Domain) {
     }
 
-    async validate(ctx: IRequestContext, schema: Schema, val:any, parentName:string=""): Promise<{ [propertyName: string]: string }> {
+    validate(ctx: IRequestContext, schema: Schema, val:any, parentName:string=""): { [propertyName: string]: string } {
         let errors: { [propertyName: string]: string } = {};
         if (!schema || !val) return errors;
 
         if (schema.extends) {
             if (schema.extends) {
-                let errorList = (await this.validate(ctx, schema.extends, val));
+                let errorList = this.validate(ctx, schema.extends, val);
                 errors = Object.assign(errors, errorList);
             }
         }
@@ -38,12 +38,12 @@ export class Validator {
                     if (prop.type === "any" && formatContext.propertyValue && formatContext.propertyValue._schema) {
                         propertyTypeName = formatContext.propertyValue._schema;
                     }
-                    let errors2 = await this.validateReference(ctx, formatContext, prop.type, val);
+                    let errors2 = this.validateReference(ctx, formatContext, prop.type, val);
                     if (errors2)
                         errors = Object.assign(errors, errors2);
                 }
                 else {
-                    let err = await this.validateProperty(ctx, formatContext, val);
+                    let err = this.validateProperty(ctx, formatContext, val);
                     if (err) {
                         errors[propertyName] = err;
                     }
@@ -58,7 +58,7 @@ export class Validator {
         if (schema.info.validate) {
             formatContext.propertyName = formatContext.propertySchema = formatContext.propertyValue = null;
             try {
-                let err = await schema.info.validate(val, ctx);
+                let err = schema.info.validate(val, ctx);
                 if (err)
                     errors["_"] = this.__formatMessage(err, formatContext, schema);
             }
@@ -69,7 +69,7 @@ export class Validator {
         return errors;
     }
 
-    private async validateReference(ctx: IRequestContext, formatContext: FormatContext, propertyTypeName: string, entity): Promise<{ [propertyName: string]: string }> {
+    private validateReference(ctx: IRequestContext, formatContext: FormatContext, propertyTypeName: string, entity): { [propertyName: string]: string } {
         let errors = {};
 
         const { propertySchema, propertyValue } = formatContext;
@@ -90,7 +90,7 @@ export class Validator {
 
         if (propertySchema.validators) {
             for (let validator of propertySchema.validators) {
-                let msg = validator.validate && await validator.validate(propertyValue, ctx);
+                let msg = validator.validate && validator.validate(propertyValue, ctx);
                 if (msg) {
                     errors[formatContext.propertyName] = this.__formatMessage(msg, formatContext, propertySchema);
                     return errors;
@@ -98,7 +98,7 @@ export class Validator {
             }
         }
 
-        let err = propertySchema.validate && await propertySchema.validate(propertyValue, ctx);
+        let err = propertySchema.validate && propertySchema.validate(propertyValue, ctx);
         if (err) {
             errors[formatContext.propertyName] = err;
             return errors;
@@ -117,14 +117,14 @@ export class Validator {
                         baseItemSchema = currentItemSchema;
                 }
                 if (currentItemSchema) {
-                    errors = Object.assign(errors, await this.validate(ctx, currentItemSchema, val, formatContext.propertyName + "."));
+                    errors = Object.assign(errors, this.validate(ctx, currentItemSchema, val, formatContext.propertyName + "."));
                 }
             }
         }
         return errors;
     }
 
-    private async validateProperty(ctx: IRequestContext, formatContext: FormatContext, entity): Promise<string> {
+    private validateProperty(ctx: IRequestContext, formatContext: FormatContext, entity): string {
         const { propertySchema, propertyValue } = formatContext;
 
         if (propertySchema.dependsOn && !propertySchema.dependsOn(entity)) return;
@@ -137,13 +137,13 @@ export class Validator {
         }
         if (propertySchema.validators) {
             for (let validator of propertySchema.validators) {
-                let err = validator.validate && await validator.validate(propertyValue, ctx);
+                let err = validator.validate && validator.validate(propertyValue, ctx);
                 if (err) return this.__formatMessage(err, formatContext, validator);
             }
         }
 
         if (propertySchema.validate) {
-            let err = await propertySchema.validate(propertyValue, ctx);
+            let err = propertySchema.validate(propertyValue, ctx);
             if (err) return this.__formatMessage(err, formatContext, propertySchema);
         }
     }

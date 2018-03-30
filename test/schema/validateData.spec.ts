@@ -103,7 +103,7 @@ describe("Validate data", function () {
         let schema = domain.getSchema("SimpleModel");
 
         let model: SimpleModel = { text: "text", number: 1, baseText: "" };
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
         expect(errors.baseText);
     });
 
@@ -112,7 +112,7 @@ describe("Validate data", function () {
         let schema = domain.getSchema("SimpleModel");
 
         let model: SimpleModel = { text: "text", number: 1, baseText: "a" };
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
         expect(errors.baseText);
     });
 
@@ -121,7 +121,7 @@ describe("Validate data", function () {
         let schema = domain.getSchema("SimpleModel");
 
         let model = schema.coerce({ text: "text", number: "1w1", baseText: "text" });
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
         expect(errors.number);
     });
 
@@ -129,7 +129,7 @@ describe("Validate data", function () {
         let model: SimpleModel = { text: "text", number: 1, baseText: "text" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("SimpleModel");
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
         expect(Object.keys(errors).length).equals(0);
     });
 
@@ -139,7 +139,7 @@ describe("Validate data", function () {
 
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
-        let errors = await schema.validate(null, refs);
+        let errors = schema.validate(null, refs);
 
         expect(Object.keys(errors).length).equals(1);
     });
@@ -150,7 +150,7 @@ describe("Validate data", function () {
 
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
-        let errors = await schema.validate(null, refs);
+        let errors = schema.validate(null, refs);
 
         expect(Object.keys(errors).length).equals(2);
     });
@@ -161,7 +161,7 @@ describe("Validate data", function () {
 
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
-        let errors = await schema.validate(null, refs);
+        let errors = schema.validate(null, refs);
 
         expect(Object.keys(errors).length).equals(1); // TODO really expected ?
     });
@@ -171,7 +171,7 @@ describe("Validate data", function () {
 
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ReferenceModel");
-        let errors = await schema.validate(null, refs);
+        let errors = schema.validate(null, refs);
 
         expect(Object.keys(errors).length).equals(1);
     });
@@ -183,7 +183,7 @@ describe("Validate data", function () {
         let model: EmailModel = { email: "first.name@email.com" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("EmailModel");
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
 
         expect(!errors.email);
     });
@@ -192,7 +192,7 @@ describe("Validate data", function () {
         let model: EmailModel = { email: "first.name@email" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("EmailModel");
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
 
         expect(errors.email);
     });
@@ -205,7 +205,7 @@ describe("Validate data", function () {
         let model: UrlModel = { url: "https://myWebsite.com/#ancre/1" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("UrlModel");
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
 
         expect(Object.keys(errors).length).equals(0);
     });
@@ -214,7 +214,7 @@ describe("Validate data", function () {
         let model: UrlModel = { url: "http://site.r" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("UrlModel");
-        let errors = await schema.validate(null, model);
+        let errors = schema.validate(null, model);
 
         expect(Object.keys(errors).length).equals(1);
     });
@@ -226,7 +226,7 @@ describe("Validate data", function () {
         let model: AlphanumericModel = { value: "abcde1345fghik6789" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AlphanumericModel");
-        let errors = await schema.validate(undefined, model);
+        let errors = schema.validate(undefined, model);
 
         expect(Object.keys(errors).length).equals(0);
     });
@@ -235,7 +235,7 @@ describe("Validate data", function () {
         let model: AlphanumericModel = { value: "abc123!" };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("AlphanumericModel");
-        let errors = await schema.validate(undefined, model);
+        let errors = schema.validate(undefined, model);
 
         expect(Object.keys(errors).length).equals(1);
     });
@@ -247,7 +247,7 @@ describe("Validate data", function () {
         let model: DateIsoModel = { date: new Date().toISOString() };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("DateIsoModel");
-        let errors = await schema.validate(undefined, model);
+        let errors = schema.validate(undefined, model);
 
         expect(Object.keys(errors).length).equals(0);
     });
@@ -258,7 +258,7 @@ describe("Validate data", function () {
         let model: DateIsoModel = { date: new Date().toDateString() };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("DateIsoModel");
-        let errors = await schema.validate(undefined, model);
+        let errors = schema.validate(undefined, model);
 
         expect(Object.keys(errors).length).equals(1);
     });
@@ -270,7 +270,7 @@ describe("Validate data", function () {
         let model: ArrayOfModel = { enums: ["a", "bb"] };
         let domain = context.rootContainer.get<Domain>("Domain");
         let schema = domain.getSchema("ArrayOfModel");
-        let errors = await schema.validate(undefined, model);
+        let errors = schema.validate(undefined, model);
 
         expect(Object.keys(errors).length).equals(1);
     });

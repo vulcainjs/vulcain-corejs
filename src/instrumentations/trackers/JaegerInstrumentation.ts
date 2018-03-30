@@ -6,6 +6,7 @@ import { ITrackerAdapter, IRequestTrackerFactory } from './index';
 import { IRequestContext } from "../../pipeline/common";
 import { TrackerId, SpanKind, ISpanTracker } from '../../instrumentations/common';
 import { Service } from '../../globals/system';
+import * as URL from 'url';
 
 export class JaegerInstrumentation implements IRequestTrackerFactory {
 
@@ -16,14 +17,17 @@ export class JaegerInstrumentation implements IRequestTrackerFactory {
                 jaegerAddress = "http://" + jaegerAddress;
             }
             if (!/:[0-9]+/.test(jaegerAddress)) {
-                jaegerAddress = jaegerAddress + ':9411';
+                jaegerAddress = jaegerAddress + ':6832';
             }
-
-            const sender = new UDPSender();
+            
+            let url = URL.parse(jaegerAddress);            
+            const sender = new UDPSender({host:url.hostname, port: url.port});
             const tracer = new jaeger.Tracer(Service.fullServiceName,
                 new jaeger.RemoteReporter(sender),
                 new jaeger.RateLimitingSampler(1));
-
+                
+            Service.log.info(null, () => `Enabling Jaeger instrumentation at ${jaegerAddress}`);
+            
             return new JaegerInstrumentation(tracer);
         }
         return null;

@@ -60,6 +60,8 @@ export class HystrixCommand {
 
         let result;
 
+        this.command.context.logInfo(() => `Executing command ${this.properties.commandName} with properties ${JSON.stringify(this.properties)}`);
+       
         // Execution
         this.hystrixMetrics.incrementExecutionCount();
         let recordTotalTime = true;

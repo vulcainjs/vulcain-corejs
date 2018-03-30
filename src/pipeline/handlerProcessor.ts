@@ -13,7 +13,6 @@ import { QueryManager } from "./handlers/query/queryManager";
 import { IManager } from "./handlers/definitions";
 import { ActionDefinition } from "./handlers/action/definitions";
 
-@Injectable(LifeTime.Singleton, DefaultServiceNames.HandlerProcessor)
 export class HandlerProcessor {
     private actionManager: CommandManager;
     private queryManager: QueryManager;

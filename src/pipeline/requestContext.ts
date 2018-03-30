@@ -12,6 +12,7 @@ import { ISpanRequestTracker, DummySpanTracker, TrackerId } from '../instrumenta
 import { Span } from '../instrumentations/span';
 import { Conventions } from '../utils/conventions';
 import { Service, ServiceStatus } from '../globals/system';
+import { URL } from 'url';
 
 export class VulcainHeaderNames {
     static X_VULCAIN_TENANT = "x-vulcain-tenant";
@@ -163,13 +164,14 @@ export class RequestContext implements IRequestContext {
             };
         }
 
+        const parentId = this.pipeline !== Pipeline.Event
+                            ? (this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null
+                            : this.requestData.correlationId;
+        
         if(!this.requestData.correlationId)
             this.requestData.correlationId = (this.request && this.request.headers[VulcainHeaderNames.X_VULCAIN_CORRELATION_ID]) || Conventions.getRandomId();
-
+        
         if (this.pipeline !== Pipeline.Test) {
-            // For event we do not use parentId to chain traces.
-            // However all traces can be aggregated with the correlationId tag.
-            const parentId = (this.pipeline !== Pipeline.Event && this.request && <string>this.request.headers[VulcainHeaderNames.X_VULCAIN_PARENT_ID]) || null;
             const trackerId: TrackerId = { spanId: parentId, correlationId: this.requestData.correlationId };
             this._tracker = Span.createRequestTracker(this, trackerId);
         }
@@ -219,7 +221,7 @@ export class RequestContext implements IRequestContext {
         return this._securityManager;
     }
 
-    setSecurityManager(tenant: string|UserContextData) {
+    setSecurityContext(tenant: string|UserContextData) {
         if (!tenant)
             throw new Error("Tenant can not be null");
         let manager = this.container.get<SecurityContext>(DefaultServiceNames.SecurityManager, true);
@@ -309,5 +311,89 @@ export class RequestContext implements IRequestContext {
     dispose() {
         this._tracker.dispose();
         this.container.dispose();
+    }
+
+    normalize() {
+        let action: string;
+        let schema: string;
+
+        const url = this.request && this.request.url;
+        const body = this.request && this.request.body;
+
+        this.requestData.body = body;
+
+        // Try to get schema and action from path
+        let schemaAction = url && url.pathname.substr(Conventions.instance.defaultUrlprefix.length + 1);
+        if (schemaAction) {
+            if (schemaAction[schemaAction.length - 1] === '/')
+                schemaAction = schemaAction.substr(0, schemaAction.length - 1);
+        }
+
+        // Split schema and action (schema is optional)
+        if (schemaAction) {
+            if (schemaAction.indexOf('.') >= 0) {
+                let parts = schemaAction.split('.');
+                schema = parts[0];
+                action = parts[1];
+            }
+            else {
+                action = schemaAction;
+            }
+        }
+        // Schema and action can be in the body
+        if (body) {
+            // Body contains only data -> create a new action object
+            if (!this.requestData.body.action && !this.requestData.body.params && !this.requestData.body.schema) {
+                this.requestData.params = this.requestData.body;
+            }
+            else {
+                action = this.requestData.body.action || action;
+                schema = this.requestData.body.schema || schema;
+            }
+        }
+        else {
+            url && url.query && Object.keys(url.query).forEach(k => {
+                if (k[0] !== "$") {
+                    this.requestData.params = this.requestData.params || {};
+                    this.requestData.params[k] = url.query[k];
+                }
+            });
+        }
+        
+        this.requestData.params = this.requestData.params || {};
+        this.requestData.page = 0;
+        this.requestData.pageSize = 20;
+        
+        // Or can be forced in the url query
+        if (url && url.query) {
+            if (url.query["$action"])
+                action = url.query["$action"];
+            if (url.query["_schema"])
+                schema = url.query["_schema"];
+
+            // Normalize option values
+            Object.keys(url.query).forEach(name => {
+                try {
+                    switch (name.toLowerCase()) {
+                        case "$page":
+                            this.requestData.page = (url.query["$page"] && parseInt(url.query["$page"])) || this.requestData.page;
+                            break;
+                        case "$pagesize":
+                            this.requestData.pageSize = (url.query[name] && parseInt(url.query[name])) || this.requestData.pageSize;
+                            break;
+                        case "$query":
+                            this.requestData.params = url.query["$query"] && JSON.parse(url.query["$query"]);
+                            break;
+                    }
+                }
+                catch (ex) {/*ignore*/ }
+            });
+        }
+        
+        this.requestData.action = action || (!body && "all") || null;
+        this.requestData.schema = schema;
+
+        this.requestData.vulcainVerb = this.requestData.schema ?  `${this.requestData.schema}.${this.requestData.action}` : this.requestData.action;
+        this.requestTracker.trackAction(this.requestData.vulcainVerb);
     }
 }

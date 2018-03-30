@@ -12,7 +12,7 @@ export enum SpanKind {
 export interface TrackerId {
     correlationId?: string;
     parentId?: string;
-    spanId: string;
+    spanId?: string;
 }
 
 export interface ITracker {
