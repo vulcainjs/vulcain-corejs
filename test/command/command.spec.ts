@@ -18,7 +18,7 @@ let context = new TestContext();
 
 describe("Command", function () {
     it("should resolve with expected results", async () => {
-        let command = CommandFactory.createDynamicCommand<TestCommand>(context.context, "TestCommand");
+        let command = new TestCommand(context.context);
         expect(command).not.to.be.undefined;
 
         let result = await command.foo("success");
@@ -29,7 +29,7 @@ describe("Command", function () {
     });
 
     it("should timeout if the function does not resolve within the configured timeout", async () => {
-        let command = CommandFactory.createDynamicCommand<TestCommandTimeout>(context.context,"TestCommandTimeout");
+        let command = new TestCommandTimeout(context.context);
 
         expect(command).not.to.be.undefined;
         try {

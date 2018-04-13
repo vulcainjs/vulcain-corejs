@@ -317,8 +317,8 @@ export class RequestContext implements IRequestContext {
         let action: string;
         let schema: string;
 
-        const url = this.request.url;
-        const body = this.request.body;
+        const url = this.request && this.request.url;
+        const body = this.request && this.request.body;
 
         this.requestData.body = body;
 

@@ -42,7 +42,6 @@ export function Command(config: CommandConfiguration = {}, commandKey?: string, 
     };
 }
 
-
 export function CommandEntryPoint(ignore=false) {
     return function (command, key: string, pdesc: PropertyDescriptor) {
         let endpoints = command.constructor[entryPointSymbol] || {};
