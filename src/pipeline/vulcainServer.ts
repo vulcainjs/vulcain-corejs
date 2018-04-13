@@ -2,7 +2,7 @@ import { IContainer } from '../di/resolvers';
 import { Conventions } from '../utils/conventions';
 import { DefaultServiceNames } from '../di/annotations';
 import { IMetrics } from '../instrumentations/metrics';
-import { Service, ServiceStatus } from "../globals/system";
+import { Service } from "../globals/system";
 import { VulcainPipeline } from "./vulcainPipeline";
 import { NormalizeDataMiddleware } from "./middlewares/normalizeDataMiddleware";
 import { AuthenticationMiddleware } from "./middlewares/authenticationMiddleware";
@@ -35,19 +35,15 @@ export class VulcainServer {
         });
 
         this.adapter.registerRoute({
-            kind: "HTTP", verb: "GET", path: "/health", handler: (req, res) => {
-                let status = Service.serviceStatus;
-                res.statusCode = status === ServiceStatus.Ready || ServiceStatus.Busy ? 200 : 500;
+            kind: "HTTP", verb: "GET", path: "/healthz", handler: (req, res) => {
+                res.statusCode = 200;
                 res.end();
             }
         });
         
         this.adapter.start(port, (err) => {
             if (err) {
-                Service.setServiceStatus(ServiceStatus.Ending);
-            }
-            else {
-                Service.setServiceStatus(ServiceStatus.Ready);
+                process.exit(1);
             }
 
             Service.log.info(null, () => 'Listening on port ' + port);

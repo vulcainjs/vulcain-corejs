@@ -18,7 +18,7 @@ import { ServiceDescriptors } from "./pipeline/handlers/descriptions/serviceDesc
 import { HttpResponse } from "./pipeline/response";
 import { VulcainServer } from "./pipeline/vulcainServer";
 import { LocalAdapter } from "./bus/localAdapter";
-import { Service, ServiceStatus } from './globals/system';
+import { Service } from './globals/system';
 import { DynamicConfiguration } from './configurations/dynamicConfiguration';
 import './graphql/graphQLHandler';
 import { ActionHandler } from './pipeline/handlers/action/annotations';
@@ -122,9 +122,7 @@ export class Application {
         });
 
         // Stop to receive inputs
-        process.once('SIGTERM', () => {
-            Service.setServiceStatus(ServiceStatus.Ending);
-            
+        process.once('SIGTERM', () => {           
             let eventBus = this.container.get<IEventBusAdapter>(DefaultServiceNames.EventBusAdapter, true);
             if (eventBus) {
                 eventBus.stopReception();
@@ -133,6 +131,7 @@ export class Application {
             if (commandBus) {
                 commandBus.stopReception();
             }
+            this.container.dispose();
         });
 
         let local = new LocalAdapter();
