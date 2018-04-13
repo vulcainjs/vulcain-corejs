@@ -11,7 +11,7 @@ export { DynamicConfiguration } from './configurations/dynamicConfiguration';
 
 export { VulcainManifest, ServiceDependency, HttpDependency, ConfigurationProperty } from './globals/manifest';
 export { VulcainLogger } from './log/vulcainLogger';
-export { Service, ServiceStatus } from './globals/system';
+export { Service } from './globals/system';
 export { IServiceResolver } from './di/serviceResolver';
 export { Metadata } from './utils/reflector';
 

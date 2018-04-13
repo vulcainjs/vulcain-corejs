@@ -1,5 +1,5 @@
 import * as amqp from 'amqplib';
-import { Service, ServiceStatus } from './../globals/system';
+import { Service } from './../globals/system';
 import { IActionBusAdapter, IEventBusAdapter } from '../bus/busAdapter';
 import { EventData } from "./messageBus";
 import { RequestData } from "../pipeline/common";
@@ -202,7 +202,7 @@ class RabbitAdapter implements IActionBusAdapter, IEventBusAdapter {
             self.channel.prefetch(1);
 
             self.channel.consume(queue.queue, async (msg) => {
-                if (this.ignoreInputMessages || Service.serviceStatus === ServiceStatus.Busy) return;
+                if (this.ignoreInputMessages) return;
                 await handler(JSON.parse(msg.content.toString()));
                 self.channel.ack(msg);
             }, { noAck: false });

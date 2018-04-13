@@ -1,31 +1,27 @@
-import { Preloader } from './preloader'; // always on first line
-
-import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
 import * as Path from 'path';
-import { Domain } from './schemas/domain';
-import { Container } from './di/containers';
-import { Files } from './utils/files';
 import 'reflect-metadata';
-import { DefaultServiceNames } from './di/annotations';
-import { IContainer, NativeEndpoint } from "./di/resolvers";
-import { Conventions } from './utils/conventions';
-import { MemoryProvider } from "./providers/memory/provider";
-import './defaults/serviceExplorer'; // Don't remove (auto register)
-import './defaults/dependencyExplorer'; // Don't remove (auto register)
-import { ScopesDescriptor } from './defaults/scopeDescriptors';  // Don't remove (auto register)
-import { LifeTime } from "./di/annotations";
-import { ServiceDescriptors } from "./pipeline/handlers/descriptions/serviceDescriptions";
-import { HttpResponse } from "./pipeline/response";
-import { VulcainServer } from "./pipeline/vulcainServer";
-import { LocalAdapter } from "./bus/localAdapter";
-import { Service } from './globals/system';
-import { DynamicConfiguration } from './configurations/dynamicConfiguration';
-import './graphql/graphQLHandler';
-import { ActionHandler } from './pipeline/handlers/action/annotations';
-import { GraphQLActionHandler } from './graphql/graphQLHandler';
-import { GraphQLAdapter } from "./graphql/graphQLAdapter";
-import { HystrixSSEStream as hystrixStream } from './commands/http/hystrixSSEStream';
 import { HandlerProcessor } from '.';
+import { IActionBusAdapter, IEventBusAdapter } from './bus/busAdapter';
+import { LocalAdapter } from "./bus/localAdapter";
+import { DynamicConfiguration } from './configurations/dynamicConfiguration';
+import './defaults/dependencyExplorer'; // Don't remove (auto register)
+import { ScopesDescriptor } from './defaults/scopeDescriptors'; // Don't remove (auto register)
+import './defaults/serviceExplorer'; // Don't remove (auto register)
+import { DefaultServiceNames, LifeTime } from './di/annotations';
+import { Container } from './di/containers';
+import { IContainer } from "./di/resolvers";
+import { Service } from './globals/system';
+import { GraphQLAdapter } from "./graphql/graphQLAdapter";
+import './graphql/graphQLHandler';
+import { GraphQLActionHandler } from './graphql/graphQLHandler';
+import { ActionHandler } from './pipeline/handlers/action/annotations';
+import { ServiceDescriptors } from "./pipeline/handlers/descriptions/serviceDescriptions";
+import { VulcainServer } from "./pipeline/vulcainServer";
+import { Preloader } from './preloader'; // always on first line
+import { Domain } from './schemas/domain';
+import { Conventions } from './utils/conventions';
+import { Files } from './utils/files';
+import { HystrixSSEStream } from './commands/http/hystrixSSEStream';
 
 const vulcainExecutablePath = __dirname;
 const applicationPath = Path.dirname(module.parent.parent.filename);
@@ -115,7 +111,7 @@ export class Application {
         this._domain = new Domain(this.domainName, this._container);
         this._container.injectInstance(this._domain, DefaultServiceNames.Domain);
 
-        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, hystrixStream.getHandler());
+        this.container.registerHTTPEndpoint("GET", Conventions.instance.defaultHystrixPath, HystrixSSEStream.getHandler());
 
         process.on('unhandledRejection', (reason, p) => {
             Service.log.info(null, () => `Unhandled Rejection at ${p} reason ${reason}")`);

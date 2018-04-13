@@ -1,17 +1,15 @@
-import { VulcainMiddleware } from "./vulcainPipeline";
-import { Service } from "../globals/system";
+import { DefaultServiceNames, Inject } from '../di/annotations';
 import { IContainer } from "../di/resolvers";
-import { UnauthorizedRequestError, ApplicationError } from "./errors/applicationRequestError";
-import { HttpResponse } from "./response";
-import { Handler, ServiceDescriptors } from "./handlers/descriptions/serviceDescriptions";
-import { RequestData, IRequestContext } from "./common";
-import { DefaultServiceNames, Injectable, LifeTime } from '../di/annotations';
-import { RequestContext, ContextWrapper } from "./requestContext";
-import { Inject } from "../di/annotations";
+import { Service } from "../globals/system";
+import { IRequestContext, RequestData } from "./common";
+import { UnauthorizedRequestError } from "./errors/applicationRequestError";
 import { CommandManager } from "./handlers/action/actionManager";
-import { QueryManager } from "./handlers/query/queryManager";
-import { IManager } from "./handlers/definitions";
 import { ActionDefinition } from "./handlers/action/definitions";
+import { IManager } from "./handlers/definitions";
+import { Handler, ServiceDescriptors } from "./handlers/descriptions/serviceDescriptions";
+import { QueryManager } from "./handlers/query/queryManager";
+import { ContextWrapper, RequestContext } from "./requestContext";
+import { HttpResponse } from "./response";
 
 export class HandlerProcessor {
     private actionManager: CommandManager;

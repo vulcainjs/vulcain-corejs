@@ -1,12 +1,10 @@
 import { IContainer, NativeEndpoint } from '../di/resolvers';
-import { VulcainPipeline, HttpRequest } from "./vulcainPipeline";
 import { HttpResponse } from "./response";
-import { Conventions } from '../utils/conventions';
+import { DefaultSerializer } from "./serializers/defaultSerializer";
+import { ISerializer } from "./serializers/serializer";
+import { HttpRequest, VulcainPipeline } from "./vulcainPipeline";
 import http = require('http');
 import url = require('url');
-import { ISerializer } from "./serializers/serializer";
-import { DefaultSerializer } from "./serializers/defaultSerializer";
-import { Service } from '../globals/system';
 
 export interface IServerAdapter {
     init(container: IContainer, pipeline: VulcainPipeline);

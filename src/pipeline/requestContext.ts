@@ -11,7 +11,7 @@ import { HttpResponse } from "./response";
 import { ISpanRequestTracker, DummySpanTracker, TrackerId } from '../instrumentations/common';
 import { Span } from '../instrumentations/span';
 import { Conventions } from '../utils/conventions';
-import { Service, ServiceStatus } from '../globals/system';
+import { Service } from '../globals/system';
 import { URL } from 'url';
 
 export class VulcainHeaderNames {
@@ -40,9 +40,6 @@ export class ContextWrapper implements IRequestContext {
     get request() { return this.parent.request; }
     get publicPath() { return this.parent.publicPath; }
     set keepConnected(flag: boolean) { this.parent.keepConnected = flag; }
-    
-    setServiceIsBusy(timeoutInMs=0) { this.parent.setServiceIsBusy(timeoutInMs);}
-    setServiceIsReady() { this.parent.setServiceIsReady();}
 
     constructor(context: IRequestContext, data: string|RequestData) {
         this.parent = <RequestContext>context;
@@ -125,9 +122,6 @@ export class RequestContext implements IRequestContext {
     private _securityManager: SecurityContext;
     _tracker: ISpanRequestTracker;
     private _customEvents: Array<ICustomEvent>;
-
-    setServiceIsBusy(timeoutInMs=0) { Service.setServiceStatus(ServiceStatus.Busy, timeoutInMs);}
-    setServiceIsReady() { Service.setServiceStatus(ServiceStatus.Ready); }
     
     /**
      * Do not use directly
