@@ -1,5 +1,6 @@
 import { IRequestContext } from "../pipeline/common";
 import { ITrackerAdapter } from "../instrumentations/trackers/index";
+import { Service } from "../globals/system";
 
 export enum SpanKind {
     Request,
@@ -76,33 +77,36 @@ export class DummySpanTracker implements ISpanRequestTracker {
     kind: SpanKind;
 
     get id(): TrackerId {
-        return {spanId: "0", parentId: "0"};
+        return { spanId: "0", parentId: "0" };
     }
 
     constructor(public context: IRequestContext) { }
 
-    createCustomTracker(context: IRequestContext, name: string, tags?: {[index:string]:string}): ITracker {
+    createCustomTracker(context: IRequestContext, name: string, tags?: { [index: string]: string }): ITracker {
         return null;
     }
 
     createCommandTracker(context: IRequestContext, commandName: string): ISpanRequestTracker {
         return this;
     }
-    trackAction(name: string, tags?: {[index:string]:string}) {
+    trackAction(name: string, tags?: { [index: string]: string }) {
     }
-    addHttpRequestTags(uri:string, verb:string){}
-    addProviderCommandTags(address:string, schema: string, tenant: string ){}
+    addHttpRequestTags(uri: string, verb: string) { }
+    addProviderCommandTags(address: string, schema: string, tenant: string) { }
     addServiceCommandTags(serviceName: string, serviceVersion: string) { }
-    addCustomCommandTags(commandType: string, tags: { [key: string]: string }) {}
+    addCustomCommandTags(commandType: string, tags: { [key: string]: string }) { }
     addTag(key: string, value: string) {
     }
-    injectHeaders(headers: (name: any, value?: string)=> any) {
+    injectHeaders(headers: (name: any, value?: string) => any) {
     }
     logError(error: Error, msg?: () => string) {
+        Service.log.error(this.context, error, msg);
     }
     logInfo(msg: () => string) {
+        Service.log.info(this.context, msg);
     }
     logVerbose(msg: () => string) {
+        Service.log.verbose(this.context, msg);
     }
     dispose() {
     }

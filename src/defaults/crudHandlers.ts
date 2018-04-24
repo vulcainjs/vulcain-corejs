@@ -77,7 +77,7 @@ export class DefaultCRUDCommand extends AbstractProviderCommand<any> {
         this.setMetricTags("get", this.provider.address, (this.schema && this.schema.name) || null, (this.context && this.context.user.tenant) || null);
         let keyProperty = this.schema.getIdProperty();
         if (args && !(typeof args === "object")) {
-            args[keyProperty] = args;    
+            args = { [keyProperty] : args };    
         }
 
         if (!args || !args[keyProperty])
